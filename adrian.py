@@ -21,7 +21,7 @@ class AdrianLexer(RegexLexer):
             (r"(\+|\*|/|%|-)", Operator),
             (r'"', Literal.String, "string"),
             (r"[\n\t ]", Text),
-            (r"[\[\]\{\}\.\(\):=,]", Punctuation),
+            (r"[\[\]\{\}\.\(\):=,<>]", Punctuation),
         ],
         "string": [
             (r'[^"\\]+', Literal.String),
