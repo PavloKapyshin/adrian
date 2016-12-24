@@ -18,7 +18,7 @@ class AdrianLexer(RegexLexer):
             (r"[a-zA-Z0-9_]+", Name),
             (r"[-]?\d+", Number.Integer),
             (r"--.+", Comment),
-            (r"(\+|\*|/|%|-)", Operator),
+            (r"(\+|\*|/|%|-|\+=|-=|\*=|/=)", Operator),
             (r'"', Literal.String, "string"),
             (r"[\n\t ]", Text),
             (r"[\[\]\{\}\.\(\):=,<>]", Punctuation),
