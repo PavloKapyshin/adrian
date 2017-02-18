@@ -1,0 +1,10 @@
+__pycache__/
+*.py[co]
+
+parser.out
+parsetab.py
+
+*~
+*.swp
+
+.directory
