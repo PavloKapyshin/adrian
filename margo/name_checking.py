@@ -1,6 +1,7 @@
 from . import ast
 from . import defs
 from . import errors
+from . import layers
 
 from vendor.paka import funcreg
 
@@ -8,25 +9,10 @@ from vendor.paka import funcreg
 _FUNCS = funcreg.TypeRegistry()
 
 
-def name_exists(name, *, context):
-    """Check for existence of a name."""
-    return context.namespace.exists(name)
-
-
-def type_exists(type_, *, context):
-    """Check for existence of a type."""
-    return type_ in defs.STANDARD_TYPES or context.typespace.exists(type_)
-
-
-def func_exists(func, *, context):
-    """Check for existence of a function."""
-    return func in defs.STANDARD_FUNCS or context.funcspace.exists(func)
-
-
 def check_value(value, *, context):
     """Check that value (atom or a list of atoms) is valid."""
     if isinstance(value, defs.NAME_TYPES):
-        if not context.exists(value, space=context.namespace):
+        if not layers.name_exists(value, context=context):
             errors.non_existing_name(context.line, name=value)
         return value
     elif isinstance(value, defs.ATOM_TYPES):
@@ -44,13 +30,13 @@ def assignment(pair, *, context):
     name = pair.stmt.name
     context.line = pair.line
     # Check that builtins are not reassigned.
-    if name.value in defs.STANDARD_FUNCS:
+    if name.value in defs.STANDARD_FUNC_NAMES:
         errors.cant_reassign_builtin(pair.line, name=name.value)
     # Check existence of the type.
-    if not type_exists(name.type_, context=context):
+    if not layers.type_exists(name.type_, context=context):
         errors.non_existing_name(pair.line, name=name.type_)
     value = check_value(pair.stmt.value, context=context)
-    return ast.Assignment(name.value, name.type_, value)
+    return ast.Pair(pair.line, ast.Assignment(name.value, name.type_, value))
 
 
 def check(pair, *, context):

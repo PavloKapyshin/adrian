@@ -60,6 +60,13 @@ class Context:
         self.funcspace = _Namespace()
 
 
+class Type(_Atom):
+    _keys = ("value", )
+
+    def __init__(self, value):
+        self.value = value
+
+
 class _UnknownType:
 
     def __str__(self):
@@ -77,17 +84,24 @@ class _Value(_Atom):
     def __init__(self, value):
         self.value = value
 
+    @classmethod
+    def to_string(cls):
+        return cls._string
+
 
 class Integer(_Value):
     """Integer in Adrian."""
+    _string = "Integer"
 
 
 class String(_Value):
     """String in Adrian."""
+    _string = "String"
 
 
 class CString(_Value):
     """C string in compiler."""
+    _string = "CString"
 
 
 class _Name(_Atom):

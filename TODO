@@ -1,2 +1,3 @@
+[ ] Test name_checking and type_checking
 [ ] Deside to use one name class for all types of name or special class for each name type.
 [ ] Add compiler option `exit-on-error` for each layer of main.

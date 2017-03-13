@@ -16,11 +16,12 @@ ATOM_TYPES = (
     ast.String,
 ) + NAME_TYPES
 
-STANDARD_FUNCS = (
+STANDARD_FUNC_NAMES = (
     "print",
 )
 
-STANDARD_TYPES = (
-    "Integer",
-    "String",
+_STANDARD_TYPES = (
+    ast.Integer,
+    ast.String
 )
+STANDARD_TYPE_NAMES = set(type_.to_string() for type_ in _STANDARD_TYPES)
