@@ -13,9 +13,7 @@ Value checking
 ↓
 Name mangling
 ↓
-ARC
-↓
-C source code
+CGen
 ```
 
 ## Name checking
@@ -33,11 +31,3 @@ Compiler generates simplified (not for human :) representation of values.
 ## Name mangling
 
 Compiler mangles names.
-
-## ARC
-
-Compiler does ARC (automatic reference counting).
-
-## C source code
-
-Compiler generates working C source code.
