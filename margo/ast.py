@@ -54,10 +54,11 @@ class _Namespace:
 
 class Context:
 
-    def __init__(self):
+    def __init__(self, exit_on_error):
         self.namespace = _Namespace()
         self.typespace = _Namespace()
         self.funcspace = _Namespace()
+        self.exit_on_error = exit_on_error
 
 
 class Type(_Atom):

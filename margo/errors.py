@@ -17,39 +17,38 @@ _TYPE_OF_NAME_AND_TYPE_OF_VALUE_ARE_NOT_EQUAL = (
 _NOT_IMPLEMENTED = "not implemented"
 
 
-def syntax_error(line):
-    _error(line, _SYNTAX_ERROR)
+def syntax_error(line, exit_on_error):
+    _error(line, exit_on_error, _SYNTAX_ERROR)
 
 
-def illegal_char(line, char):
-    _error(line, _ILLEGAL_CHAR, char=char)
+def illegal_char(line, exit_on_error, char):
+    _error(line, exit_on_error, _ILLEGAL_CHAR, char=char)
 
 
-def non_existing_name(line, name):
-    _error(line, _NON_EXISTING_NAME, name=name)
+def non_existing_name(line, exit_on_error, name):
+    _error(line, exit_on_error, _NON_EXISTING_NAME, name=name)
 
 
-def cant_reassign_builtin(line, name):
-    _error(line, _CANT_REASSIGN_BUILTIN, name=name)
+def cant_reassign_builtin(line, exit_on_error, name):
+    _error(line, exit_on_error, _CANT_REASSIGN_BUILTIN, name=name)
 
 
 def type_of_name_and_type_of_value_are_not_equal(
-        line, name, type_of_name, type_of_value):
+        line, exit_on_error, name, type_of_name, type_of_value):
     _error(
-        line, _TYPE_OF_NAME_AND_TYPE_OF_VALUE_ARE_NOT_EQUAL,
+        line, exit_on_error, _TYPE_OF_NAME_AND_TYPE_OF_VALUE_ARE_NOT_EQUAL,
         name=name, type_of_name=type_of_name, type_of_value=type_of_value)
 
 
-def not_implemented(line):
-    _error(line, _NOT_IMPLEMENTED)
+def not_implemented(line, exit_on_error):
+    _error(line, exit_on_error, _NOT_IMPLEMENTED)
 
 
-def _error(line, msg, exit=True, **keywords):
+def _error(line, exit_on_error, msg, **keywords):
     base_msg = "Error on line {line}: {{0}}.".format(line=line)
     if line <= 0:
         base_msg = "Error: {0}."
     message = base_msg.format(msg.format_map(keywords))
-    if exit:
-        print(message, file=sys.stderr)
+    print(message, file=sys.stderr)
+    if exit_on_error:
         sys.exit(1)
-    # TODO: raise an exception.

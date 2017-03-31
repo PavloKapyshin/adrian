@@ -1,4 +1,4 @@
-"""Parse input and return low-level AST."""
+"""Lex and parse input and return low-level AST."""
 
 import sys
 
@@ -8,12 +8,109 @@ from vendor.ply import yacc
 from . import ast
 from . import defs
 from . import errors
-from . import lexer_defs
 
 
-# Import tokens from lexer_defs.
-tokens = lexer_defs.tokens
+# Lexer defs.
+# Reserved words.
+reserved = {
+    "var": "VAR",
 
+    # Standard types.
+    "Integer": "TYPE_INTEGER",
+    "String": "TYPE_STRING",
+}
+
+
+# List of tokens.
+tokens = [
+    "INTEGER",
+    "STRING",
+    "VARIABLE_NAME",
+    "TYPE_NAME",
+
+    "LP",       # (
+    "RP",       # )
+
+    "EQ",       # ==
+    "LE",       # <=
+    "GE",       # >=
+    "NE",       # !=
+
+    "GT",       # >
+    "LT",       # <
+    "EQUAL",    # =
+    "PLUS",     # +
+    "MINUS",    # -
+    "TIMES",    # *
+    "DIVIDE",   # /
+    "COLON",    # :
+] + list(reserved.values())  # Reserved words are also tokens.
+
+
+# Regular expressions for simple tokens.
+# Longest must be first.
+t_EQ = r"=="
+t_LE = r"<="
+t_GE = r">="
+t_NE = r"!="
+
+t_LP = r"\("
+t_RP = r"\)"
+
+t_LT = r"<"
+t_GT = r">"
+t_EQUAL = r"="
+t_COLON = r":"
+t_PLUS = r"\+"
+t_MINUS = r"-"
+t_TIMES = r"\*"
+t_DIVIDE = r"/"
+
+
+# Regular expressions with some action code.
+def t_INTEGER(token):
+    r"""[-]?\d+"""
+    token.value = ast.Integer(value=token.value)
+    return token
+
+
+def t_STRING(token):
+    r"""["][^"]*?["]"""
+    token.value = ast.String(value=token.value[1:-1])
+    return token
+
+
+def t_VARIABLE_NAME(token):
+    r"""[a-z_]+[a-zA-Z0-9]*"""
+    token.type = reserved.get(token.value, "VARIABLE_NAME")  # Check for reserved words.
+    return token
+
+
+def t_TYPE_NAME(token):
+    r"""[A-Z_]+[a-zA-Z0-9]*"""
+    token.type = reserved.get(token.value, "TYPE_NAME")  # Check for reserved words.
+    return token
+
+
+def t_newline(token):
+    r"""\n+"""
+    token.lexer.lineno += len(token.value)  # Number of newlines.
+
+def t_comment(token):
+    r"""--.*"""
+    pass
+
+
+# Ignoring.
+t_ignore = " \t"
+
+
+def t_error(token):
+    """Error handling rule."""
+    errors.illegal_char(line=token.lexer.lineno, exit_on_error=EXIT_ON_ERROR, char=token.value[0])
+
+
+# Parser defs.
 # Precedence of operators. Last operators have higher precedence.
 precedence = (
     ("right", "LE", "GE", "LT", "GT"),
@@ -188,12 +285,14 @@ def p_atom_3(content):
 
 def p_error(content):
     """Error handling function."""
-    errors.syntax_error(line=content.lineno)
+    errors.syntax_error(line=content.lineno, exit_on_error=EXIT_ON_ERROR)
 
 
-def main(code):
+def main(code, *, exit_on_error=True):
     """Build lexer and build parser."""
-    lexer = lex.lex(module=lexer_defs)
+    global EXIT_ON_ERROR
+    EXIT_ON_ERROR = exit_on_error
+    lexer = lex.lex(module=sys.modules[__name__])
     lexer.input(code)
     parser = yacc.yacc(module=sys.modules[__name__], debug=False)
     # Parse data got from lexer.
