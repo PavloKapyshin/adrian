@@ -13,7 +13,9 @@ Value checking
 ↓
 Name mangling
 ↓
-CGen
+CGen AST
+↓
+C source
 ```
 
 ## Name checking
@@ -31,3 +33,11 @@ Compiler generates simplified (not for human :) representation of values.
 ## Name mangling
 
 Compiler mangles names.
+
+## CGen
+
+Compiler generates CGen AST.
+
+## C source
+
+Compiler generates C source code.
