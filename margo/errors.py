@@ -17,6 +17,12 @@ _TYPE_OF_NAME_AND_TYPE_OF_VALUE_ARE_NOT_EQUAL = (
 _NOT_IMPLEMENTED = "not implemented"
 
 
+class CompilationError(Exception):
+
+    def __init__(self, message):
+        self.message = message
+
+
 def syntax_error(line, exit_on_error):
     _error(line, exit_on_error, _SYNTAX_ERROR)
 
@@ -52,3 +58,4 @@ def _error(line, exit_on_error, msg, **keywords):
     print(message, file=sys.stderr)
     if exit_on_error:
         sys.exit(1)
+    raise CompilationError(message)

@@ -1,6 +1,7 @@
 import cmd
 import sys
 
+from margo import errors
 from margo import lex_parse
 from margo import name_checking
 from margo import type_checking
@@ -9,7 +10,7 @@ from margo import type_checking
 class REPL(cmd.Cmd):
     intro = "This is Adrian testing REPL.\n"
     prompt = ">>> "
-    keywords = {}
+    keywords = {"exit_on_error": True}
 
     def do_keywords(self, keywords):
         if keywords:
@@ -20,10 +21,13 @@ class REPL(cmd.Cmd):
             print(self.keywords)
 
     def do_eval(self, inp):
-        ast = lex_parse.main(inp, **self.keywords)
-        nc_ast = name_checking.main(ast, **self.keywords)
-        tc_ast = type_checking.main(nc_ast, **self.keywords)
-        print(tc_ast)
+        try:
+            ast = lex_parse.main(inp, **self.keywords)
+            nc_ast = name_checking.main(ast, **self.keywords)
+            tc_ast = type_checking.main(nc_ast, **self.keywords)
+            print(tc_ast)
+        except errors.CompilationError as e:
+            pass
 
     def do_exit(self, arg):
         sys.exit(0)
@@ -32,6 +36,7 @@ class REPL(cmd.Cmd):
         self.do_eval(inp)
 
     do_quit = do_exit
+    do_kw = do_keywords
 
 
 if __name__ == "__main__":
