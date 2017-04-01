@@ -13,7 +13,7 @@ Value checking
 ↓
 Name mangling
 ↓
-CGen AST
+CGen
 ↓
 C source
 ```
