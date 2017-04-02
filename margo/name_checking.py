@@ -50,5 +50,5 @@ def check(ast_, *, context):
     return [_FUNCS[pair.stmt](pair, context=context) for pair in ast_]
 
 
-def main(ast_, *, exit_on_error=True):
-    return check(ast_, context=ast.Context(exit_on_error))
+def main(ast_, *, context=ast.Context(exit_on_error=True)):
+    return check(ast_, context=context)

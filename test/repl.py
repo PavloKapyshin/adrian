@@ -1,6 +1,7 @@
 import cmd
 import sys
 
+from margo import ast
 from margo import errors
 from margo import lex_parse
 from margo import name_checking
@@ -12,6 +13,7 @@ class REPL(cmd.Cmd):
     intro = "This is Adrian testing REPL.\n"
     prompt = ">>> "
     _settings = {"exit_on_error": True, "mangle_names": False}
+    context = ast.Context(_settings["exit_on_error"])
 
     def do_settings(self, settings):
         if settings:
@@ -23,12 +25,17 @@ class REPL(cmd.Cmd):
 
     def do_eval(self, inp):
         try:
+            # Keep settings up to date.
+            self.context.exit_on_error = self._settings["exit_on_error"]
+
             settings = self._settings
             mangle_names = settings["mangle_names"]
             del settings["mangle_names"]
+
+            # Compiling.
             ast = lex_parse.main(inp, **settings)
-            nc_ast = name_checking.main(ast, **settings)
-            tc_ast = type_checking.main(nc_ast, **settings)
+            nc_ast = name_checking.main(ast, context=self.context)
+            tc_ast = type_checking.main(nc_ast, context=self.context)
             if mangle_names:
                 nm_ast = name_mangling.main(tc_ast, file_hash="FILEHASH")
                 print(nm_ast)
