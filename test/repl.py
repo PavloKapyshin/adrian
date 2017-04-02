@@ -10,6 +10,7 @@ from margo import name_mangling
 
 
 class REPL(cmd.Cmd):
+    _AVAILABLE_SETTINGS = ("exit_on_error", "mangle_names")
     intro = "This is Adrian testing REPL.\n"
     prompt = ">>> "
     _settings = {"exit_on_error": True, "mangle_names": False}
@@ -22,6 +23,9 @@ class REPL(cmd.Cmd):
                 self._settings[key] = eval(value)
         else:
             print(self._settings)
+
+    def complete_settings(self, text, line, begindx, endidx):
+        return [i for i in self._AVAILABLE_SETTINGS if i.startswith(text)]
 
     def do_eval(self, inp):
         try:
@@ -53,6 +57,7 @@ class REPL(cmd.Cmd):
 
     do_quit = do_exit
     do_set = do_settings
+    complete_set = complete_settings
 
 
 if __name__ == "__main__":
