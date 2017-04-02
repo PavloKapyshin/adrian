@@ -45,9 +45,9 @@ class REPL(cmd.Cmd):
                 print(nm_ast)
             else:
                 print(tc_ast)
-            self._settings["mangle_names"] = mangle_names
         except errors.CompilationError as e:
-            pass
+            print(e.message)
+        self._settings["mangle_names"] = mangle_names
 
     def do_exit(self, arg):
         sys.exit(0)
