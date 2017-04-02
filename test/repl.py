@@ -1,53 +1,38 @@
+import ast
 import cmd
 import sys
 
-from margo import ast
-from margo import errors
-from margo import lex_parse
-from margo import name_checking
-from margo import type_checking
-from margo import name_mangling
+import margo
 
 
 class REPL(cmd.Cmd):
     _AVAILABLE_SETTINGS = ("exit_on_error", "mangle_names")
     intro = "This is Adrian testing REPL.\n"
     prompt = ">>> "
-    _settings = {"exit_on_error": True, "mangle_names": False}
-    context = ast.Context(_settings["exit_on_error"])
+    settings = {"exit_on_error": True, "mangle_names": False}
+    context = margo.ast.Context(exit_on_error=settings["exit_on_error"])
 
     def do_settings(self, settings):
         if settings:
             for kw in settings.split(" "):
                 key, value = kw.split("=")
-                self._settings[key] = eval(value)
+                self.settings[key] = ast.literal_eval(value)
         else:
-            print(self._settings)
+            print(self.settings)
 
     def complete_settings(self, text, line, begindx, endidx):
         return [i for i in self._AVAILABLE_SETTINGS if i.startswith(text)]
 
     def do_eval(self, inp):
         try:
-            # Keep settings up to date.
-            self.context.exit_on_error = self._settings["exit_on_error"]
-
-            settings = self._settings
-            mangle_names = settings["mangle_names"]
-            del settings["mangle_names"]
-
-            # Compiling.
-            ast = lex_parse.main(inp, **settings)
-            nc_ast = name_checking.main(ast, context=self.context)
-            tc_ast = type_checking.main(nc_ast, context=self.context)
-            if mangle_names:
-                nm_ast = name_mangling.main(tc_ast, file_hash="FILEHASH")
-                print(nm_ast)
-            else:
-                print(tc_ast)
-        except errors.CompilationError as e:
-            print(e.message)
-        self._settings["mangle_names"] = mangle_names
+            # Keep context up to date.
+            self.context.exit_on_error = self.settings["exit_on_error"]
+            # Compile.
+            margo.compile(
+                inp, self.context,
+                mangle_names=self.settings["mangle_names"])
+        except margo.errors.CompilationError as e:
+            print(e.message, file=sys.stderr)
 
     def do_exit(self, arg):
         sys.exit(0)
