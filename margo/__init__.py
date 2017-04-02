@@ -34,5 +34,5 @@ def compile_file(file_name, exit_on_error=True, mangle_names=False, encoding="ut
         compile(
             line, exit_on_error=exit_on_error,
             mangle_names=mangle_names, file_hash=_get_file_hash(file_name))
-        for line in _read_line(file_name, encoding)
+        for line in _read_file(file_name, encoding)
     ])
