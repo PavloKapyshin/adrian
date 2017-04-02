@@ -56,5 +56,6 @@ def _error(line, exit_on_error, msg, **keywords):
         base_msg = "Error: {0}."
     message = base_msg.format(msg.format_map(keywords))
     if exit_on_error:
+        print(message, file=sys.stderr)
         sys.exit(1)
     raise CompilationError(message)
