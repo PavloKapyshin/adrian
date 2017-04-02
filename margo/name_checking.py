@@ -12,8 +12,9 @@ _FUNCS = funcreg.TypeRegistry()
 def check_value(value, *, context):
     """Check that value (atom or a list of atoms) is valid."""
     if isinstance(value, defs.NAME_TYPES):
-        if not layers.name_exists(value, context=context):
-            errors.non_existing_name(context.line, context.exit_on_error, name=value)
+        if not layers.name_exists(value.value, context=context):
+            errors.non_existing_name(
+                context.line, context.exit_on_error, name=value.value)
         return value
     elif isinstance(value, defs.ATOM_TYPES):
         return value
@@ -37,12 +38,17 @@ def assignment(pair, *, context):
     if not layers.type_exists(name.type_, context=context):
         errors.non_existing_name(context.line, context.exit_on_error, name=name.type_)
     value = check_value(pair.stmt.value, context=context)
+    context.namespace.add_name(name.value, {
+        "node_type": defs.NodeType.variable,
+        "type": name.type_,
+        "value": value
+    })
     return ast.Pair(pair.line, ast.Assignment(name.value, name.type_, value))
 
 
-def check(pair, *, context):
-    return _FUNCS[pair.stmt](pair, context=context)
+def check(ast_, *, context):
+    return [_FUNCS[pair.stmt](pair, context=context) for pair in ast_]
 
 
 def main(ast_, *, exit_on_error=True):
-    return [check(pair, context=ast.Context(exit_on_error)) for pair in ast_]
+    return check(ast_, context=ast.Context(exit_on_error))

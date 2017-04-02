@@ -42,8 +42,8 @@ class _Namespace:
     def exists(self, name):
         return name in self._space[self._scope]
 
-    def get_name(self, name):
-        if self.exist(name):
+    def get(self, name):
+        if self.exists(name):
             return self._space[self._scope][name]
         return None
 

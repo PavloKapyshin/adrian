@@ -1,6 +1,13 @@
 """Contains many useful definitions."""
 
+import enum
+
 from . import ast
+
+
+@enum.unique
+class NodeType(enum.Enum):
+    variable = 1
 
 
 CALLABLE_ATOMS = (

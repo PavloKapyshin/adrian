@@ -11,15 +11,15 @@ _FUNCS = funcreg.TypeRegistry()
 
 def str_type(value, *, context):
     if isinstance(value, defs.NAME_TYPES):
-        return value.type_
+        entry = context.namespace.get(value.value)
+        if entry:
+            return entry["type"]
     return value.to_string()
 
 
 def check_type_of_value(value, *, context):
     """Validate value (atom or a list of atoms) and return its type."""
     if isinstance(value, defs.NAME_TYPES):
-        if not layers.name_exists(value, context=context):
-            errors.non_existing_name(context.line, context.exit_on_error, name=value)
         return str_type(value, context=context)
     elif isinstance(value, defs.ATOM_TYPES):
         return str_type(value, context=context)
@@ -78,12 +78,17 @@ def assignment(pair, *, context):
         errors.type_of_name_and_type_of_value_are_not_equal(
             context.line, context.exit_on_error, name=name.value,
             type_of_name=name.type_, type_of_value=type_of_value)
+    context.namespace.add_name(name.value, {
+        "node_type": defs.NodeType.variable,
+        "type": name.type_,
+        "value": stmt.value
+    })
     return ast.Pair(pair.line, ast.Assignment(name.value, name.type_, stmt.value))
 
 
-def check(pair, *, context):
-    return _FUNCS[pair.stmt](pair, context=context)
+def check(ast_, *, context):
+    return [_FUNCS[pair.stmt](pair, context=context) for pair in ast_]
 
 
 def main(ast_, *, exit_on_error=True):
-    return [check(pair, context=ast.Context(exit_on_error)) for pair in ast_]
+    return check(ast_, context=ast.Context(exit_on_error))
