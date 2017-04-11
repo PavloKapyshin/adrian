@@ -61,24 +61,6 @@ class Context:
         self.exit_on_error = exit_on_error
 
 
-class Type(_Atom):
-    _keys = ("value", )
-
-    def __init__(self, value):
-        self.value = value
-
-
-class _UnknownType:
-
-    def __str__(self):
-        return "UnknownType"
-
-    __repr__ = __str__
-
-
-UnknownType = _UnknownType()
-
-
 class _Value(_Atom):
     _keys = ("value", )
 
@@ -111,17 +93,25 @@ class _Name(_Atom):
     Is used to represent:
      - variable
      - constant
+     - type
 
     """
-    _keys = ("value", "type_")
+    _keys = ("value", )
 
-    def __init__(self, value, type_):
+    def __init__(self, value):
         self.value = value
-        self.type_ = type_
+
+
+class Name(_Name):
+    """Name in Adrian (lexing and parsing layer)."""
 
 
 class VariableName(_Name):
     """Variable name in Adrian."""
+
+
+class TypeName(_Name):
+    """Type name in Adrian."""
 
 
 class Assignment(_Atom):
@@ -134,8 +124,17 @@ class Assignment(_Atom):
         name            op
 
     """
-    _keys = ("name", "value")
+    _keys = ("name", "type_", "value")
 
     def __init__(self, name, type_, value):
-        self.name = VariableName(name, type_=type_ or UnknownType)
+        self.name = Name(name)
+        self.type_ = type_
         self.value = value
+
+
+class ModuleMember(_Atom):
+    _keys = ("module_name", "member")
+
+    def __init__(self, module_name, member):
+        self.module_name = module_name
+        self.member = member

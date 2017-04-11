@@ -25,8 +25,7 @@ reserved = {
 tokens = [
     "INTEGER",
     "STRING",
-    "VARIABLE_NAME",
-    "TYPE_NAME",
+    "NAME",
 
     "LP",       # (
     "RP",       # )
@@ -44,6 +43,7 @@ tokens = [
     "TIMES",    # *
     "DIVIDE",   # /
     "COLON",    # :
+    "HASHTAG",  # #
 ] + list(reserved.values())  # Reserved words are also tokens.
 
 
@@ -61,6 +61,8 @@ t_LT = r"<"
 t_GT = r">"
 t_EQUAL = r"="
 t_COLON = r":"
+t_HASHTAG = r"\#"
+
 t_PLUS = r"\+"
 t_MINUS = r"-"
 t_TIMES = r"\*"
@@ -80,15 +82,9 @@ def t_STRING(token):
     return token
 
 
-def t_VARIABLE_NAME(token):
-    r"""[a-z_]+[a-zA-Z0-9]*"""
-    token.type = reserved.get(token.value, "VARIABLE_NAME")  # Check for reserved words.
-    return token
-
-
-def t_TYPE_NAME(token):
-    r"""[A-Z_]+[a-zA-Z0-9]*"""
-    token.type = reserved.get(token.value, "TYPE_NAME")  # Check for reserved words.
+def t_NAME(token):
+    r"""[a-zA-Z_][a-z_A-Z0-9]*"""
+    token.type = reserved.get(token.value, "NAME")  # Check for reserved words.
     return token
 
 
@@ -168,43 +164,53 @@ def p_stmt(content):
     """
     # Atom_expr can be a func call.
     # atom_expr -> atom trailers
-    # func_call -> VARIABLE_NAME (args)
+    # func_call -> NAME (args)
     content[0] = content[1]
 
 
 # Assignment statement.
 def p_assignment_stmt_1(content):
-    """assignment_stmt : VAR VARIABLE_NAME COLON type assignop expr"""
+    """assignment_stmt : VAR NAME COLON type assignop bool_expr"""
     content[0] = ast.Assignment(
         name=content[2], type_=content[4], value=content[6])
 
 
 def p_assignment_stmt_2(content):
-    """assignment_stmt : VAR VARIABLE_NAME COLON type"""
+    """assignment_stmt : VAR NAME COLON type"""
     content[0] = ast.Assignment(
         name=content[2], type_=content[4], value=None)
 
 
 def p_assignment_stmt_3(content):
-    """assignment_stmt : VARIABLE_NAME assignop bool_expr"""
+    """assignment_stmt : NAME assignop bool_expr"""
     content[0] = ast.Assignment(
-        name=content[1], type_=ast.UnknownType, value=content[3])
+        name=content[1], type_=None, value=content[3])
 
 
 def p_assignment_stmt_4(content):
-    """assignment_stmt : VAR VARIABLE_NAME assignop bool_expr"""
+    """assignment_stmt : VAR NAME assignop bool_expr"""
     content[0] = ast.Assignment(
-        name=content[2], type_=ast.UnknownType, value=content[4])
-
+        name=content[2], type_=None, value=content[4])
 
 # Type.
 def p_type(content):
     """
     type : TYPE_INTEGER
          | TYPE_STRING
-         | TYPE_NAME
+         | name_from_module
     """
     content[0] = content[1]
+
+
+def p_name_from_module_1(content):
+    """name_from_module : NAME"""
+    content[0] = ast.Name(content[1])
+
+
+def p_name_from_module_2(content):
+    """name_from_module : NAME HASHTAG NAME"""
+    content[0] = ast.ModuleMember(
+        module_name=content[1], member=ast.Name(content[3]))
 
 
 # Assignment operator.
@@ -279,8 +285,8 @@ def p_atom_2(content):
 
 
 def p_atom_3(content):
-    """atom : VARIABLE_NAME"""
-    content[0] = ast.VariableName(content[1], type_=ast.UnknownType)
+    """atom : name_from_module"""
+    content[0] = content[1]
 
 
 def p_error(content):
