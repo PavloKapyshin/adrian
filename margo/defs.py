@@ -8,20 +8,18 @@ from . import ast
 @enum.unique
 class NodeType(enum.Enum):
     variable = 1
+    constant = 2
 
 
 CALLABLE_ATOMS = (
-    ast.VariableName,
-)
-
-NAME_TYPES = (
-    ast.VariableName,
+    ast.Name,
 )
 
 ATOM_TYPES = (
     ast.Integer,
     ast.String,
-) + NAME_TYPES
+    ast.Name,
+)
 
 STANDARD_FUNC_NAMES = (
     "print",

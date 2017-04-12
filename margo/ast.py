@@ -54,11 +54,12 @@ class _Namespace:
 
 class Context:
 
-    def __init__(self, exit_on_error):
+    def __init__(self, exit_on_error, module_paths):
         self.namespace = _Namespace()
         self.typespace = _Namespace()
         self.funcspace = _Namespace()
         self.exit_on_error = exit_on_error
+        self.module_paths = module_paths
 
 
 class _Value(_Atom):
@@ -82,12 +83,7 @@ class String(_Value):
     _string = "String"
 
 
-class CString(_Value):
-    """C string in compiler."""
-    _string = "CString"
-
-
-class _Name(_Atom):
+class Name(_Atom):
     """Name concept in Adrian.
 
     Is used to represent:
@@ -102,26 +98,14 @@ class _Name(_Atom):
         self.value = value
 
 
-class Name(_Name):
-    """Name in Adrian (lexing and parsing layer)."""
-
-
-class VariableName(_Name):
-    """Variable name in Adrian."""
-
-
-class TypeName(_Name):
-    """Type name in Adrian."""
-
-
 class Assignment(_Atom):
     """Declaration and (optionally) initialization of variable.
 
-                type_     value
+                 type_    value
                 vvvvvvv   vvvvv
     var my_lol: Integer = 1 + 2
         ^^^^^^          ^
-        name            op
+         name           op
 
     """
     _keys = ("name", "type_", "value")

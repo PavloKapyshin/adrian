@@ -90,5 +90,5 @@ def check(ast_, *, context):
     return [_FUNCS[pair.stmt](pair, context=context) for pair in ast_]
 
 
-def main(ast_, *, context=ast.Context(exit_on_error=True)):
+def main(ast_, *, context=ast.Context(exit_on_error=True, module_paths=["std_modules/"])):
     return check(ast_, context=context)

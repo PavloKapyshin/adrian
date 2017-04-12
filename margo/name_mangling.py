@@ -1,5 +1,6 @@
 from . import ast
 from . import defs
+from . import layers
 
 from vendor.paka import funcreg
 
@@ -9,11 +10,7 @@ _FUNCS = funcreg.TypeRegistry()
 
 def mangle(name, *, file_hash):
     if can_mangle(name):
-        return "_".join([
-            "adrian",
-            file_hash,
-            name
-        ])
+        return layers.mangle_name(name, file_hash=file_hash)
     return name
 
 

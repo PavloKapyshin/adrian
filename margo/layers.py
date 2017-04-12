@@ -15,3 +15,6 @@ def func_exists(func, *, context):
     """Check for existence of a function."""
     return func in defs.STANDARD_FUNC_NAMES or context.funcspace.exists(func)
 
+
+def mangle_name(name, *, file_hash):
+    return "_".join(["adrian", file_hash, name])

@@ -8,6 +8,7 @@ _SYNTAX_ERROR = "syntax error"
 _ILLEGAL_CHAR = "illegal character '{char}'"
 
 _NON_EXISTING_NAME = "non existing name '{name}'"
+_NON_EXISTING_NAME_IN_MODULE = "non existing name '{name}' in module '{module}'"
 _CANT_REASSIGN_BUILTIN = "can't reassign builtin '{name}'"
 
 _TYPE_OF_NAME_AND_TYPE_OF_VALUE_ARE_NOT_EQUAL = (
@@ -33,6 +34,10 @@ def illegal_char(line, exit_on_error, char):
 
 def non_existing_name(line, exit_on_error, name):
     _error(line, exit_on_error, _NON_EXISTING_NAME, name=name)
+
+
+def non_existing_name_in_module(line, exit_on_error, name, module):
+    _error(line, exit_on_error, _NON_EXISTING_NAME_IN_MODULE, name=name, module=module)
 
 
 def cant_reassign_builtin(line, exit_on_error, name):
