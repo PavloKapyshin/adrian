@@ -1,4 +1,4 @@
-[X] Add CGen layer
+[ ] Add module system to type_checking, name_mangling and cgen layers
+[ ] CGen: ctypes is not a module actually
 [ ] Add AdrOps and AdrTypes
 [ ] Test compiler
-[X] Deside to use one name class for all types of name or special class for each name type.
