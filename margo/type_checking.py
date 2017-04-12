@@ -10,7 +10,7 @@ _FUNCS = funcreg.TypeRegistry()
 
 
 def str_type(value, *, context):
-    if isinstance(value, defs.NAME_TYPES):
+    if isinstance(value, ast.Name):
         entry = context.namespace.get(value.value)
         if entry:
             return entry["type"]
@@ -19,7 +19,7 @@ def str_type(value, *, context):
 
 def check_type_of_value(value, *, context):
     """Validate value (atom or a list of atoms) and return its type."""
-    if isinstance(value, defs.NAME_TYPES):
+    if isinstance(value, ast.Name):
         return str_type(value, context=context)
     elif isinstance(value, defs.ATOM_TYPES):
         return str_type(value, context=context)
@@ -71,19 +71,21 @@ def _check_divide(type1, type2, *, context):
 @_FUNCS.register(ast.Assignment)
 def assignment(pair, *, context):
     stmt = pair.stmt
-    name = stmt.name
     context.line = pair.line
     type_of_value = check_type_of_value(stmt.value, context=context)
-    if (name.type_ != type_of_value) and not (type_of_value is None):
+    if isinstance(stmt.type_, ast.ModuleMember) and stmt.type_.module_name == "ctypes":
+        # TODO: remove all hardcoded parts (this means a very deep refactoring :)
+        pass
+    elif (stmt.type_ != type_of_value) and not (type_of_value is None):
         errors.type_of_name_and_type_of_value_are_not_equal(
-            context.line, context.exit_on_error, name=name.value,
-            type_of_name=name.type_, type_of_value=type_of_value)
-    context.namespace.add_name(name.value, {
+            context.line, context.exit_on_error, name=stmt.name.value,
+            type_of_name=stmt.type_, type_of_value=type_of_value)
+    context.namespace.add_name(stmt.name.value, {
         "node_type": defs.NodeType.variable,
-        "type": name.type_,
+        "type": type_of_value,
         "value": stmt.value
     })
-    return ast.Pair(pair.line, ast.Assignment(name.value, name.type_, stmt.value))
+    return ast.Pair(pair.line, ast.Assignment(stmt.name.value, stmt.type_, stmt.value))
 
 
 def check(ast_, *, context):
