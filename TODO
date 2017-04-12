@@ -1,4 +1,6 @@
-[ ] Add module system to type_checking, name_mangling and cgen layers
+[ ] Add module system to name_mangling layer
+[ ] Add module system to cgen layer
 [ ] CGen: ctypes is not a module actually
 [ ] Add AdrOps and AdrTypes
 [ ] Test compiler
+[X] Add module system to type_checking layer
