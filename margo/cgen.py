@@ -2,20 +2,35 @@ from . import ast
 from . import defs
 
 from vendor.paka import funcreg
-from vendor.adrian import cgen.objects
+from vendor.adrian.cgen import objects
 
 
 _FUNCS = funcreg.TypeRegistry()
 
 
-def _generate_value(value):
-    if isinstance(value, defs.NAME_TYPES):
-        return cgen.objects.Var(value.value)
+def ctype(type_):
+    if type_.module_name == "ctypes":
+        _d = {
+            "Int32": objects.CTypes.int32,
+            "Int64": objects.CTypes.int64,
+            "Char": objects.CTypes.char
+        }
+        return _d[type_.member.value]
+
+
+def _generate_value(value, type_):
+    if isinstance(value, ast.Name):
+        return objects.Var(value.value)
     elif isinstance(value, defs.ATOM_TYPES):
-        return cgen.objects.Val(value.value, )  # TODO: Type?
+        # TODO: only ctypes type is supported
+        return objects.Val(value.value, ctype(type_))
     elif isinstance(value, list):
-        return cgen.objects.FuncCall( , _generate_value(value[1]),    # TODO: Operator?
-            _generate_value(value[2]))
+        # TODO: only ctypes type is supported
+        return objects.Expr(
+            value[0],
+            _generate_value(value[1], type_),
+            _generate_value(value[2], type_)
+        )
 
 
 def generate_value(stmt):
@@ -27,17 +42,17 @@ generate_value.registry = funcreg.TypeRegistry()
 
 @generate_value.registry.register(ast.Assignment)
 def _generate_assignment_value(stmt):
-    return _generate_value(stmt.value)
+    return _generate_value(stmt.value, stmt.type_)
 
 
 @_FUNCS.register(ast.Assignment)
-def assignment(pair):
-    return cgen.objects.Decl(pair.stmt.name.value, generate_value(pair.stmt))
+def assignment(pair, *, context):
+    return objects.Decl(pair.stmt.name.value, generate_value(pair.stmt))
 
 
 def generate(ast_, *, context):
     return [_FUNCS[pair.stmt](pair, context=context) for pair in ast_]
 
 
-def main(ast_, *, context=ast.Context(exit_on_error=True)):
+def main(ast_, *, context=ast.Context(exit_on_error=True, module_paths=["std_modules/"])):
     return generate(ast_, context=context)
