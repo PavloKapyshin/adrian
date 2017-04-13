@@ -19,10 +19,13 @@ def can_mangle(name):
 
 
 def translate_value(value, *, file_hash):
-    if isinstance(value, defs.NAME_TYPES):
+    if isinstance(value, ast.Name):
         return mangle(value.value, file_hash=file_hash)
     elif isinstance(value, defs.ATOM_TYPES):
         return value
+    elif isinstance(value, ast.ModuleMember):
+        if value.module_name == "ctypes":
+            return value
     elif isinstance(value, list):
         return [
             value[0],
@@ -34,12 +37,15 @@ def translate_value(value, *, file_hash):
 @_FUNCS.register(ast.Assignment)
 def assignment(pair, *, file_hash):
     """var NAME: TYPE = 2 + NAME"""
-    name = pair.stmt.name
-    new_name = mangle(name.value, file_hash=file_hash)
-    new_type = mangle(name.type_, file_hash=file_hash)
+    stmt = pair.stmt
+    new_name = mangle(stmt.name.value, file_hash=file_hash)
+    if isinstance(stmt.type_, ast.ModuleMember) and (stmt.type_.module_name == "ctypes"):
+        new_type = stmt.type_
+    else:
+        new_type = mangle(stmt.type_, file_hash=file_hash)
     new_value = None
-    if pair.stmt.value:
-        new_value = translate_value(pair.stmt.value, file_hash=file_hash)
+    if stmt.value:
+        new_value = translate_value(stmt.value, file_hash=file_hash)
     return ast.Pair(pair.line, ast.Assignment(new_name, new_type, new_value))
 
 
