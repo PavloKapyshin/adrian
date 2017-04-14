@@ -7,7 +7,12 @@ import sys
 _SYNTAX_ERROR = "syntax error"
 _ILLEGAL_CHAR = "illegal character '{char}'"
 
+_BAD_NAME_FOR_VARIABLE = "bad name '{name}' for variable"
+_BAD_NAME_FOR_CONSTANT = "bad name '{name}' for constant"
+_BAD_NAME_FOR_TYPE = "bad name '{name}' for type"
+
 _NON_EXISTING_NAME = "non existing name '{name}'"
+_NON_EXISTING_MODULE = "non existing module '{module}'"
 _NON_EXISTING_NAME_IN_MODULE = "non existing name '{name}' in module '{module}'"
 _CANT_REASSIGN_BUILTIN = "can't reassign builtin '{name}'"
 
@@ -32,8 +37,24 @@ def illegal_char(line, exit_on_error, char):
     _error(line, exit_on_error, _ILLEGAL_CHAR, char=char)
 
 
+def bad_name_for_variable(line, exit_on_error, name):
+    _error(line, exit_on_error, _BAD_NAME_FOR_VARIABLE, name=name)
+
+
+def bad_name_for_constant(line, exit_on_error, name):
+    _error(line, exit_on_error, _BAD_NAME_FOR_CONSTANT, name=name)
+
+
+def bad_name_for_type(line, exit_on_error, name):
+    _error(line, exit_on_error, _BAD_NAME_FOR_TYPE, name=name)
+
+
 def non_existing_name(line, exit_on_error, name):
     _error(line, exit_on_error, _NON_EXISTING_NAME, name=name)
+
+
+def non_existing_module(line, exit_on_error, module):
+    _error(line, exit_on_error, _NON_EXISTING_MODULE, module=module)
 
 
 def non_existing_name_in_module(line, exit_on_error, name, module):

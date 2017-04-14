@@ -58,6 +58,7 @@ class Context:
         self.namespace = _Namespace()
         self.typespace = _Namespace()
         self.funcspace = _Namespace()
+        self.includes = []
         self.exit_on_error = exit_on_error
         self.module_paths = module_paths
 
