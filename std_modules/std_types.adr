@@ -1,0 +1,52 @@
+-- ctypes#String is an alias for ctypes#Array(ctypes#Char)
+-- Self is an alias for structs type
+
+struct String {
+    var length: ctypes#Int64
+    var string: ctypes#String
+
+    func init(self: Self; string: ctypes#String) {
+        self.string = string
+        self.length = c#strlen(string)
+    }
+
+    func del(self: Self; index: ctypes#Int64) {}
+    func get(self: Self; index: ctypes#Int64): ctypes#Char {}
+    func push(self: Self; index: ctypes#Int64; char: ctypes#Char) {}
+
+    func reverse(self: Self): Self {}
+}
+
+
+const ZERO_SIGN = 1
+const POSITIVE_SIGN = 2
+const NEGATIVE_SIGN = 3
+
+
+struct Integer {
+    var sign: ctypes#Int32
+    var digits: ctypes#String
+
+    func init(self: Self; digits: ctypes#String) {
+        -- only positive integers and zero are supported
+        self.digits = digits
+        if self.digits == "0" {
+            self.sign = ZERO_SIGN
+        } else {
+            self.sign = POSITIVE_SIGN
+        }
+    }
+}
+
+
+func add(int1, int2: Integer): Integer {}
+func sub(int1, int2: Integer): Integer {}
+func mul(int1, int2: Integer): Integer {}
+func divFloat(int1, int2: Integer): Float {}
+func divInteger(int1, int2: Integer): Integer {}
+
+
+alias + add
+alias - sub
+alias * mul
+alias / (divFloat, divInteger)
