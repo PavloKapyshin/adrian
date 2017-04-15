@@ -37,3 +37,6 @@ VARIABLE_REGEX = re.compile(r"[a-z_][a-zA-Z0-9]*")
 CONSTANT_REGEX = re.compile(r"[A-Z_][A-Z_0-9]*")
 
 CTYPES_MODULE_NAME = "ctypes"
+CTYPES_INT32_STRING = "Int32"
+CTYPES_INT64_STRING = "Int64"
+CTYPES_CHAR_STRING = "Char"
