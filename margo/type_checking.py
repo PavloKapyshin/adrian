@@ -64,7 +64,7 @@ def assignment(pair, *, context):
     context.line = pair.line
     type_of_value = get_type_of_value(stmt.value, context=context)
     if (isinstance(stmt.type_, ast.ModuleMember) and \
-            stmt.type_.module_name == "ctypes"):
+            stmt.type_.module_name == defs.CTYPES_MODULE_NAME):
         _d = {
             defs.CTYPES_INT32_STRING: ast.Integer.to_string(),
             defs.CTYPES_INT64_STRING: ast.Integer.to_string(),

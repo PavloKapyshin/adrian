@@ -9,14 +9,27 @@ from paka import funcreg
 
 CKEYWORDS = (
     "while",
-)
+    )
 
 CTYPES = (
     "int",
-)
+    )
 
 
 _FUNCS = funcreg.TypeRegistry()
+
+
+@_FUNCS.register(objects.Val)
+def val(stmt, context):
+    if isinstance(stmt.type_, (
+            type(objects.CTypes.int32), type(objects.CTypes.int64))):
+        if stmt.literal[0] == "0" and len(stmt.literal) > 1:
+            errors.bad_literal(stmt.literal)
+        good_int = re.compile(r"^[0-9]+$")
+        if not good_int.match(stmt.literal):
+            errors.bad_literal(stmt.literal)
+    else:
+        errors.not_implemented()
 
 
 @_FUNCS.register(objects.Var)
@@ -27,7 +40,7 @@ def var(stmt, context):
     if match and stmt.name not in CKEYWORDS and stmt.name not in CTYPES:
         pass
     else:
-        errors.bad_name(name=stmt.name)
+        errors.bad_name(stmt.name)
 
 
 def main(ast_):

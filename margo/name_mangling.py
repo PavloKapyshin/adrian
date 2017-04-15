@@ -25,7 +25,7 @@ def translate_value(value, *, file_hash):
     elif isinstance(value, defs.ATOM_TYPES):
         return value
     elif isinstance(value, ast.ModuleMember):
-        if value.module_name == "ctypes":
+        if value.module_name == defs.CTYPES_MODULE_NAME:
             return value
     elif isinstance(value, list):
         return [
@@ -41,7 +41,7 @@ def assignment(pair, *, file_hash):
     stmt = pair.stmt
     new_name = mangle(stmt.name.value, file_hash=file_hash)
     if (isinstance(stmt.type_, ast.ModuleMember) and \
-            (stmt.type_.module_name == "ctypes")):
+            (stmt.type_.module_name == defs.CTYPES_MODULE_NAME)):
         new_type = stmt.type_
     else:
         new_type = mangle(stmt.type_, file_hash=file_hash)
