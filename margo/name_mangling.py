@@ -15,7 +15,8 @@ def mangle(name, *, file_hash):
 
 
 def can_mangle(name):
-    return not (name in defs.STANDARD_FUNC_NAMES or name in defs.STANDARD_TYPE_NAMES)
+    return (not (name in defs.STANDARD_FUNC_NAMES or \
+            name in defs.STANDARD_TYPE_NAMES))
 
 
 def translate_value(value, *, file_hash):
@@ -39,7 +40,8 @@ def assignment(pair, *, file_hash):
     """var NAME: TYPE = 2 + NAME"""
     stmt = pair.stmt
     new_name = mangle(stmt.name.value, file_hash=file_hash)
-    if isinstance(stmt.type_, ast.ModuleMember) and (stmt.type_.module_name == "ctypes"):
+    if (isinstance(stmt.type_, ast.ModuleMember) and \
+            (stmt.type_.module_name == "ctypes")):
         new_type = stmt.type_
     else:
         new_type = mangle(stmt.type_, file_hash=file_hash)
