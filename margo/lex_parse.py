@@ -1,6 +1,7 @@
 """Lex and parse input and return low-level AST."""
 
 import sys
+import collections
 
 from vendor.ply import lex
 from vendor.ply import yacc
@@ -12,14 +13,22 @@ from . import errors
 
 # Lexer defs.
 # Reserved words.
-reserved = {
+reserved = collections.OrderedDict({
     "var": "VAR",
+    "fun": "FUN",
     "struct": "STRUCT",
+    "return": "RETURN",
+
+    # CTypes.
+    defs.CTYPES_MODULE_NAME + "#" + defs.CTYPES_INT32_STRING: "TYPE_INT32",
+    defs.CTYPES_MODULE_NAME + "#" + defs.CTYPES_INT64_STRING: "TYPE_INT64",
+    defs.CTYPES_MODULE_NAME + "#" + defs.CTYPES_CSTRING_STRING: "TYPE_CSTRING",
+    defs.CTYPES_MODULE_NAME + "#" + defs.CTYPES_CHAR_STRING: "TYPE_CHAR",
 
     # Standard types.
     "Integer": "TYPE_INTEGER",
     "String": "TYPE_STRING",
-}
+})
 
 
 # List of tokens.
@@ -46,6 +55,9 @@ tokens = [
     "TIMES",    # *
     "DIVIDE",   # /
     "COLON",    # :
+    "SEMI",     # ;
+    "COMMA",    # ,
+    "PERIOD",   # .
     "HASHTAG",  # #
 ] + list(reserved.values())  # Reserved words are also tokens.
 
@@ -66,6 +78,9 @@ t_LT = r"<"
 t_GT = r">"
 t_EQUAL = r"="
 t_COLON = r":"
+t_SEMI = r";"
+t_COMMA = r","
+t_PERIOD = r"\."
 t_HASHTAG = r"\#"
 
 t_PLUS = r"\+"
@@ -165,8 +180,10 @@ def p_pair(content):
 # Statement.
 def p_stmt(content):
     """
-    stmt : assignment_stmt
-         | struct_stmt
+    stmt : decl_stmt
+         | assignment_stmt
+         | struct_decl_stmt
+         | func_decl_stmt
     """
     # Atom_expr can be a func call.
     # atom_expr -> atom trailers
@@ -174,15 +191,84 @@ def p_stmt(content):
     content[0] = content[1]
 
 
-# Struct statement.
-def p_struct_stmt(content):
-    """struct_stmt : STRUCT NAME LBRACE struct_body RBRACE"""
+# Return statement.
+def p_return_stmt(content):
+    """return_stmt : RETURN bool_expr"""
+    content[0] = ast.ReturnStmt(value=content[2])
+
+
+# Function declaration statement.
+def p_func_decl_stmt_1(content):
+    """
+    func_decl_stmt : FUN NAME LP args RP COLON type LBRACE func_body RBRACE
+    """
+    content[0] = ast.FuncDecl(
+        name=content[2], args=content[4], type_=content[7], body=content[9])
+
+
+def p_func_decl_stmt_2(content):
+    """func_decl_stmt : FUN NAME LP args RP LBRACE func_body RBRACE"""
+    content[0] = ast.FuncDecl(
+        name=content[2], args=content[4], type_=None, body=content[7])
+
+
+# Function body.
+def p_func_body_1(content):
+    """func_body : func_body func_body_stmt"""
+    content[0] = content[1] + [content[2]]
+
+
+def p_func_body_2(content):
+    """func_body : empty"""
+    content[0] = []
+
+
+# Function body statement.
+def p_func_body_stmt(content):
+    """func_body_stmt : decl_stmt
+                      | assignment_stmt
+                      | return_stmt
+    """
+    content[0] = content[1]
+
+
+# Function arguments.
+def p_args_1(content):
+    """args : args SEMI args"""
+    content[0] = content[1] + content[3]
+
+
+def p_arg_2(content):
+    """args : arg_names COLON type"""
+    content[0] = []
+    for name in content[1]:
+        content[0].append(ast.Arg(name=name, type_=content[3]))
+
+
+def p_args_3(content):
+    """args : empty"""
+    content[0] = []
+
+
+# Argument names.
+def p_arg_names_1(content):
+    """arg_names : NAME COMMA arg_names"""
+    content[0] = [content[1]] + content[3]
+
+def p_arg_names_2(content):
+    """arg_names : NAME"""
+    content[0] = [content[1]]
+
+
+# Struct declaration statement.
+def p_struct_decl_stmt(content):
+    """struct_decl_stmt : STRUCT NAME LBRACE struct_body RBRACE"""
     content[0] = ast.StructDecl(name=content[2], body=content[4])
 
 
 # Struct body.
 def p_struct_body_1(content):
-    """struct_body : struct_body assignment_stmt"""
+    """struct_body : struct_body struct_body_stmt"""
     content[0] = content[1] + [content[2]]
 
 
@@ -191,40 +277,65 @@ def p_struct_body_2(content):
     content[0] = []
 
 
-# Assignment statement.
-def p_assignment_stmt_1(content):
-    """assignment_stmt : VAR NAME COLON type assignop bool_expr"""
-    content[0] = ast.Assignment(
-        name=content[2], type_=content[4], value=content[6])
+# Struct body statement.
+def p_struct_body_stmt(content):
+    """struct_body_stmt : decl_stmt
+                        | func_decl_stmt
+    """
+    content[0] = content[1]
 
 
-def p_assignment_stmt_2(content):
-    """assignment_stmt : VAR NAME COLON type"""
-    content[0] = ast.Assignment(
-        name=content[2], type_=content[4], value=None)
+# Variable declaration statement.
+def p_decl_stmt_1(content):
+    """decl_stmt : VAR NAME COLON type EQUAL bool_expr"""
+    content[0] = ast.Decl(
+        name=ast.Name(content[2]), type_=content[4], value=content[6])
 
 
-def p_assignment_stmt_3(content):
-    """assignment_stmt : NAME assignop bool_expr"""
-    content[0] = ast.Assignment(
-        name=content[1], type_=None, value=content[3])
+def p_decl_stmt_2(content):
+    """decl_stmt : VAR NAME COLON type"""
+    content[0] = ast.Decl(
+        name=ast.Name(content[2]), type_=content[4], value=None)
 
 
-def p_assignment_stmt_4(content):
-    """assignment_stmt : VAR NAME assignop bool_expr"""
-    content[0] = ast.Assignment(
-        name=content[2], type_=None, value=content[4])
+def p_decl_stmt_3(content):
+    """decl_stmt : VAR NAME EQUAL bool_expr"""
+    content[0] = ast.Decl(
+        name=ast.Name(content[2]), type_=None, value=content[4])
+
+
+# Variable assignment statement.
+def p_assignment_stmt(content):
+    """assignment_stmt : name_from_struct assignop bool_expr"""
+    content[0] = ast.Assignment(name=content[1], op=content[2], value=content[3])
+
 
 # Type.
 def p_type(content):
     """
     type : TYPE_INTEGER
          | TYPE_STRING
+         | TYPE_INT32
+         | TYPE_INT64
+         | TYPE_CSTRING
+         | TYPE_CHAR
          | name_from_module
     """
     content[0] = content[1]
 
 
+# Name from struct.
+def p_name_from_struct_1(content):
+    """name_from_struct : NAME"""
+    content[0] = ast.Name(content[1])
+
+
+def p_name_from_struct_2(content):
+    """name_from_struct : name_from_struct PERIOD NAME"""
+    content[0] = ast.StructElem(struct_name=content[1], elem=content[3])
+
+
+# Name from module.
 def p_name_from_module_1(content):
     """name_from_module : NAME"""
     content[0] = ast.Name(content[1])

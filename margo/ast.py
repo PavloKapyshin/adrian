@@ -99,6 +99,37 @@ class Name(_Atom):
         self.value = value
 
 
+class ReturnStmt(_Atom):
+    """Return statement.
+
+    return 1 + 2
+           ^^^^^
+           value
+    """
+    _keys = ("value", )
+
+    def __init__(self, value):
+        self.value = value
+
+
+class FuncDecl(_Atom):
+    """Declaration of function.
+
+         name                                      type_
+        vvvvvv                                  vvvvvvvvvv
+    fun myFunc(arg1: Type1; arg2, arg3: Type2): ReturnType {...}
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^               ^^^
+                           args                             body
+    """
+    _keys = ("name", "args", "type_", "body")
+
+    def __init__(self, name, args, type_, body):
+        self.name = name
+        self.args = args
+        self.type_ = type_
+        self.body = body
+
+
 class StructDecl(_Atom):
     """Declaration of struct.
             name
@@ -116,21 +147,39 @@ class StructDecl(_Atom):
         self.body = body
 
 
-class Assignment(_Atom):
+class Decl(_Atom):
     """Declaration and (optionally) initialization of variable.
 
-                type_    value
-               vvvvvvv   vvvvv
+                type_
+               vvvvvvv
     var myVar: Integer = 1 + 2
-        ^^^^^          ^
-        name           op
+        ^^^^^            ^^^^^
+        name             value
 
     """
     _keys = ("name", "type_", "value")
 
     def __init__(self, name, type_, value):
-        self.name = Name(name)
+        self.name = name
         self.type_ = type_
+        self.value = value
+
+
+class Assignment(_Atom):
+    """Assign value to already existing variable.
+
+          op
+          v
+    myVar = 1 + 2
+    ^^^^^   ^^^^^
+    name    value
+
+    """
+    _keys = ("name", "op", "value")
+
+    def __init__(self, name, op, value):
+        self.name = name
+        self.op = op
         self.value = value
 
 
@@ -140,3 +189,11 @@ class ModuleMember(_Atom):
     def __init__(self, module_name, member):
         self.module_name = module_name
         self.member = member
+
+
+class StructElem(_Atom):
+    _keys = ("struct_name", "elem")
+
+    def __init__(self, struct_name, elem):
+        self.struct_name = struct_name
+        self.elem = elem
