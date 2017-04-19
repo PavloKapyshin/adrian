@@ -14,6 +14,7 @@ from . import errors
 # Reserved words.
 reserved = {
     "var": "VAR",
+    "struct": "STRUCT",
 
     # Standard types.
     "Integer": "TYPE_INTEGER",
@@ -29,6 +30,8 @@ tokens = [
 
     "LP",       # (
     "RP",       # )
+    "LBRACE",   # {
+    "RBRACE",   # }
 
     "EQ",       # ==
     "LE",       # <=
@@ -56,6 +59,8 @@ t_NE = r"!="
 
 t_LP = r"\("
 t_RP = r"\)"
+t_LBRACE = r"\{"
+t_RBRACE = r"\}"
 
 t_LT = r"<"
 t_GT = r">"
@@ -161,11 +166,29 @@ def p_pair(content):
 def p_stmt(content):
     """
     stmt : assignment_stmt
+         | struct_stmt
     """
     # Atom_expr can be a func call.
     # atom_expr -> atom trailers
     # func_call -> NAME (args)
     content[0] = content[1]
+
+
+# Struct statement.
+def p_struct_stmt(content):
+    """struct_stmt : STRUCT NAME LBRACE struct_body RBRACE"""
+    content[0] = ast.StructDecl(name=content[2], body=content[4])
+
+
+# Struct body.
+def p_struct_body_1(content):
+    """struct_body : struct_body assignment_stmt"""
+    content[0] = content[1] + [content[2]]
+
+
+def p_struct_body_2(content):
+    """struct_body : empty"""
+    content[0] = []
 
 
 # Assignment statement.
@@ -287,6 +310,11 @@ def p_atom_2(content):
 def p_atom_3(content):
     """atom : name_from_module"""
     content[0] = content[1]
+
+
+# Empty rule.
+def p_empty(content):
+    """empty :"""
 
 
 def p_error(content):

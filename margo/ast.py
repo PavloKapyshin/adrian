@@ -99,6 +99,23 @@ class Name(_Atom):
         self.value = value
 
 
+class StructDecl(_Atom):
+    """Declaration of struct.
+            name
+           vvvvvv
+    struct MyType {
+        var length: Integer    < body
+        var data: String       < body
+    }
+    """
+
+    _keys = ("name", "body")
+
+    def __init__(self, name, body):
+        self.name = name
+        self.body = body
+
+
 class Assignment(_Atom):
     """Declaration and (optionally) initialization of variable.
 
@@ -109,6 +126,7 @@ class Assignment(_Atom):
          name           op
 
     """
+    # TODO: change name in docstring according to naming rules
     _keys = ("name", "type_", "value")
 
     def __init__(self, name, type_, value):
