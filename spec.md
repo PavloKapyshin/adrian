@@ -161,4 +161,6 @@ Or `stmts` can consists of any statement exclude constant decalaration and inclu
 
 Write about:
 [ ] If, elif and else
-[ ] Naming rules
+[ ] Structs and type naming rules
+[ ] Constants
+[ ] Modules
