@@ -30,9 +30,9 @@ var myVar: Integer
 
 ```adrian
 -- These functions are equivalent:
-func myFunc(): Integer {}
+fun myFunc(): Integer {}
 
-func myFunc(): Integer {
+fun myFunc(): Integer {
 	return 0
 }
 ```
@@ -69,11 +69,11 @@ Type of name and type of value must be equal. Variable must be declarated before
 ## Function declaration
 
 ```adrian
-func n(args): t {
+fun n(args): t {
 	stmts
 }
 
-func n(args) {
+fun n(args) {
 	stmts
 }
 ```
@@ -86,11 +86,11 @@ Where `n` is a function name, `t` is an optional return type, `args` is a list o
 `args` can be empty:
 
 ```adrian
-func n() {}
+fun n() {}
 ```
 
 ```adrian
-func n(arg1: t1; arg2, arg3: t2) {}
+fun n(arg1: t1; arg2, arg3: t2) {}
 ```
 
 Where `arg1` has type `t1`, `arg2` and `arg3` have type `t2`. Different groups of
@@ -103,7 +103,7 @@ the function declaration are written.
 `stmts` can be empty:
 
 ```adrian
-func n() {}
+fun n() {}
 ```
 
 Or `stmts` can consists of any statement exclude constant decalaration and include return statement.
