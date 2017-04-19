@@ -119,14 +119,13 @@ class StructDecl(_Atom):
 class Assignment(_Atom):
     """Declaration and (optionally) initialization of variable.
 
-                 type_    value
-                vvvvvvv   vvvvv
-    var my_lol: Integer = 1 + 2
-        ^^^^^^          ^
-         name           op
+                type_    value
+               vvvvvvv   vvvvv
+    var myVar: Integer = 1 + 2
+        ^^^^^          ^
+        name           op
 
     """
-    # TODO: change name in docstring according to naming rules
     _keys = ("name", "type_", "value")
 
     def __init__(self, name, type_, value):
