@@ -1,6 +1,55 @@
 # Adrian Language Specification
 
 
+## Naming rules
+
+Names must be named according to this rules.
+
+All names must be informative.
+
+### Variables
+
+Regular expression for matching variable names: `[a-z_][a-zA-Z0-9]*`.
+Variable name cannot be a reserved name.
+
+Underscore in the beginning means private variable.
+
+Variables are named using camel case.
+
+```adrian
+-- Good names:
+var myVeryLongName: None
+var _myPrivateName: None
+var short: None
+var _var1: None
+
+-- Bad names:
+var my_bad_name: None
+var _my_bad_private_name: None
+var var: None
+```
+
+### Functions
+
+Regular expression for matching function names: `[a-z_][a-zA-Z0-9]*`.
+Function name cannot be a reserved name.
+
+Underscore in the beginning means private function.
+
+Functions are named using camel case.
+
+```adrian
+-- Good names:
+fun _privateFunc(): None {}
+fun publicFunc(): None {}
+fun _func12(): None {}
+
+-- Bad names:
+func _bad_func(): None {}
+func bad_Func(): None {}
+```
+
+
 ## Default values
 
 When value is not provided, the types are used for providing default value.
