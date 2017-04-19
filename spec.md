@@ -1,6 +1,42 @@
 # Adrian Language Specification
 
 
+## Default values
+
+When value is not provided, the types are used for providing default value.
+
+Default values for standard types:
+
+```
+| Type Name | Default value |
+|-----------+---------------|
+| Integer   | 0             |
+| String    | ""            |
+| Decimal   | 0             |
+| Bool      | False         |
+| Vector    | []            |
+| Set       | ()            |
+| Dict      | {}            |
+| None      | None          |
+```
+
+### Examples
+
+```adrian
+-- These variable declarations are equivalent:
+var myVar: Integer = 0
+var myVar: Integer
+```
+
+```adrian
+-- These functions are equivalent:
+func myFunc(): Integer {}
+
+func myFunc(): Integer {
+	return 0
+}
+```
+
 ## Variable declaration
 
 ```adrian
@@ -10,7 +46,7 @@ var n: t
 
 Where `n` is a variable name, `t` is a type name and `v` is an optional value.
 
-Type of name and type of value must be equal.
+Type of name and type of value must be equal. When `v` is not provided variable will be initialized using default value.
 
 ```adrian
 var n = v
@@ -70,7 +106,7 @@ the function declaration are written.
 func n() {}
 ```
 
-Or `stmts` can consists of any statement except constant decalaration and include return statement.
+Or `stmts` can consists of any statement exclude constant decalaration and include return statement.
 
 ## TODO
 
