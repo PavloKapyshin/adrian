@@ -18,16 +18,6 @@ reserved = collections.OrderedDict({
     "fun": "FUN",
     "struct": "STRUCT",
     "return": "RETURN",
-
-    # CTypes.
-    defs.CTYPES_MODULE_NAME + "#" + defs.CTYPES_INT32_STRING: "TYPE_INT32",
-    defs.CTYPES_MODULE_NAME + "#" + defs.CTYPES_INT64_STRING: "TYPE_INT64",
-    defs.CTYPES_MODULE_NAME + "#" + defs.CTYPES_CSTRING_STRING: "TYPE_CSTRING",
-    defs.CTYPES_MODULE_NAME + "#" + defs.CTYPES_CHAR_STRING: "TYPE_CHAR",
-
-    # Standard types.
-    "Integer": "TYPE_INTEGER",
-    "String": "TYPE_STRING",
 })
 
 
@@ -312,15 +302,7 @@ def p_assignment_stmt(content):
 
 # Type.
 def p_type(content):
-    """
-    type : TYPE_INTEGER
-         | TYPE_STRING
-         | TYPE_INT32
-         | TYPE_INT64
-         | TYPE_CSTRING
-         | TYPE_CHAR
-         | name_from_module
-    """
+    """type : name_from_module"""
     content[0] = content[1]
 
 

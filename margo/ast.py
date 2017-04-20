@@ -84,6 +84,11 @@ class String(_Value):
     _string = "String"
 
 
+class CString(_Value):
+    """CString in Adrian."""
+    _string = "CString"
+
+
 class Name(_Atom):
     """Name concept in Adrian.
 
@@ -97,6 +102,22 @@ class Name(_Atom):
 
     def __init__(self, value):
         self.value = value
+
+
+class FuncCall(_Atom):
+    """Function call.
+
+            args
+           vvvvvv
+    myFunc(1 + 20)
+    ^^^^^^
+     name
+    """
+    _keys = ("name", "args")
+
+    def __init__(self, name, args):
+        self.name = name
+        self.args = args
 
 
 class ReturnStmt(_Atom):
