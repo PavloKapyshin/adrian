@@ -48,6 +48,27 @@ def _generate_decl_value(stmt):
     return ctype(stmt.type_)
 
 
+def generate_body(body, *, context):
+    return generate(body, context=context)
+
+
+def generate_args(args):
+    return [(arg.name, ctype(arg.type_)) for arg in args]
+
+@_FUNCS.register(ast.FuncDecl)
+def func_decl(pair, *, context):
+    return cgen.Func(
+        pair.stmt.name, ctype(pair.stmt.type_),
+        generate_args(pair.stmt.args),
+        generate_body(pair.stmt.body, context=context))
+
+
+@_FUNCS.register(ast.StructDecl)
+def struct_decl(pair, *, context):
+    return cgen.Struct(
+        pair.stmt.name, generate_body(pair.stmt.body, context=context))
+
+
 @_FUNCS.register(ast.Decl)
 def decl(pair, *, context):
     return cgen.Decl(pair.stmt.name, generate_value(pair.stmt))

@@ -23,7 +23,9 @@ def _init_args(value):
 
 
 def std_type_init_args_from_name(type_, value):
-    std_type_init_args_from_name.reg[type_.value](value)
+    if isinstance(type_, ast.ModuleMember):
+        return std_type_init_args_from_name.reg[type_.member](value)
+    return std_type_init_args_from_name.reg[type_.value](value)
 
 
 std_type_init_args_from_name.reg = funcreg.NameRegistry()
@@ -33,12 +35,21 @@ std_type_init_args_from_name.reg = funcreg.NameRegistry()
 def _init_args_from_name_integer(value):
     return ast.StructElem(value.value, "digits")
 
+@std_type_init_args_from_name.reg.register(defs.CTYPES_INT32_STRING)
+def _init_args_from_name_int32(value):
+    return value
+
+
+@std_type_init_args_from_name.reg.register(defs.CTYPES_INT64_STRING)
+def _init_args_from_name_int64(value):
+    return value
+
 
 def determine_std_type(value, *, context):
     if isinstance(value, list):
         return determine_std_type(value[1], context=context)
     elif isinstance(value, ast.Name):
-        return context.namespace.get(value)["type"]
+        return context.namespace.get(value.value)["type_"]
     return ast.Name(value.to_string())
 
 
@@ -55,7 +66,7 @@ def translate_std_type_value(type_, value, *, context):
     base = ast.FuncCall(ast.StructElem(
         ast.ModuleMember(defs.STD_TYPES_MODULE_NAME, type_), elem=None), args=None)
     if isinstance(value, ast.Name):
-        base.name.elem = ast.Name("__init__")
+        base.name.elem = ast.Name("init")
         base.args = std_type_init_args_from_name(type_, value)
     elif isinstance(value, list):
         _d = {
@@ -64,12 +75,12 @@ def translate_std_type_value(type_, value, *, context):
             "*": "mul",
             "/": "div"
         }
-        base.name.elem = ast.Name("__" + _d[value[0]] + "__")
+        base.name.elem = ast.Name(_d[value[0]])
         base.args = (
             translate_std_type_value(type_, value[1]),
             translate_std_type_value(type_, value[2]))
     elif value:
-        base.name.elem = ast.Name("__init__")
+        base.name.elem = ast.Name("init")
         base.args = std_type_init_args(type_, value)
     return base
 
@@ -82,13 +93,18 @@ def translate_method(struct_name, method, *, context):
 translate_method.reg = funcreg.NameRegistry()
 
 
-@translate_method.reg.register("__init__")
+@translate_method.reg.register("init")
 def _translate_init_method(struct_name, method, *, context):
     self_decl = ast.Pair(0, ast.Decl(ast.Name("self"), type_=ast.Name(struct_name),
         value=ast.FuncCall(ast.ModuleMember(ast.Name("c"), ast.Name("malloc")),
             args=(ast.FuncCall(
                 ast.ModuleMember(ast.Name("c"), ast.Name("sizeof")),
                 args=(ast.StructScalar(struct_name)))))))
+    context.namespace.add_name("self", {
+        "type_": self_decl.type_,
+        "node_type": defs.NodeType.variable,
+        "value": self_decl.value
+    })
     return_stmt = ast.Pair(0, ast.ReturnStmt(ast.Name("self")))
     method.body = [self_decl] + method.body + [return_stmt]
     method.name = "init" + struct_name
@@ -111,9 +127,17 @@ def func_body(body, *, context):
     return translate(body, context=context)
 
 
-def func_args(args):
-    return [new_args.append(ast.Arg(arg.name, translate_std_type(arg.type_)))
-            for arg in args]
+def func_args(args, *, context):
+    result = []
+    for arg in args:
+        type_ = translate_std_type(arg.type_)
+        context.namespace.add_name(arg.name, {
+            "type_": type_,
+            "node_type": defs.NodeType.variable,
+            "value": None
+        })
+        result.append(ast.Arg(arg.name, arg.type_))
+    return result
 
 
 @_FUNCS.register(ast.Assignment)
@@ -126,21 +150,29 @@ def assignment(pair, *, context):
 @_FUNCS.register(ast.FuncDecl)
 def func_decl(pair, *, context):
     stmt = pair.stmt
-    args = func_args(stmt.args)
+    context.namespace.add_scope()
+    args = func_args(stmt.args, context=context)
     type_ = translate_std_type(stmt.type_)
+    context.funcspace.add_name(stmt.name, {
+        "type_": type_,
+        "args": args
+    })
     body = func_body(stmt.body, context=context)
+    context.namespace.del_scope()
     return ast.Pair(pair.line, ast.FuncDecl(stmt.name, args, type_, body))
 
 
 @_FUNCS.register(ast.StructDecl)
 def struct_decl(pair, *, context):
     stmt = pair.stmt
+    context.namespace.add_scope()
     body, funcs = struct_body(stmt.body, context=context)
     new_funcs = [
         ast.Pair(func.line, translate_method(
             stmt.name, func.stmt, context=context))
         for func in funcs]
     new = ast.Pair(pair.line, ast.StructDecl(stmt.name, body))
+    context.namespace.del_scope()
     return [new] + new_funcs
 
 
@@ -153,6 +185,11 @@ def decl(pair, *, context):
             stmt.type_.value in defs.STD_TYPE_NAMES):
         type_ = ast.ModuleMember("std_types", stmt.type_.value)
         value = translate_std_type_value(stmt.type_, stmt.value, context=context)
+    context.namespace.add_name(stmt.name, {
+        "type_": type_,
+        "node_type": defs.NodeType.variable,
+        "value": value
+    })
     return ast.Pair(pair.line, ast.Decl(stmt.name, type_, value))
 
 
