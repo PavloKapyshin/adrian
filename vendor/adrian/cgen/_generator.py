@@ -2,7 +2,7 @@ from . import errors
 from . import objects
 from . import _context
 
-from paka import funcreg
+from vendor.paka import funcreg
 
 
 _FUNCS = funcreg.TypeRegistry()

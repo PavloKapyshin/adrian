@@ -9,23 +9,24 @@ _FUNCS = funcreg.TypeRegistry()
 
 
 def ctype(type_):
-    if type_.module_name == defs.CTYPES_MODULE_NAME:
+    if (isinstance(type_, ast.ModuleMember) and \
+            type_.module_name == defs.CTYPES_MODULE_NAME):
         _d = {
             defs.CTYPES_INT32_STRING: cgen.CTypes.int32,
             defs.CTYPES_INT64_STRING: cgen.CTypes.int64,
             defs.CTYPES_CHAR_STRING: cgen.CTypes.char
         }
-        return _d[type_.member.value]
+        return _d[type_.member]
 
 
 def _generate_value(value, type_):
     if isinstance(value, ast.Name):
         return cgen.Var(value.value)
     elif isinstance(value, defs.ATOM_TYPES):
-        # TODO: only ctypes type is supported
+        # TODO: only ctypes are supported
         return cgen.Val(value.value, ctype(type_))
     elif isinstance(value, list):
-        # TODO: only ctypes type is supported
+        # TODO: only ctypes are supported
         return cgen.Expr(
             value[0],
             _generate_value(value[1], type_),
@@ -40,14 +41,16 @@ def generate_value(stmt):
 generate_value.registry = funcreg.TypeRegistry()
 
 
-@generate_value.registry.register(ast.Assignment)
-def _generate_assignment_value(stmt):
-    return _generate_value(stmt.value, stmt.type_)
+@generate_value.registry.register(ast.Decl)
+def _generate_decl_value(stmt):
+    if stmt.value:
+        return _generate_value(stmt.value, stmt.type_)
+    return ctype(stmt.type_)
 
 
-@_FUNCS.register(ast.Assignment)
-def assignment(pair, *, context):
-    return cgen.Decl(pair.stmt.name.value, generate_value(pair.stmt))
+@_FUNCS.register(ast.Decl)
+def decl(pair, *, context):
+    return cgen.Decl(pair.stmt.name, generate_value(pair.stmt))
 
 
 def generate(ast_, *, context):
