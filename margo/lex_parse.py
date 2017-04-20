@@ -158,7 +158,7 @@ def p_ast_1(content):
 
 def p_ast_2(content):
     """ast : pair"""
-    content[0] = [content[1]]  # AST must be list.
+    content[0] = [content[1]]
 
 
 # Pair.
@@ -232,7 +232,7 @@ def p_arg_2(content):
     """args : arg_names COLON type"""
     content[0] = []
     for name in content[1]:
-        content[0].append(ast.Arg(name=name, type_=content[3]))
+        content[0].append(ast.Arg(name, type_=content[3]))
 
 
 def p_args_3(content):
@@ -278,20 +278,17 @@ def p_struct_body_stmt(content):
 # Variable declaration statement.
 def p_decl_stmt_1(content):
     """decl_stmt : VAR NAME COLON type EQUAL bool_expr"""
-    content[0] = ast.Decl(
-        name=ast.Name(content[2]), type_=content[4], value=content[6])
+    content[0] = ast.Decl(name=content[2], type_=content[4], value=content[6])
 
 
 def p_decl_stmt_2(content):
     """decl_stmt : VAR NAME COLON type"""
-    content[0] = ast.Decl(
-        name=ast.Name(content[2]), type_=content[4], value=None)
+    content[0] = ast.Decl(name=content[2], type_=content[4], value=None)
 
 
 def p_decl_stmt_3(content):
     """decl_stmt : VAR NAME EQUAL bool_expr"""
-    content[0] = ast.Decl(
-        name=ast.Name(content[2]), type_=None, value=content[4])
+    content[0] = ast.Decl(name=content[2], type_=None, value=content[4])
 
 
 # Variable assignment statement.
@@ -313,7 +310,7 @@ def p_name_from_struct_1(content):
 
 
 def p_name_from_struct_2(content):
-    """name_from_struct : name_from_struct PERIOD NAME"""
+    """name_from_struct : name_from_struct PERIOD name_from_struct"""
     content[0] = ast.StructElem(struct_name=content[1], elem=content[3])
 
 
@@ -326,7 +323,7 @@ def p_name_from_module_1(content):
 def p_name_from_module_2(content):
     """name_from_module : NAME HASHTAG NAME"""
     content[0] = ast.ModuleMember(
-        module_name=content[1], member=ast.Name(content[3]))
+        module_name=content[1], member=content[3])
 
 
 # Assignment operator.

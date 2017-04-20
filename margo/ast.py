@@ -104,6 +104,14 @@ class Name(_Atom):
         self.value = value
 
 
+class Arg(_Atom):
+    _keys = ("name", "type_")
+
+    def __init__(self, name, type_):
+        self.name = name
+        self.type_ = type_
+
+
 class StructScalar(_Atom):
     _keys = ("name", )
 
