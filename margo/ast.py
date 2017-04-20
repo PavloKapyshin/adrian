@@ -104,6 +104,13 @@ class Name(_Atom):
         self.value = value
 
 
+class StructScalar(_Atom):
+    _keys = ("name", )
+
+    def __init__(self, name):
+        self.name = name
+
+
 class FuncCall(_Atom):
     """Function call.
 

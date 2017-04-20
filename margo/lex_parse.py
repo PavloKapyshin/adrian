@@ -219,7 +219,7 @@ def p_func_body_stmt(content):
                       | assignment_stmt
                       | return_stmt
     """
-    content[0] = content[1]
+    content[0] = ast.Pair(line=content.lineno(0), stmt=content[1])
 
 
 # Function arguments.
@@ -272,7 +272,7 @@ def p_struct_body_stmt(content):
     """struct_body_stmt : decl_stmt
                         | func_decl_stmt
     """
-    content[0] = content[1]
+    content[0] = ast.Pair(line=content.lineno(0), stmt=content[1])
 
 
 # Variable declaration statement.
