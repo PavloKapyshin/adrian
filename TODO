@@ -1,16 +1,9 @@
-[ ] Add syntax sugar layer
-[ ] Add structs to syntax_sugar layer
+[ ] Split syntax sugar layer into struct_sugar and std_types_sugar layers
 [ ] Add structs to name_checking layer
 [ ] Add structs to type_checking layer
 [ ] Add structs to name_mangling layer
-[ ] Add structs to cgen layer
-[ ] Add functions to syntax_sugar layer
 [ ] Add functions to name_checking layer
 [ ] Add functions to type_checking layer
 [ ] Add functions to name_mangling layer
-[ ] Add functions to cgen layer
 [ ] Add AdrOps and AdrTypes
 [ ] Test compiler
-[X] Add module system to type_checking layer
-[X] Add module system to name_mangling layer
-[X] Add module system to cgen layer
