@@ -30,7 +30,7 @@ ATOM_TYPES = (
     ast.Name,
 )
 
-STANDARD_FUNC_NAMES = (
+STD_FUNCS = (
     "print",
 )
 
@@ -45,7 +45,7 @@ VARIABLE_REGEX = re.compile(r"[a-z_][a-zA-Z0-9]*")
 CONSTANT_REGEX = re.compile(r"[A-Z_][A-Z_0-9]*")
 
 CTYPES_MODULE_NAME = "ctypes"
-CTYPES_INT32_STRING = "Int32"
+CTYPES_INT32 = "Int32"
 CTYPES_INT64_STRING = "Int64"
 CTYPES_CSTRING_STRING = "CString"
 CTYPES_CHAR_STRING = "Char"

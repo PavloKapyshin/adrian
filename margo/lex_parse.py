@@ -259,7 +259,7 @@ def p_name_from_struct_2(content):
 
 def p_name_from_module_1(content):
     """name_from_module : NAME HASH NAME"""
-    content[0] = ast.ModuleMember(content[1], content[3])
+    content[0] = ast.ModuleMember(content[1], ast.Name(content[3]))
 
 
 def p_name_from_module_2(content):

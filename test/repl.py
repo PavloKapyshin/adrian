@@ -10,7 +10,7 @@ class REPL(cmd.Cmd):
     intro = "This is Adrian testing REPL.\n"
     prompt = ">>> "
     settings = {"exit_on_error": True, "mangle_names": False}
-    context = margo.ast.Context(exit_on_error=settings["exit_on_error"])
+    context = margo.ast.Context(exit_on_error=settings["exit_on_error"], module_paths=["std_modules/"])
 
     def do_settings(self, settings):
         if settings:
@@ -28,9 +28,9 @@ class REPL(cmd.Cmd):
             # Keep context up to date.
             self.context.exit_on_error = self.settings["exit_on_error"]
             # Compile.
-            margo.compile(
+            print(margo.compile(
                 inp, self.context,
-                mangle_names=self.settings["mangle_names"])
+                mangle_names=self.settings["mangle_names"]))
         except margo.errors.CompilationError as e:
             print(e.message, file=sys.stderr)
 

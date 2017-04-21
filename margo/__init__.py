@@ -2,8 +2,8 @@ import hashlib
 
 from . import lex_parse
 from . import name_checking
-from . import type_checking
-from . import name_mangling
+# from . import type_checking
+# from . import name_mangling
 from . import ast as margo_ast
 
 
@@ -22,11 +22,17 @@ def _read_file(file_name, encoding):
 
 def compile(text, context, mangle_names=False, file_hash=""):
     lp_ast = lex_parse.main(text, exit_on_error=context.exit_on_error)
-    nc_ast = name_checking.main(lp_ast, context=context)
-    result = type_checking.main(nc_ast, context=context)
-    if mangle_names:
-        result = name_mangling.main(result, file_hash=file_hash)
-    return result
+    name_checking.main(lp_ast)
+    return lp_ast
+
+
+# def compile(text, context, mangle_names=False, file_hash=""):
+#     lp_ast = lex_parse.main(text, exit_on_error=context.exit_on_error)
+#     nc_ast = name_checking.main(lp_ast, context=context)
+#     result = type_checking.main(nc_ast, context=context)
+#     if mangle_names:
+#         result = name_mangling.main(result, file_hash=file_hash)
+#     return result
 
 
 def compile_file(file_name, exit_on_error=True, mangle_names=False, encoding="utf-8"):
