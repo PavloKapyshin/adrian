@@ -135,7 +135,7 @@ class FuncCall(_Atom):
         self.args = args
 
 
-class ReturnStmt(_Atom):
+class Return(_Atom):
     """Return statement.
 
     return 1 + 2
@@ -148,7 +148,7 @@ class ReturnStmt(_Atom):
         self.value = value
 
 
-class FuncDecl(_Atom):
+class Func(_Atom):
     """Declaration of function.
 
          name                                      type_
@@ -166,7 +166,7 @@ class FuncDecl(_Atom):
         self.body = body
 
 
-class StructDecl(_Atom):
+class Struct(_Atom):
     """Declaration of struct.
             name
            vvvvvv

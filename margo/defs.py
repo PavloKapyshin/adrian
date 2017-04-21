@@ -6,6 +6,14 @@ import enum
 from . import ast
 
 
+RESERVED_WORDS = (
+    "var",
+    "fun",
+    "struct",
+    "return",
+)
+
+
 @enum.unique
 class NodeType(enum.Enum):
     variable = 1
