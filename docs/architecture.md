@@ -9,7 +9,11 @@ Name checking
 ↓
 Type checking
 ↓
-Value checking
+Syntax sugar
+↓
+Name checking
+↓
+Type checking
 ↓
 Name mangling
 ↓
@@ -26,9 +30,9 @@ Compiler checks naming conventions, name existence and that builtins are not rea
 
 Compiler checks that type of name and type of value are equal and are valid.
 
-## Value checking
+## Syntax sugar
 
-Compiler generates simplified (not for human :) representation of values.
+Compiler translates AST into more simple for compiler.
 
 ## Name mangling
 
