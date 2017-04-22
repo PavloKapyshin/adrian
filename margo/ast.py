@@ -92,7 +92,7 @@ class CString(_Value):
 class Name(_Atom):
     """Name concept in Adrian.
 
-    Is used to represent:
+    Is used to represent on parsing level:
      - variable
      - constant
      - function
@@ -237,8 +237,8 @@ class ModuleMember(_Atom):
 
 
 class StructElem(_Atom):
-    _keys = ("struct_name", "elem")
+    _keys = ("struct", "elem")
 
-    def __init__(self, struct_name, elem):
-        self.struct_name = struct_name
+    def __init__(self, struct, elem):
+        self.struct = struct
         self.elem = elem

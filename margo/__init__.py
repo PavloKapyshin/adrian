@@ -3,7 +3,7 @@ import hashlib
 from . import lex_parse
 from . import naming_rules
 from . import name_existence
-# from . import type_checking
+from . import type_inference
 # from . import name_mangling
 from . import ast as margo_ast
 
@@ -28,10 +28,10 @@ def compile(text, context, mangle_names=False, file_hash=""):
     naming_rules.main(lp_ast, context=context)
     print("Stage 3: checking name existence.")
     name_existence.main(lp_ast, context=context)
-    #print("Stage 3: checking types and doing type inference.")
-    #tc_ast = type_checking.main(lp_ast, context=context)
+    print("Stage 4: doing type inference where needed.")
+    ti_ast = type_inference.main(lp_ast, context=context)
     print("Compiled.")
-    return lp_ast
+    return ti_ast
 
 
 def compile_file(file_name, exit_on_error=True, mangle_names=False, encoding="utf-8"):

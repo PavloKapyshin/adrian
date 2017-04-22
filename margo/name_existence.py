@@ -39,6 +39,11 @@ def check_module_existence(module_name, *, context):
     add_include(module_name, path, context=context)
 
 
+def check_struct_field_or_method_existence(struct, *, context):
+    if struct.elem == "init":
+        pass
+
+
 def check_type_existence(type_, *, context):
     if isinstance(type_, ast.Name):
         if not (type_.value in defs.STD_TYPE_NAMES or \
@@ -52,6 +57,9 @@ def check_type_existence(type_, *, context):
             errors.cant_find_name_in_module(
                 context.line, context.exit_on_error,
                 name=type_.member, module_name=type_.module_name)
+    elif isinstance(type_, ast.StructElem):
+        check_type_existence(type_.struct, context=context)
+        check_struct_field_or_method_existence(type_, context=context)
     else:
         errors.not_implemented(context.line, context.exit_on_error)
 

@@ -268,28 +268,28 @@ def p_call_args_3(content):
 
 
 def p_type(content):
-    """type : name_from_module"""
+    """type : name_from_struct"""
     content[0] = content[1]
 
 
 def p_name_from_struct_1(content):
-    """name_from_struct : name_from_struct PERIOD name_from_struct"""
+    """name_from_struct : name_from_module PERIOD name_from_struct"""
     content[0] = ast.StructElem(content[1], content[3])
 
 
 def p_name_from_struct_2(content):
-    """name_from_struct : NAME"""
-    content[0] = ast.Name(content[1])
+    """name_from_struct : name_from_module"""
+    content[0] = content[1]
 
 
 def p_name_from_module_1(content):
-    """name_from_module : NAME HASH name_from_struct"""
-    content[0] = ast.ModuleMember(content[1], content[3])
+    """name_from_module : NAME HASH NAME"""
+    content[0] = ast.ModuleMember(content[1], ast.Name(content[3]))
 
 
 def p_name_from_module_2(content):
-    """name_from_module : name_from_struct"""
-    content[0] = content[1]
+    """name_from_module : NAME"""
+    content[0] = ast.Name(content[1])
 
 
 def p_assignop(content):
@@ -348,7 +348,7 @@ def p_atom_1(content):
     """
     atom : INTEGER
          | STRING
-         | name_from_module
+         | name_from_struct
          | method_call
     """
     content[0] = content[1]

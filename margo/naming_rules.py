@@ -51,6 +51,11 @@ def check_decl_type(type_, *, context):
     elif isinstance(type_, ast.ModuleMember):
         check_module_name(type_.module_name, context=context)
         check_decl_type(type_.member, context=context)
+    elif isinstance(type_, ast.MethodCall):
+        check_decl_type(type_.method, context=context)
+    elif isinstance(type_, ast.StructElem):
+        check_decl_type(type_.struct, context=context)
+        check_name(type_.elem, context=context)
     else:
         errors.not_implemented(context.line, context.exit_on_error)
 
