@@ -34,20 +34,21 @@ STD_FUNCS = (
     "print",
 )
 
-_STANDARD_TYPES = (
+_STD_TYPES = (
     ast.Integer,
     ast.String
 )
-STD_TYPE_NAMES = set(type_.to_string() for type_ in _STANDARD_TYPES)
+STD_TYPE_NAMES = set(type_.to_string() for type_ in _STD_TYPES)
 
 TYPE_REGEX = re.compile(r"[A-Z_][a-zA-Z0-9]*")
 VARIABLE_REGEX = re.compile(r"[a-z_][a-zA-Z0-9]*")
+MODULE_REGEX = re.compile(r"[a-z_][a-z_0-9]*")
 CONSTANT_REGEX = re.compile(r"[A-Z_][A-Z_0-9]*")
 
-CTYPES_MODULE_NAME = "ctypes"
-CTYPES_INT32 = "Int32"
-CTYPES_INT64_STRING = "Int64"
-CTYPES_CSTRING_STRING = "CString"
-CTYPES_CHAR_STRING = "Char"
+C_MODULE_NAME = "c"
+C_INT32 = "Int32"
+C_INT64 = "Int64"
+C_CSTRING = "CString"
+C_CHAR = "Char"
 
 STD_TYPES_MODULE_NAME = "std_types"

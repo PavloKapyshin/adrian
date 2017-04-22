@@ -150,13 +150,15 @@ def p_func_decl_1(content):
     func_decl : FUN NAME LPAREN args RPAREN COLON type LBRACE func_body RBRACE
     """
     content[0] = ast.Func(
-        name=content[2], args=content[4], type_=content[7], body=content[9])
+        name=ast.Name(content[2]), args=content[4],
+        type_=content[7], body=content[9])
 
 
 def p_func_decl_2(content):
     """func_decl : FUN NAME LPAREN args RPAREN LBRACE func_body RBRACE"""
     content[0] = ast.Func(
-        name=content[2], args=content[4], type_=None, body=content[7])
+        name=ast.Name(content[2]), args=content[4],
+        type_=None, body=content[7])
 
 
 def p_func_body_1(content):
@@ -191,17 +193,17 @@ def p_args_2(content):
 
 def p_arg_names_1(content):
     """arg_names : NAME COMMA arg_names"""
-    content[0] = [content[1]] + content[3]
+    content[0] = [ast.Name(content[1])] + content[3]
 
 
 def p_arg_names_2(content):
     """arg_names : NAME"""
-    content[0] = [content[1]]
+    content[0] = [ast.Name(content[1])]
 
 
 def p_struct_decl(content):
     """struct_decl : STRUCT NAME LBRACE struct_body RBRACE"""
-    content[0] = ast.Struct(content[2], content[4])
+    content[0] = ast.Struct(ast.Name(content[2]), content[4])
 
 
 def p_struct_body_1(content):
@@ -224,22 +226,40 @@ def p_struct_body_stmt(content):
 
 def p_decl_1(content):
     """decl : VAR NAME COLON type EQ bool_expr"""
-    content[0] = ast.Decl(content[2], type_=content[4], value=content[6])
+    content[0] = ast.Decl(
+        ast.Name(content[2]), type_=content[4], expr=content[6])
 
 
 def p_decl_2(content):
     """decl : VAR NAME COLON type"""
-    content[0] = ast.Decl(content[2], type_=content[4], value=None)
+    content[0] = ast.Decl(
+        ast.Name(content[2]), type_=content[4], expr=None)
 
 
 def p_decl_3(content):
     """decl : VAR NAME EQ bool_expr"""
-    content[0] = ast.Decl(content[2], type_=None, value=content[4])
+    content[0] = ast.Decl(
+        ast.Name(content[2]), type_=None, expr=content[4])
 
 
 def p_assignment(content):
     """assignment : name_from_struct assignop bool_expr"""
     content[0] = ast.Assignment(content[1], content[2], content[3])
+
+
+def p_method_call(content):
+    """method_call : type LPAREN call_args RPAREN"""
+    content[0] = ast.MethodCall(method=content[1], args=content[3])
+
+
+def p_call_args_1(content):
+    """call_args : bool_expr COMMA call_args"""
+    content[0] = [content[1]] + content[3]
+
+
+def p_call_args_2(content):
+    """call_args : empty"""
+    content[0] = []
 
 
 def p_type(content):
@@ -258,13 +278,13 @@ def p_name_from_struct_2(content):
 
 
 def p_name_from_module_1(content):
-    """name_from_module : NAME HASH NAME"""
-    content[0] = ast.ModuleMember(content[1], ast.Name(content[3]))
+    """name_from_module : NAME HASH name_from_struct"""
+    content[0] = ast.ModuleMember(content[1], content[3])
 
 
 def p_name_from_module_2(content):
-    """name_from_module : NAME"""
-    content[0] = ast.Name(content[1])
+    """name_from_module : name_from_struct"""
+    content[0] = content[1]
 
 
 def p_assignop(content):
@@ -323,6 +343,8 @@ def p_atom_1(content):
     """
     atom : INTEGER
          | STRING
+         | name_from_module
+         | method_call
     """
     content[0] = content[1]
 
@@ -330,11 +352,6 @@ def p_atom_1(content):
 def p_atom_2(content):
     """atom : LPAREN bool_expr RPAREN"""
     content[0] = content[2]
-
-
-def p_atom_3(content):
-    """atom : name_from_module"""
-    content[0] = content[1]
 
 
 def p_empty(content):

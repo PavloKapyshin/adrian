@@ -9,7 +9,7 @@ class REPL(cmd.Cmd):
     _AVAILABLE_SETTINGS = ("exit_on_error", "mangle_names")
     intro = "This is Adrian testing REPL.\n"
     prompt = ">>> "
-    settings = {"exit_on_error": True, "mangle_names": False}
+    settings = {"exit_on_error": False, "mangle_names": False}
     context = margo.ast.Context(exit_on_error=settings["exit_on_error"], module_paths=["std_modules/"])
 
     def do_settings(self, settings):
@@ -41,6 +41,8 @@ class REPL(cmd.Cmd):
         self.do_eval(inp)
 
     do_quit = do_exit
+    do_q = do_exit
+    do_e = do_exit
     do_set = do_settings
     complete_set = complete_settings
 

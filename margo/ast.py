@@ -95,6 +95,7 @@ class Name(_Atom):
     Is used to represent:
      - variable
      - constant
+     - function
      - type
 
     """
@@ -145,7 +146,7 @@ class Return(_Atom):
     _keys = ("value", )
 
     def __init__(self, value):
-        self.value = value
+        self.expr = expr
 
 
 class Func(_Atom):
@@ -188,17 +189,17 @@ class Decl(_Atom):
 
                 type_
                vvvvvvv
-    var myVar: Integer = 1 + 2
-        ^^^^^            ^^^^^
-        name             value
+    var myVar: Integer = 1 + 20
+        ^^^^^            ^^^^^^
+        name              expr
 
     """
-    _keys = ("name", "type_", "value")
+    _keys = ("name", "type_", "expr")
 
-    def __init__(self, name, type_, value):
+    def __init__(self, name, type_, expr):
         self.name = name
         self.type_ = type_
-        self.value = value
+        self.expr = expr
 
 
 class Assignment(_Atom):
@@ -206,17 +207,25 @@ class Assignment(_Atom):
 
           op
           v
-    myVar = 1 + 2
-    ^^^^^   ^^^^^
-    name    value
+    myVar = 1 + 20
+    ^^^^^   ^^^^^^
+    name     expr
 
     """
-    _keys = ("name", "op", "value")
+    _keys = ("name", "op", "expr")
 
-    def __init__(self, name, op, value):
+    def __init__(self, name, op, expr):
         self.name = name
         self.op = op
-        self.value = value
+        self.expr = expr
+
+
+class MethodCall(_Atom):
+    _keys = ("method", "args")
+
+    def __init__(self, method, args):
+        self.method = method
+        self.args = args
 
 
 class ModuleMember(_Atom):

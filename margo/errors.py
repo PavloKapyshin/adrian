@@ -9,6 +9,7 @@ _ILLEGAL_CHAR = "illegal character '{char}'"
 
 _BAD_NAME_FOR_VARIABLE = "bad name '{name}' for variable"
 _BAD_NAME_FOR_CONSTANT = "bad name '{name}' for constant"
+_BAD_NAME_FOR_MODULE = "bad name '{name}' for module"
 _BAD_NAME_FOR_TYPE = "bad name '{name}' for type"
 
 _NON_EXISTING_NAME = "non existing name '{name}'"
@@ -16,8 +17,8 @@ _NON_EXISTING_MODULE = "non existing module '{module}'"
 _CANT_REASSIGN_BUILTIN = "can't reassign builtin '{name}'"
 
 _TYPE_OF_NAME_AND_TYPE_OF_VALUE_ARE_NOT_EQUAL = (
-    "type ('{type_of_name}') of name '{name}' and type of "
-    "value ('{type_of_value}') are not equal")
+    "type ('{type_of_name}') of name '{name}' and "
+    "type ('{type_of_value}') of value are not equal")
 
 _NOT_IMPLEMENTED = "not implemented"
 
@@ -42,6 +43,10 @@ def bad_name_for_variable(line, exit_on_error, name):
 
 def bad_name_for_constant(line, exit_on_error, name):
     _error(line, exit_on_error, _BAD_NAME_FOR_CONSTANT, name=name)
+
+
+def bad_name_for_module(line, exit_on_error, name):
+    _error(line, exit_on_error, _BAD_NAME_FOR_MODULE, name=name)
 
 
 def bad_name_for_type(line, exit_on_error, name):
