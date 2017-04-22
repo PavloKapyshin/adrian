@@ -7,7 +7,7 @@ import margo
 
 class REPL(cmd.Cmd):
     _AVAILABLE_SETTINGS = ("exit_on_error", "mangle_names")
-    intro = "This is Adrian testing REPL.\n"
+    intro = "Welcome to Adrian testing REPL.\n"
     prompt = ">>> "
     settings = {"exit_on_error": False, "mangle_names": False}
     context = margo.ast.Context(exit_on_error=settings["exit_on_error"], module_paths=["std_modules/"])
