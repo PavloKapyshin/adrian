@@ -1,10 +1,10 @@
 # Standard Library Reference
 
-## CTypes module
+## C module
 
-`ctypes.Int32`
-`ctypes.Int64`
-`ctypes.Char`
-`ctypes.Pointer`
-`ctypes.Array`
-`ctypes.String`
+`c#Int32`
+`c#Int64`
+`c#Char`
+`c#Pointer`
+`c#Array`
+`c#String`
