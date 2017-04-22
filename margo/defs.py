@@ -51,6 +51,7 @@ C_INT64 = "Int64"
 C_CSTRING = "CString"
 C_CHAR = "Char"
 
-STD_MODULE_NAMES = ("std_types")
+STD_TYPES_MODULE_NAME = "std_types"
+STD_MODULE_NAMES = (STD_TYPES_MODULE_NAME)
 STD_MODULES_PATH = "std_modules/"
 ADRIAN_FILE_EXTENSION = ".adr"

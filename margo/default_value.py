@@ -52,7 +52,8 @@ def translate(ast_, *, context):
     result = []
     for pair in ast_:
         context.line = pair.line
-        result.append(_FUNCS[pair.stmt](pair.stmt, context=context))
+        result.append(ast.Pair(
+            pair.line, _FUNCS[pair.stmt](pair.stmt, context=context)))
     return result
 
 
