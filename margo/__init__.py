@@ -2,7 +2,8 @@ import hashlib
 
 from . import lex_parse
 from . import naming_rules
-from . import type_checking
+from . import name_existence
+# from . import type_checking
 # from . import name_mangling
 from . import ast as margo_ast
 
@@ -25,6 +26,8 @@ def compile(text, context, mangle_names=False, file_hash=""):
     lp_ast = lex_parse.main(text, exit_on_error=context.exit_on_error)
     print("Stage 2: checking naming rules.")
     naming_rules.main(lp_ast, context=context)
+    print("Stage 3: checking name existence.")
+    name_existence.main(lp_ast, context=context)
     #print("Stage 3: checking types and doing type inference.")
     #tc_ast = type_checking.main(lp_ast, context=context)
     print("Compiled.")

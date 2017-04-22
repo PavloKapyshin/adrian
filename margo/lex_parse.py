@@ -258,6 +258,11 @@ def p_call_args_1(content):
 
 
 def p_call_args_2(content):
+    """call_args : bool_expr"""
+    content[0] = [content[1]]
+
+
+def p_call_args_3(content):
     """call_args : empty"""
     content[0] = []
 

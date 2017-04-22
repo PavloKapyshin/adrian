@@ -55,6 +55,11 @@ def check_decl_type(type_, *, context):
         errors.not_implemented(context.line, context.exit_on_error)
 
 
+def check_call_args(args, *, context):
+    for arg in args:
+        check_expr(arg, context=context)
+
+
 def check_name(expr, *, context):
     if isinstance(expr, ast.Name):
         if not matches_variable_name(expr.value):
@@ -75,6 +80,9 @@ def check_expr(expr, *, context):
     elif isinstance(expr, list):
         check_expr(expr[1], context=context)
         check_expr(expr[2], context=context)
+    elif isinstance(expr, ast.MethodCall):
+        check_decl_type(expr.method, context=context)
+        check_call_args(expr.args, context=context)
     else:
         errors.not_implemented(context.line, context.exit_on_error)
 

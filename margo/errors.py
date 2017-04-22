@@ -11,10 +11,12 @@ _BAD_NAME_FOR_VARIABLE = "bad name '{name}' for variable"
 _BAD_NAME_FOR_CONSTANT = "bad name '{name}' for constant"
 _BAD_NAME_FOR_MODULE = "bad name '{name}' for module"
 _BAD_NAME_FOR_TYPE = "bad name '{name}' for type"
+_BAD_NAME_IN_EXPR = "bad name '{name}' in expression"
 
 _NON_EXISTING_NAME = "non existing name '{name}'"
 _NON_EXISTING_MODULE = "non existing module '{module}'"
 _CANT_REASSIGN_BUILTIN = "can't reassign builtin '{name}'"
+_CANT_FIND_NAME_IN_MODULE = "can't find name '{name}' in module '{module_name}'"
 
 _TYPE_OF_NAME_AND_TYPE_OF_VALUE_ARE_NOT_EQUAL = (
     "type ('{type_of_name}') of name '{name}' and "
@@ -53,6 +55,10 @@ def bad_name_for_type(line, exit_on_error, name):
     _error(line, exit_on_error, _BAD_NAME_FOR_TYPE, name=name)
 
 
+def bad_name_in_expr(line, exit_on_error, name):
+    _error(line, exit_on_error, _BAD_NAME_IN_EXPR, name=name)
+
+
 def non_existing_name(line, exit_on_error, name):
     _error(line, exit_on_error, _NON_EXISTING_NAME, name=name)
 
@@ -63,6 +69,12 @@ def non_existing_module(line, exit_on_error, module):
 
 def cant_reassign_builtin(line, exit_on_error, name):
     _error(line, exit_on_error, _CANT_REASSIGN_BUILTIN, name=name)
+
+
+def cant_find_name_in_module(line, exit_on_error, name, module_name):
+    _error(
+        line, exit_on_error,
+        _CANT_FIND_NAME_IN_MODULE, name=name, module_name=module_name)
 
 
 def type_of_name_and_type_of_value_are_not_equal(
