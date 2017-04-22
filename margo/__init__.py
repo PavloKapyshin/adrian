@@ -4,6 +4,7 @@ from . import lex_parse
 from . import naming_rules
 from . import name_existence
 from . import type_inference
+from . import type_checking
 # from . import name_mangling
 from . import ast as margo_ast
 
@@ -30,6 +31,8 @@ def compile(text, context, mangle_names=False, file_hash=""):
     name_existence.main(lp_ast, context=context)
     print("Stage 4: doing type inference where needed.")
     ti_ast = type_inference.main(lp_ast, context=context)
+    print("Stage 5: checking types.")
+    type_checking.main(ti_ast, context=context)
     print("Compiled.")
     return ti_ast
 

@@ -20,7 +20,7 @@ _CANT_FIND_NAME_IN_MODULE = "can't find name '{name}' in module '{module_name}'"
 
 _TYPE_OF_NAME_AND_TYPE_OF_VALUE_ARE_NOT_EQUAL = (
     "type ('{type_of_name}') of name '{name}' and "
-    "type ('{type_of_value}') of value are not equal")
+    "type ('{type_of_expr}') of expression are not equal")
 
 _NOT_IMPLEMENTED = "not implemented"
 
@@ -77,11 +77,11 @@ def cant_find_name_in_module(line, exit_on_error, name, module_name):
         _CANT_FIND_NAME_IN_MODULE, name=name, module_name=module_name)
 
 
-def type_of_name_and_type_of_value_are_not_equal(
-        line, exit_on_error, name, type_of_name, type_of_value):
+def type_of_name_and_type_of_expr_are_not_equal(
+        line, exit_on_error, name, type_of_name, type_of_expr):
     _error(
         line, exit_on_error, _TYPE_OF_NAME_AND_TYPE_OF_VALUE_ARE_NOT_EQUAL,
-        name=name, type_of_name=type_of_name, type_of_value=type_of_value)
+        name=name, type_of_name=type_of_name, type_of_expr=type_of_expr)
 
 
 def not_implemented(line, exit_on_error):

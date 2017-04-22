@@ -108,5 +108,5 @@ def check(ast_, *, context):
 
 
 def main(ast_, *, context=ast.Context(
-        exit_on_error=True, module_paths=["std_modules/"])):
+        exit_on_error=True, module_paths=[defs.STD_MODULES_PATH])):
     check(ast_, context=context)
