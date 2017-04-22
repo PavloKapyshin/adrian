@@ -25,9 +25,11 @@ def check_types(type1, type2, name, *, context):
 
 @_FUNCS.register(ast.Decl)
 def decl(stmt, *, context):
-    type_of_expr = inference.get_type_from_expr(stmt.expr, context=context)
-    type_ = stmt.type_
-    check_types(type_, type_of_expr, stmt.name.value, context=context)
+    if stmt.expr:
+        type_of_expr = inference.get_type_from_expr(
+            stmt.expr, context=context)
+        type_ = stmt.type_
+        check_types(type_, type_of_expr, stmt.name.value, context=context)
 
 
 def check(ast_, *, context):

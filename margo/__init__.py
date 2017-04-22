@@ -5,6 +5,7 @@ from . import naming_rules
 from . import name_existence
 from . import type_inference
 from . import type_checking
+from . import default_value
 # from . import name_mangling
 from . import ast as margo_ast
 
@@ -33,8 +34,10 @@ def compile(text, context, mangle_names=False, file_hash=""):
     ti_ast = type_inference.main(lp_ast, context=context)
     print("Stage 5: checking types.")
     type_checking.main(ti_ast, context=context)
+    print("Stage 6: adding default values where needed.")
+    dv_ast = default_value.main(ti_ast, context=context)
     print("Compiled.")
-    return ti_ast
+    return dv_ast
 
 
 def compile_file(file_name, exit_on_error=True, mangle_names=False, encoding="utf-8"):
