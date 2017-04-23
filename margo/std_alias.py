@@ -41,7 +41,7 @@ def std_type_init_args_from_alias(args, *, context):
             # We usually can calculate length of an Integer when compiling.
             result.append(ast.MethodCall(
                 ast.StructElem(ast.ModuleMember(
-                    defs.C_MODULE_NAME, defs.C_CSTRING), ast.Name("init")),
+                    defs.C_MODULE_NAME, ast.Name(defs.C_CSTRING)), ast.Name("init")),
                 [arg.value]))
         else:
             errors.not_implemented(context.line, context.exit_on_error)

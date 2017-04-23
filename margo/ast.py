@@ -242,3 +242,11 @@ class StructElem(_Atom):
     def __init__(self, struct, elem):
         self.struct = struct
         self.elem = elem
+
+
+class FuncCall(_Atom):
+    _keys = ("name", "args")
+
+    def __init__(self, name, args):
+        self.name = name
+        self.args = args
