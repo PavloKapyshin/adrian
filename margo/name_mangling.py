@@ -8,6 +8,10 @@ from vendor.paka import funcreg
 _FUNCS = funcreg.TypeRegistry()
 
 
+def mangle_name(name, *, file_hash):
+    return "_".join(["adrian", file_hash, name])
+
+
 def mangle(name, *, file_hash):
     if can_mangle(name):
         return layers.mangle_name(name, file_hash=file_hash)

@@ -141,7 +141,7 @@ def p_stmt(content):
 
 
 def p_return(content):
-    """return : RETURN bool_expr"""
+    """return : RET bool_expr"""
     content[0] = ast.Return(content[2])
 
 
@@ -202,8 +202,8 @@ def p_arg_names_2(content):
 
 
 def p_struct_decl(content):
-    """struct_decl : STRUCT NAME LBRACE struct_body RBRACE"""
-    content[0] = ast.Struct(ast.Name(content[2]), content[4])
+    """struct_decl : DATA NAME LBRACE struct_body RBRACE"""
+    content[0] = ast.Data(ast.Name(content[2]), content[4])
 
 
 def p_struct_body_1(content):

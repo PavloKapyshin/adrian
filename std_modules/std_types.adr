@@ -1,52 +1,42 @@
--- ctypes#String is an alias for ctypes#Array(ctypes#Char)
--- Self is an alias for structs type
-
 struct String {
-    var length: ctypes#Int64
-    var string: ctypes#String
+    length: c#Int64
+    string: c#String
 
-    func init(self: Self; string: ctypes#String) {
+    fun init(string: c#String) {
         self.string = string
         self.length = c#strlen(string)
     }
 
-    func del(self: Self; index: ctypes#Int64) {}
-    func get(self: Self; index: ctypes#Int64): ctypes#Char {}
-    func push(self: Self; index: ctypes#Int64; char: ctypes#Char) {}
+    fun del(index: c#Int64): None {}
+    fun get(index: c#Int64): c#Char {}
+    fun push(index: c#Int64; char: c#Char): None {}
 
-    func reverse(self: Self): Self {}
+    fun reverse(): String {}
 }
 
 
-const ZERO_SIGN = 1
-const POSITIVE_SIGN = 2
-const NEGATIVE_SIGN = 3
+cst ZERO_SIGN = 1
+cst POSITIVE_SIGN = 2
+cst NEGATIVE_SIGN = 3
 
 
 struct Integer {
-    var sign: ctypes#Int32
-    var digits: ctypes#String
+    sign: c#Int32
+    digits: c#String
 
-    func init(self: Self; digits: ctypes#String) {
+    fun init(digits: c#String) {
         -- only positive integers and zero are supported
         self.digits = digits
-        if self.digits == "0" {
+        iff self.digits == c#String("0") {
             self.sign = ZERO_SIGN
         } else {
             self.sign = POSITIVE_SIGN
         }
     }
+
+    fun add(int1, int2: Integer): Integer {}
+    fun sub(int1, int2: Integer): Integer {}
+    fun mul(int1, int2: Integer): Integer {}
+    fun divFloat(int1, int2: Integer): Float {}
+    fun divInteger(int1, int2: Integer): Integer {}
 }
-
-
-func add(int1, int2: Integer): Integer {}
-func sub(int1, int2: Integer): Integer {}
-func mul(int1, int2: Integer): Integer {}
-func divFloat(int1, int2: Integer): Float {}
-func divInteger(int1, int2: Integer): Integer {}
-
-
-alias + add
-alias - sub
-alias * mul
-alias / (divFloat, divInteger)

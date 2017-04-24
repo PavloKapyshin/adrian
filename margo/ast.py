@@ -139,9 +139,9 @@ class FuncCall(_Atom):
 class Return(_Atom):
     """Return statement.
 
-    return 1 + 2
-           ^^^^^
-           value
+    ret 1 + 2
+        ^^^^^
+        value
     """
     _keys = ("value", )
 
@@ -167,11 +167,11 @@ class Func(_Atom):
         self.body = body
 
 
-class Struct(_Atom):
+class Data(_Atom):
     """Declaration of struct.
-            name
-           vvvvvv
-    struct MyType {
+          name
+         vvvvvv
+    data MyType {
         var length: Integer    < body
         var data: String       < body
     }

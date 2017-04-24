@@ -8,9 +8,12 @@ from . import ast
 
 RESERVED_WORDS = (
     "var",
+    "cst",
     "fun",
-    "struct",
-    "return",
+    "data",
+    "ret",
+    "iff",
+    "else",
 )
 
 
