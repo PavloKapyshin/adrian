@@ -1,7 +1,7 @@
 import hashlib
 
 from . import lex_parse
-from . import naming_rules
+from . import new_naming_rules
 from . import name_existence
 from . import type_inference
 from . import type_checking
@@ -29,9 +29,9 @@ def compile(text, context, mangle_names=False, file_hash=""):
     print("Stage 1: parsing code.")
     lp_ast = lex_parse.main(text, exit_on_error=context.exit_on_error)
     print("Stage 2: checking naming rules.")
-    naming_rules.main(lp_ast, context=context)
+    nr_ast = new_naming_rules.NamingRules(context).main(lp_ast)
     print("Stage 3: checking name existence.")
-    name_existence.main(lp_ast, context=context)
+    name_existence.main(nr_ast, context=context)
     print("Stage 4: doing type inference where needed.")
     ti_ast = type_inference.main(lp_ast, context=context)
     print("Stage 5: checking types.")
@@ -46,7 +46,8 @@ def compile(text, context, mangle_names=False, file_hash=""):
     return oop_ast
 
 
-def compile_file(file_name, exit_on_error=True, mangle_names=False, encoding="utf-8"):
+def compile_file(
+        file_name, exit_on_error=True, mangle_names=False, encoding="utf-8"):
     return "\n".join([
         compile(
             line, exit_on_error=exit_on_error,

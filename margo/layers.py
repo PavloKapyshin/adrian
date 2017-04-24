@@ -4,8 +4,10 @@ from . import defs
 
 
 class Layer:
-    context=ast.Context(
-        exit_on_error=True, module_paths=[defs.STD_MODULES_PATH])
+
+    def __init__(self, context=ast.Context(
+            exit_on_error=True, module_paths=[defs.STD_MODULES_PATH])):
+        self.context = context
 
     def decl(self):
         """Overrides in subclass."""

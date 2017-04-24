@@ -8,12 +8,12 @@ from . import ast
 
 RESERVED_WORDS = (
     "var",
-    "cst",
+#    "cst",
     "fun",
     "data",
     "ret",
-    "iff",
-    "else",
+#    "iff",
+#    "else",
 )
 
 
