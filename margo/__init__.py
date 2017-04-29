@@ -2,7 +2,7 @@ import hashlib
 
 from . import lex_parse
 from . import new_naming_rules
-from . import name_existence
+from . import new_name_existence
 from . import type_inference
 from . import type_checking
 from . import default_value
@@ -31,9 +31,9 @@ def compile(text, context, mangle_names=False, file_hash=""):
     print("Stage 2: checking naming rules.")
     nr_ast = new_naming_rules.NamingRules(context).main(lp_ast)
     print("Stage 3: checking name existence.")
-    name_existence.main(nr_ast, context=context)
+    ne_ast = new_name_existence.NameExistence(context).main(nr_ast)
     print("Stage 4: doing type inference where needed.")
-    ti_ast = type_inference.main(lp_ast, context=context)
+    ti_ast = type_inference.main(ne_ast, context=context)
     print("Stage 5: checking types.")
     type_checking.main(ti_ast, context=context)
     print("Stage 6: adding default values where needed.")
