@@ -1,15 +1,14 @@
 import hashlib
 
 from . import lex_parse
-from . import new_naming_rules
-from . import new_name_existence
+from . import naming_rules
+from . import name_existence
 from . import type_inference
 from . import type_checking
 from . import default_value
 from . import std_alias
 from . import oop
 # from . import name_mangling
-from . import ast as margo_ast
 
 
 def _get_file_hash(file_name):
@@ -29,9 +28,9 @@ def compile(text, context, mangle_names=False, file_hash=""):
     print("Stage 1: parsing code.")
     lp_ast = lex_parse.main(text, exit_on_error=context.exit_on_error)
     print("Stage 2: checking naming rules.")
-    nr_ast = new_naming_rules.NamingRules(context).main(lp_ast)
+    nr_ast = naming_rules.NamingRules(context).main(lp_ast)
     print("Stage 3: checking name existence.")
-    ne_ast = new_name_existence.NameExistence(context).main(nr_ast)
+    ne_ast = name_existence.NameExistence(context).main(nr_ast)
     print("Stage 4: doing type inference where needed.")
     ti_ast = type_inference.main(ne_ast, context=context)
     print("Stage 5: checking types.")
@@ -42,7 +41,7 @@ def compile(text, context, mangle_names=False, file_hash=""):
     sa_ast = std_alias.main(dv_ast, context=context)
     print("Stage 8: translating Adrian structs to C structs.")
     oop_ast = oop.main(sa_ast, context=context)
-    print("Rocket launched!")
+    print("Compiled!")
     return oop_ast
 
 

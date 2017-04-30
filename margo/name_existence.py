@@ -101,15 +101,15 @@ class NameExistence(layers.Layer):
             self.context.line, self.context.exit_on_error)
 
     def decl(self, stmt):
-        self.name = self._decl_name(stmt.name)
-        self.type_ = stmt.type_
+        name = self._decl_name(stmt.name)
+        type_ = stmt.type_
         if stmt.type_:
-            self.type_ = self._decl_type(stmt.type_)
-        self.expr = stmt.expr
+            type_ = self._decl_type(stmt.type_)
+        expr = stmt.expr
         if stmt.expr:
-            self.expr = self._expr(stmt.expr)
+            expr = self._expr(stmt.expr)
         # Register here to avoid linking in expression to itself.
-        self.context.namespace.add_name(self.name, {
+        self.context.namespace.add_name(name, {
             "node_type": defs.NodeType.variable
         })
-        return ast.Decl(self.name, self.type_, self.expr)
+        return ast.Decl(name, type_, expr)

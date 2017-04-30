@@ -1,43 +1,32 @@
 -- Unit std library
 -- Unit is a special data, like Megabytes, Kelvins, Metres, etc.
 
-struct Unit {
-    type: String
+struct Unit(type) {
     value: Decimal
 
-    fun init(value: Decimal; type: String) {
-        self.type = type
+    fun init(value: Decimal) {
         self.value = value
     }
 
-    fun _safeOperation(unit1Type, unit2Type: String; value: Decimal): Unit {
-        iff unit1Type == unit2Type {
-            ret Unit(unit1Type, value)
-        }
-        -- Your error can be here.
-        print("Types are not equal!")
-        ret Unit(0.0, "")
+    fun add(unit1, unit2: Unit(type)): Unit(type) {
+        var result: Unit(type) = Unit(unit1.value + unit2.value)
+        ret result
     }
 
-    fun add(unit1, unit2: Unit): Unit {
-        ret self._safeOperation(
-            unit1.type, unit2.type, unit1.value + unit2.value)
+    fun sub(unit1, unit2: Unit(type)): Unit(type) {
+        var result: Unit(type) = Unit(unit1.value - unit2.value)
+        ret result
     }
 
-    fun sub(unit1, unit2: Unit): Unit {
-        ret self._safeOperation(
-            unit1.type, unit2.type, unit1.value - unit2.value)
+    fun mul(unit1, unit2: Unit(type)): Unit(type) {
+        var result: Unit(type) = Unit(unit1.value * unit2.value)
+        ret result
     }
 
-    fun mul(unit1, unit2: Unit): Unit {
-        ret self._safeOperation(
-            unit1.type, unit2.type, unit1.value * unit2.value)
-    }
-
-    fun div(unit1, unit2: Unit): Unit {
+    fun div(unit1, unit2: Unit(type)): Unit(type) {
         iff not (unit2.value == 0.0) {
-            ret self._safeOperation(
-                unit1.type, unit2.type, unit1.value / unit2.value)
+            var result: Unit(type) = Unit(unit1.value / unit2.value)
+            ret result
         }
         -- Your error can be here.
         print("n / 0")
