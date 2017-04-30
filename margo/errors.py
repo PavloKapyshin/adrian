@@ -19,9 +19,7 @@ _NON_EXISTING_MODULE = "non existing module '{module}'"
 _CANT_REASSIGN_BUILTIN = "can't reassign builtin '{name}'"
 _CANT_FIND_NAME_IN_MODULE = "can't find name '{name}' in module '{module_name}'"
 
-_TYPE_OF_NAME_AND_TYPE_OF_VALUE_ARE_NOT_EQUAL = (
-    "type ('{type_of_name}') of name '{name}' and "
-    "type ('{type_of_expr}') of expression are not equal")
+_TYPES_ARE_NOT_EQUAL = "type '{type1}' and type '{type2}' are not equal."
 
 _NOT_IMPLEMENTED = "not implemented"
 
@@ -82,11 +80,10 @@ def cant_find_name_in_module(line, exit_on_error, name, module_name):
         _CANT_FIND_NAME_IN_MODULE, name=name, module_name=module_name)
 
 
-def type_of_name_and_type_of_expr_are_not_equal(
-        line, exit_on_error, name, type_of_name, type_of_expr):
+def types_are_not_equal(line, exit_on_error, type1, type2):
     _error(
-        line, exit_on_error, _TYPE_OF_NAME_AND_TYPE_OF_VALUE_ARE_NOT_EQUAL,
-        name=name, type_of_name=type_of_name, type_of_expr=type_of_expr)
+        line, exit_on_error, _TYPES_ARE_NOT_EQUAL,
+        type1=type1, type2=type2)
 
 
 def not_implemented(line, exit_on_error):

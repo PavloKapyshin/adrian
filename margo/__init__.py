@@ -32,17 +32,17 @@ def compile(text, context, mangle_names=False, file_hash=""):
     print("Stage 3: checking name existence.")
     ne_ast = name_existence.NameExistence(context).main(nr_ast)
     print("Stage 4: doing type inference where needed.")
-    ti_ast = type_inference.main(ne_ast, context=context)
-    print("Stage 5: checking types.")
-    type_checking.main(ti_ast, context=context)
-    print("Stage 6: adding default values where needed.")
-    dv_ast = default_value.main(ti_ast, context=context)
-    print("Stage 7: translating standard aliases.")
-    sa_ast = std_alias.main(dv_ast, context=context)
-    print("Stage 8: translating Adrian structs to C structs.")
-    oop_ast = oop.main(sa_ast, context=context)
+    ti_ast = type_inference.TypeInference(context).main(ne_ast)
+    # print("Stage 5: checking types.")
+    # type_checking.main(ti_ast, context=context)
+    # print("Stage 6: adding default values where needed.")
+    # dv_ast = default_value.main(ti_ast, context=context)
+    # print("Stage 7: translating standard aliases.")
+    # sa_ast = std_alias.main(dv_ast, context=context)
+    # print("Stage 8: translating Adrian structs to C structs.")
+    # oop_ast = oop.main(sa_ast, context=context)
     print("Compiled!")
-    return oop_ast
+    return ti_ast
 
 
 def compile_file(
