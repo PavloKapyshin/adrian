@@ -1,0 +1,46 @@
+-- Unit std library
+-- Unit is a special data, like Megabytes, Kelvins, Metres, etc.
+
+struct Unit {
+    type: String
+    value: Decimal
+
+    fun init(value: Decimal; type: String) {
+        self.type = type
+        self.value = value
+    }
+
+    fun _safeOperation(unit1Type, unit2Type: String; value: Decimal): Unit {
+        iff unit1Type == unit2Type {
+            ret Unit(unit1Type, value)
+        }
+        -- Your error can be here.
+        print("Types are not equal!")
+        ret Unit(0.0, "")
+    }
+
+    fun add(unit1, unit2: Unit): Unit {
+        ret self._safeOperation(
+            unit1.type, unit2.type, unit1.value + unit2.value)
+    }
+
+    fun sub(unit1, unit2: Unit): Unit {
+        ret self._safeOperation(
+            unit1.type, unit2.type, unit1.value - unit2.value)
+    }
+
+    fun mul(unit1, unit2: Unit): Unit {
+        ret self._safeOperation(
+            unit1.type, unit2.type, unit1.value * unit2.value)
+    }
+
+    fun div(unit1, unit2: Unit): Unit {
+        iff not (unit2.value == 0.0) {
+            ret self._safeOperation(
+                unit1.type, unit2.type, unit1.value / unit2.value)
+        }
+        -- Your error can be here.
+        print("n / 0")
+        ret Unit(0.0, "")
+    }
+}
