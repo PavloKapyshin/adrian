@@ -19,7 +19,7 @@ _NON_EXISTING_MODULE = "non existing module '{module}'"
 _CANT_REASSIGN_BUILTIN = "can't reassign builtin '{name}'"
 _CANT_FIND_NAME_IN_MODULE = "can't find name '{name}' in module '{module_name}'"
 
-_TYPES_ARE_NOT_EQUAL = "type '{type1}' and type '{type2}' are not equal."
+_TYPES_ARE_NOT_EQUAL = "type '{type1}' and type '{type2}' are not equal"
 
 _NOT_IMPLEMENTED = "not implemented"
 
