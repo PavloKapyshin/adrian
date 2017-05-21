@@ -49,6 +49,43 @@ func _bad_func(): None {}
 func bad_Func(): None {}
 ```
 
+### Modules
+
+Regular expression for matching module names: `[a-z_][a-z_0-9]*`.
+
+Module names are named using underscore case.
+
+```adrian
+-- Good names:
+_special_module#member
+c#member
+collections#member
+
+-- Bad names:
+_specialModule#member
+C#member
+
+-- Very bad names:
+co_L_L_ections#member
+```
+
+### Types
+
+Regular expression for matching type names: `[A-Z_][a-zA-Z0-9]`
+
+Type names are named using camel case.
+
+```adrian
+-- Good names:
+var myVar: _Integer
+var myVar: HTMLTag
+var myVar: Context
+
+-- Bad names:
+var myVar: integer
+var myVar: __Integer
+var myVar: Int_32
+```
 
 ## Default values
 
