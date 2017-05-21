@@ -8,4 +8,4 @@
 Now you may use `pygments` Python package.
 
 ## About
-Read my [notes about Adrian programming language](http://adrian.calendarius.org/blog/) (in Russian).
+Read my [notes about Adrian programming language](http://adrian.calendarius.org) (in Russian).
