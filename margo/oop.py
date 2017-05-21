@@ -1,73 +1,52 @@
 from . import ast
 from . import defs
+from . import layers
 from . import errors
 
-from vendor.paka import funcreg
 
+class OOP(layers.Layer):
 
-_FUNCS = funcreg.TypeRegistry()
+    def _make_func_from_method(self, expr):
+        return ast.FuncCall(
+            self._method(expr.method),
+            self._args(expr.args))
 
+    def _method(self, method):
+        if isinstance(method, ast.StructElem):
+            struct = self._method(method.struct)
+            elem = self._method(method.elem)
+            if isinstance(struct, ast.ModuleMember):
+                # Name concatination.
+                struct.member = elem + struct.member
+            else:
+                # Name concatination.
+                struct = elem + struct
+            return struct
+        elif isinstance(method, ast.Name):
+            return method.value
+        elif isinstance(method, ast.ModuleMember):
+            method.member = self._method(method.member)
+            return method
+        elif isinstance(method, ast.MethodCall):
+            return self._make_func_from_method(method)
+        errors.not_implemented(self.context.line, self.context.exit_on_error)
 
-def translate_method(method, *, context):
-    if isinstance(method, ast.StructElem):
-        struct = translate_method(method.struct, context=context)
-        elem = translate_method(method.elem, context=context)
-        if isinstance(struct, ast.ModuleMember):
-            struct.member = elem + struct.member
-        else:
-            struct = elem + struct
-        return struct
-    elif isinstance(method, ast.Name):
-        return method.value
-    elif isinstance(method, ast.ModuleMember):
-        method.member = translate_method(method.member, context=context)
-        return method
-    elif isinstance(method, ast.MethodCall):
-        method = translate_method(expr.method, context=context)
-        args = translate_args(expr.args, context=context)
-        return ast.FuncCall(method, args)
-    else:
-        print(method)
-        errors.not_implemented(context.line, context.exit_on_error)
+    def _args(self, args):
+        result = []
+        for arg in args:
+            if isinstance(arg, ast.MethodCall):
+                result.append(self._make_func_from_method(arg))
+            else:
+                result.append(arg)
+        return result
 
+    def _expr(self, expr):
+        if isinstance(expr, ast.MethodCall):
+            return self._make_func_from_method(expr)
+        errors.not_implemented(self.context.line, self.context.exit_on_error)
 
-def translate_args(args, *, context):
-    result = []
-    for arg in args:
-        if isinstance(arg, ast.MethodCall):
-            result.append(ast.FuncCall(
-                translate_method(arg.method, context=context),
-                translate_args(arg.args, context=context)))
-        else:
-            result.append(arg)
-    return result
-
-
-def translate_expr(expr, *, context):
-    if isinstance(expr, ast.MethodCall):
-        method = translate_method(expr.method, context=context)
-        args = translate_args(expr.args, context=context)
-        return ast.FuncCall(method, args)
-    else:
-        print("expr")
-        errors.not_implemented(context.line, context.exit_on_error)
-
-
-@_FUNCS.register(ast.Decl)
-def decl(stmt, *, context):
-    expr = translate_expr(stmt.expr, context=context)
-    return ast.Decl(stmt.name, stmt.type_, expr)
-
-
-def translate(ast_, *, context):
-    result = []
-    for pair in ast_:
-        context.line = pair.line
-        result.append(ast.Pair(
-            pair.line, _FUNCS[pair.stmt](pair.stmt, context=context)))
-    return result
-
-
-def main(ast_, *, context=ast.Context(
-        exit_on_error=True, module_paths=[defs.STD_MODULES_PATH])):
-    return translate(ast_, context=context)
+    def decl(self, stmt):
+        name = stmt.name
+        type_ = stmt.type_
+        expr = self._expr(stmt.expr)
+        return ast.Decl(name, type_, expr)

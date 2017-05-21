@@ -1,3 +1,6 @@
+import copy
+
+
 class _Atom:
     _keys = ()  # Override in subclass.
 
@@ -9,6 +12,9 @@ class _Atom:
                     key, getattr(self, key)) for key in self._keys))
 
     __repr__ = __str__
+
+    def copy(self):
+        return copy.deepcopy(self)
 
 
 class Pair(_Atom):

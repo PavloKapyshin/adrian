@@ -21,7 +21,7 @@ class StdAlias(layers.Layer):
         type_ = call.method
         if not isinstance(type_, ast.StructElem):
             return ast.MethodCall(
-                ast.StructElem(type_, ast.Name("init")), call.args)
+                ast.StructElem(type_.copy(), ast.Name("init")), call.args)
         elif type_.elem.value == "init":
             # BUG CAN BE HERE!
             return call

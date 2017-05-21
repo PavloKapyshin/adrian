@@ -39,10 +39,10 @@ def compile(text, context, mangle_names=False, file_hash=""):
     dv_ast = default_value.DefaultValue(context).main(tc_ast)
     print("Stage 7: translating standard aliases.")
     sa_ast = std_alias.StdAlias(context).main(dv_ast)
-    # print("Stage 8: translating Adrian structs to C structs.")
-    # oop_ast = oop.main(sa_ast, context=context)
+    print("Stage 8: translating Adrian structs to C structs.")
+    oop_ast = oop.OOP(context).main(sa_ast)
     print("Compiled!")
-    return sa_ast
+    return oop_ast
 
 
 def compile_file(
