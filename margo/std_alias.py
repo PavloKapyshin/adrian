@@ -45,7 +45,7 @@ class StdAlias(layers.Layer):
         args = self._std_type_init_args_from_alias([atom])
         return ast.MethodCall(
             ast.StructElem(
-                ast.ModuleMember(defs.STD_TYPES_MODULE_NAME, type_).
+                ast.ModuleMember(defs.STD_TYPES_MODULE_NAME, type_),
             ast.Name("init")), args)
 
     def _expr_from_alias(self, expr):
@@ -61,5 +61,5 @@ class StdAlias(layers.Layer):
         name = stmt.name
         type_ = self._type_from_alias(stmt.type_)
         expr = self._expr_from_alias(stmt.expr)
-        context.namespace.add_name(name.value, {"type": type_})
+        self.context.namespace.add_name(name.value, {"type": type_})
         return ast.Decl(name, type_, expr)
