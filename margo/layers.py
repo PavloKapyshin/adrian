@@ -30,6 +30,12 @@ class Layer:
         result = []
         for pair in ast_:
             self.context.line = pair.line
-            result.append(ast.Pair(
-                pair.line, self.funcs[type(pair.stmt)](pair.stmt)))
+            res = self.funcs[type(pair.stmt)](pair.stmt)
+            if isinstance(res, list):
+                for elem in res:
+                    result.append(ast.Pair(
+                        pair.line, elem))
+            else:
+                result.append(ast.Pair(
+                    pair.line, res))
         return result

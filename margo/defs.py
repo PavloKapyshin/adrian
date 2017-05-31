@@ -53,6 +53,12 @@ C_INT32 = "Int32"
 C_INT64 = "Int64"
 C_CSTRING = "CString"
 C_CHAR = "Char"
+C_FUNC_SIGNATURES = {
+    "initInt32": {
+        "rettype": ast.ModuleMember(
+            module_name="c", member=ast.Name("Int32")),
+    },
+}
 
 STD_TYPES_MODULE_NAME = "std_types"
 STD_MODULE_NAMES = (STD_TYPES_MODULE_NAME)
