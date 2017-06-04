@@ -149,14 +149,14 @@ def p_func_decl_1(content):
     """
     func_decl : FUN NAME LPAREN args RPAREN COLON type LBRACE func_body RBRACE
     """
-    content[0] = ast.Func(
+    content[0] = ast.FuncDecl(
         name=ast.Name(content[2]), args=content[4],
         type_=content[7], body=content[9])
 
 
 def p_func_decl_2(content):
     """func_decl : FUN NAME LPAREN args RPAREN LBRACE func_body RBRACE"""
-    content[0] = ast.Func(
+    content[0] = ast.FuncDecl(
         name=ast.Name(content[2]), args=content[4],
         type_=None, body=content[7])
 
@@ -202,8 +202,8 @@ def p_arg_names_2(content):
 
 
 def p_struct_decl(content):
-    """struct_decl : DATA NAME LBRACE struct_body RBRACE"""
-    content[0] = ast.Data(ast.Name(content[2]), content[4])
+    """struct_decl : SCT NAME LBRACE struct_body RBRACE"""
+    content[0] = ast.StructDecl(ast.Name(content[2]), content[4])
 
 
 def p_struct_body_1(content):

@@ -100,9 +100,29 @@ class String(_Value):
     _string = "String"
 
 
-class CString(_Value):
-    """CString in Adrian."""
-    _string = "CString"
+class CChar(_Value):
+    """CChar in Adrian."""
+    _string = "Char"
+
+
+class CIntFast8(_Value):
+    """CIntFast8 in Adrian."""
+    _string = "IntFast8"
+
+
+class CIntFast32(_Value):
+    """CIntFast32 in Adrian."""
+    _string = "IntFast32"
+
+
+class CUIntFast8(_Value):
+    """CUIntFast8 in Adrian."""
+    _string = "UIntFast8"
+
+
+class CUIntFast32(_Value):
+    """CUIntFast32 in Adrian."""
+    _string = "UIntFast32"
 
 
 class Name(_Atom):
