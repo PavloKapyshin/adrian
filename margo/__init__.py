@@ -3,7 +3,7 @@ import hashlib
 from . import lex_parse
 from . import naming_rules
 from . import name_existence
-# from . import type_inference
+from . import type_inference
 # from . import type_checking
 # from . import default_value
 # from . import std_alias
@@ -33,8 +33,8 @@ def compile(text, context, mangle_names=False, file_hash=""):
     nr_ast = naming_rules.NamingRules(context).main(lp_ast)
     print("Stage 3: checking name existence.")
     ne_ast = name_existence.NameExistence(context).main(nr_ast)
-    # print("Stage 4: doing type inference where needed.")
-    # ti_ast = type_inference.TypeInference(context).main(ne_ast)
+    print("Stage 4: doing type inference where needed.")
+    ti_ast = type_inference.TypeInference(context).main(ne_ast)
     # print("Stage 5: checking types.")
     # tc_ast = type_checking.TypeChecking(context).main(ti_ast)
     # print("Stage 6: adding default values where needed.")
@@ -48,7 +48,7 @@ def compile(text, context, mangle_names=False, file_hash=""):
     # print("Stage 10: doing automatic reference counting.")
     # arc_ast = arc.ARC(context).main(se_ast)
     print("Compiled!")
-    return ne_ast
+    return ti_ast
 
 
 def compile_file(

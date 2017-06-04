@@ -3,53 +3,58 @@ from . import defs
 from . import layers
 from . import errors
 
+from vendor.paka import funcreg
+
 
 class TypeInference(layers.Layer):
 
     def _types_equal(self, type1, type2):
-        if (isinstance(type1, ast.Name) and \
-                isinstance(type2, ast.Name)):
-            return type1.value == type2.value
-        elif (isinstance(type1, ast.ModuleMember) and \
-                isinstance(type2, ast.ModuleMember)):
-            return (type1.module_name == type2.module_name and \
-                    self._types_equal(type1.member, type2.member))
-        errors.not_implemented(
-            self.context.line, self.context.exit_on_error)
+        return self._types_equal.reg[type1](self, type1, type2)
 
+    _types_equal.reg = funcreg.TypeRegistry()
 
-    def _get_type_from_method(self, method):
-        # TODO: support other methods and structs.
-        if not isinstance(method, ast.StructElem):
-            return method
-        elif method.elem.value == "init":
-            return method.struct
-        errors.not_implemented(
-            self.context.line, self.context.exit_on_error)
+    @_types_equal.reg.register(ast.Name)
+    def _types_equal_name(self, type1, type2):
+        return type1.value == type2.value
+
+    @_types_equal.reg.register(ast.ModuleMember)
+    def _types_equal_name(self, type1, type2):
+        return (type1.name == type2.name and \
+                self._types_equal(type1.member, type2.member))
 
     def _get_type_from_expr(self, expr):
-        if isinstance(expr, ast.Name):
-            return self.context.namespace.get(expr.value)["type"]
-        elif isinstance(expr, ast.MethodCall):
-            if ((not isinstance(expr.method, ast.StructElem)) or \
-                    expr.method.elem.value == "init"):
-                return self._get_type_from_method(expr.method)
-            errors.not_implemented(
-                self.context.line, self.context.exit_on_error)
-        elif isinstance(expr, defs.ATOM_TYPES):
-            return ast.Name(expr.to_string())
-        elif isinstance(expr, list):
-            # Expression must contain only one type atoms.
-            # TODO: maybe typeOf(4 / 2) == Decimal.
-            expr1type = self._get_type_from_expr(expr[1])
-            expr2type = self._get_type_from_expr(expr[2])
-            if self._types_equal(expr1type, expr2type):
-                return expr1type
-            errors.types_are_not_equal(
-                self.context.line, self.context.exit_on_error,
-                expr1type, expr2type)
+        return self._get_type_from_expr.reg[expr](self, expr)
+
+    _get_type_from_expr.reg = funcreg.TypeRegistry()
+
+    @_get_type_from_expr.reg.register(ast.Name)
+    def _get_type_from_name(self, name):
+        return self.context.namespace.get(name.value)["type_"]
+
+    @_get_type_from_expr.reg.register(ast.MethodCall)
+    def _get_type_from_method(self, method):
+        if not isinstance(method.method, ast.StructElem):
+            return method.method
+        elif method.method.elem.value == "__init__":
+            return method.method.name
         errors.not_implemented(
             self.context.line, self.context.exit_on_error)
+
+    @_get_type_from_expr.reg.register(ast.Integer)
+    @_get_type_from_expr.reg.register(ast.String)
+    def _get_type_from_atom(self, atom):
+        return ast.Name(atom.to_string())
+
+    @_get_type_from_expr.reg.register(list)
+    def _get_type_from_list(self, lst):
+        # TODO: maybe typeOf(4 / 2) == Decimal.
+        expr_type1 = self._get_type_from_expr(lst[1])
+        expr_type2 = self._get_type_from_expr(lst[2])
+        if not self._types_equal(expr_type1, expr_type2):
+            errors.types_are_not_equal(
+                self.context.line, self.context.exit_on_error,
+                expr_type1, expr_type2)
+        return expr_type1
 
     def decl(self, stmt):
         name = stmt.name
@@ -58,6 +63,6 @@ class TypeInference(layers.Layer):
         if not type_:
             type_ = self._get_type_from_expr(expr)
         self.context.namespace.add_name(name.value, {
-            "type": type_
+            "type_": type_
         })
         return ast.Decl(name, type_, expr)
