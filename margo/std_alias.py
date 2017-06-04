@@ -11,7 +11,9 @@ class StdAlias(layers.Layer):
     def _type_from_alias(self, type_):
         if (isinstance(type_, ast.Name) and \
                 type_.value in defs.STD_TYPES_NAMES):
-            return ast.ModuleMember(defs.STD_TYPES_MODULE_NAME, type_)
+            return ast.ModuleMember(
+                name=ast.Name(defs.STD_TYPES_MODULE_NAME),
+                member=type_)
         return type_
 
     def _expr_from_alias(self, expr):
@@ -50,7 +52,7 @@ class StdAlias(layers.Layer):
         return ast.MethodCall(
             method=ast.StructElem(
                 name=ast.ModuleMember(
-                    name=defs.STD_TYPES_MODULE_NAME,
+                    name=ast.Name(defs.STD_TYPES_MODULE_NAME),
                     member=type_),
                 elem=ast.Name("__init__")),
             args=args)

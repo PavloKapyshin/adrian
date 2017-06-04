@@ -19,6 +19,7 @@ class TypeChecking(layers.Layer):
 
     @_types_equal.reg.register(ast.ModuleMember)
     def _types_equal_name(self, type1, type2):
+        print(type1, type2)
         return (type1.name.value == type2.name.value and \
                 self._types_equal(type1.member, type2.member))
 
