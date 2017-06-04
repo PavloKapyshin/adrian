@@ -7,7 +7,7 @@ from . import name_existence
 from . import type_inference
 from . import type_checking
 from . import default_value
-# from . import std_alias
+from . import std_alias
 # from . import oop
 # from . import simple_expr
 # from . import arc
@@ -42,8 +42,8 @@ def compile(text, context, mangle_names=False, file_hash=""):
     tc_ast = type_checking.TypeChecking(context).main(ti_ast)
     print("Stage 7: adding default values where needed.")
     dv_ast = default_value.DefaultValue(context).main(tc_ast)
-    # print("Stage 8: translating standard aliases.")
-    # sa_ast = std_alias.StdAlias(context).main(dv_ast)
+    print("Stage 8: translating standard aliases.")
+    sa_ast = std_alias.StdAlias(context).main(dv_ast)
     # print("Stage 9: translating Adrian structs to C structs.")
     # oop_ast = oop.OOP(context).main(sa_ast)
     # print("Stage 10: simplifying Adrian expressions.")
@@ -51,7 +51,7 @@ def compile(text, context, mangle_names=False, file_hash=""):
     # print("Stage 11: doing automatic reference counting.")
     # arc_ast = arc.ARC(context).main(se_ast)
     print("Compiled!")
-    return dv_ast
+    return sa_ast
 
 
 def compile_file(
