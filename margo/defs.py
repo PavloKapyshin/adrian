@@ -38,7 +38,7 @@ STD_TYPES = (
     ast.Integer,
     ast.String
 )
-STD_TYPES_NAMES = set(type_.to_string() for type_ in STD_TYPES)
+STD_TYPES_NAMES = set(type_.to_type().value for type_ in STD_TYPES)
 # STD_TYPES_FUNC_SIGNATURES = {
 #     "initInteger": {
 #         "rettype": ast.ModuleMember(
@@ -55,7 +55,7 @@ C_TYPES = (
     ast.CUIntFast32,
     ast.CChar,
 )
-C_TYPES_NAMES = set(type_.to_string() for type_ in C_TYPES)
+C_TYPES_NAMES = set(type_.to_type().member.value for type_ in C_TYPES)
 # C_FUNC_SIGNATURES = {
 #     "initInt32": {
 #         "rettype": ast.ModuleMember(

@@ -1,6 +1,9 @@
 import copy
 
 
+C_MODULE_NAME = "c"
+
+
 class _Atom:
     _keys = ()  # Override in subclass.
 
@@ -77,57 +80,6 @@ class Context:
 
     def copy(self):
         return copy.deepcopy(self)
-
-
-class _Value(_Atom):
-    _keys = ("value", )
-
-    def __init__(self, value):
-        self.value = value
-
-    @classmethod
-    def to_string(cls):
-        return cls._string
-
-
-class Integer(_Value):
-    """Integer in Adrian."""
-    _string = "Integer"
-
-
-class String(_Value):
-    """String in Adrian."""
-    _string = "String"
-
-
-class CChar(_Value):
-    """CChar in Adrian."""
-    _string = "Char"
-
-
-class CIntFast8(_Value):
-    """CIntFast8 in Adrian."""
-    _string = "IntFast8"
-
-
-class CIntFast32(_Value):
-    """CIntFast32 in Adrian."""
-    _string = "IntFast32"
-
-
-class CUIntFast8(_Value):
-    """CUIntFast8 in Adrian."""
-    _string = "UIntFast8"
-
-
-class CUIntFast32(_Value):
-    """CUIntFast32 in Adrian."""
-    _string = "UIntFast32"
-
-
-class CString(_Value):
-    """The way to represent raw C string."""
-    _string = "CString"
 
 
 class Name(_Atom):
@@ -283,3 +235,64 @@ class StructElem(_Atom):
     def __init__(self, name, elem):
         self.name = name
         self.elem = elem
+
+
+class _Value(_Atom):
+    _keys = ("value", )
+
+    def __init__(self, value):
+        self.value = value
+
+    @classmethod
+    def to_type(cls):
+        return cls._type
+
+
+class Integer(_Value):
+    """Integer in Adrian."""
+    _type = Name("Integer")
+
+
+class String(_Value):
+    """String in Adrian."""
+    _type = Name("String")
+
+
+class CChar(_Value):
+    """CChar in Adrian."""
+    _type = ModuleMember(
+        name=Name(C_MODULE_NAME),
+        member=Name("Char"))
+
+
+class CIntFast8(_Value):
+    """CIntFast8 in Adrian."""
+    _type = ModuleMember(
+        name=Name(C_MODULE_NAME),
+        member=Name("IntFast8"))
+
+
+class CIntFast32(_Value):
+    """CIntFast32 in Adrian."""
+    _type = ModuleMember(
+        name=Name(C_MODULE_NAME),
+        member=Name("IntFast32"))
+
+
+class CUIntFast8(_Value):
+    """CUIntFast8 in Adrian."""
+    _type = ModuleMember(
+        name=Name(C_MODULE_NAME),
+        member=Name("UIntFast8"))
+
+
+class CUIntFast32(_Value):
+    """CUIntFast32 in Adrian."""
+    _type = ModuleMember(
+        name=Name(C_MODULE_NAME),
+        member=Name("UIntFast32"))
+
+
+class CString(_Value):
+    """The way to represent raw C string."""
+    _type = Name("CString")

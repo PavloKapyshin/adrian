@@ -94,6 +94,11 @@ class NameExistence(layers.Layer):
 
     @_expr.reg.register(ast.Integer)
     @_expr.reg.register(ast.String)
+    @_expr.reg.register(ast.CIntFast8)
+    @_expr.reg.register(ast.CUIntFast8)
+    @_expr.reg.register(ast.CIntFast32)
+    @_expr.reg.register(ast.CUIntFast32)
+    @_expr.reg.register(ast.CChar)
     def _expr_atom(self, atom):
         # Nothing to do here.
         return atom

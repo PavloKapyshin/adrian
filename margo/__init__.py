@@ -34,14 +34,14 @@ def compile(text, context, mangle_names=False, file_hash=""):
     an_ast = analyzer.Analyzer(context).main(lp_ast)
     print("Stage 3: checking naming rules.")
     nr_ast = naming_rules.NamingRules(context).main(an_ast)
-    # print("Stage 4: checking name existence.")
-    # ne_ast = name_existence.NameExistence(context).main(nr_ast)
-    # print("Stage 5: doing type inference where needed.")
-    # ti_ast = type_inference.TypeInference(context).main(ne_ast)
-    # print("Stage 6: checking types.")
-    # tc_ast = type_checking.TypeChecking(context).main(ti_ast)
-    # print("Stage 7: adding default values where needed.")
-    # dv_ast = default_value.DefaultValue(context).main(tc_ast)
+    print("Stage 4: checking name existence.")
+    ne_ast = name_existence.NameExistence(context).main(nr_ast)
+    print("Stage 5: doing type inference where needed.")
+    ti_ast = type_inference.TypeInference(context).main(ne_ast)
+    print("Stage 6: checking types.")
+    tc_ast = type_checking.TypeChecking(context).main(ti_ast)
+    print("Stage 7: adding default values where needed.")
+    dv_ast = default_value.DefaultValue(context).main(tc_ast)
     # print("Stage 8: translating standard aliases.")
     # sa_ast = std_alias.StdAlias(context).main(dv_ast)
     # print("Stage 9: translating Adrian structs to C structs.")
@@ -51,7 +51,7 @@ def compile(text, context, mangle_names=False, file_hash=""):
     # print("Stage 11: doing automatic reference counting.")
     # arc_ast = arc.ARC(context).main(se_ast)
     print("Compiled!")
-    return nr_ast
+    return dv_ast
 
 
 def compile_file(

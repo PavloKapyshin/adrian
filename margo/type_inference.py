@@ -42,8 +42,13 @@ class TypeInference(layers.Layer):
 
     @_get_type_from_expr.reg.register(ast.Integer)
     @_get_type_from_expr.reg.register(ast.String)
+    @_get_type_from_expr.reg.register(ast.CIntFast8)
+    @_get_type_from_expr.reg.register(ast.CUIntFast8)
+    @_get_type_from_expr.reg.register(ast.CIntFast32)
+    @_get_type_from_expr.reg.register(ast.CUIntFast32)
+    @_get_type_from_expr.reg.register(ast.CChar)
     def _get_type_from_atom(self, atom):
-        return ast.Name(atom.to_string())
+        return atom.to_type()
 
     @_get_type_from_expr.reg.register(list)
     def _get_type_from_list(self, lst):
