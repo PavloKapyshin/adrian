@@ -32,8 +32,8 @@ def compile(text, context, mangle_names=False, file_hash=""):
     lp_ast = lex_parse.main(text, exit_on_error=context.exit_on_error)
     print("Stage 2: analyzing code and getting more data from context.")
     an_ast = analyzer.Analyzer(context).main(lp_ast)
-    # print("Stage 3: checking naming rules.")
-    # nr_ast = naming_rules.NamingRules(context).main(an_ast)
+    print("Stage 3: checking naming rules.")
+    nr_ast = naming_rules.NamingRules(context).main(an_ast)
     # print("Stage 4: checking name existence.")
     # ne_ast = name_existence.NameExistence(context).main(nr_ast)
     # print("Stage 5: doing type inference where needed.")
@@ -51,7 +51,7 @@ def compile(text, context, mangle_names=False, file_hash=""):
     # print("Stage 11: doing automatic reference counting.")
     # arc_ast = arc.ARC(context).main(se_ast)
     print("Compiled!")
-    return an_ast
+    return nr_ast
 
 
 def compile_file(

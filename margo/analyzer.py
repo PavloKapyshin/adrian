@@ -28,12 +28,19 @@ class Analyzer(layers.Layer):
 
     @_expr.reg.register(ast.MethodCall)
     def _expr_method(self, method):
-        print(method)
         if isinstance(method.method, ast.ModuleMember):
             if method.method.name.value == defs.C_MODULE_NAME:
                 return self._to_c_data(method.method.member, method.args)
         errors.not_implemented(
             self.context.line, self.context.exit_on_error)
+
+    @_expr.reg.register(list)
+    def _expr_list(self, lst):
+        return [
+            lst[0],
+            self._expr(lst[1]),
+            self._expr(lst[2])
+        ]
 
     def _to_c_data(self, type_, args):
         d = {
