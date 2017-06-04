@@ -16,10 +16,13 @@ class SimpleExpr(layers.Layer):
     def _make_temps_funccall(self, expr):
         # var s = c#initInt32(1)
         # var s = myFun()
-        if (isinstance(expr.name, ast.ModuleMember) and \
-                expr.name.module_name == defs.C_MODULE_NAME):
-            # TODO: check for func existence.
-            info = defs.C_FUNC_SIGNATURES[expr.name.member]
+        if isinstance(expr.name, ast.ModuleMember):
+            if expr.name.module_name == defs.C_MODULE_NAME:
+                # TODO: check for func existence.
+                info = defs.C_FUNC_SIGNATURES[expr.name.member]
+            elif expr.name.module_name == defs.STD_TYPES_MODULE_NAME:
+                # TODO: check for func existence.
+                info = defs.STD_TYPES_FUNC_SIGNATURES[expr.name.member]
         else:
             info = self.context.funcspace.get(expr)
         type_ = info["rettype"]

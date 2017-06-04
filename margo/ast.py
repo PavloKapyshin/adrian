@@ -53,6 +53,13 @@ class _Namespace:
             return self._space[self._scope][name]
         return None
 
+    def update(self, name, values):
+        for key, val in values.items():
+            self._space[self._scope][name][key] = val
+
+    def space(self):
+        return self._space
+
     @property
     def scope(self):
         return self._scope
@@ -67,6 +74,9 @@ class Context:
         self.includes = []
         self.exit_on_error = exit_on_error
         self.module_paths = module_paths
+
+    def copy(self):
+        return copy.deepcopy(self)
 
 
 class _Value(_Atom):
@@ -155,7 +165,7 @@ class Return(_Atom):
         self.expr = expr
 
 
-class Func(_Atom):
+class FuncDecl(_Atom):
     """Declaration of function.
 
          name                                      type_
@@ -173,7 +183,7 @@ class Func(_Atom):
         self.body = body
 
 
-class Data(_Atom):
+class StructDecl(_Atom):
     """Declaration of struct.
           name
          vvvvvv
@@ -235,24 +245,16 @@ class MethodCall(_Atom):
 
 
 class ModuleMember(_Atom):
-    _keys = ("module_name", "member")
+    _keys = ("name", "member")
 
-    def __init__(self, module_name, member):
-        self.module_name = module_name
+    def __init__(self, name, member):
+        self.name = name
         self.member = member
 
 
 class StructElem(_Atom):
-    _keys = ("struct", "elem")
+    _keys = ("name", "elem")
 
-    def __init__(self, struct, elem):
-        self.struct = struct
-        self.elem = elem
-
-
-class FuncCall(_Atom):
-    _keys = ("name", "args")
-
-    def __init__(self, name, args):
+    def __init__(self, name, elem):
         self.name = name
-        self.args = args
+        self.elem = elem

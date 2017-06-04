@@ -47,6 +47,7 @@ TYPE_REGEX = re.compile(r"[A-Z_][a-zA-Z0-9]*")
 VARIABLE_REGEX = re.compile(r"[a-z_][a-zA-Z0-9]*")
 MODULE_REGEX = re.compile(r"[a-z_][a-z_0-9]*")
 CONSTANT_REGEX = re.compile(r"[A-Z_][A-Z_0-9]*")
+SPECIAL_STRUCT_ELEM_REGEX = re.compile(r"[_][_][a-zA-Z0-9]*[_][_]")
 
 C_MODULE_NAME = "c"
 C_INT32 = "Int32"
@@ -56,11 +57,21 @@ C_CHAR = "Char"
 C_FUNC_SIGNATURES = {
     "initInt32": {
         "rettype": ast.ModuleMember(
-            module_name="c", member=ast.Name("Int32")),
+            name=ast.Name(C_MODULE_NAME), member=ast.Name("Int32")),
     },
+    "initCString": {
+        "rettype": ast.ModuleMember(
+            name=ast.Name(C_MODULE_NAME), member=ast.Name("CString")),
+    }
 }
 
 STD_TYPES_MODULE_NAME = "std_types"
+STD_TYPES_FUNC_SIGNATURES = {
+    "initInteger": {
+        "rettype": ast.ModuleMember(
+            name=ast.Name(STD_TYPES_MODULE_NAME), member=ast.Name("Integer"))
+    }
+}
 STD_MODULE_NAMES = (STD_TYPES_MODULE_NAME)
 STD_MODULES_PATH = "std_modules/"
 ADRIAN_FILE_EXTENSION = ".adr"

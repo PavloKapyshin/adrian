@@ -12,17 +12,17 @@ class Layer:
     def decl(self):
         """Overrides in subclass."""
 
-    def data(self):
+    def struct_decl(self):
         """Overrides in subclass."""
 
-    def func(self):
+    def func_decl(self):
         """Overrides in subclass."""
 
     def _make_funcs_dict(self):
         return {
             ast.Decl: self.decl,
-            ast.Data: self.data,
-            ast.Func: self.func
+            ast.StructDecl: self.struct_decl,
+            ast.FuncDecl: self.func_decl,
         }
 
     def main(self, ast_):

@@ -75,7 +75,7 @@ def t_STRING(token):
 
 
 def t_NAME(token):
-    r"""[a-zA-Z_][a-zA-Z0-9_]*"""
+    r"""[_]?[_]?[a-zA-Z][a-zA-Z0-9_]*[_]?[_]?"""
     # Check for reserved words.
     token.type = _RESERVED_WORDS.get(token.value, "NAME")
     return token
@@ -284,7 +284,7 @@ def p_name_from_struct_2(content):
 
 def p_name_from_module_1(content):
     """name_from_module : NAME HASH NAME"""
-    content[0] = ast.ModuleMember(content[1], ast.Name(content[3]))
+    content[0] = ast.ModuleMember(ast.Name(content[1]), ast.Name(content[3]))
 
 
 def p_name_from_module_2(content):

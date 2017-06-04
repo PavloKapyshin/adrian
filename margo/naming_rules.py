@@ -3,83 +3,157 @@ from . import defs
 from . import layers
 from . import errors
 
+from vendor.paka import funcreg
+
 
 class NamingRules(layers.Layer):
 
-    def _matches_variable_name(self, name):
-        return defs.VARIABLE_REGEX.fullmatch(name)
+    def _matches_variable_name(self, text):
+        """Checks text for matching variable naming rules."""
+        return defs.VARIABLE_REGEX.fullmatch(text)
 
-    def _matches_type_name(self, name):
-        return defs.TYPE_REGEX.fullmatch(name)
+    def _matches_type_name(self, text):
+        """Checks text for matching type naming rules."""
+        return defs.TYPE_REGEX.fullmatch(text)
 
-    def _matches_module_name(self, name):
-        return defs.MODULE_REGEX.fullmatch(name)
+    def _matches_module_name(self, text):
+        """Checks text for matching module naming rules."""
+        return defs.MODULE_REGEX.fullmatch(text)
 
-    def _decl_name(self, name):
+    def _matches_special_struct_elem(self, text):
+        """Checks text for matching special elem rules."""
+        return defs.SPECIAL_STRUCT_ELEM_REGEX.fullmatch(text)
+
+    def _check_decl_name(self, name):
+        """Checks name according to all naming rules."""
         if not self._matches_variable_name(name.value):
             errors.bad_name_for_variable(
-                self.context.line, self.context.exit_on_error, name.value)
+                self.context.line, self.context.exit_on_error,
+                name.value)
         return name
 
-    def _type_name(self, name):
+    def _check_module_name(self, module_name):
+        """Checks text according to all naming rules."""
+        if not self._matches_module_name(module_name.value):
+            errors.bad_name_for_module(
+                self.context.line, self.context.exit_on_error,
+                module_name.value)
+        return module_name
+
+    def _check_struct_elem_name(self, name):
+        # TODO: think how to refactor this.
+        # Maybe self._check_decl_type()?
+        if (not (self._matches_special_struct_elem(name.value) or\
+                self._matches_variable_name(name.value) or\
+                self._matches_type_name(name.value))):
+            errors.bad_name_in_expr(
+                self.context.line, self.context.exit_on_error,
+                name.value)
+        return name
+
+    def _check_struct_elem(self, struct_elem):
+        if isinstance(struct_elem, ast.Name):
+            return self._check_struct_elem_name(struct_elem)
+        return self._check_decl_type(struct_elem)
+
+    def _check_decl_type(self, type_):
+        """Checks type_ according to all naming rules."""
+        return self._check_decl_type.reg[type_](self, type_)
+
+    _check_decl_type.reg = funcreg.TypeRegistry()
+
+    @_check_decl_type.reg.register(ast.Name)
+    def _check_decl_type_name(self, name):
+        """Checks name according to all naming rules."""
         if not self._matches_type_name(name.value):
             errors.bad_name_for_type(
-                self.context.line, self.context.exit_on_error, name.value)
+                self.context.line, self.context.exit_on_error,
+                name.value)
         return name
 
-    def _module_name(self, name):
-        if not self._matches_module_name(name):
-            errors.bad_name_for_module(
-                self.context.line, self.context.exit_on_error, name)
-        return name
+    @_check_decl_type.reg.register(ast.ModuleMember)
+    def _check_decl_type_module_member(self, module):
+        """Checks module according to all naming rules."""
+        return ast.ModuleMember(
+            name=self._check_module_name(module.name),
+            member=self._check_decl_type(module.member))
 
-    def _decl_type(self, type_):
-        if isinstance(type_, ast.Name):
-            return self._type_name(type_)
-        elif isinstance(type_, ast.ModuleMember):
-            return ast.ModuleMember(
-                self._module_name(type_.module_name),
-                self._decl_type(type_.member))
-        elif isinstance(type_, ast.StructElem):
-            return ast.StructElem(
-                self._decl_type(type_.struct),
-                self._name(type_.elem))
-        errors.not_implemented(self.context.line, self.context.exit_on_error)
+    @_check_decl_type.reg.register(ast.StructElem)
+    def _check_decl_type_struct_elem(self, struct):
+        """Checks struct according to all naming rules."""
+        return ast.StructElem(
+            name=self._check_decl_type(struct.name),
+            elem=self._check_struct_elem(struct.elem))
 
-    def _name(self, name):
+    def _check_expr(self, expr):
+        """Checks expr according to all naming rules."""
+        return self._check_expr.reg[expr](self, expr)
+
+    _check_expr.reg = funcreg.TypeRegistry()
+
+    @_check_expr.reg.register(ast.Name)
+    def _check_expr_name(self, name):
+        """Checks name according to all naming rules.
+
+        TODO: name can be a constant.
+        Needed to check node type in context.
+        """
         if not self._matches_variable_name(name.value):
             errors.bad_name_for_variable(
-                self.context.line, self.context.exit_on_error, name.value)
+                self.context.line, self.context.exit_on_error,
+                name.value)
         return name
 
-    def _call_args(self, args):
-        result = []
-        for arg in args:
-            result.append(self._expr(arg))
-        return result
+    @_check_expr.reg.register(ast.MethodCall)
+    def _check_expr_method_call(self, method):
+        """Checks method according to all naming rules.
 
-    def _expr(self, expr):
-        if isinstance(expr, ast.Name):
-            return self._name(expr)
-        elif isinstance(expr, defs.ATOM_TYPES):
-            return expr
-        elif isinstance(expr, list):
-            return [
-                expr[0],
-                self._expr(expr[1]),
-                self._expr(expr[2])
-            ]
-        elif isinstance(expr, ast.MethodCall):
-            return ast.MethodCall(
-                self._decl_type(expr.method), self._call_args(expr.args))
-        errors.not_implemented(self.context.line, self.context.exit_on_error)
+        method.method must named according to the type naming rules.
+        """
+        return ast.MethodCall(
+            method=self._check_decl_type(method.method),
+            args=self._check_call_args(method.args))
+
+    @_check_expr.reg.register(ast.StructElem)
+    def _check_expr_struct_elem(self, struct):
+        return ast.StructElem(
+            name=self._check_struct_name(struct.name),
+            elem=self._check_struct_elem(struct.elem))
+
+    @_check_expr.reg.register(ast.Integer)
+    @_check_expr.reg.register(ast.String)
+    def _check_expr_atom(self, atom):
+        # Nothing to do here.
+        return atom
+
+    @_check_expr.reg.register(list)
+    def _check_expr_list(self, lst):
+        return [
+            lst[0],
+            self._check_expr(lst[1]),
+            self._check_expr(lst[2])
+        ]
+
+    def _check_struct_name(self, name):
+        if isinstance(name, ast.Name):
+            if (not (self._matches_variable_name(name.value) or\
+                    self._matches_type_name(name.value))):
+                errors.bad_name_in_expr(
+                    self.context.line, self.context.exit_on_error,
+                    name.value)
+            return name
+        return self._check_decl_type(name)
+
+    def _check_call_args(self, args):
+        """Checks args according to the naming rules."""
+        return [self._check_expr(arg) for arg in args]
 
     def decl(self, stmt):
-        self.name = self._decl_name(stmt.name)
-        self.type_ = stmt.type_
-        if stmt.type_:
-            self.type_ = self._decl_type(stmt.type_)
-        self.expr = stmt.expr
-        if stmt.expr:
-            self.expr = self._expr(stmt.expr)
-        return ast.Decl(self.name, self.type_, self.expr)
+        name = self._check_decl_name(stmt.name)
+        type_ = stmt.type_
+        if type_:
+            type_ = self._check_decl_type(type_)
+        expr = stmt.expr
+        if expr:
+            expr = self._check_expr(expr)
+        return ast.Decl(name, type_, expr)
