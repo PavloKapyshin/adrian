@@ -6,5 +6,5 @@ scope: source.adrian
 
 contexts:
   main:
-    - match: \b(iff|else|for|while|fun|struct|ret|var|cst|ignore|in)\b
+    - match: \b(iff|els|for|whl|fun|sct|ret|var|cst|ign|in|is|inf)\b
       scope: keyword.control.adrian
