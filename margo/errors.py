@@ -21,6 +21,8 @@ _CANT_FIND_NAME_IN_MODULE = "can't find name '{name}' in module '{module_name}'"
 
 _TYPES_ARE_NOT_EQUAL = "type '{type1}' and type '{type2}' are not equal"
 
+_WRONG_NUMBER_OF_ARGS = "wrong number of arguments: expected {expected}, got {got}"
+
 _NOT_IMPLEMENTED = "not implemented"
 
 
@@ -88,6 +90,10 @@ def types_are_not_equal(line, exit_on_error, type1, type2):
 
 def not_implemented(line, exit_on_error):
     _error(line, exit_on_error, _NOT_IMPLEMENTED)
+
+
+def wrong_number_of_args(line, exit_on_error, expected, got):
+    _error(line, exit_on_error, _WRONG_NUMBER_OF_ARGS, expected=expected, got=got)
 
 
 def _error(line, exit_on_error, msg, **keywords):

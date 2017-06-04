@@ -1,6 +1,7 @@
 import hashlib
 
 from . import lex_parse
+from . import analyzer
 from . import naming_rules
 from . import name_existence
 from . import type_inference
@@ -29,26 +30,28 @@ def _read_file(file_name, encoding):
 def compile(text, context, mangle_names=False, file_hash=""):
     print("Stage 1: parsing code.")
     lp_ast = lex_parse.main(text, exit_on_error=context.exit_on_error)
-    print("Stage 2: checking naming rules.")
-    nr_ast = naming_rules.NamingRules(context).main(lp_ast)
-    print("Stage 3: checking name existence.")
-    ne_ast = name_existence.NameExistence(context).main(nr_ast)
-    print("Stage 4: doing type inference where needed.")
-    ti_ast = type_inference.TypeInference(context).main(ne_ast)
-    print("Stage 5: checking types.")
-    tc_ast = type_checking.TypeChecking(context).main(ti_ast)
-    print("Stage 6: adding default values where needed.")
-    dv_ast = default_value.DefaultValue(context).main(tc_ast)
-    # print("Stage 7: translating standard aliases.")
+    print("Stage 2: analyzing code and getting more data from context.")
+    an_ast = analyzer.Analyzer(context).main(lp_ast)
+    # print("Stage 3: checking naming rules.")
+    # nr_ast = naming_rules.NamingRules(context).main(an_ast)
+    # print("Stage 4: checking name existence.")
+    # ne_ast = name_existence.NameExistence(context).main(nr_ast)
+    # print("Stage 5: doing type inference where needed.")
+    # ti_ast = type_inference.TypeInference(context).main(ne_ast)
+    # print("Stage 6: checking types.")
+    # tc_ast = type_checking.TypeChecking(context).main(ti_ast)
+    # print("Stage 7: adding default values where needed.")
+    # dv_ast = default_value.DefaultValue(context).main(tc_ast)
+    # print("Stage 8: translating standard aliases.")
     # sa_ast = std_alias.StdAlias(context).main(dv_ast)
-    # print("Stage 8: translating Adrian structs to C structs.")
+    # print("Stage 9: translating Adrian structs to C structs.")
     # oop_ast = oop.OOP(context).main(sa_ast)
-    # print("Stage 9: simplifying Adrian expressions.")
+    # print("Stage 10: simplifying Adrian expressions.")
     # se_ast = simple_expr.SimpleExpr(context).main(oop_ast)
-    # print("Stage 10: doing automatic reference counting.")
+    # print("Stage 11: doing automatic reference counting.")
     # arc_ast = arc.ARC(context).main(se_ast)
     print("Compiled!")
-    return dv_ast
+    return an_ast
 
 
 def compile_file(
