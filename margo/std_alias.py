@@ -73,12 +73,15 @@ class StdAlias(layers.Layer):
                 self._expr_from_alias(lst[1]),
                 self._expr_from_alias(lst[2])
             ]
-        type_ = lst[1].to_type()
+        if isinstance(lst[1], ast.Name):
+            type_ = self.context.namespace.get(lst[1].value)["type_"]
+        else:
+            type_ = ast.ModuleMember(
+                name=ast.Name(defs.STD_TYPES_MODULE_NAME),
+                member=lst[1].to_type())
         return ast.MethodCall(
             method=ast.StructElem(
-                name=ast.ModuleMember(
-                    name=ast.Name(defs.STD_TYPES_MODULE_NAME),
-                    member=type_),
+                name=type_,
                 elem=ast.Name(self._op_to_func(lst[0]))),
             args=[
                 self._expr_from_alias(lst[1]),

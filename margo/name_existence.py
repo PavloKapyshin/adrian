@@ -9,9 +9,7 @@ from vendor.paka import funcreg
 class NameExistence(layers.Layer):
 
     def _type_exists(self, text):
-        return (text in defs.STD_TYPES_NAMES or \
-                text in defs.C_TYPES_NAMES or \
-                self.context.typespace.exists(text))
+        return (self.context.typespace.exists(text))
 
     def _module_exists(self, text):
         # TODO: search for module in the fs.
@@ -26,6 +24,20 @@ class NameExistence(layers.Layer):
                 self.context.line, self.context.exit_on_error,
                 name.value)
         return name
+
+    def _std_type(self, type_):
+        if type_.value in defs.STD_TYPES_NAMES:
+            return type_
+        errors.non_existing_type(
+            self.context.line, self.context.exit_on_error,
+            type_.value)
+
+    def _c_type(self, type_):
+        if type_.value in defs.C_TYPES_NAMES:
+            return type_
+        errors.non_existing_type(
+            self.context.line, self.context.exit_on_error,
+            type_.value)
 
     def _decl_type(self, type_):
         return self._decl_type.reg[type_](self, type_)
@@ -44,9 +56,16 @@ class NameExistence(layers.Layer):
     def _decl_type_module(self, module):
         # TODO: check existence of type in module.
         # Maybe it fixed?
-        return ast.ModuleMember(
-            name=self._module_name(module.name),
-            member=self._decl_type(module.member))
+        if module.name.value == defs.STD_TYPES_MODULE_NAME:
+            return ast.ModuleMember(
+                name=module.name,
+                member=self._std_type(module.member))
+        elif module.name.value == defs.C_MODULE_NAME:
+            return ast.ModuleMember(
+                name=module.name,
+                member=self._c_type(module.member))
+        errors.not_implemented(
+            self.context.line, self.context.exit_on_error)
 
     @_decl_type.reg.register(ast.StructElem)
     def _decl_type_struct(self, struct):
@@ -79,18 +98,18 @@ class NameExistence(layers.Layer):
     def _expr_name(self, name):
         return self._name(name)
 
-    @_expr.reg.register(ast.MethodCall)
-    def _expr_method(self, method):
-        if isinstance(method.method, ast.StructElem):
+    @_expr.reg.register(ast.FuncCall)
+    def _expr_funccall(self, call):
+        if isinstance(call.name, ast.StructElem):
             # TODO: check for existence struct.elem.
-            return ast.MethodCall(
-                method=ast.StructElem(
-                    name=self._decl_type(method.method.name),
-                    elem=method.method.elem),   # Check here.
-                args=self._call_args(method.args))
-        return ast.MethodCall(
-            method=self._decl_type(method.method),
-            args=self._call_args(method.args))
+            return ast.FuncCall(
+                name=ast.StructElem(
+                    name=self._decl_type(call.name.name),
+                    elem=call.name.elem),   # Check here.
+                args=self._call_args(call.args))
+        return ast.FuncCall(
+            name=self._func_name(call.name),
+            args=self._call_args(call.args))
 
     @_expr.reg.register(ast.Integer)
     @_expr.reg.register(ast.String)
@@ -99,6 +118,7 @@ class NameExistence(layers.Layer):
     @_expr.reg.register(ast.CIntFast32)
     @_expr.reg.register(ast.CUIntFast32)
     @_expr.reg.register(ast.CChar)
+    @_expr.reg.register(ast.CString)
     def _expr_atom(self, atom):
         # Nothing to do here.
         return atom
@@ -111,17 +131,22 @@ class NameExistence(layers.Layer):
             self._expr(lst[2])
         ]
 
+    def _func_name(self, name):
+        if isinstance(name, ast.Name):
+            if (name.value in defs.STD_TYPES_FUNC_SIGNATURES or \
+                    name.value in defs.C_FUNC_SIGNATURES):
+                return name
+        if (name.member.value in defs.STD_TYPES_FUNC_SIGNATURES or \
+                name.member.value in defs.C_FUNC_SIGNATURES):
+            return name
+
     def _call_args(self, args):
         return [self._expr(arg) for arg in args]
 
     def decl(self, stmt):
         name = self._decl_name(stmt.name)
-        type_ = stmt.type_
-        if type_:
-            type_ = self._decl_type(stmt.type_)
-        expr = stmt.expr
-        if expr:
-            expr = self._expr(stmt.expr)
+        type_ = self._decl_type(stmt.type_)
+        expr = self._expr(stmt.expr)
         # Register here to avoid linking in expression to itself.
         self.context.namespace.add_name(name.value, {
             "node_type": defs.NodeType.variable

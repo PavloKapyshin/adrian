@@ -76,7 +76,10 @@ class SimpleExpr(layers.Layer):
         tmp_names = []
         for arg in args:
             tmp_name, lst = self._expr(arg)
-            tmp_names.append(ast.Name(tmp_name))
+            if isinstance(tmp_name, str):
+                tmp_names.append(ast.Name(tmp_name))
+            else:
+                tmp_names.append(tmp_name)
             tmp_decls.extend(lst)
         return tmp_names, tmp_decls
 
