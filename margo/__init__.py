@@ -4,7 +4,7 @@ from . import lex_parse
 from . import naming_rules
 from . import name_existence
 from . import type_inference
-# from . import type_checking
+from . import type_checking
 # from . import default_value
 # from . import std_alias
 # from . import oop
@@ -35,8 +35,8 @@ def compile(text, context, mangle_names=False, file_hash=""):
     ne_ast = name_existence.NameExistence(context).main(nr_ast)
     print("Stage 4: doing type inference where needed.")
     ti_ast = type_inference.TypeInference(context).main(ne_ast)
-    # print("Stage 5: checking types.")
-    # tc_ast = type_checking.TypeChecking(context).main(ti_ast)
+    print("Stage 5: checking types.")
+    tc_ast = type_checking.TypeChecking(context).main(ti_ast)
     # print("Stage 6: adding default values where needed.")
     # dv_ast = default_value.DefaultValue(context).main(tc_ast)
     # print("Stage 7: translating standard aliases.")
@@ -48,7 +48,7 @@ def compile(text, context, mangle_names=False, file_hash=""):
     # print("Stage 10: doing automatic reference counting.")
     # arc_ast = arc.ARC(context).main(se_ast)
     print("Compiled!")
-    return ti_ast
+    return tc_ast
 
 
 def compile_file(
