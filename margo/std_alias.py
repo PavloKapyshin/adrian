@@ -67,11 +67,29 @@ class StdAlias(layers.Layer):
 
     @_expr_from_alias.reg.register(list)
     def _expr_from_alias_list(self, lst):
-        return [
-            lst[0],
-            self._expr_from_alias(lst[1]),
-            self._expr_from_alias(lst[2])
-        ]
+        if isinstance(lst[1], defs.C_TYPES):
+            return [
+                lst[0],
+                self._expr_from_alias(lst[1]),
+                self._expr_from_alias(lst[2])
+            ]
+        type_ = lst[1].to_type()
+        return ast.MethodCall(
+            method=ast.StructElem(
+                name=ast.ModuleMember(
+                    name=ast.Name(defs.STD_TYPES_MODULE_NAME),
+                    member=type_),
+                elem=ast.Name(self._op_to_func(lst[0]))),
+            args=[
+                self._expr_from_alias(lst[1]),
+                self._expr_from_alias(lst[2])
+            ])
+
+    def _op_to_func(self, op):
+        if op in defs.OP_TO_FUNC:
+            return defs.OP_TO_FUNC[op]
+        errors.not_implemented(
+            self.context.line, self.context.exit_on_error)
 
     def _std_type_init_args_from_alias(self, args):
         return [self._std_type_init_args_from_alias.reg[arg](

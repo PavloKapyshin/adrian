@@ -18,7 +18,7 @@ class TypeInference(layers.Layer):
         return type1.value == type2.value
 
     @_types_equal.reg.register(ast.ModuleMember)
-    def _types_equal_name(self, type1, type2):
+    def _types_equal_module(self, type1, type2):
         return (type1.name == type2.name and \
                 self._types_equal(type1.member, type2.member))
 

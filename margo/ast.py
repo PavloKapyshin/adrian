@@ -295,4 +295,6 @@ class CUIntFast32(_Value):
 
 class CString(_Value):
     """The way to represent raw C string."""
-    _type = Name("CString")
+    _type = ModuleMember(
+        name=Name(C_MODULE_NAME),
+        member=Name("String"))
