@@ -125,6 +125,11 @@ class CUIntFast32(_Value):
     _string = "UIntFast32"
 
 
+class CString(_Value):
+    """The way to represent raw C string."""
+    _string = "CString"
+
+
 class Name(_Atom):
     """Name concept in Adrian.
 
