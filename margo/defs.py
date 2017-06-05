@@ -82,28 +82,28 @@ C_TYPES = (
     ast.CChar,
 )
 C_TYPES_NAMES = set(type_.to_type().member.value for type_ in C_TYPES)
-C_FUNC_SIGNATURES = {
-    "__init__IntFast32": {
-        "rettype": ast.ModuleMember(
-            name=ast.Name(C_MODULE_NAME),
-            member=ast.Name("IntFast32")),
-    },
-    "__init__UIntFast32": {
-        "rettype": ast.ModuleMember(
-            name=ast.Name(C_MODULE_NAME),
-            member=ast.Name("UIntFast32")),
-    },
-    "__init__IntFast8": {
-        "rettype": ast.ModuleMember(
-            name=ast.Name(C_MODULE_NAME),
-            member=ast.Name("IntFast8")),
-    },
-    "__init__UIntFast8": {
-        "rettype": ast.ModuleMember(
-            name=ast.Name(C_MODULE_NAME),
-            member=ast.Name("UIntFast8")),
-    }
-}
+# C_FUNC_SIGNATURES = {
+#     "__init__IntFast32": {
+#         "rettype": ast.ModuleMember(
+#             name=ast.Name(C_MODULE_NAME),
+#             member=ast.Name("IntFast32")),
+#     },
+#     "__init__UIntFast32": {
+#         "rettype": ast.ModuleMember(
+#             name=ast.Name(C_MODULE_NAME),
+#             member=ast.Name("UIntFast32")),
+#     },
+#     "__init__IntFast8": {
+#         "rettype": ast.ModuleMember(
+#             name=ast.Name(C_MODULE_NAME),
+#             member=ast.Name("IntFast8")),
+#     },
+#     "__init__UIntFast8": {
+#         "rettype": ast.ModuleMember(
+#             name=ast.Name(C_MODULE_NAME),
+#             member=ast.Name("UIntFast8")),
+#     }
+# }
 
 STD_FUNCS = (
     "print",
