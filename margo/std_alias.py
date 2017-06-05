@@ -24,6 +24,9 @@ class StdAlias(layers.Layer):
     @_expr_from_alias.reg.register(ast.Name)
     def _expr_from_alias_name(self, name):
         type_ = self.context.namespace.get(name.value)["type_"]
+        if (isinstance(type_, ast.ModuleMember) and \
+                type_.name.value == defs.C_MODULE_NAME):
+            return name.copy()
         return ast.MethodCall(
             method=ast.StructElem(
                 name=type_,

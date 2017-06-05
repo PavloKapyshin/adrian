@@ -56,10 +56,11 @@ def compile_repl(text, contexts, mangle_names=False, file_hash=""):
     print("Stage 10: checking types.")
     tc_ast = type_checking.TypeChecking(
         contexts["type_checking"]).main(ne_ast)
-    # print("Stage 11: doing automatic reference counting.")
-    # arc_ast = arc.ARC(context).main(tc_ast)
+    print("Stage 11: doing automatic reference counting.")
+    arc_ast = arc.ARC(
+        contexts["arc"]).main(tc_ast)
     print("Compiled!")
-    return tc_ast
+    return arc_ast
 
 
 def compile(text, context, mangle_names=False, file_hash=""):
