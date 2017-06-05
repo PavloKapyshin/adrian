@@ -57,7 +57,7 @@ class Analyzer(layers.Layer):
             errors.wrong_number_of_args(
                 self.context.line, self.context.exit_on_error,
                 expected="1", got=str(len(args)))
-        return d[type_.value](ast.CString(args[0].value))
+        return d[type_.value](args[0].value)
 
     def decl(self, stmt):
         name = stmt.name

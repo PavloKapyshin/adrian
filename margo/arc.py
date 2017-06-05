@@ -81,6 +81,10 @@ class ARC(layers.Layer):
     def _arc_element_catom(self, key, value):
         return None
 
+    @_arc_element.reg.register(list)
+    def _arc_element_list(self, key, lst):
+        return None
+
     def _arc_element_call_args(self, args):
         for arg in args:
             if isinstance(arg, ast.Name):
@@ -128,6 +132,14 @@ class ARC(layers.Layer):
     @_expr.reg.register(ast.CString)
     def _expr_catom(self, catom):
         return catom
+
+    @_expr.reg.register(list)
+    def _expr_list(self, lst):
+        return [
+            lst[0],
+            self._expr(lst[1]),
+            self._expr(lst[2])
+        ]
 
     def _expr_call_args(self, args):
         return [self._expr(arg) for arg in args]

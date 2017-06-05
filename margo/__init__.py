@@ -11,6 +11,7 @@ from . import std_alias
 from . import oop
 from . import simple_expr
 from . import arc
+# from . import cgen
 # from . import name_mangling
 
 
@@ -59,6 +60,9 @@ def compile_repl(text, contexts, mangle_names=False, file_hash=""):
     print("Stage 11: doing automatic reference counting.")
     arc_ast = arc.ARC(
         contexts["arc"]).main(tc_ast)
+    # print("Stage 12: translating to C-like ast.")
+    # cgen_ast = cgen.CGen(
+    #     contexts["cgen"]).main(arc_ast)
     print("Compiled!")
     return arc_ast
 

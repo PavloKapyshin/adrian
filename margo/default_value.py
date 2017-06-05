@@ -28,10 +28,10 @@ class DefaultValue(layers.Layer):
     def _get_default_expr_from_module(self, module):
         if module.name.value == defs.C_MODULE_NAME:
             d = {
-                "IntFast8": (ast.CIntFast8, ast.CString("0")),
-                "IntFast32": (ast.CIntFast32, ast.CString("0")),
-                "UIntFast8": (ast.CUIntFast8, ast.CString("0")),
-                "UIntFast32": (ast.CUIntFast32, ast.CString("0"))
+                "IntFast8": (ast.CIntFast8, "0"),
+                "IntFast32": (ast.CIntFast32, "0"),
+                "UIntFast8": (ast.CUIntFast8, "0"),
+                "UIntFast32": (ast.CUIntFast32, "0")
             }
             if module.member.value in d:
                 entry = d[module.member.value]

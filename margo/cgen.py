@@ -1,83 +1,67 @@
 from . import ast
 from . import defs
+from . import layers
+from . import errors
 
-from vendor.paka import funcreg
 from vendor.adrian import cgen
+from vendor.paka import funcreg
 
 
-_FUNCS = funcreg.TypeRegistry()
+class CGen(layers.Layer):
 
-
-def ctype(type_):
-    if (isinstance(type_, ast.ModuleMember) and \
-            type_.module_name == defs.CTYPES_MODULE_NAME):
-        _d = {
-            defs.CTYPES_INT32_STRING: cgen.CTypes.int32,
-            defs.CTYPES_INT64_STRING: cgen.CTypes.int64,
-            defs.CTYPES_CHAR_STRING: cgen.CTypes.char
+    def _to_cop(self, op):
+        d = {
+            "+": cgen.COps.plus,
+            "-": cgen.COps.minus,
+            "*": cgen.COps.star,
+            "/": cgen.COps.slash,
         }
-        return _d[type_.member]
+        if op in d:
+            return d[op]
+        errors.not_implemented(
+            self.context.line, self.context.exit_on_error)
 
+    def _to_ctype(self, type_):
+        return self._to_ctype.reg[type_](self, type_)
 
-def _generate_value(value, type_):
-    if isinstance(value, ast.Name):
-        return cgen.Var(value.value)
-    elif isinstance(value, defs.ATOM_TYPES):
-        # TODO: only ctypes are supported
-        return cgen.Val(value.value, ctype(type_))
-    elif isinstance(value, list):
-        # TODO: only ctypes are supported
+    _to_ctype.reg = funcreg.TypeRegistry()
+
+    @_to_ctype.reg.register(ast.CIntFast8)
+    @_to_ctype.reg.register(ast.CUIntFast8)
+    @_to_ctype.reg.register(ast.CIntFast32)
+    @_to_ctype.reg.register(ast.CUIntFast32)
+    def _to_ctype_catom(self, catom):
+        d = {
+            ast.CIntFast8: cgen.CTypes.int_fast8,
+            ast.CUIntFast8: cgen.CTypes.uint_fast8,
+            ast.CIntFast32: cgen.CTypes.int_fast32,
+            ast.CUIntFast32: cgen.CTypes.uint_fast32,
+        }
+        if type(catom) in d:
+            return d[type(catom)]
+        errors.not_implemented(
+            self.context.line, self.context.exit_on_error)
+
+    def _expr(self, expr):
+        return self._expr.reg[expr](self, expr)
+
+    _expr.reg = funcreg.TypeRegistry()
+
+    @_expr.reg.register(ast.CIntFast8)
+    @_expr.reg.register(ast.CUIntFast8)
+    @_expr.reg.register(ast.CIntFast32)
+    @_expr.reg.register(ast.CUIntFast32)
+    def _expr_catom(self, catom):
+        cgen.Val(catom.value, self._to_ctype(catom))
+
+    @_expr.reg.register(list)
+    def _expr_list(self, lst):
         return cgen.Expr(
-            value[0],
-            _generate_value(value[1], type_),
-            _generate_value(value[2], type_)
-        )
+            self._to_cop(lst[0]),
+            self._expr(lst[1]),
+            self._expr(lst[2]))
 
-
-def generate_value(stmt):
-    return generate_value.registry[stmt](stmt)
-
-
-generate_value.registry = funcreg.TypeRegistry()
-
-
-@generate_value.registry.register(ast.Decl)
-def _generate_decl_value(stmt):
-    if stmt.value:
-        return _generate_value(stmt.value, stmt.type_)
-    return ctype(stmt.type_)
-
-
-def generate_body(body, *, context):
-    return generate(body, context=context)
-
-
-def generate_args(args):
-    return [(arg.name, ctype(arg.type_)) for arg in args]
-
-@_FUNCS.register(ast.FuncDecl)
-def func_decl(pair, *, context):
-    return cgen.Func(
-        pair.stmt.name, ctype(pair.stmt.type_),
-        generate_args(pair.stmt.args),
-        generate_body(pair.stmt.body, context=context))
-
-
-@_FUNCS.register(ast.StructDecl)
-def struct_decl(pair, *, context):
-    return cgen.Struct(
-        pair.stmt.name, generate_body(pair.stmt.body, context=context))
-
-
-@_FUNCS.register(ast.Decl)
-def decl(pair, *, context):
-    return cgen.Decl(pair.stmt.name, generate_value(pair.stmt))
-
-
-def generate(ast_, *, context):
-    return [_FUNCS[pair.stmt](pair, context=context) for pair in ast_]
-
-
-def main(ast_, *, context=ast.Context(
-        exit_on_error=True, module_paths=["std_modules/"])):
-    return generate(ast_, context=context)
+    def decl(self, stmt):
+        name = stmt.name
+        expr = self._expr(stmt.expr)
+        return cgen.Decl(name.value, expr)
