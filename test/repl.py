@@ -1,6 +1,7 @@
 import ast
 import cmd
 import sys
+import pprint
 
 import margo
 
@@ -45,7 +46,7 @@ class REPL(cmd.Cmd):
             # Keep context up to date.
             self.context.exit_on_error = self.settings["exit_on_error"]
             # Compile.
-            print(margo.compile_repl(
+            pprint.pprint(margo.compile_repl(
                 inp, self.contexts,
                 mangle_names=self.settings["mangle_names"]))
         except margo.errors.CompilationError as e:

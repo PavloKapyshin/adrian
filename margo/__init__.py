@@ -11,7 +11,7 @@ from . import std_alias
 from . import oop
 from . import simple_expr
 from . import arc
-# from . import cgen
+from . import cgen
 # from . import name_mangling
 
 
@@ -60,11 +60,11 @@ def compile_repl(text, contexts, mangle_names=False, file_hash=""):
     print("Stage 11: doing automatic reference counting.")
     arc_ast = arc.ARC(
         contexts["arc"]).main(tc_ast)
-    # print("Stage 12: translating to C-like ast.")
-    # cgen_ast = cgen.CGen(
-    #     contexts["cgen"]).main(arc_ast)
+    print("Stage 12: translating to C-like ast.")
+    cgen_ast = cgen.CGen(
+        contexts["cgen"]).main(arc_ast)
     print("Compiled!")
-    return arc_ast
+    return cgen_ast
 
 
 def compile(text, context, mangle_names=False, file_hash=""):
@@ -90,8 +90,10 @@ def compile(text, context, mangle_names=False, file_hash=""):
     tc_ast = type_checking.TypeChecking(context.copy()).main(ne_ast)
     print("Stage 11: doing automatic reference counting.")
     arc_ast = arc.ARC(context.copy()).main(tc_ast)
+    print("Stage 12: translating to C-like ast.")
+    cgen_ast = cgen.CGen(context.copy()).main(arc_ast)
     print("Compiled!")
-    return arc_ast
+    return cgen_ast
 
 
 def compile_file(

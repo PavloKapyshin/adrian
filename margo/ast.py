@@ -28,6 +28,40 @@ class Pair(_Atom):
         self.stmt = stmt
 
 
+class Variable(_Atom):
+    _keys = ("deps", "name", "type_")
+
+    def __init__(self, name, type_, deps=None):
+        self.name = name
+        self.type_ = type_
+        self.deps = deps or []
+
+
+class _Includes:
+
+    def __init__(self):
+        self._includes = {}
+
+    def __contains__(self, name):
+        return name in self._includes
+
+    def __getitem__(self, key):
+        return self._includes[key]
+
+    def __setitem__(self, key, value):
+        self._includes[key] = value
+
+    def get_cgen_ast(self):
+        ast_ = []
+        for key, value in self._includes.items():
+            include = value["__INCLUDE__"]
+            del value["__INCLUDE__"]
+            for key_, val in value.items():
+                ast_.append(val)
+            value["__INCLUDE__"] = include
+        return ast_
+
+
 class _Namespace:
 
     def __init__(self):
@@ -74,9 +108,10 @@ class Context:
         self.namespace = _Namespace()
         self.typespace = _Namespace()
         self.funcspace = _Namespace()
-        self.includes = []
+        self.includes = _Includes()
         self.exit_on_error = exit_on_error
         self.module_paths = module_paths
+        self.var_types = {}
 
     def copy(self):
         return copy.deepcopy(self)
@@ -298,3 +333,11 @@ class CString(_Value):
     _type = ModuleMember(
         name=Name(C_MODULE_NAME),
         member=Name("String"))
+
+class Void(_Value):
+    """The way to represent C void."""
+    _type = Name("Void")
+    _keys = ()
+
+    def __init__(self):
+        pass
