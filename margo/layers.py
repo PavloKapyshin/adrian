@@ -5,9 +5,9 @@ from . import defs
 
 class Layer:
 
-    def __init__(self, context=ast.Context(
-            exit_on_error=True, module_paths=[defs.STD_MODULES_PATH])):
-        self.context = context
+    def __init__(self, context=None):
+        self.context = context or ast.Context(
+            exit_on_error=True)
 
     def decl(self):
         """Overrides in subclass."""

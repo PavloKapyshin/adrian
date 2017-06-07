@@ -1,0 +1,1 @@
+PYTHONPATH=:. python3 test/test_analyzer.py

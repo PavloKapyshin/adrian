@@ -11,30 +11,38 @@ class REPL(cmd.Cmd):
     intro = "Welcome to Adrian testing REPL.\n"
     prompt = ">>> "
     settings = {"exit_on_error": False, "mangle_names": False}
-    context = margo.ast.Context(
-        exit_on_error=settings["exit_on_error"],
-        module_paths=["std_modules/"])
-    contexts = {
-        "analyzer": context.copy(),
-        "naming_rules": context.copy(),
-        "type_inference": context.copy(),
-        "default_value": context.copy(),
-        "std_alias": context.copy(),
-        "oop": context.copy(),
-        "simple_expr": context.copy(),
-        "name_existence": context.copy(),
-        "type_checking": context.copy(),
-        "arc": context.copy(),
-        "cgen": context.copy(),
-
-        "exit_on_error": settings["exit_on_error"]
-    }
+    contexts = (lambda settings: {
+        layer_name: margo.ast.Context(
+            exit_on_error=settings["exit_on_error"])
+        for layer_name in (
+            "analyzer",
+            "naming_rules",
+            "type_inference",
+            "default_value",
+            "std_alias",
+            "oop",
+            "simple_expr",
+            "name_existence",
+            "type_checking",
+            "arc",
+            "cgen"
+        )
+    })(settings)
+    # For lexing and parsing layer.
+    contexts["exit_on_error"] = settings["exit_on_error"]
 
     def do_settings(self, settings):
         if settings:
             for kw in settings.split(" "):
                 key, value = kw.split("=")
                 self.settings[key] = ast.literal_eval(value)
+                if key == "exit_on_error":
+                    exit_on_error = self.settings["exit_on_error"]
+                    self.contexts["exit_on_error"] = exit_on_error
+                    # Updating all contexts.
+                    for layer_name, context in self.contexts.items():
+                        if layer_name != "exit_on_error":
+                            context.exit_on_error = exit_on_error
         else:
             print(self.settings)
 
@@ -43,9 +51,7 @@ class REPL(cmd.Cmd):
 
     def do_eval(self, inp):
         try:
-            # Keep context up to date.
-            self.context.exit_on_error = self.settings["exit_on_error"]
-            # Compile.
+            # Compiling.
             pprint.pprint(margo.compile_repl(
                 inp, self.contexts,
                 mangle_names=self.settings["mangle_names"]))
@@ -56,6 +62,8 @@ class REPL(cmd.Cmd):
         sys.exit(0)
 
     def default(self, inp):
+        if inp == "EOF":
+            return True
         self.do_eval(inp)
 
     do_quit = do_exit

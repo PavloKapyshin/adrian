@@ -136,8 +136,15 @@ def p_stmt(content):
          | assignment
          | struct_decl
          | func_decl
+         | func_call
     """
     content[0] = content[1]
+
+
+def p_func_call_1(content):
+    """func_call : name_from_module LPAREN call_args RPAREN"""
+    content[0] = ast.FuncCall(
+        name=content[1], args=content[3])
 
 
 def p_return(content):
@@ -150,14 +157,14 @@ def p_func_decl_1(content):
     func_decl : FUN NAME LPAREN args RPAREN COLON type LBRACE func_body RBRACE
     """
     content[0] = ast.FuncDecl(
-        name=ast.Name(content[2]), args=content[4],
+        name=content[2], args=content[4],
         type_=content[7], body=content[9])
 
 
 def p_func_decl_2(content):
     """func_decl : FUN NAME LPAREN args RPAREN LBRACE func_body RBRACE"""
     content[0] = ast.FuncDecl(
-        name=ast.Name(content[2]), args=content[4],
+        name=content[2], args=content[4],
         type_=None, body=content[7])
 
 
@@ -176,15 +183,13 @@ def p_func_body_stmt(content):
     func_body_stmt : decl
                    | assignment
                    | return
+                   | func_call
     """
     content[0] = ast.Pair(content.lineno(0), content[1])
 
 def p_args_1(content):
     """args : arg_names COLON type SEMI args"""
-    content[0] = []
-    for name in content[1]:
-        content[0].append(ast.Arg(name, content[3]))
-    content[0] += content[5]
+    return [ast.Arg(name, content[3]) for name in content[1]] + content[5]
 
 def p_args_2(content):
     """args : empty"""
@@ -193,17 +198,17 @@ def p_args_2(content):
 
 def p_arg_names_1(content):
     """arg_names : NAME COMMA arg_names"""
-    content[0] = [ast.Name(content[1])] + content[3]
+    content[0] = [content[1]] + content[3]
 
 
 def p_arg_names_2(content):
     """arg_names : NAME"""
-    content[0] = [ast.Name(content[1])]
+    content[0] = [content[1]]
 
 
 def p_struct_decl(content):
     """struct_decl : SCT NAME LBRACE struct_body RBRACE"""
-    content[0] = ast.StructDecl(ast.Name(content[2]), content[4])
+    content[0] = ast.StructDecl(content[2], content[4])
 
 
 def p_struct_body_1(content):
@@ -227,19 +232,19 @@ def p_struct_body_stmt(content):
 def p_decl_1(content):
     """decl : VAR NAME COLON type EQ bool_expr"""
     content[0] = ast.Decl(
-        ast.Name(content[2]), type_=content[4], expr=content[6])
+        content[2], type_=content[4], expr=content[6])
 
 
 def p_decl_2(content):
     """decl : VAR NAME COLON type"""
     content[0] = ast.Decl(
-        ast.Name(content[2]), type_=content[4], expr=None)
+        content[2], type_=content[4], expr=None)
 
 
 def p_decl_3(content):
     """decl : VAR NAME EQ bool_expr"""
     content[0] = ast.Decl(
-        ast.Name(content[2]), type_=None, expr=content[4])
+        content[2], type_=None, expr=content[4])
 
 
 def p_assignment(content):
@@ -284,7 +289,7 @@ def p_name_from_struct_2(content):
 
 def p_name_from_module_1(content):
     """name_from_module : NAME HASH NAME"""
-    content[0] = ast.ModuleMember(ast.Name(content[1]), ast.Name(content[3]))
+    content[0] = ast.ModuleMember(content[1], ast.Name(content[3]))
 
 
 def p_name_from_module_2(content):
@@ -350,6 +355,7 @@ def p_atom_1(content):
          | STRING
          | name_from_struct
          | method_call
+         | func_call
     """
     content[0] = content[1]
 

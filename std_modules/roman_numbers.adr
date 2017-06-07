@@ -4,7 +4,7 @@ cst _ROMAN_NUMBER_TO_INTEGER = {
     "X" = 10,
 }
 
-struct RomanNumber {
+sct RomanNumber {
     data: Integer
 
     fun _parseCharToInteger(char: String) {
@@ -15,17 +15,17 @@ struct RomanNumber {
     }
 
     fun _parseStringToInteger(str: String) {
-        var stack: structs#Stack(Integer)
+        var stack: stack#Stack(Integer)
         for char in str {
             stack.push(_parseCharToInteger(char))
         }
         var correspondingInteger = 0
         var lastInteger =  0
-        while not stack.isEmpty() {
+        whl not stack.isEmpty() {
             var elem = stack.pop()
             iff lastInteger <= elem {
                 correspondingInteger += elem
-            } else {
+            } els {
                 correspondingInteger -= elem
             }
             lastInteger = elem

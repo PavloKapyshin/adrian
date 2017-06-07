@@ -38,7 +38,7 @@ STD_TYPES = (
     ast.Integer,
     ast.String
 )
-STD_TYPES_NAMES = set(type_.to_type().value for type_ in STD_TYPES)
+STD_TYPES_NAMES = set(type_.to_type() for type_ in STD_TYPES)
 # TODO: use cgen.CFuncDescr
 STD_TYPES_FUNC_SIGNATURES = {
     "__init__Integer": {
@@ -48,7 +48,7 @@ STD_TYPES_FUNC_SIGNATURES = {
         "args": [ast.CString.to_type()]
     },
     "__free__Integer": {
-        "rettype": ast.Void(),
+        "rettype": ast.CVoid(),
         "args": [ast.ModuleMember(
             name=ast.Name(STD_TYPES_MODULE_NAME),
             member=ast.Name("Integer"))]
@@ -124,7 +124,7 @@ C_TYPES = (
     ast.CString,
     ast.CChar,
 )
-C_TYPES_NAMES = set(type_.to_type().member.value for type_ in C_TYPES)
+C_TYPES_NAMES = set(type_.to_type().member for type_ in C_TYPES)
 # C_FUNC_SIGNATURES = {
 #     "__init__IntFast32": {
 #         "rettype": ast.ModuleMember(
