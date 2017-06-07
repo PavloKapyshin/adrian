@@ -2,7 +2,7 @@ import hashlib
 
 from . import lex_parse
 from . import analyzer
-# from . import naming_rules
+from . import naming_rules
 # from . import name_existence
 # from . import type_inference
 # from . import type_checking
@@ -34,9 +34,9 @@ def compile_repl(text, contexts, mangle_names=False, file_hash=""):
         text, exit_on_error=contexts["exit_on_error"])
     print("Stage 2: analyzing code and getting more data from context.")
     an_ast = analyzer.Analyzer(contexts["analyzer"]).main(lp_ast)
-    # print("Stage 3: checking naming rules.")
-    # nr_ast = naming_rules.NamingRules(
-    #     contexts["naming_rules"]).main(an_ast)
+    print("Stage 3: checking naming rules.")
+    nr_ast = naming_rules.NamingRules(
+        contexts["naming_rules"]).main(an_ast)
     # print("Stage 4: doing type inference where needed.")
     # ti_ast = type_inference.TypeInference(
     #     contexts["type_inference"]).main(nr_ast)
@@ -65,7 +65,7 @@ def compile_repl(text, contexts, mangle_names=False, file_hash=""):
     #     contexts["cgen"]).main(arc_ast)
     print("Compiled!")
     # return cgen_ast
-    return an_ast
+    return nr_ast
 
 
 def compile(text, context, mangle_names=False, file_hash=""):

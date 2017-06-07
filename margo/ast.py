@@ -223,6 +223,23 @@ class MethodCall(_Node):
         return self._args
 
 
+# class Instance(_Node):
+#     __slots__ = ("_struct", "_args", "_keys")
+
+#     def __init__(self, struct, args):
+#         self._struct = struct
+#         self._args = args
+#         self._keys = ("struct", "args")
+
+#     @property
+#     def struct(self):
+#         return self._struct
+
+#     @property
+#     def args(self):
+#         return self._args
+
+
 # Adrian language statements.
 class Pair(_Node):
     __slots__ = ("_line", "_stmt", "_keys")

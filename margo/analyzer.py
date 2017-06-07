@@ -1,8 +1,4 @@
-from . import ast
-from . import defs
-from . import cdefs
-from . import errors
-from . import layers
+from . import ast, cdefs, errors, layers
 
 from vendor.paka import funcreg
 

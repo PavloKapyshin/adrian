@@ -8,9 +8,10 @@ from . import ast
 
 TYPE_REGEX = re.compile(r"[A-Z_][a-zA-Z0-9]*")
 VARIABLE_REGEX = re.compile(r"[a-z_][a-zA-Z0-9]*")
+FUNCTION_REGEX = re.compile(r"[a-z_][a-zA-Z0-9]*")
 MODULE_REGEX = re.compile(r"[a-z_][a-z_0-9]*")
 CONSTANT_REGEX = re.compile(r"[A-Z_][A-Z_0-9]*")
-SPECIAL_STRUCT_ELEM_REGEX = re.compile(r"[_][_][a-zA-Z0-9]*[_][_]")
+SPEC_STRUCT_ELEM_REGEX = re.compile(r"[_][_][a-zA-Z0-9]*[_][_]")
 
 RESERVED_WORDS = (
     "var",
