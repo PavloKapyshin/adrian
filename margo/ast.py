@@ -1,5 +1,4 @@
-import copy
-import collections
+import copy, collections
 
 from . import cdefs
 
@@ -207,12 +206,17 @@ class FuncCall(_Node):
 
 
 class MethodCall(_Node):
-    __slots__ = ("_method", "_args", "_keys")
+    __slots__ = ("_struct", "_method", "_args", "_keys")
 
-    def __init__(self, method, args):
+    def __init__(self, struct, method, args):
+        self._struct = struct
         self._method = method
         self._args = args
-        self._keys = ("method", "args")
+        self._keys = ("struct", "method", "args")
+
+    @property
+    def struct(self):
+        return self._struct
 
     @property
     def method(self):

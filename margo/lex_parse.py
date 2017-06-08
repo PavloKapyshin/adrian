@@ -101,14 +101,6 @@ def t_error(token):
 
 
 # Parser defs.
-precedence = (
-    ("right", "LTEQ", "GTEQ", "LT", "GT"),
-    ("right", "EQEQ", "NEQ"),
-    ("right", "PLUS", "MINUS"),
-    ("right", "TIMES", "DIVIDE"),
-)
-
-
 def sexpr(expr):
     if len(expr) == 3 + 1:
         return [expr[2], expr[1], expr[3]]
@@ -254,7 +246,9 @@ def p_assignment(content):
 
 def p_method_call(content):
     """method_call : type LPAREN call_args RPAREN"""
-    content[0] = ast.MethodCall(method=content[1], args=content[3])
+    content[0] = ast.MethodCall(
+        struct=content[1].name, method=content[1].method,
+        args=content[3])
 
 
 def p_call_args_1(content):

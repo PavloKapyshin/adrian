@@ -1,7 +1,6 @@
 """Contains many useful definitions."""
 
-import re
-import enum
+import re, enum
 
 from . import ast
 

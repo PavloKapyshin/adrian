@@ -1,0 +1,5 @@
+PYTHONPATH=:. python3 test/test_ply_parser.py
+echo ''
+echo ''
+PYTHONPATH=:. ./../../venvs/margolith-env/bin/python3 test/test_pyparsing_parser.py
+
