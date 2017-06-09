@@ -1,12 +1,14 @@
 import unittest
 
-from margo import lex_parse, analyzer, ast, cdefs
+from margo import lex_parse, foreign_parser, analyzer, ast, cdefs
 
 
 def compile(inp):
     pseudo_result = analyzer.Analyzer(
-        ast.Context(exit_on_error=True)).main(
-            lex_parse.main(inp, exit_on_error=True))
+        structs.Context()).main(
+            foreign_parser.ForeignParser().main(
+                lex_parse.main(inp, exit_on_error=True)),
+            exit_on_error=True)
     # We need only stmt info.
     return [str(pair.stmt) for pair in pseudo_result]
 
@@ -127,4 +129,5 @@ class DeclOnlyExprTest(CommonTestCase):
 
 
 if __name__ == "__main__":
+    print("Analyzer")
     unittest.main()

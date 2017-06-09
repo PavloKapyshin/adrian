@@ -1,8 +1,9 @@
 import hashlib
 
 from . import lex_parse
-from . import analyzer
-from . import naming_rules
+from . import foreign_parser
+#from . import analyzer
+#from . import naming_rules
 # from . import name_existence
 # from . import type_inference
 # from . import type_checking
@@ -32,6 +33,8 @@ def compile_repl(text, contexts, mangle_names=False, file_hash=""):
     print("Stage 1: parsing code.")
     lp_ast = lex_parse.main(
         text, exit_on_error=contexts["exit_on_error"])
+    fp_ast = foreign_parser.ForeignParser().main(
+        lp_ast, contexts["exit_on_error"])
     # print("Stage 2: analyzing code and getting more data from context.")
     # an_ast = analyzer.Analyzer(contexts["analyzer"]).main(lp_ast)
     # print("Stage 3: checking naming rules.")
@@ -65,7 +68,7 @@ def compile_repl(text, contexts, mangle_names=False, file_hash=""):
     #     contexts["cgen"]).main(arc_ast)
     print("Compiled!")
     # return cgen_ast
-    return lp_ast
+    return fp_ast
 
 
 def compile(text, context, mangle_names=False, file_hash=""):

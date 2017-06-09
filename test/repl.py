@@ -12,24 +12,27 @@ class REPL(cmd.Cmd):
     prompt = ">>> "
     settings = {"exit_on_error": False, "mangle_names": False}
     contexts = (lambda settings: {
-        layer_name: margo.ast.Context(
-            exit_on_error=settings["exit_on_error"])
-        for layer_name in (
-            "analyzer",
-            "naming_rules",
-            "type_inference",
-            "default_value",
-            "std_alias",
-            "oop",
-            "simple_expr",
-            "name_existence",
-            "type_checking",
-            "arc",
-            "cgen"
-        )
+            "exit_on_error": settings["exit_on_error"]
     })(settings)
+    # contexts = (lambda settings: {
+    #     layer_name: margo.ast.Context(
+    #         exit_on_error=settings["exit_on_error"])
+    #     for layer_name in (
+    #         "analyzer",
+    #         "naming_rules",
+    #         "type_inference",
+    #         "default_value",
+    #         "std_alias",
+    #         "oop",
+    #         "simple_expr",
+    #         "name_existence",
+    #         "type_checking",
+    #         "arc",
+    #         "cgen"
+    #     )
+    # })(settings)
     # For lexing and parsing layer.
-    contexts["exit_on_error"] = settings["exit_on_error"]
+    #contexts["exit_on_error"] = settings["exit_on_error"]
 
     def do_settings(self, settings):
         if settings:

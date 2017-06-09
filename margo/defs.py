@@ -15,9 +15,9 @@ SPEC_STRUCT_ELEM_REGEX = re.compile(r"[_][_][a-zA-Z0-9]*[_][_]")
 RESERVED_WORDS = (
     "var",
 #    "cst",
-    "fun",
-    "sct",
-    "ret",
+#    "fun",
+#    "sct",
+#    "ret",
 #    "iff",
 #    "els",
 )

@@ -1,10 +1,11 @@
 import unittest
 
-from margo import lex_parse, ast, cdefs
+from margo import lex_parse, foreign_parser, ast, cdefs
 
 
 def compile(inp):
-    pseudo_result = lex_parse.main(inp, exit_on_error=True)
+    pseudo_result = foreign_parser.ForeignParser().main(
+        lex_parse.main(inp, exit_on_error=True), exit_on_error=True)
     # We need only stmt info.
     return [str(pair.stmt) for pair in pseudo_result]
 
@@ -21,13 +22,13 @@ class DeclOnlyTypeTest(CommonTestCase):
     def test_integer(self):
         expected = (ast.Decl(
             name="myVariable", type_=ast.Name("Integer"),
-            expr=None), )
+            expr=ast.Empty()), )
         self.check("var myVariable: Integer", expected)
 
     def test_string(self):
         expected = (ast.Decl(
             name="a", type_=ast.Name("String"),
-            expr=None), )
+            expr=ast.Empty()), )
         self.check("var a: String", expected)
 
     def test_c_intfast8(self):
@@ -35,7 +36,7 @@ class DeclOnlyTypeTest(CommonTestCase):
             name="a1", type_=ast.ModuleMember(
                 name=cdefs.CMODULE_NAME,
                 member=ast.Name("IntFast8")),
-            expr=None), )
+            expr=ast.Empty()), )
         self.check("var a1: c#IntFast8", expected)
 
     def test_c_intfast32(self):
@@ -43,7 +44,7 @@ class DeclOnlyTypeTest(CommonTestCase):
             name="a1", type_=ast.ModuleMember(
                 name=cdefs.CMODULE_NAME,
                 member=ast.Name("IntFast32")),
-            expr=None), )
+            expr=ast.Empty()), )
         self.check("var a1: c#IntFast32", expected)
 
     def test_c_uintfast8(self):
@@ -51,7 +52,7 @@ class DeclOnlyTypeTest(CommonTestCase):
             name="a1", type_=ast.ModuleMember(
                 name=cdefs.CMODULE_NAME,
                 member=ast.Name("UIntFast8")),
-            expr=None), )
+            expr=ast.Empty()), )
         self.check("var a1: c#UIntFast8", expected)
 
     def test_c_uintfast32(self):
@@ -59,7 +60,7 @@ class DeclOnlyTypeTest(CommonTestCase):
             name="a1", type_=ast.ModuleMember(
                 name=cdefs.CMODULE_NAME,
                     member=ast.Name("UIntFast32")),
-            expr=None), )
+            expr=ast.Empty()), )
         self.check("var a1: c#UIntFast32", expected)
 
 
@@ -67,41 +68,38 @@ class DeclOnlyExprTest(CommonTestCase):
 
     def test_integer(self):
         expected = (ast.Decl(
-            name="a", type_=None, expr=ast.Integer(
+            name="a", type_=ast.Empty(), expr=ast.Integer(
                 literal="1")), )
         self.check("var a = 1", expected)
 
     def test_integer_list1(self):
         expected = (ast.Decl(
-            name="a", type_=None, expr=[
+            name="a", type_=ast.Empty(), expr=ast.SExpr(
                 "+",
                 ast.Integer(literal="1"),
-                ast.Integer(literal="1")
-            ]), )
+                ast.Integer(literal="1"))), )
         self.check("var a = 1 + 1", expected)
 
     def test_integer_list2(self):
         expected = (ast.Decl(
-            name="a", type_=None, expr=[
+            name="a", type_=ast.Empty(), expr=ast.SExpr(
                 "+",
                 ast.Integer(literal="2"),
-                [
+                ast.SExpr(
                     "*",
                     ast.Integer(literal="9"),
-                    ast.Integer(literal="1")
-                ]
-            ]), )
+                    ast.Integer(literal="1")))), )
         self.check("var a = 2 + 9 * 1", expected)
 
     def test_string(self):
         expected = (ast.Decl(
-            name="a", type_=None, expr=ast.String(
+            name="a", type_=ast.Empty(), expr=ast.String(
                 literal="Hello, world!")), )
         self.check('var a = "Hello, world!"', expected)
 
     def test_c_intfast8(self):
         expected = (ast.Decl(
-            name="a", type_=None, expr=ast.FuncCall(
+            name="a", type_=ast.Empty(), expr=ast.FuncCall(
                 name=ast.ModuleMember(
                     name=cdefs.CMODULE_NAME,
                     member=ast.Name("IntFast8")),
@@ -110,7 +108,7 @@ class DeclOnlyExprTest(CommonTestCase):
 
     def test_c_uintfast8(self):
         expected = (ast.Decl(
-            name="a", type_=None, expr=ast.FuncCall(
+            name="a", type_=ast.Empty(), expr=ast.FuncCall(
                 name=ast.ModuleMember(
                     name=cdefs.CMODULE_NAME,
                     member=ast.Name("UIntFast8")),
@@ -119,7 +117,7 @@ class DeclOnlyExprTest(CommonTestCase):
 
     def test_c_intfast32(self):
         expected = (ast.Decl(
-            name="a", type_=None, expr=ast.FuncCall(
+            name="a", type_=ast.Empty(), expr=ast.FuncCall(
                 name=ast.ModuleMember(
                     name=cdefs.CMODULE_NAME,
                     member=ast.Name("IntFast32")),
@@ -128,7 +126,7 @@ class DeclOnlyExprTest(CommonTestCase):
 
     def test_c_uintfast32(self):
         expected = (ast.Decl(
-            name="a", type_=None, expr=ast.FuncCall(
+            name="a", type_=ast.Empty(), expr=ast.FuncCall(
                 name=ast.ModuleMember(
                     name=cdefs.CMODULE_NAME,
                     member=ast.Name("UIntFast32")),
