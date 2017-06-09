@@ -3,7 +3,7 @@ import functools
 from pyparsing import (
     Literal, Optional, Regex, OneOrMore, ZeroOrMore, Combine,
     Forward, Suppress, Group, ParseResults, Empty,
-    operatorPrecedence, opAssoc, oneOf, dblQuotedString)
+    operatorPrecedence, opAssoc, oneOf, dblQuotedString, lineno)
 
 from . import ast
 
@@ -144,7 +144,10 @@ decl3 = (
 
 decl = (decl1 | decl2 | decl3)
 
-stmt = (decl | call)
+stmt = (decl | call).setParseAction(
+    lambda st, locn, tokens: ast.Pair(
+        line=lineno(locn, st),
+        stmt=tokens[0]))
 
 ast_ = OneOrMore(stmt)
 

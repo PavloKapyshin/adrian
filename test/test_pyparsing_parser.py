@@ -6,7 +6,7 @@ from margo import parser, ast, cdefs
 def compile(inp):
     pseudo_result = parser.main(inp)
     # We need only stmt info.
-    return [str(stmt) for stmt in pseudo_result]
+    return [str(pair.stmt) for pair in pseudo_result]
 
 
 class CommonTestCase(unittest.TestCase):
