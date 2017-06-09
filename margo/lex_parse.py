@@ -119,7 +119,7 @@ def p_ast_2(content):
 
 def p_pair(content):
     """pair : stmt"""
-    content[0] = ast.Pair(content.lineno(0), content[1])
+    content[0] = ast.Pair(content.lineno(0), column=1, stmt=content[1])
 
 
 def p_stmt(content):
@@ -177,7 +177,7 @@ def p_func_body_stmt(content):
                    | return
                    | func_call
     """
-    content[0] = ast.Pair(content.lineno(0), content[1])
+    content[0] = ast.Pair(content.lineno(0), column=1, stmt=content[1])
 
 def p_args_1(content):
     """args : arg_names COLON type SEMI args"""
@@ -218,7 +218,7 @@ def p_struct_body_stmt(content):
     struct_body_stmt : decl
                      | func_decl
     """
-    content[0] = ast.Pair(content.lineno(0), content[1])
+    content[0] = ast.Pair(content.lineno(0), column=1, stmt=content[1])
 
 
 def p_decl_1(content):
@@ -365,7 +365,7 @@ def p_empty(content):
 
 def p_error(content):
     """Error handling function."""
-    errors.syntax_error(content.lineno, EXIT_ON_ERROR)
+    errors.syntax_error(ast.Position(content.lineno, 1), EXIT_ON_ERROR)
 
 
 def main(code, *, exit_on_error=True):

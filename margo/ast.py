@@ -245,17 +245,39 @@ class MethodCall(_Node):
 
 
 # Adrian language statements.
-class Pair(_Node):
-    __slots__ = ("_line", "_stmt", "_keys")
+class Position:
+    """For error functions."""
+    __slots__ = ("_line", "_column")
 
-    def __init__(self, line, stmt):
+    def __init__(self, line, column):
         self._line = line
-        self._stmt = stmt
-        self._keys = ("line", "stmt")
+        self._column = column
 
     @property
     def line(self):
         return self._line
+
+    @property
+    def column(self):
+        return self._column
+
+
+class Pair(_Node):
+    __slots__ = ("_line", "_column", "_stmt", "_keys")
+
+    def __init__(self, line, column, stmt):
+        self._line = line
+        self._column = column
+        self._stmt = stmt
+        self._keys = ("line", "column", "stmt")
+
+    @property
+    def line(self):
+        return self._line
+
+    @property
+    def column(self):
+        return self._column
 
     @property
     def stmt(self):

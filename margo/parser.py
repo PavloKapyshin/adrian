@@ -3,9 +3,10 @@ import functools
 from pyparsing import (
     Literal, Optional, Regex, OneOrMore, ZeroOrMore, Combine,
     Forward, Suppress, Group, ParseResults, Empty,
-    operatorPrecedence, opAssoc, oneOf, dblQuotedString, lineno)
+    operatorPrecedence, opAssoc, oneOf, dblQuotedString, lineno,
+    col, ParseBaseException)
 
-from . import ast
+from . import ast, errors
 
 
 def sexpr(tokens):
@@ -147,9 +148,15 @@ decl = (decl1 | decl2 | decl3)
 stmt = (decl | call).setParseAction(
     lambda st, locn, tokens: ast.Pair(
         line=lineno(locn, st),
+        column=col(locn, st),
         stmt=tokens[0]))
 
 ast_ = OneOrMore(stmt)
 
-def main(inp):
-    return ast_.parseString(inp).asList()
+
+def main(inp, exit_on_error=True):
+    try:
+        result = ast_.parseString(inp).asList()
+        return result
+    except ParseBaseException as e:
+        errors.syntax_error(ast.Position(e.lineno, e.col), exit_on_error)
