@@ -85,4 +85,12 @@ class StdAlias(layers.Layer):
 
     def funccall(self, stmt):
         args = [self._expr(arg) for arg in stmt.args]
-        return ast.FuncCall(stmt.name, args)
+        name = stmt.name
+        if (isinstance(name, ast.ModuleMember) and \
+                (name.name == cdefs.CMODULE_NAME) and \
+                (name.member == "tpr")):
+            name = ast.ModuleMember(
+                name=name.name,
+                member=ast.FunctionName("puts"))
+            args = [ast.CString("Hello, world!")]
+        return ast.FuncCall(name, args)

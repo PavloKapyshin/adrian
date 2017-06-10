@@ -34,6 +34,9 @@ class Name(collections.UserString):
     def __init__(self, data):
         super().__init__(data)
 
+    def copy(self):
+        return copy.deepcopy(self)
+
 
 class VariableName(Name):
     pass
@@ -136,21 +139,21 @@ class MethodCall(_Node):
         return self._args
 
 
-# class Instance(_Node):
-#     __slots__ = ("_struct", "_args", "_keys")
+class Instance(_Node):
+    __slots__ = ("_struct", "_args", "_keys")
 
-#     def __init__(self, struct, args):
-#         self._struct = struct
-#         self._args = args
-#         self._keys = ("struct", "args")
+    def __init__(self, struct, args):
+        self._struct = struct
+        self._args = args
+        self._keys = ("struct", "args")
 
-#     @property
-#     def struct(self):
-#         return self._struct
+    @property
+    def struct(self):
+        return self._struct
 
-#     @property
-#     def args(self):
-#         return self._args
+    @property
+    def args(self):
+        return self._args
 
 
 # Adrian language statements.
