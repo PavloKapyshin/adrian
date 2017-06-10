@@ -41,9 +41,12 @@ class Layer:
         result = []
         for pair in ast_:
             self.position = ast.Position(pair.line, pair.column)
-            result.append(
-                ast.Pair(pair.line, pair.column,
-                    funcs[type(pair.stmt)](pair.stmt)))
+            subres = funcs[type(pair.stmt)](pair.stmt)
+            if isinstance(subres, list):
+                result.extend(subres)
+            else:
+                result.append(
+                    ast.Pair(pair.line, pair.column, subres))
         return result
         # self.funcs = self._make_funcs_dict()
         # result = []

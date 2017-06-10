@@ -11,7 +11,7 @@ from . import type_inference
 from . import default_value
 from . import std_alias
 from . import oop
-# from . import simple_expr
+from . import simple_expr
 # from . import arc
 # from . import cgen
 
@@ -56,9 +56,10 @@ def compile_repl(text, contexts, file_hash=""):
     print("Stage 7: translating Adrian structs to C structs.")
     oop_ast = oop.OOP(contexts["oop"]).main(
         sa_ast, exit_on_error=contexts["exit_on_error"])
-    # print("Stage 8: simplifying Adrian expressions.")
-    # se_ast = simple_expr.SimpleExpr(
-    #     contexts["simple_expr"]).main(oop_ast)
+    print("Stage 8: simplifying Adrian expressions.")
+    se_ast = simple_expr.SimpleExpr(
+        contexts["simple_expr"]).main(
+        oop_ast, exit_on_error=contexts["exit_on_error"])
     # print("Stage 9: checking name existence.")
     # ne_ast = name_existence.NameExistence(
     #     contexts["name_existence"]).main(se_ast)
@@ -73,7 +74,7 @@ def compile_repl(text, contexts, file_hash=""):
     #     contexts["cgen"]).main(arc_ast)
     print("Compiled!")
     # return cgen_ast
-    return oop_ast
+    return se_ast
 
 
 def compile(text, context, file_hash=""):
