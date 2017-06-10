@@ -82,3 +82,7 @@ class StdAlias(layers.Layer):
             "type": type_
         })
         return ast.Decl(stmt.name, type_, expr)
+
+    def funccall(self, stmt):
+        args = [self._expr(arg) for arg in stmt.args]
+        return ast.FuncCall(stmt.name, args)

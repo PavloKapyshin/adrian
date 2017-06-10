@@ -42,3 +42,6 @@ class DefaultValue(layers.Layer):
         if isinstance(stmt.expr, ast.Empty):
             expr = self._get_default_value(stmt.type_)
         return ast.Decl(stmt.name, stmt.type_, expr)
+
+    def funccall(self, stmt):
+        return ast.FuncCall(stmt.name, stmt.args)

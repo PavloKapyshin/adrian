@@ -13,3 +13,6 @@ class TypeInference(layers.TypeLayer):
             "type": type_
         })
         return ast.Decl(stmt.name, type_, stmt.expr)
+
+    def funccall(self, stmt):
+        return ast.FuncCall(stmt.name, stmt.args)
