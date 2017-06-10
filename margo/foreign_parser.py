@@ -3,7 +3,8 @@ from . import ast, parser_ast
 from vendor.paka import funcreg
 
 
-class ForeignParser():
+class ForeignParser:
+
     def tr_call_args(self, args):
         return [self.tr_expr(arg) for arg in args]
 
@@ -64,7 +65,7 @@ class ForeignParser():
             self.tr_expr(stmt[1]), self.tr_call_args(stmt[2]))
 
 
-    def main(self, parser_ast_, exit_on_error):
+    def main(self, parser_ast_, *, exit_on_error):
         self.exit_on_error = exit_on_error
         result = []
         for pair in parser_ast_:

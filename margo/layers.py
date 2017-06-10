@@ -1,13 +1,17 @@
 """Framework for creating layers for margolith."""
-from . import ast
-from . import defs
+from . import ast, defs
 
 
 class Layer:
 
     def __init__(self, context=None):
-        self.context = context or ast.Context(
-            exit_on_error=True)
+        self.namespace = None
+        self.funcspace = None
+        self.typespace = None
+        if context:
+            self.namespace = context.namespace
+            self.funcspace = context.funcspace
+            self.typespace = context.typespace
 
     def decl(self):
         """Overrides in subclass."""
@@ -29,27 +33,37 @@ class Layer:
             ast.FuncCall: self.funccall,
         }
 
-    def main(self, ast_):
-        self.funcs = self._make_funcs_dict()
+    def main(self, ast_, *, exit_on_error=True):
+        self.exit_on_error = exit_on_error
+        funcs = self._make_funcs_dict()
         result = []
         for pair in ast_:
-            if isinstance(pair, ast.Pair):
-                self.context.line = pair.line
-                res = self.funcs[type(pair.stmt)](pair.stmt)
-                if isinstance(res, list):
-                    for elem in res:
-                        result.append(ast.Pair(
-                            pair.line, elem))
-                else:
-                    result.append(ast.Pair(
-                        pair.line, res))
-            else:
-                res = self.funcs[type(pair)](pair)
-                if isinstance(res, list):
-                    for elem in res:
-                        result.append(ast.Pair(
-                            self.context.line, elem))
-                else:
-                    result.append(ast.Pair(
-                        self.context.line, res))
+            self.position = ast.Position(pair.line, pair.column)
+            result.append(
+                ast.Pair(pair.line, pair.column,
+                    funcs[type(pair.stmt)](pair.stmt)))
         return result
+        # self.funcs = self._make_funcs_dict()
+        # result = []
+        # for pair in ast_:
+        #     if isinstance(pair, ast.Pair):
+        #         self.position = ast.Position(pair.line, pair.column)
+        #         res = self.funcs[type(pair.stmt)](pair.stmt)
+        #         if isinstance(res, list):
+        #             for elem in res:
+        #                 result.append(ast.Pair(
+        #                     pair.line, pair.column, elem))
+        #         else:
+        #             result.append(ast.Pair(
+        #                 pair.line, pair.column, res))
+        #     else:
+        #         res = self.funcs[type(pair)](pair)
+        #         if isinstance(res, list):
+        #             for elem in res:
+        #                 result.append(ast.Pair(
+        #                     self.position.line, self.position.column,
+        #                     elem))
+        #         else:
+        #             result.append(ast.Pair(
+        #                 self.position.line, self.position.column, res))
+        # return result

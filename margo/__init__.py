@@ -2,8 +2,9 @@ import hashlib
 
 from . import lex_parse
 from . import foreign_parser
+from . import structs
 #from . import analyzer
-#from . import naming_rules
+from . import naming_rules
 # from . import name_existence
 # from . import type_inference
 # from . import type_checking
@@ -13,7 +14,6 @@ from . import foreign_parser
 # from . import simple_expr
 # from . import arc
 # from . import cgen
-# from . import name_mangling
 
 
 def _get_file_hash(file_name):
@@ -29,17 +29,18 @@ def _read_file(file_name, encoding):
     return contents.splitlines()
 
 
-def compile_repl(text, contexts, mangle_names=False, file_hash=""):
+def compile_repl(text, contexts, file_hash=""):
     print("Stage 1: parsing code.")
     lp_ast = lex_parse.main(
         text, exit_on_error=contexts["exit_on_error"])
     fp_ast = foreign_parser.ForeignParser().main(
-        lp_ast, contexts["exit_on_error"])
+        lp_ast, exit_on_error=contexts["exit_on_error"])
     # print("Stage 2: analyzing code and getting more data from context.")
-    # an_ast = analyzer.Analyzer(contexts["analyzer"]).main(lp_ast)
-    # print("Stage 3: checking naming rules.")
-    # nr_ast = naming_rules.NamingRules(
-    #     contexts["naming_rules"]).main(an_ast)
+    # an_ast = analyzer.Analyzer(contexts["analyzer"]).main(
+    #     lp_ast, exit_on_error=contexts["exit_on_error"])
+    print("Stage 2: checking naming rules and analyzing names.")
+    nr_ast = naming_rules.NamingRules(contexts["naming_rules"]).main(
+        fp_ast, exit_on_error=contexts["exit_on_error"])
     # print("Stage 4: doing type inference where needed.")
     # ti_ast = type_inference.TypeInference(
     #     contexts["type_inference"]).main(nr_ast)
@@ -68,10 +69,10 @@ def compile_repl(text, contexts, mangle_names=False, file_hash=""):
     #     contexts["cgen"]).main(arc_ast)
     print("Compiled!")
     # return cgen_ast
-    return fp_ast
+    return nr_ast
 
 
-def compile(text, context, mangle_names=False, file_hash=""):
+def compile(text, context, file_hash=""):
     print("Stage 1: parsing code.")
     lp_ast = lex_parse.main(text, exit_on_error=context.exit_on_error)
     print("Stage 2: analyzing code and getting more data from context.")
@@ -102,11 +103,10 @@ def compile(text, context, mangle_names=False, file_hash=""):
 
 def compile_file(
         file_name, exit_on_error=True,
-        mangle_names=False, encoding="utf-8"):
+        encoding="utf-8"):
     return "\n".join([
         compile(
             line, exit_on_error=exit_on_error,
-            mangle_names=mangle_names,
             file_hash=_get_file_hash(file_name))
         for line in _read_file(file_name, encoding)
     ])

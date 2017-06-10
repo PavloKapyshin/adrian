@@ -1,3 +1,5 @@
+"""This layer analyzes and checks names."""
+
 from . import ast, defs, cdefs, errors, layers
 
 from vendor.paka import funcreg
@@ -18,98 +20,99 @@ _matches_spec_struct_elem = _matches_maker(
 class NamingRules(layers.Layer):
 
     def _expr(self, expr):
-        if expr:
-            self._expr.reg[expr](self, expr)
+        if isinstance(expr, ast.Empty):
+            return ast.Empty()
+        return self._expr.registry[expr](self, expr)
 
-    _expr.reg = funcreg.TypeRegistry()
+    _expr.registry = funcreg.TypeRegistry()
 
-    @_expr.reg.register(ast.Name)
+    @_expr.registry.register(ast.Name)
     def _expr_name(self, name):
-        self._var_name(name)
+        # Only variable name is allowed, for now :D
+        return self._var_name(name)
 
-    @_expr.reg.register(ast.Integer)
-    @_expr.reg.register(ast.String)
-    @_expr.reg.register(ast.CIntFast8)
-    @_expr.reg.register(ast.CUIntFast8)
-    @_expr.reg.register(ast.CIntFast32)
-    @_expr.reg.register(ast.CUIntFast32)
-    @_expr.reg.register(ast.CChar)
-    @_expr.reg.register(ast.CString)
-    def _expr_pass(self, atom):
-        pass
+    @_expr.registry.register(ast.Integer)
+    @_expr.registry.register(ast.String)
+    def _expr_atom(self, atom):
+        return atom
 
-    @_expr.reg.register(ast.FuncCall)
-    def _expr_func_call(self, call):
-        self._call_args(call.args)
-        self._func_name(call.name)
+    @_expr.registry.register(ast.SExpr)
+    def _sexpr(self, sexpr):
+        return ast.SExpr(
+            sexpr.op, self._expr(sexpr.expr1),
+            self._expr(sexpr.expr2))
 
-    @_expr.reg.register(ast.MethodCall)
-    @_expr.reg.register(ast.StructElem)
+    @_expr.registry.register(ast.FuncCall)
+    def _expr_funccall(self, call):
+        return ast.FuncCall(
+            name=self._func_name(call.name),
+            args=self._call_args(call.args))
+
+    @_expr.registry.register(ast.MethodCall)
+    @_expr.registry.register(ast.StructElem)
     def _expr_not_implemented(self, atom):
-        errors.not_implemented(
-            self.context.line, self.context.exit_on_error)
-
-    def _func_name(self, name):
-        if isinstance(name, ast.ModuleMember):
-            module = name
-            self._module_name(module.name)
-            if module.name == cdefs.CMODULE_NAME:
-                if not _matches_func_name(module.member):
-                    errors.bad_name_for_function(
-                        self.context.line,
-                        self.context.exit_on_error,
-                        module.member)
-        else:
-            errors.not_implemented(
-                self.context.line, self.context.exit_on_error)
+        errors.not_implemented(self.position, self.exit_on_error)
 
     def _call_args(self, args):
-        for arg in args:
-            self._expr(arg)
+        return [self._expr(arg) for arg in args]
 
     def _type(self, type_):
-        if type_:
-            self._type.reg[type_](self, type_)
+        if isinstance(type_, ast.Empty):
+            return ast.Empty()
+        return self._type.registry[type_](self, type_)
 
-    _type.reg = funcreg.TypeRegistry()
+    _type.registry = funcreg.TypeRegistry()
 
-    @_type.reg.register(ast.ModuleMember)
+    @_type.registry.register(ast.ModuleMember)
     def _type_module_member(self, module):
-        self._module_name(module.name)
-        self._type(module.member)
+        return ast.ModuleMember(
+            name=self._module_name(module.name),
+            member=self._type(module.member))
 
-    @_type.reg.register(ast.StructElem)
-    def _type_struct_elem(self, struct):
-        errors.not_implemented(
-            self.context.line, self.context.exit_on_error)
+    @_type.registry.register(ast.StructElem)
+    def _type_struct_eleme(self, struct):
+        errors.not_implemented(self.position, self.exit_on_error)
 
-    @_type.reg.register(ast.Name)
+    @_type.registry.register(ast.Name)
     def _type_name(self, name):
         if not _matches_type_name(name):
             errors.bad_name_for_type(
-                self.context.line, self.context.exit_on_error,
-                name)
+                self.position, self.exit_on_error, name)
+        return ast.TypeName(str(name))
 
     def _var_name(self, name):
         if not _matches_var_name(name):
             errors.bad_name_for_variable(
-                self.context.line, self.context.exit_on_error,
-                name)
+                self.position, self.exit_on_error, name)
+        return ast.VariableName(str(name))
 
     def _module_name(self, name):
         if not _matches_module_name(name):
             errors.bad_name_for_module(
-                self.context.line, self.context.exit_on_error,
-                name)
+                self.position, self.exit_on_error, name)
+        return ast.ModuleName(str(name))
+
+    def _func_name(self, name):
+        if isinstance(name, ast.ModuleMember):
+            module = name
+            if module.name == cdefs.CMODULE_NAME:
+                if not _matches_func_name(module.member):
+                    if not _matches_type_name(module.member):
+                        errors.bad_name_for_type(
+                            self.position, self.exit_on_error,
+                            module.member)
+                    return ast.ModuleMember(
+                        name=self._module_name(module.name),
+                        member=self._type(module.member))
+                return ast.ModuleMember(
+                    name=self._module_name(module.name),
+                    member=ast.FunctionName(str(module.member)))
+        errors.not_implemented(self.position, self.exit_on_error)
 
     def decl(self, stmt):
-        self._var_name(stmt.name)
-        self._type(stmt.type_)
-        self._expr(stmt.expr)
-        # TODO: add name to context ({"node_type": Variable}).
-        return ast.Decl(stmt.name, stmt.type_, stmt.expr)
-
-    def funccall(self, stmt):
-        self._func_name(stmt.name)
-        self._call_args(stmt.args)
-        return ast.FuncCall(stmt.name, stmt.args)
+        # We know that this is varaible name, so
+        # we dont need information about it.
+        name = ast.Name(str(self._var_name(stmt.name)))
+        type_ = self._type(stmt.type_)
+        expr = self._expr(stmt.expr)
+        return ast.Decl(name, type_, expr)

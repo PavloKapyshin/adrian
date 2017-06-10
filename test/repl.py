@@ -7,32 +7,27 @@ import margo
 
 
 class REPL(cmd.Cmd):
-    _AVAILABLE_SETTINGS = ("exit_on_error", "mangle_names")
+    _AVAILABLE_SETTINGS = ("exit_on_error", )
     intro = "Welcome to Adrian testing REPL.\n"
     prompt = ">>> "
-    settings = {"exit_on_error": False, "mangle_names": False}
-    contexts = (lambda settings: {
-            "exit_on_error": settings["exit_on_error"]
-    })(settings)
-    # contexts = (lambda settings: {
-    #     layer_name: margo.ast.Context(
-    #         exit_on_error=settings["exit_on_error"])
-    #     for layer_name in (
-    #         "analyzer",
-    #         "naming_rules",
-    #         "type_inference",
-    #         "default_value",
-    #         "std_alias",
-    #         "oop",
-    #         "simple_expr",
-    #         "name_existence",
-    #         "type_checking",
-    #         "arc",
-    #         "cgen"
-    #     )
-    # })(settings)
-    # For lexing and parsing layer.
-    #contexts["exit_on_error"] = settings["exit_on_error"]
+    settings = {"exit_on_error": False}
+    contexts = {
+        layer_name: margo.structs.Context()
+        for layer_name in (
+            "analyzer",
+            "naming_rules",
+            "type_inference",
+            "default_value",
+            "std_alias",
+            "oop",
+            "simple_expr",
+            "name_existence",
+            "type_checking",
+            "arc",
+            "cgen"
+        )
+    }
+    contexts["exit_on_error"] = settings["exit_on_error"]
 
     def do_settings(self, settings):
         if settings:
@@ -42,10 +37,6 @@ class REPL(cmd.Cmd):
                 if key == "exit_on_error":
                     exit_on_error = self.settings["exit_on_error"]
                     self.contexts["exit_on_error"] = exit_on_error
-                    # Updating all contexts.
-                    for layer_name, context in self.contexts.items():
-                        if layer_name != "exit_on_error":
-                            context.exit_on_error = exit_on_error
         else:
             print(self.settings)
 
@@ -55,9 +46,7 @@ class REPL(cmd.Cmd):
     def do_eval(self, inp):
         try:
             # Compiling.
-            pprint.pprint(margo.compile_repl(
-                inp, self.contexts,
-                mangle_names=self.settings["mangle_names"]))
+            pprint.pprint(margo.compile_repl(inp, self.contexts))
         except margo.errors.CompilationError as e:
             print(e.message, file=sys.stderr)
 

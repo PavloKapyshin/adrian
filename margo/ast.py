@@ -35,6 +35,22 @@ class Name(collections.UserString):
         super().__init__(data)
 
 
+class VariableName(Name):
+    pass
+
+
+class TypeName(Name):
+    pass
+
+
+class ModuleName(Name):
+    pass
+
+
+class FunctionName(Name):
+    pass
+
+
 class ModuleMember(_Node):
     __slots__ = ("_name", "_member", "_keys")
 
