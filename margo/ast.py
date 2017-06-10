@@ -354,7 +354,6 @@ class Return(_Node):
 
 # Some Adrian and C atoms and special AST nodes.
 class Literal(_Node):
-    __slots__ = ("_type", "_literal", "_keys")
 
     def __init__(self, literal):
         self._literal = literal
@@ -366,83 +365,57 @@ class Literal(_Node):
 
     @classmethod
     def to_type(cls):
-        # TODO: hardcore!
-        return cls("0")._type
+        return cls._type
 
 
 class Integer(Literal):
     """Integer in Adrian."""
-
-    def __init__(self, literal):
-        super().__init__(literal)
-        self._type = TypeName("Integer")
+    _type = TypeName("Integer")
 
 
 
 class String(Literal):
     """String in Adrian."""
-
-    def __init__(self, literal):
-        super().__init__(literal)
-        self._type = TypeName("String")
+    _type = TypeName("String")
 
 
 class CLiteral(Literal):
 
     @classmethod
     def to_type(cls):
-        # TODO: hardcore!
         return ModuleMember(
             name=ModuleName(cdefs.CMODULE_NAME),
-            member=cls("0")._type)
+            member=cls._type)
 
 
 class CChar(CLiteral):
     """CChar in Adrian."""
-
-    def __init__(self, literal):
-        super().__init__(literal)
-        self._type = TypeName("Char")
+    _type = TypeName("Char")
 
 
 class CIntFast8(CLiteral):
     """CIntFast8 in Adrian."""
-
-    def __init__(self, literal):
-        super().__init__(literal)
-        self._type = TypeName("IntFast8")
+    _type = TypeName("IntFast8")
 
 
 class CIntFast32(CLiteral):
     """CIntFast32 in Adrian."""
-
-    def __init__(self, literal):
-        super().__init__(literal)
-        self._type = TypeName("IntFast32")
+    _type = TypeName("IntFast32")
 
 
 class CUIntFast8(CLiteral):
     """CUIntFast8 in Adrian."""
-
-    def __init__(self, literal):
-        super().__init__(literal)
-        self._type = TypeName("UIntFast8")
+    _type = TypeName("UIntFast8")
 
 
 class CUIntFast32(CLiteral):
     """CUIntFast32 in Adrian."""
-
-    def __init__(self, literal):
-        super().__init__(literal)
-        self._type = TypeName("UIntFast32")
+    _type = TypeName("UIntFast32")
 
 
 class CString(CLiteral):
     """CString in Adrian."""
-
-    def __init__(self, literal):
-        super().__init__(literal)
-        self._type = TypeName("String")
+    _type = TypeName("String")
 
 
 class CVoid:

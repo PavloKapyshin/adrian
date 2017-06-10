@@ -8,7 +8,7 @@ from . import analyzer
 # from . import name_existence
 from . import type_inference
 # from . import type_checking
-# from . import default_value
+from . import default_value
 # from . import std_alias
 # from . import oop
 # from . import simple_expr
@@ -45,9 +45,10 @@ def compile_repl(text, contexts, file_hash=""):
     ti_ast = type_inference.TypeInference(
         contexts["type_inference"]).main(
         an_ast, exit_on_error=contexts["exit_on_error"])
-    # print("Stage 5: adding default values where needed.")
-    # dv_ast = default_value.DefaultValue(
-    #     contexts["default_value"]).main(ti_ast)
+    print("Stage 5: adding default values where needed.")
+    dv_ast = default_value.DefaultValue(
+        contexts["default_value"]).main(
+        ti_ast, exit_on_error=contexts["exit_on_error"])
     # print("Stage 6: translating standard aliases.")
     # sa_ast = std_alias.StdAlias(
     #     contexts["std_alias"]).main(dv_ast)
@@ -70,7 +71,7 @@ def compile_repl(text, contexts, file_hash=""):
     #     contexts["cgen"]).main(arc_ast)
     print("Compiled!")
     # return cgen_ast
-    return ti_ast
+    return dv_ast
 
 
 def compile(text, context, file_hash=""):

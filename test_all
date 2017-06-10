@@ -2,3 +2,4 @@ PYTHONPATH=:. python3 test/test_ply_parser.py
 PYTHONPATH=:. python3 test/test_naming_rules.py
 PYTHONPATH=:. python3 test/test_analyzer.py
 PYTHONPATH=:. python3 test/test_type_inference.py
+PYTHONPATH=:. python3 test/test_default_value.py
