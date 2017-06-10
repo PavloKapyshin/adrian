@@ -65,3 +65,7 @@ class OOP(layers.Layer):
             "type": stmt.type_
         })
         return ast.Decl(stmt.name, stmt.type_, expr)
+
+    def funccall(self, stmt):
+        return ast.FuncCall(
+            stmt.name, [self._expr(arg) for arg in stmt.args])
