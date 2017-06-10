@@ -1,9 +1,12 @@
-[ ] Split syntax sugar layer into struct_sugar and std_types_sugar layers
-[ ] Add structs to name_checking layer
-[ ] Add structs to type_checking layer
-[ ] Add structs to name_mangling layer
-[ ] Add functions to name_checking layer
-[ ] Add functions to type_checking layer
-[ ] Add functions to name_mangling layer
-[ ] Add AdrOps and AdrTypes
-[ ] Test compiler
+[ ] Write tests for std alias
+[ ] Write tests for simple expr
+[ ] Write tests for oop
+
+[ ] Refactor name existence
+[ ] Refactor type checking
+[ ] Refactor arc
+[ ] Refactor cgen
+
+[ ] Write tests for name existence
+[ ] Write tests for type checking
+[ ] Write tests for cgen
