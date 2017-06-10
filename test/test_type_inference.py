@@ -25,54 +25,6 @@ class CommonTestCase(unittest.TestCase):
         self.assertEqual([
             str(stmt) for stmt in expected], compile(inp))
 
-
-class DeclOnlyTypeTest(CommonTestCase):
-
-    def test_integer(self):
-        expected = (ast.Decl(
-            name="myVariable", type_=ast.TypeName("Integer"),
-            expr=ast.Empty()), )
-        self.check("var myVariable: Integer", expected)
-
-    def test_string(self):
-        expected = (ast.Decl(
-            name="a", type_=ast.TypeName("String"),
-            expr=ast.Empty()), )
-        self.check("var a: String", expected)
-
-    def test_c_intfast8(self):
-        expected = (ast.Decl(
-            name="a1", type_=ast.ModuleMember(
-                name=ast.ModuleName(cdefs.CMODULE_NAME),
-                member=ast.TypeName("IntFast8")),
-            expr=ast.Empty()), )
-        self.check("var a1: c#IntFast8", expected)
-
-    def test_c_intfast32(self):
-        expected = (ast.Decl(
-            name="a1", type_=ast.ModuleMember(
-                name=ast.ModuleName(cdefs.CMODULE_NAME),
-                member=ast.TypeName("IntFast32")),
-            expr=ast.Empty()), )
-        self.check("var a1: c#IntFast32", expected)
-
-    def test_c_uintfast8(self):
-        expected = (ast.Decl(
-            name="a1", type_=ast.ModuleMember(
-                name=ast.ModuleName(cdefs.CMODULE_NAME),
-                member=ast.TypeName("UIntFast8")),
-            expr=ast.Empty()), )
-        self.check("var a1: c#UIntFast8", expected)
-
-    def test_c_uintfast32(self):
-        expected = (ast.Decl(
-            name="a1", type_=ast.ModuleMember(
-                name=ast.ModuleName(cdefs.CMODULE_NAME),
-                member=ast.TypeName("UIntFast32")),
-            expr=ast.Empty()), )
-        self.check("var a1: c#UIntFast32", expected)
-
-
 class DeclOnlyExprTest(CommonTestCase):
 
     def test_integer(self):
