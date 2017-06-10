@@ -9,7 +9,7 @@ from . import analyzer
 from . import type_inference
 # from . import type_checking
 from . import default_value
-# from . import std_alias
+from . import std_alias
 # from . import oop
 # from . import simple_expr
 # from . import arc
@@ -49,9 +49,10 @@ def compile_repl(text, contexts, file_hash=""):
     dv_ast = default_value.DefaultValue(
         contexts["default_value"]).main(
         ti_ast, exit_on_error=contexts["exit_on_error"])
-    # print("Stage 6: translating standard aliases.")
-    # sa_ast = std_alias.StdAlias(
-    #     contexts["std_alias"]).main(dv_ast)
+    print("Stage 6: translating standard aliases.")
+    sa_ast = std_alias.StdAlias(
+        contexts["std_alias"]).main(
+        dv_ast, exit_on_error=contexts["exit_on_error"])
     # print("Stage 7: translating Adrian structs to C structs.")
     # oop_ast = oop.OOP(contexts["oop"]).main(sa_ast)
     # print("Stage 8: simplifying Adrian expressions.")
@@ -71,7 +72,7 @@ def compile_repl(text, contexts, file_hash=""):
     #     contexts["cgen"]).main(arc_ast)
     print("Compiled!")
     # return cgen_ast
-    return dv_ast
+    return sa_ast
 
 
 def compile(text, context, file_hash=""):

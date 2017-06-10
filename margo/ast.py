@@ -51,6 +51,10 @@ class FunctionName(Name):
     pass
 
 
+class MethodName(Name):
+    pass
+
+
 class ModuleMember(_Node):
     __slots__ = ("_name", "_member", "_keys")
 
@@ -467,3 +471,13 @@ class Empty():
         return "EMPTY"
 
     __repr__ = __str__
+
+
+CTYPES = (
+    CIntFast8,
+    CIntFast32,
+    CUIntFast8,
+    CUIntFast32,
+    CChar,
+    CString
+)

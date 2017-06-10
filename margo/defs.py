@@ -115,16 +115,6 @@ STD_TYPES_FUNC_SIGNATURES = {
     }
 }
 
-C_MODULE_NAME = "c"
-C_TYPES = (
-    ast.CIntFast8,
-    ast.CIntFast32,
-    ast.CUIntFast8,
-    ast.CUIntFast32,
-    ast.CString,
-    ast.CChar,
-)
-C_TYPES_NAMES = set(type_.to_type().member for type_ in C_TYPES)
 # C_FUNC_SIGNATURES = {
 #     "__init__IntFast32": {
 #         "rettype": ast.ModuleMember(
@@ -151,7 +141,7 @@ C_TYPES_NAMES = set(type_.to_type().member for type_ in C_TYPES)
 STD_FUNCS = (
     "print",
 )
-STD_MODULE_NAMES = (STD_TYPES_MODULE_NAME, C_MODULE_NAME)
+STD_MODULE_NAMES = (STD_TYPES_MODULE_NAME, )
 STD_MODULES_PATH = "std_modules/"
 
 OP_TO_FUNC = {
