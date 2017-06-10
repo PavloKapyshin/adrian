@@ -110,9 +110,7 @@ class NamingRules(layers.Layer):
         errors.not_implemented(self.position, self.exit_on_error)
 
     def decl(self, stmt):
-        # We know that this is varaible name, so
-        # we dont need information about it.
-        name = str(self._var_name(stmt.name))
+        name = self._var_name(stmt.name)
         type_ = self._type(stmt.type_)
         expr = self._expr(stmt.expr)
         return ast.Decl(name, type_, expr)

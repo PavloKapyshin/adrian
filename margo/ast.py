@@ -366,7 +366,8 @@ class Literal(_Node):
 
     @classmethod
     def to_type(cls):
-        return cls._type
+        # TODO: hardcore!
+        return cls("0")._type
 
 
 class Integer(Literal):
@@ -374,7 +375,7 @@ class Integer(Literal):
 
     def __init__(self, literal):
         super().__init__(literal)
-        self._type = Name("Integer")
+        self._type = TypeName("Integer")
 
 
 
@@ -383,16 +384,17 @@ class String(Literal):
 
     def __init__(self, literal):
         super().__init__(literal)
-        self._type = Name("String")
+        self._type = TypeName("String")
 
 
 class CLiteral(Literal):
 
     @classmethod
     def to_type(cls):
+        # TODO: hardcore!
         return ModuleMember(
-            name=cdefs.CMODULE_NAME,
-            member=cls._type)
+            name=ModuleName(cdefs.CMODULE_NAME),
+            member=cls("0")._type)
 
 
 class CChar(CLiteral):
@@ -400,7 +402,7 @@ class CChar(CLiteral):
 
     def __init__(self, literal):
         super().__init__(literal)
-        self._type = Name("Char")
+        self._type = TypeName("Char")
 
 
 class CIntFast8(CLiteral):
@@ -408,7 +410,7 @@ class CIntFast8(CLiteral):
 
     def __init__(self, literal):
         super().__init__(literal)
-        self._type = Name("IntFast8")
+        self._type = TypeName("IntFast8")
 
 
 class CIntFast32(CLiteral):
@@ -416,7 +418,7 @@ class CIntFast32(CLiteral):
 
     def __init__(self, literal):
         super().__init__(literal)
-        self._type = Name("IntFast32")
+        self._type = TypeName("IntFast32")
 
 
 class CUIntFast8(CLiteral):
@@ -424,7 +426,7 @@ class CUIntFast8(CLiteral):
 
     def __init__(self, literal):
         super().__init__(literal)
-        self._type = Name("UIntFast8")
+        self._type = TypeName("UIntFast8")
 
 
 class CUIntFast32(CLiteral):
@@ -432,7 +434,7 @@ class CUIntFast32(CLiteral):
 
     def __init__(self, literal):
         super().__init__(literal)
-        self._type = Name("UIntFast32")
+        self._type = TypeName("UIntFast32")
 
 
 class CString(CLiteral):
@@ -440,7 +442,7 @@ class CString(CLiteral):
 
     def __init__(self, literal):
         super().__init__(literal)
-        self._type = Name("String")
+        self._type = TypeName("String")
 
 
 class CVoid:

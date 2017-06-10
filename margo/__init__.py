@@ -6,7 +6,7 @@ from . import structs
 from . import naming_rules
 from . import analyzer
 # from . import name_existence
-# from . import type_inference
+from . import type_inference
 # from . import type_checking
 # from . import default_value
 # from . import std_alias
@@ -41,9 +41,10 @@ def compile_repl(text, contexts, file_hash=""):
     print("Stage 3: analyzing code and getting more data from context.")
     an_ast = analyzer.Analyzer(contexts["analyzer"]).main(
         nr_ast, exit_on_error=contexts["exit_on_error"])
-    # print("Stage 4: doing type inference where needed.")
-    # ti_ast = type_inference.TypeInference(
-    #     contexts["type_inference"]).main(nr_ast)
+    print("Stage 4: doing type inference where needed.")
+    ti_ast = type_inference.TypeInference(
+        contexts["type_inference"]).main(
+        an_ast, exit_on_error=contexts["exit_on_error"])
     # print("Stage 5: adding default values where needed.")
     # dv_ast = default_value.DefaultValue(
     #     contexts["default_value"]).main(ti_ast)
@@ -69,7 +70,7 @@ def compile_repl(text, contexts, file_hash=""):
     #     contexts["cgen"]).main(arc_ast)
     print("Compiled!")
     # return cgen_ast
-    return an_ast
+    return ti_ast
 
 
 def compile(text, context, file_hash=""):
