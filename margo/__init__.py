@@ -3,8 +3,8 @@ import hashlib
 from . import lex_parse
 from . import foreign_parser
 from . import structs
-#from . import analyzer
 from . import naming_rules
+from . import analyzer
 # from . import name_existence
 # from . import type_inference
 # from . import type_checking
@@ -35,12 +35,12 @@ def compile_repl(text, contexts, file_hash=""):
         text, exit_on_error=contexts["exit_on_error"])
     fp_ast = foreign_parser.ForeignParser().main(
         lp_ast, exit_on_error=contexts["exit_on_error"])
-    # print("Stage 2: analyzing code and getting more data from context.")
-    # an_ast = analyzer.Analyzer(contexts["analyzer"]).main(
-    #     lp_ast, exit_on_error=contexts["exit_on_error"])
     print("Stage 2: checking naming rules and analyzing names.")
     nr_ast = naming_rules.NamingRules(contexts["naming_rules"]).main(
         fp_ast, exit_on_error=contexts["exit_on_error"])
+    print("Stage 3: analyzing code and getting more data from context.")
+    an_ast = analyzer.Analyzer(contexts["analyzer"]).main(
+        nr_ast, exit_on_error=contexts["exit_on_error"])
     # print("Stage 4: doing type inference where needed.")
     # ti_ast = type_inference.TypeInference(
     #     contexts["type_inference"]).main(nr_ast)
@@ -69,7 +69,7 @@ def compile_repl(text, contexts, file_hash=""):
     #     contexts["cgen"]).main(arc_ast)
     print("Compiled!")
     # return cgen_ast
-    return nr_ast
+    return an_ast
 
 
 def compile(text, context, file_hash=""):

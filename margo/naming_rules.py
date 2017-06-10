@@ -112,7 +112,14 @@ class NamingRules(layers.Layer):
     def decl(self, stmt):
         # We know that this is varaible name, so
         # we dont need information about it.
-        name = ast.Name(str(self._var_name(stmt.name)))
+        name = str(self._var_name(stmt.name))
         type_ = self._type(stmt.type_)
         expr = self._expr(stmt.expr)
         return ast.Decl(name, type_, expr)
+
+    def _call_args(self, args):
+        return [self._expr(arg) for arg in args]
+
+    def funccall(self, stmt):
+        return ast.FuncCall(
+            self._func_name(stmt.name), self._call_args(stmt.args))

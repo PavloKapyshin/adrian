@@ -13,16 +13,16 @@ class Layer:
             self.funcspace = context.funcspace
             self.typespace = context.typespace
 
-    def decl(self):
+    def decl(self, stmt):
         """Overrides in subclass."""
 
-    def struct_decl(self):
+    def struct_decl(self, stmt):
         """Overrides in subclass."""
 
-    def func_decl(self):
+    def func_decl(self, stmt):
         """Overrides in subclass."""
 
-    def funccall(self):
+    def funccall(self, stmt):
         """Overrides in subclass."""
 
     def _make_funcs_dict(self):

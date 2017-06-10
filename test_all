@@ -1,2 +1,3 @@
-PYTHONPATH=:. python3 test/test_analyzer.py
 PYTHONPATH=:. python3 test/test_ply_parser.py
+PYTHONPATH=:. python3 test/test_naming_rules.py
+PYTHONPATH=:. python3 test/test_analyzer.py
