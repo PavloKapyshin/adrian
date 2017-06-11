@@ -1,6 +1,6 @@
 [X] Write tests for std alias
+[X] Write tests for oop
 [ ] Write tests for simple expr
-[ ] Write tests for oop
 
 [ ] Refactor name existence
 [ ] Refactor type checking
@@ -12,8 +12,8 @@
 [ ] Write tests for cgen
 
 [ ] Write tests for std alias
-[ ] Write tests for simple expr
 [ ] Write tests for oop
+[ ] Write tests for simple expr
 
 [ ] Write tests for name existence
 [ ] Write tests for type checking

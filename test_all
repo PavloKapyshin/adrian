@@ -5,3 +5,4 @@ PYTHONPATH=:. python3 test/test_type_inference.py
 PYTHONPATH=:. python3 test/test_default_value.py
 PYTHONPATH=:. python3 test/test_std_alias.py
 PYTHONPATH=:. python3 test/test_oop.py
+PYTHONPATH=:. python3 test/test_simple_expr.py
