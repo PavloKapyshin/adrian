@@ -1,7 +1,7 @@
 struct Vector(someType) {
-    var length: c#Int64
+    var length: c#UInt32
     var data: c#Pointer(c#Pointer(c#Void))
-    const self._elemSize = c#sizeof(c#Pointer(c#Void))
+    cst self._elemSize = c#sizeof(c#Pointer(c#Void))
 
     fun init(): None {
         self.length = 0
@@ -9,7 +9,7 @@ struct Vector(someType) {
     }
 
     fun _allocateMemoryForData(): c#Pointer(c#Void) {
-        return c#calloc(self.length, self._elemSize)
+        ret c#calloc(self.length, self._elemSize)
     }
 
     fun copy(): Vector(someType) {
@@ -17,11 +17,11 @@ struct Vector(someType) {
         result.length = self.length
         result.data = self._allocateMemoryForData()
         c#memcpy(result.data, self.data, self.length * self._elemSize)
-        return result
+        ret result
     }
 
     fun setItem(value: c#Pointer(c#Void); index: c#Int64): None {
-        if index >= self.length {
+        iff index >= self.length {
             var oldLength = self.length
             self.length = index + 1
             var newData = self._allocateMemoryForData()
@@ -35,11 +35,11 @@ struct Vector(someType) {
     }
 
     fun getItem(index: c#Int64): someType? {
-        if index < self.length {
+        iff index < self.length {
             return self.data[index]
         }
         print("ERROR: OUT OF BOUNDS")
-        return None
+        ret None
     }
 
     -- Generated: start
@@ -52,7 +52,7 @@ struct Vector(someType) {
 
 
 -------------------------------------------------
-struct Integer {
+sct Integer {
     var length: c#Int64
     var digits: c#String
 }
