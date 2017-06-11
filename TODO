@@ -1,7 +1,3 @@
-[X] Write tests for std alias
-[X] Write tests for oop
-[X] Write tests for simple expr
-
 [ ] Refactor name existence
 [ ] Refactor type checking
 [ ] Refactor arc

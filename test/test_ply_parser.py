@@ -5,7 +5,8 @@ from margo import lex_parse, foreign_parser, ast, cdefs
 
 def compile(inp):
     pseudo_result = foreign_parser.ForeignParser().main(
-        lex_parse.main(inp, exit_on_error=True), exit_on_error=True)
+        lex_parse.main(inp, exit_on_error=True),
+        exit_on_error=True)
     # We need only stmt info.
     return [str(pair.stmt) for pair in pseudo_result]
 
@@ -132,6 +133,49 @@ class DeclOnlyExprTest(CommonTestCase):
                     member=ast.Name("UIntFast32")),
                 args=[ast.Integer("0")])), )
         self.check("var a = c#UIntFast32(0)", expected)
+
+    def test_c_malloc(self):
+        expected = (ast.Decl(
+            name="myMemory", type_=ast.Empty(),
+            expr=ast.FuncCall(
+                name=ast.ModuleMember(
+                    name=cdefs.CMODULE_NAME,
+                    member=ast.Name("malloc")),
+                args=[ast.Integer("10")])), )
+        # TODO: c#malloc's first argument must have c type.
+        self.check("var myMemory = c#malloc(10)", expected)
+
+
+class DeclTest(CommonTestCase):
+
+    def test_integer(self):
+        expected = (ast.Decl(
+            name="myVariable", type_=ast.Name("Integer"),
+            expr=ast.Integer("1")), )
+        self.check("var myVariable: Integer = 1", expected)
+
+    def test_c_intfast8(self):
+        expected = (ast.Decl(
+            name="myVariable", type_=ast.ModuleMember(
+                name=cdefs.CMODULE_NAME,
+                member=ast.Name("IntFast8")),
+            expr=ast.FuncCall(
+                name=ast.ModuleMember(
+                    name=cdefs.CMODULE_NAME,
+                    member=ast.Name("IntFast8")),
+                args=[ast.Integer("10")])), )
+        self.check("var myVariable: c#IntFast8 = c#IntFast8(10)", expected)
+
+
+class FuncCall(CommonTestCase):
+
+    def test_c_tpr(self):
+        expected = (ast.FuncCall(
+            name=ast.ModuleMember(
+                name=cdefs.CMODULE_NAME,
+                member=ast.Name("tpr")),
+            args=[]), )
+        self.check("c#tpr()", expected)
 
 
 if __name__ == "__main__":
