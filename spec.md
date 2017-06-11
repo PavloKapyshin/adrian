@@ -1,18 +1,13 @@
-# Adrian Language Specification
-
-
-## Naming rules
+# Naming rules
 
 Names must be named according to this rules.
 
-All names must be informative.
+Private name must starts with an underscore `_`.
 
-### Variables
+## Variables
 
 Regular expression for matching variable names: `[a-z_][a-zA-Z0-9]*`.
 Variable name cannot be a reserved name.
-
-Underscore in the beginning means private variable.
 
 Variables are named using camel case.
 
@@ -29,12 +24,10 @@ var _my_bad_private_name: None
 var var: None
 ```
 
-### Functions
+## Functions
 
 Regular expression for matching function names: `[a-z_][a-zA-Z0-9]*`.
 Function name cannot be a reserved name.
-
-Underscore in the beginning means private function.
 
 Functions are named using camel case.
 
@@ -49,7 +42,7 @@ func _bad_func(): None {}
 func bad_Func(): None {}
 ```
 
-### Modules
+## Modules
 
 Regular expression for matching module names: `[a-z_][a-z_0-9]*`.
 
@@ -69,7 +62,7 @@ C#member
 co_L_L_ections#member
 ```
 
-### Types
+## Types
 
 Regular expression for matching type names: `[A-Z_][a-zA-Z0-9]`
 
@@ -87,9 +80,9 @@ var myVar: __Integer
 var myVar: Int_32
 ```
 
-## Default values
+# Default values
 
-When value is not provided, the types are used for providing default value.
+When value is not provided, the types are used for generating default value.
 
 Default values for standard types:
 
@@ -106,7 +99,7 @@ Default values for standard types:
 | None      | None          |
 ```
 
-### Examples
+## Examples
 
 ```adrian
 -- These variable declarations are equivalent:
@@ -123,14 +116,14 @@ fun myFunc(): Integer {
 }
 ```
 
-## Variable declaration
+# Variable declaration
 
 ```adrian
-var n: t = v
-var n: t
+var n: T = v
+var n: T
 ```
 
-Where `n` is a variable name, `t` is a type name and `v` is an optional value.
+Where `n` is a variable name, `T` is a type name and `v` is an optional value.
 
 Type of name and type of value must be equal. When `v` is not provided variable will be initialized using default value.
 
@@ -141,7 +134,7 @@ var n = v
 Type inference is also provided.
 
 
-## Variable assignment
+# Variable assignment
 
 ```adrian
 n = v
@@ -152,10 +145,10 @@ Where `n` is a variable name, `v` is a value.
 Type of name and type of value must be equal. Variable must be declarated before assignment.
 
 
-## Function declaration
+# Function declaration
 
 ```adrian
-fun n(args): t {
+fun n(args): T {
 	stmts
 }
 
@@ -164,10 +157,10 @@ fun n(args) {
 }
 ```
 
-Where `n` is a function name, `t` is an optional return type, `args` is a list of arguments,
-`stmts` is a list of statements. Function return's type and type `t` must be equal.
+Where `n` is a function name, `T` is an optional return type, `args` is a list of arguments,
+`stmts` is a list of statements. Function return's type and type `T` must be equal.
 
-### args
+## args
 
 `args` can be empty:
 
@@ -176,15 +169,15 @@ fun n() {}
 ```
 
 ```adrian
-fun n(arg1: t1; arg2, arg3: t2) {}
+fun n(arg1: T1; arg2, arg3: T2; ...) {}
 ```
 
-Where `arg1` has type `t1`, `arg2` and `arg3` have type `t2`. Different groups of
+Where `arg1` has type `T1`, `arg2` and `arg3` have type `T2`. Different groups of
 arguments must be separated by semicolon. Arguments in groups must be separated by
 comma. The passed function arguments must be in the order in which arguments in
 the function declaration are written.
 
-### stmts
+## stmts
 
 `stmts` can be empty:
 
@@ -194,10 +187,31 @@ fun n() {}
 
 Or `stmts` can consists of any statement exclude constant decalaration and include return statement.
 
-## TODO
+# Struct declaration
 
-Write about:
-[ ] If, elif and else
-[ ] Structs and type naming rules
-[ ] Constants
-[ ] Modules
+```adrian
+sct MyStruct(types) is (interfaces) {
+    stmts
+}
+```
+
+## types
+
+`types` can be empty:
+
+```adrian
+sct MyStruct {}
+```
+
+```adrian
+sct Node(someType1, someType2, ...) {}
+```
+
+Every type in `types` must be named as variable.
+Because it isn't a type name, it is an argument like in function.
+You can use these types inside of struct body.
+
+
+## interfaces
+
+TODO

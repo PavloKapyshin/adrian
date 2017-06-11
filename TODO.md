@@ -4,3 +4,8 @@
 [ ] Write about standard Adrian statements
 [ ] Write about `print` and `length` function
 [ ] Write about `Printable` and `Lengthable` interfaces
+[ ] Write about if, elif and else
+[ ] Write about constants
+[ ] Write about modules
+[ ] Write about methods
+[ ] Write about interfaces
