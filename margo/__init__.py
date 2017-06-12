@@ -5,7 +5,7 @@ from . import foreign_parser
 from . import structs
 from . import naming_rules
 from . import analyzer
-# from . import name_existence
+from . import name_existence
 from . import type_inference
 # from . import type_checking
 from . import default_value
@@ -60,9 +60,10 @@ def compile_repl(text, contexts, file_hash=""):
     se_ast = simple_expr.SimpleExpr(
         contexts["simple_expr"]).main(
         oop_ast, exit_on_error=contexts["exit_on_error"])
-    # print("Stage 9: checking name existence.")
-    # ne_ast = name_existence.NameExistence(
-    #     contexts["name_existence"]).main(se_ast)
+    print("Stage 9: checking name existence.")
+    ne_ast = name_existence.NameExistence(
+       contexts["name_existence"]).main(
+       se_ast, exit_on_error=contexts["exit_on_error"])
     # print("Stage 10: checking types.")
     # tc_ast = type_checking.TypeChecking(
     #     contexts["type_checking"]).main(ne_ast)
@@ -74,7 +75,7 @@ def compile_repl(text, contexts, file_hash=""):
     #     contexts["cgen"]).main(arc_ast)
     print("Compiled!")
     # return cgen_ast
-    return se_ast
+    return ne_ast
 
 
 def compile(text, context, file_hash=""):

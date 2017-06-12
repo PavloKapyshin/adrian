@@ -48,30 +48,7 @@ class Layer:
                 result.append(
                     ast.Pair(pair.line, pair.column, subres))
         return result
-        # self.funcs = self._make_funcs_dict()
-        # result = []
-        # for pair in ast_:
-        #     if isinstance(pair, ast.Pair):
-        #         self.position = ast.Position(pair.line, pair.column)
-        #         res = self.funcs[type(pair.stmt)](pair.stmt)
-        #         if isinstance(res, list):
-        #             for elem in res:
-        #                 result.append(ast.Pair(
-        #                     pair.line, pair.column, elem))
-        #         else:
-        #             result.append(ast.Pair(
-        #                 pair.line, pair.column, res))
-        #     else:
-        #         res = self.funcs[type(pair)](pair)
-        #         if isinstance(res, list):
-        #             for elem in res:
-        #                 result.append(ast.Pair(
-        #                     self.position.line, self.position.column,
-        #                     elem))
-        #         else:
-        #             result.append(ast.Pair(
-        #                 self.position.line, self.position.column, res))
-        # return result
+
 
 class TypeLayer(Layer):
 
@@ -136,3 +113,15 @@ class TypeLayer(Layer):
                 self.position, self.exit_on_error,
                 expr1_type, expr2_type)
         return expr1_type
+
+
+class CheckingLayer(Layer):
+
+    def main(self, ast_, *, exit_on_error=True):
+        self.exit_on_error = exit_on_error
+        funcs = self._make_funcs_dict()
+        for pair in ast_:
+            self.position = ast.Position(pair.line, pair.column)
+            # Just checking.
+            funcs[type(pair.stmt)](pair.stmt)
+        return ast_
