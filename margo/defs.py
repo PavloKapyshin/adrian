@@ -1,0 +1,3 @@
+RESERVED_WORDS = (
+    "var",
+)

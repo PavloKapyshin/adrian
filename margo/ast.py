@@ -179,39 +179,17 @@ class SExpr(_Node):
         return self._expr2
 
 
-class Position:
-    """For error functions."""
-    __slots__ = ("_line", "_column")
-
-    def __init__(self, line, column):
-        self._line = line
-        self._column = column
-
-    @property
-    def line(self):
-        return self._line
-
-    @property
-    def column(self):
-        return self._column
-
-
 class Pair(_Node):
-    __slots__ = ("_line", "_column", "_stmt", "_keys")
+    __slots__ = ("_line", "_stmt", "_keys")
 
-    def __init__(self, line, column, stmt):
+    def __init__(self, line, stmt):
         self._line = line
-        self._column = column
         self._stmt = stmt
-        self._keys = ("line", "column", "stmt")
+        self._keys = ("line", "stmt")
 
     @property
     def line(self):
         return self._line
-
-    @property
-    def column(self):
-        return self._column
 
     @property
     def stmt(self):

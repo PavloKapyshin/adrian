@@ -33,78 +33,79 @@ class CompilationError(Exception):
         self.message = message
 
 
-def syntax_error(position, exit_on_error):
-    _error(position, exit_on_error, _SYNTAX_ERROR)
+def syntax_error(line, exit_on_error):
+    _error(line, exit_on_error, _SYNTAX_ERROR)
 
 
-def illegal_char(position, exit_on_error, char):
-    _error(position, exit_on_error, _ILLEGAL_CHAR, char=char)
+def illegal_char(line, exit_on_error, char):
+    _error(line, exit_on_error, _ILLEGAL_CHAR, char=char)
 
 
-def bad_name_for_variable(position, exit_on_error, name):
-    _error(position, exit_on_error, _BAD_NAME_FOR_VARIABLE, name=name)
+def bad_name_for_variable(line, exit_on_error, name):
+    _error(line, exit_on_error, _BAD_NAME_FOR_VARIABLE, name=name)
 
 
-def bad_name_for_function(position, exit_on_error, name):
-    _error(position, exit_on_error, _BAD_NAME_FOR_FUNCTION, name=name)
+def bad_name_for_function(line, exit_on_error, name):
+    _error(line, exit_on_error, _BAD_NAME_FOR_FUNCTION, name=name)
 
 
-def bad_name_for_constant(position, exit_on_error, name):
-    _error(position, exit_on_error, _BAD_NAME_FOR_CONSTANT, name=name)
+def bad_name_for_constant(line, exit_on_error, name):
+    _error(line, exit_on_error, _BAD_NAME_FOR_CONSTANT, name=name)
 
 
-def bad_name_for_module(position, exit_on_error, name):
-    _error(position, exit_on_error, _BAD_NAME_FOR_MODULE, name=name)
+def bad_name_for_module(line, exit_on_error, name):
+    _error(line, exit_on_error, _BAD_NAME_FOR_MODULE, name=name)
 
 
-def bad_name_for_type(position, exit_on_error, name):
-    _error(position, exit_on_error, _BAD_NAME_FOR_TYPE, name=name)
+def bad_name_for_type(line, exit_on_error, name):
+    _error(line, exit_on_error, _BAD_NAME_FOR_TYPE, name=name)
 
 
-def bad_name_in_expr(position, exit_on_error, name):
-    _error(position, exit_on_error, _BAD_NAME_IN_EXPR, name=name)
+def bad_name_in_expr(line, exit_on_error, name):
+    _error(line, exit_on_error, _BAD_NAME_IN_EXPR, name=name)
 
 
-def non_existing_name(position, exit_on_error, name):
-    _error(position, exit_on_error, _NON_EXISTING_NAME, name=name)
+def non_existing_name(line, exit_on_error, name):
+    _error(line, exit_on_error, _NON_EXISTING_NAME, name=name)
 
 
-def non_existing_type(position, exit_on_error, type_):
-    _error(position, exit_on_error, _NON_EXISTING_TYPE, type_=type_)
+def non_existing_type(line, exit_on_error, type_):
+    _error(line, exit_on_error, _NON_EXISTING_TYPE, type_=type_)
 
 
-def non_existing_module(position, exit_on_error, module):
-    _error(position, exit_on_error, _NON_EXISTING_MODULE, module=module)
+def non_existing_module(line, exit_on_error, module):
+    _error(line, exit_on_error, _NON_EXISTING_MODULE, module=module)
 
 
-def cant_reassign_builtin(position, exit_on_error, name):
-    _error(position, exit_on_error, _CANT_REASSIGN_BUILTIN, name=name)
+def cant_reassign_builtin(line, exit_on_error, name):
+    _error(line, exit_on_error, _CANT_REASSIGN_BUILTIN, name=name)
 
 
-def cant_find_name_in_module(position, exit_on_error, name, module_name):
+def cant_find_name_in_module(line, exit_on_error, name, module_name):
     _error(
-        position, exit_on_error,
+        line, exit_on_error,
         _CANT_FIND_NAME_IN_MODULE, name=name, module_name=module_name)
 
 
-def types_are_not_equal(position, exit_on_error, type1, type2):
+def types_are_not_equal(line, exit_on_error, type1, type2):
     _error(
-        position, exit_on_error, _TYPES_ARE_NOT_EQUAL,
+        line, exit_on_error, _TYPES_ARE_NOT_EQUAL,
         type1=type1, type2=type2)
 
 
-def not_implemented(position, exit_on_error):
-    _error(position, exit_on_error, _NOT_IMPLEMENTED)
+def not_implemented():
+    _error(0, True, _NOT_IMPLEMENTED)
 
 
-def wrong_number_of_args(position, exit_on_error, expected, got):
-    _error(position, exit_on_error, _WRONG_NUMBER_OF_ARGS, expected=expected, got=got)
+def wrong_number_of_args(line, exit_on_error, expected, got):
+    _error(
+        line, exit_on_error, _WRONG_NUMBER_OF_ARGS,
+        expected=expected, got=got)
 
 
-def _error(position, exit_on_error, msg, **keywords):
-    base_msg = "Error (line: {line}; column: {column}): {{0}}.".format(
-        line=position.line, column=position.column)
-    if position.line <= 0:
+def _error(line, exit_on_error, msg, **keywords):
+    base_msg = "Error (line: {line}): {{0}}.".format(line=line)
+    if line <= 0:
         base_msg = "Error: {0}."
     message = base_msg.format(msg.format_map(keywords))
     if exit_on_error:
