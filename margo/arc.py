@@ -69,5 +69,9 @@ class ARC(layers.Layer):
         self.var_types[str(name)] = type_
         return ast.Decl(name, type_, expr)
 
+    def funccall(self, stmt):
+        # Only c#Void functions are supported.
+        return ast.FuncCall(stmt.name, stmt.args)
+
     def main(self, ast_, *, exit_on_error):
         return super().main(ast_, exit_on_error=exit_on_error) + self._arc()
