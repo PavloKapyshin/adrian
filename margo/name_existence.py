@@ -98,3 +98,7 @@ class NameExistence(layers.CheckingLayer):
         self.namespace.add(stmt.name, {
             "node_type": defs.NodeType.variable
         })
+
+    def funccall(self, stmt):
+        # TODO: check existence of functions.
+        pass

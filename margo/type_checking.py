@@ -13,3 +13,6 @@ class TypeChecking(layers.TypeLayer):
             "type": stmt.type_
         })
         return ast.Decl(stmt.name, stmt.type_, stmt.expr)
+
+    def funccall(self, stmt):
+        return ast.FuncCall(stmt.name, stmt.args)
