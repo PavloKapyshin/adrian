@@ -22,11 +22,8 @@ def arc(namespace_projection, _identifier=None):
 
     unique_regions = {}
     for region in sorted(regions.values()):
-        # BAD CODE:
-        region_ = {str(n) for n in region}
-        # GOOD CODE:
-        key = "@region@".join(region_)
-        unique_regions[key] = region_
+        key = "@region@".join(region)
+        unique_regions[key] = region
 
     def _get_var(region):
         for var in sorted(region):

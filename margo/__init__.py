@@ -12,7 +12,7 @@ from . import default_value
 from . import std_alias
 from . import oop
 from . import simple_expr
-# from . import arc
+from . import arc
 # from . import cgen
 
 
@@ -68,15 +68,16 @@ def compile_repl(text, contexts, file_hash=""):
     tc_ast = type_checking.TypeChecking(
         contexts["type_checking"]).main(
         ne_ast, exit_on_error=contexts["exit_on_error"])
-    # print("Stage 11: doing automatic reference counting.")
-    # arc_ast = arc.ARC(
-    #     contexts["arc"]).main(tc_ast)
+    print("Stage 11: doing automatic reference counting.")
+    arc_ast = arc.ARC(
+        contexts["arc"]).main(
+        tc_ast, exit_on_error=contexts["exit_on_error"])
     # print("Stage 12: translating to C-like ast.")
     # cgen_ast = cgen.CGen(
     #     contexts["cgen"]).main(arc_ast)
     print("Compiled!")
     # return cgen_ast
-    return tc_ast
+    return arc_ast
 
 
 def compile(text, context, file_hash=""):

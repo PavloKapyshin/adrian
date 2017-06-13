@@ -58,6 +58,13 @@ class Namespace:
     def get(self, name):
         return self.get_with_scope(name)[0]
 
+    def space(self):
+        return self._space
+
+    @property
+    def scope(self):
+        return self._scope
+
 
 # class Namespace:
 
