@@ -24,7 +24,8 @@ C source
 ## Parsing
 
 Parsing the input Adrian source code and returning parser AST (probably JSON with the AST inside).
-Parser for margolith can be writen in any programming language and can be pluged in using foreign parser interface.
+Parser for margolith can be writen in any programming language with JSON support and can be
+pluged in using foreign parser interface.
 
 
 ## Foreign parser interface
