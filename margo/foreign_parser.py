@@ -7,6 +7,7 @@ def translate(node):
     args = []
     for subnode in node[1:]:
         if isinstance(subnode, list):
+            # Main function requires list of nodes.
             args.extend(main([subnode]))
         else:
             args.append(subnode)
