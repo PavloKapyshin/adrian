@@ -1,27 +1,27 @@
 import copy
 
 
-# class Includes:
+class Includes:
 
-#     def __init__(self):
-#         self._includes = {}
+    def __init__(self):
+        self._includes = {}
 
-#     def __contains__(self, name):
-#         return name in self._includes
+    def __contains__(self, name):
+        return name in self._includes
 
-#     def __getitem__(self, key):
-#         return self._includes[key]
+    def __getitem__(self, key):
+        return self._includes[key]
 
-#     def __setitem__(self, key, value):
-#         self._includes[key] = value
+    def __setitem__(self, key, value):
+        self._includes[key] = value
 
-#     def get_cgen_ast(self):
-#         ast_ = []
-#         for key, value in self._includes.items():
-#             for key_, value_ in value.items():
-#                 if key_ != "__INCLUDE__":
-#                     ast_.append(value_)
-#         return ast_
+    def cgen_ast(self):
+        ast_ = []
+        for key, value in self._includes.items():
+            for key_, value_ in value.items():
+                if key_ != "__INCLUDE__":
+                    ast_.append(value_)
+        return ast_
 
 
 class Namespace:
