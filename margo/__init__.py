@@ -1,4 +1,5 @@
 from . import parser
+from . import foreign_parser
 from . import structs
 from . import context
 
@@ -20,7 +21,8 @@ def compile_repl(inp, *, ns, ts, fs, exit_on_error):
     with context.new_context(
             ns=ns, ts=ts, fs=fs, exit_on_error=exit_on_error):
         parsed_ast = parser.main(inp)
-    return parsed_ast
+        object_ast = foreign_parser.main(parsed_ast)
+    return object_ast
 
 
 # def compile_repl(text, contexts, file_hash=""):

@@ -3,7 +3,7 @@ import sys
 
 from vendor.ply import lex, yacc
 
-from . import ast, parser_ast, defs, errors
+from . import parser_astlib, defs, errors
 
 
 _RESERVED_WORDS = dict((word, word.upper()) for word in defs.RESERVED_WORDS)
@@ -62,13 +62,13 @@ for tok_regex, const_name in sorted(
 
 def t_INTEGER(token):
     r"""[-]?\d+"""
-    token.value = [parser_ast.INTEGER, token.value]
+    token.value = [parser_astlib.INTEGER, token.value]
     return token
 
 
 def t_STRING(token):
     r"""["][^"]*?["]"""
-    token.value = [parser_ast.STRING, token.value[1:-1]]
+    token.value = [parser_astlib.STRING, token.value[1:-1]]
     return token
 
 
@@ -109,7 +109,7 @@ precedence = (
 
 def sexpr(expr):
     if len(expr) == 3 + 1:
-        return [parser_ast.SEXPR, expr[2], expr[1], expr[3]]
+        return [parser_astlib.SEXPR, expr[2], expr[1], expr[3]]
     return [expr[1]]
 
 
@@ -125,7 +125,7 @@ def p_ast_2(content):
 
 def p_pair(content):
     """pair : stmt"""
-    content[0] = [parser_ast.PAIR, content.lineno(0), content[1]]
+    content[0] = [parser_astlib.PAIR, content.lineno(0), content[1]]
 
 
 def p_stmt(content):
@@ -138,7 +138,7 @@ def p_stmt(content):
 
 def p_func_call_1(content):
     """func_call : name_from_module LPAREN call_args RPAREN"""
-    content[0] = [parser_ast.FUNC_CALL, content[1], content[3]]
+    content[0] = [parser_astlib.FUNC_CALL, content[1], content[3]]
 
 
 # def p_return(content):
@@ -225,17 +225,17 @@ def p_func_call_1(content):
 
 def p_decl_1(content):
     """decl : VAR NAME COLON type EQ bool_expr"""
-    content[0] = [parser_ast.DECL, content[2], content[4], content[6]]
+    content[0] = [parser_astlib.DECL, content[2], content[4], content[6]]
 
 
 def p_decl_2(content):
     """decl : VAR NAME COLON type"""
-    content[0] = [parser_ast.DECL, content[2], content[4], parser_ast.EMPTY]
+    content[0] = [parser_astlib.DECL, content[2], content[4], [parser_astlib.EMPTY]]
 
 
 def p_decl_3(content):
     """decl : VAR NAME EQ bool_expr"""
-    content[0] = [parser_ast.DECL, content[2], parser_ast.EMPTY, content[4]]
+    content[0] = [parser_astlib.DECL, content[2], [parser_astlib.EMPTY], content[4]]
 
 
 # def p_assignment(content):
@@ -245,7 +245,7 @@ def p_decl_3(content):
 
 # def p_method_call(content):
 #     """method_call : type LPAREN call_args RPAREN"""
-#     content[0] = [parser_ast.METHOD_CALL, content[1][0], content[1][1], content[3]]
+#     content[0] = [parser_astlib.METHOD_CALL, content[1][0], content[1][1], content[3]]
 
 
 def p_call_args_1(content):
@@ -270,7 +270,7 @@ def p_type(content):
 
 # def p_name_from_struct_1(content):
 #     """name_from_struct : name_from_module PERIOD name_from_struct"""
-#     content[0] = [parser_ast.STRUCT_ELEM, content[1], content[3]]
+#     content[0] = [parser_astlib.STRUCT_ELEM, content[1], content[3]]
 
 
 # def p_name_from_struct_2(content):
@@ -280,12 +280,12 @@ def p_type(content):
 
 def p_name_from_module_1(content):
     """name_from_module : NAME HASH NAME"""
-    content[0] = [parser_ast.MODULE_MEMBER, content[1], [parser_ast.NAME, content[3]]]
+    content[0] = [parser_astlib.MODULE_MEMBER, content[1], [parser_astlib.NAME, content[3]]]
 
 
 def p_name_from_module_2(content):
     """name_from_module : NAME"""
-    content[0] = [parser_ast.NAME, content[1]]
+    content[0] = [parser_astlib.NAME, content[1]]
 
 
 # def p_assignop(content):
