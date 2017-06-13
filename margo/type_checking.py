@@ -1,84 +1,15 @@
-from . import ast
-from . import defs
-from . import layers
-from . import errors
-
-from vendor.paka import funcreg
+from . import ast, layers, errors
 
 
-class TypeChecking(layers.Layer):
-
-    def _types_equal(self, type1, type2):
-        return self._types_equal.reg[type1](self, type1, type2)
-
-    _types_equal.reg = funcreg.TypeRegistry()
-
-    @_types_equal.reg.register(ast.Name)
-    def _types_equal_name(self, type1, type2):
-        if isinstance(type2, ast.Name):
-            return type1.value == type2.value
-        errors.types_are_not_equal(
-            self.context.line, self.context.exit_on_error,
-            type1, type2)
-
-    @_types_equal.reg.register(ast.ModuleMember)
-    def _types_equal_module(self, type1, type2):
-        if isinstance(type2, ast.ModuleMember):
-            return (type1.name.value == type2.name.value and \
-                    self._types_equal(type1.member, type2.member))
-        errors.types_are_not_equal(
-            self.context.line, self.context.exit_on_error,
-            type1, type2)
-
-    def _get_type_from_expr(self, expr):
-        return self._get_type_from_expr.reg[expr](self, expr)
-
-    _get_type_from_expr.reg = funcreg.TypeRegistry()
-
-    @_get_type_from_expr.reg.register(ast.Name)
-    def _get_type_from_name(self, name):
-        return self.context.namespace.get(name.value)["type_"]
-
-    @_get_type_from_expr.reg.register(ast.FuncCall)
-    def _get_type_from_method(self, call):
-        if isinstance(call.name, ast.ModuleMember):
-            info = defs.STD_TYPES_FUNC_SIGNATURES[call.name.member.value]
-            return info["rettype"]
-        errors.not_implemented(
-            self.context.line, self.context.exit_on_error)
-
-    @_get_type_from_expr.reg.register(ast.Integer)
-    @_get_type_from_expr.reg.register(ast.String)
-    @_get_type_from_expr.reg.register(ast.CIntFast8)
-    @_get_type_from_expr.reg.register(ast.CUIntFast8)
-    @_get_type_from_expr.reg.register(ast.CIntFast32)
-    @_get_type_from_expr.reg.register(ast.CUIntFast32)
-    @_get_type_from_expr.reg.register(ast.CChar)
-    @_get_type_from_expr.reg.register(ast.CString)
-    def _get_type_from_atom(self, atom):
-        return atom.to_type()
-
-    @_get_type_from_expr.reg.register(list)
-    def _get_type_from_list(self, lst):
-        # TODO: maybe typeOf(4 / 3) == Decimal.
-        expr_type1 = self._get_type_from_expr(lst[1])
-        expr_type2 = self._get_type_from_expr(lst[2])
-        if not self._types_equal(expr_type1, expr_type2):
-            errors.types_are_not_equal(
-                self.context.line, self.context.exit_on_error,
-                expr_type1, expr_type2)
-        return expr_type1
+class TypeChecking(layers.TypeLayer):
 
     def decl(self, stmt):
-        name = stmt.name
-        type_ = stmt.type_
-        expr = stmt.expr
-        type_of_expr = self._get_type_from_expr(expr)
-        if not self._types_equal(type_, type_of_expr):
+        type_of_expr = self.get_type_from_expr(stmt.expr)
+        if not self.types_equal(stmt.type_, type_of_expr):
             errors.types_are_not_equal(
-                self.context.line, self.context.exit_on_error,
-                type_, type_of_expr)
-        self.context.namespace.add_name(name.value, {
-            "type_": type_
+                self.position, self.exit_on_error,
+                stmt.type_, type_of_expr)
+        self.namespace.add(stmt.name, {
+            "type": stmt.type_
         })
-        return ast.Decl(name, type_, expr)
+        return ast.Decl(stmt.name, stmt.type_, stmt.expr)

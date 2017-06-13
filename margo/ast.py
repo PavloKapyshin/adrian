@@ -484,3 +484,4 @@ CTYPES = (
     CChar,
     CString
 )
+CTYPES_NAMES = set(type_.to_type().member for type_ in CTYPES)

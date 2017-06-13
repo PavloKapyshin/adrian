@@ -43,74 +43,74 @@ STD_TYPES_NAMES = set(type_.to_type() for type_ in STD_TYPES)
 STD_TYPES_FUNC_SIGNATURES = {
     "__init__Integer": {
         "rettype": ast.ModuleMember(
-            name=ast.Name(STD_TYPES_MODULE_NAME),
-            member=ast.Name("Integer")),
+            name=ast.ModuleName(STD_TYPES_MODULE_NAME),
+            member=ast.TypeName("Integer")),
         "args": [ast.CString.to_type()]
     },
     "__free__Integer": {
         "rettype": ast.CVoid(),
         "args": [ast.ModuleMember(
-            name=ast.Name(STD_TYPES_MODULE_NAME),
-            member=ast.Name("Integer"))]
+            name=ast.ModuleName(STD_TYPES_MODULE_NAME),
+            member=ast.TypeName("Integer"))]
     },
     "__copy__Integer": {
         "rettype": ast.ModuleMember(
-            name=ast.Name(STD_TYPES_MODULE_NAME),
-            member=ast.Name("Integer")),
+            name=ast.ModuleName(STD_TYPES_MODULE_NAME),
+            member=ast.TypeName("Integer")),
         "args": [ast.ModuleMember(
-            name=ast.Name(STD_TYPES_MODULE_NAME),
-            member=ast.Name("Integer"))]
+            name=ast.ModuleName(STD_TYPES_MODULE_NAME),
+            member=ast.TypeName("Integer"))]
     },
     "__add__Integer": {
         "rettype": ast.ModuleMember(
-            name=ast.Name(STD_TYPES_MODULE_NAME),
-            member=ast.Name("Integer")),
+            name=ast.ModuleName(STD_TYPES_MODULE_NAME),
+            member=ast.TypeName("Integer")),
         "args": [
             ast.ModuleMember(
-                name=ast.Name(STD_TYPES_MODULE_NAME),
-                member=ast.Name("Integer")),
+                name=ast.ModuleName(STD_TYPES_MODULE_NAME),
+                member=ast.TypeName("Integer")),
             ast.ModuleMember(
-                name=ast.Name(STD_TYPES_MODULE_NAME),
-                member=ast.Name("Integer"))
+                name=ast.ModuleName(STD_TYPES_MODULE_NAME),
+                member=ast.TypeName("Integer"))
         ]
     },
     "__sub__Integer": {
         "rettype": ast.ModuleMember(
-            name=ast.Name(STD_TYPES_MODULE_NAME),
-            member=ast.Name("Integer")),
+            name=ast.ModuleName(STD_TYPES_MODULE_NAME),
+            member=ast.TypeName("Integer")),
         "args": [
             ast.ModuleMember(
-                name=ast.Name(STD_TYPES_MODULE_NAME),
-                member=ast.Name("Integer")),
+                name=ast.ModuleName(STD_TYPES_MODULE_NAME),
+                member=ast.TypeName("Integer")),
             ast.ModuleMember(
-                name=ast.Name(STD_TYPES_MODULE_NAME),
-                member=ast.Name("Integer"))
+                name=ast.ModuleName(STD_TYPES_MODULE_NAME),
+                member=ast.TypeName("Integer"))
         ]
     },
     "__mul__Integer": {
         "rettype": ast.ModuleMember(
-            name=ast.Name(STD_TYPES_MODULE_NAME),
-            member=ast.Name("Integer")),
+            name=ast.ModuleName(STD_TYPES_MODULE_NAME),
+            member=ast.TypeName("Integer")),
         "args": [
             ast.ModuleMember(
-                name=ast.Name(STD_TYPES_MODULE_NAME),
-                member=ast.Name("Integer")),
+                name=ast.ModuleName(STD_TYPES_MODULE_NAME),
+                member=ast.TypeName("Integer")),
             ast.ModuleMember(
-                name=ast.Name(STD_TYPES_MODULE_NAME),
-                member=ast.Name("Integer"))
+                name=ast.ModuleName(STD_TYPES_MODULE_NAME),
+                member=ast.TypeName("Integer"))
         ]
     },
     "__div__Integer": {
         "rettype": ast.ModuleMember(
-            name=ast.Name(STD_TYPES_MODULE_NAME),
-            member=ast.Name("Integer")),
+            name=ast.ModuleName(STD_TYPES_MODULE_NAME),
+            member=ast.TypeName("Integer")),
         "args": [
             ast.ModuleMember(
-                name=ast.Name(STD_TYPES_MODULE_NAME),
-                member=ast.Name("Integer")),
+                name=ast.ModuleName(STD_TYPES_MODULE_NAME),
+                member=ast.TypeName("Integer")),
             ast.ModuleMember(
-                name=ast.Name(STD_TYPES_MODULE_NAME),
-                member=ast.Name("Integer"))
+                name=ast.ModuleName(STD_TYPES_MODULE_NAME),
+                member=ast.TypeName("Integer"))
         ]
     }
 }

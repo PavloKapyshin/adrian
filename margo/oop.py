@@ -10,6 +10,8 @@ class OOP(layers.Layer):
             type_ = self.namespace.get(struct)["type"]
         elif isinstance(struct, ast.FuncCall):
             type_ = struct.name
+        else:
+            errors.not_implemented(self.position, self.exit_on_error)
         if isinstance(type_, ast.ModuleMember):
             return ast.ModuleMember(
                 name=type_.name,

@@ -87,11 +87,19 @@ class TypeLayer(Layer):
             module = call.name
             if isinstance(module.member, ast.TypeName):
                 errors.not_implemented(self.position, self.exit_on_error)
+            elif isinstance(module.member, ast.MethodName):
+                # Only std types are supported, for now :D
+                func_info = defs.STD_TYPES_FUNC_SIGNATURES[module.member]
+                return func_info["rettype"]
             elif isinstance(module.member, ast.FunctionName):
                 # Only std types are supported, for now :D
                 func_info = defs.STD_TYPES_FUNC_SIGNATURES[module.member]
                 return func_info["rettype"]
         errors.not_implemented(self.position, self.exit_on_error)
+
+    @get_type_from_expr.registry.register(ast.Instance)
+    def get_type_from_instance(self, instance):
+        return instance.struct
 
     @get_type_from_expr.registry.register(ast.Integer)
     @get_type_from_expr.registry.register(ast.String)

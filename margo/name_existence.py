@@ -1,4 +1,4 @@
-from . import ast, defs, errors, layers
+from . import ast, defs, cdefs, errors, layers
 
 from vendor.paka import funcreg
 
@@ -11,7 +11,7 @@ class NameExistence(layers.CheckingLayer):
                 self.position, self.exit_on_error, type_)
 
     def _c_type(self, type_):
-        if not type_ in cdefs.CTYPES_NAMES:
+        if not type_ in ast.CTYPES_NAMES:
             errors.non_existing_type(
                 self.position, self.exit_on_error, type_)
 
@@ -28,7 +28,6 @@ class NameExistence(layers.CheckingLayer):
 
     @_decl_type.registry.register(ast.ModuleMember)
     def _decl_type_module(self, module):
-        print(module)
         # Checking existence of module.member.
         if module.name == defs.STD_TYPES_MODULE_NAME:
             self._std_type(module.member)

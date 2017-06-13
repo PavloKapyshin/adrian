@@ -7,7 +7,7 @@ from . import naming_rules
 from . import analyzer
 from . import name_existence
 from . import type_inference
-# from . import type_checking
+from . import type_checking
 from . import default_value
 from . import std_alias
 from . import oop
@@ -64,9 +64,10 @@ def compile_repl(text, contexts, file_hash=""):
     ne_ast = name_existence.NameExistence(
        contexts["name_existence"]).main(
        se_ast, exit_on_error=contexts["exit_on_error"])
-    # print("Stage 10: checking types.")
-    # tc_ast = type_checking.TypeChecking(
-    #     contexts["type_checking"]).main(ne_ast)
+    print("Stage 10: checking types.")
+    tc_ast = type_checking.TypeChecking(
+        contexts["type_checking"]).main(
+        ne_ast, exit_on_error=contexts["exit_on_error"])
     # print("Stage 11: doing automatic reference counting.")
     # arc_ast = arc.ARC(
     #     contexts["arc"]).main(tc_ast)
@@ -75,7 +76,7 @@ def compile_repl(text, contexts, file_hash=""):
     #     contexts["cgen"]).main(arc_ast)
     print("Compiled!")
     # return cgen_ast
-    return ne_ast
+    return tc_ast
 
 
 def compile(text, context, file_hash=""):
