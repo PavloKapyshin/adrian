@@ -3,15 +3,13 @@
 ```
 Adrian source code
 ↓
-Lexing and Parsing
+Parsing
 ↓
-Name checking
+Foreign parser interface
 ↓
-Type checking
+Naming rules checking
 ↓
-Syntax sugar
-↓
-Name checking
+Name existence checking
 ↓
 Type checking
 ↓
@@ -22,21 +20,36 @@ CGen
 C source
 ```
 
-## Name checking
 
-Compiler checks naming conventions, name existence and that builtins are not reassigned.
+## Parsing
+
+Parsing the input Adrian source code and returning parser AST (probably JSON with the AST inside).
+Parser for margolith can be writen in any programming language and can be pluged in using foreign parser interface.
+
+
+## Foreign parser interface
+
+Translating parser AST to object-oriented AST.
+
+
+## Naming rules checking
+
+Compiler checks naming conventions.
+
+
+## Name existence checking
+
+Compiler checks name existence.
+
 
 ## Type checking
 
-Compiler checks that type of name and type of value are equal and are valid.
+Compiler checks types for equality.
 
-## Syntax sugar
-
-Compiler translates AST into more simple for compiler.
 
 ## Name mangling
 
-Compiler mangles names.
+Compiler mangles names using file hash.
 
 ## CGen
 
@@ -44,4 +57,4 @@ Compiler generates CGen AST.
 
 ## C source
 
-Compiler generates C source code.
+Compiler generates C source code using adrian.cgen library.
