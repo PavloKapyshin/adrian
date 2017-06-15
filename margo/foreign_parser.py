@@ -7,8 +7,7 @@ def translate(node):
     args = []
     for subnode in node[1:]:
         if isinstance(subnode, list):
-            # Main function requires list of nodes.
-            args.extend(main([subnode]))
+            args.extend(translate(subnode))
         else:
             args.append(subnode)
     yield getattr(astlib, node[0])(*args)
@@ -17,6 +16,5 @@ def translate(node):
 def main(ast_):
     new_ast = []
     for node in ast_:
-        for new_node in translate(node):
-            new_ast.append(new_node)
+        new_ast.extend(translate(node))
     return new_ast

@@ -250,17 +250,17 @@ def p_decl_3(content):
 
 def p_call_args_1(content):
     """call_args : bool_expr COMMA call_args"""
-    content[0] = [content[1]] + content[3]
+    content[0] = [parser_astlib.CALL_ARGS, content[1], content[3]]
 
 
 def p_call_args_2(content):
     """call_args : bool_expr"""
-    content[0] = [content[1]]
+    content[0] = [parser_astlib.CALL_ARGS, content[1], [parser_astlib.EMPTY]]
 
 
 def p_call_args_3(content):
     """call_args : empty"""
-    content[0] = []
+    content[0] = [parser_astlib.EMPTY]
 
 
 def p_type(content):

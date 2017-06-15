@@ -2,6 +2,7 @@ from . import parser
 from . import foreign_parser
 from . import structs
 from . import context
+from . import layers
 
 
 # def _get_file_hash(file_name):

@@ -3,7 +3,11 @@ import copy, collections
 from . import cdefs
 
 
-class _Node:
+class BaseNode:
+    pass
+
+
+class Node(BaseNode):
     _keys = ()  # Override in subclass.
 
     def __str__(self):
@@ -29,7 +33,6 @@ class Name(collections.UserString):
      - type
 
     """
-    __slots__ = ()
 
     def __init__(self, data):
         super().__init__(data)
@@ -58,8 +61,7 @@ class MethodName(Name):
     pass
 
 
-class ModuleMember(_Node):
-    __slots__ = ("_name", "_member", "_keys")
+class ModuleMember(Node):
 
     def __init__(self, name, member):
         self._name = name
@@ -75,8 +77,7 @@ class ModuleMember(_Node):
         return self._member
 
 
-class StructElem(_Node):
-    __slots__ = ("_name", "_elem", "_keys")
+class StructElem(Node):
 
     def __init__(self, name, elem):
         self._name = name
@@ -92,7 +93,7 @@ class StructElem(_Node):
         return self._elem
 
 
-class FuncCall(_Node):
+class FuncCall(Node):
     """Function call.
 
             args
@@ -101,7 +102,6 @@ class FuncCall(_Node):
     ^^^^^^
      name
     """
-    __slots__ = ("_name", "_args", "_keys")
 
     def __init__(self, name, args):
         self._name = name
@@ -117,8 +117,7 @@ class FuncCall(_Node):
         return self._args
 
 
-class MethodCall(_Node):
-    __slots__ = ("_struct", "_method", "_args", "_keys")
+class MethodCall(Node):
 
     def __init__(self, struct, method, args):
         self._struct = struct
@@ -139,8 +138,7 @@ class MethodCall(_Node):
         return self._args
 
 
-class Instance(_Node):
-    __slots__ = ("_struct", "_args", "_keys")
+class Instance(Node):
 
     def __init__(self, struct, args):
         self._struct = struct
@@ -157,8 +155,23 @@ class Instance(_Node):
 
 
 # Adrian language statements.
-class SExpr(_Node):
-    __slots__ = ("_op", "_expr1", "_expr2", "_keys")
+class CallArgs(Node):
+
+    def __init__(self, arg, rest=None):
+        self._arg = arg
+        self._rest = rest or Empty()
+        self._keys = ("arg", "rest")
+
+    @property
+    def arg(self):
+        return self._arg
+
+    @property
+    def rest(self):
+        return self._rest
+
+
+class SExpr(Node):
 
     def __init__(self, op, expr1, expr2):
         self._op = op
@@ -179,8 +192,7 @@ class SExpr(_Node):
         return self._expr2
 
 
-class Pair(_Node):
-    __slots__ = ("_line", "_stmt", "_keys")
+class Pair(Node):
 
     def __init__(self, line, stmt):
         self._line = line
@@ -196,7 +208,7 @@ class Pair(_Node):
         return self._stmt
 
 
-class Decl(_Node):
+class Decl(Node):
     """Declaration and (optionally) initialization of variable.
 
                 type_
@@ -206,7 +218,6 @@ class Decl(_Node):
         name              expr
 
     """
-    __slots__ = ("_name", "_type", "_expr", "_keys")
 
     def __init__(self, name, type_, expr):
         self._name = name
@@ -227,7 +238,7 @@ class Decl(_Node):
         return self._expr
 
 
-class Assignment(_Node):
+class Assignment(Node):
     """Assign value to already existing variable.
 
           op
@@ -237,7 +248,6 @@ class Assignment(_Node):
     name     expr
 
     """
-    __slots__ = ("_name", "_op", "_expr", "_keys")
 
     def __init__(self, name, op, expr):
         self._name = name
@@ -258,7 +268,7 @@ class Assignment(_Node):
         return self._expr
 
 
-class FuncDecl(_Node):
+class FuncDecl(Node):
     """Declaration of function.
 
          name                                      type_
@@ -267,7 +277,6 @@ class FuncDecl(_Node):
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^               ^^^
                            args                             body
     """
-    __slots__ = ("_name", "_args", "_type", "_body", "_keys")
 
     def __init__(self, name, args, type_, body):
         self._name = name
@@ -293,7 +302,7 @@ class FuncDecl(_Node):
         return self._body
 
 
-class StructDecl(_Node):
+class StructDecl(Node):
     """Declaration of struct.
          name
         vvvvvv
@@ -303,7 +312,6 @@ class StructDecl(_Node):
     }
     """
 
-    __slots__ = ("_name", "_body", "_keys")
 
     def __init__(self, name, body):
         self._name = name
@@ -319,14 +327,13 @@ class StructDecl(_Node):
         return self._body
 
 
-class Return(_Node):
+class Return(Node):
     """Return statement.
 
     ret 1 + 2
         ^^^^^
         expr
     """
-    __slots__ = ("_expr", "_keys")
 
     def __init__(self, expr):
         self._expr = expr
@@ -338,7 +345,7 @@ class Return(_Node):
 
 
 # Some Adrian and C atoms and special AST nodes.
-class Literal(_Node):
+class Literal(Node):
 
     def __init__(self, literal):
         self._literal = literal
@@ -403,9 +410,8 @@ class CString(CLiteral):
     _type = TypeName("String")
 
 
-class CVoid:
+class CVoid(BaseNode):
     """CVoid in Adrian."""
-    __slots__ = ()
 
     def __str__(self):
         return "Void"
@@ -413,8 +419,7 @@ class CVoid:
     __repr__ = __str__
 
 
-class StructScalar(_Node):
-    __slots__ = ("_name", "_keys")
+class StructScalar(Node):
 
     def __init__(self, name):
         self._name = name
@@ -425,8 +430,7 @@ class StructScalar(_Node):
         return self._name
 
 
-class Arg(_Node):
-    __slots__ = ("_name", "_type", "_keys")
+class Arg(Node):
 
     def __init__(self, name, type_):
         self._name = name
@@ -442,8 +446,7 @@ class Arg(_Node):
         return self._type
 
 
-class Empty():
-    __slots__ = ()
+class Empty(BaseNode):
 
     def __init__(self):
         pass
