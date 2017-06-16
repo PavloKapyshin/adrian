@@ -1,5 +1,6 @@
 from . import parser
 from . import foreign_parser
+from . import analyzer
 from . import structs
 from . import context
 from . import layers
@@ -21,9 +22,12 @@ from . import layers
 def compile_repl(inp, *, ns, ts, fs, exit_on_error):
     with context.new_context(
             ns=ns, ts=ts, fs=fs, exit_on_error=exit_on_error):
-        parsed_ast = parser.main(inp)
-        object_ast = foreign_parser.main(parsed_ast)
-    return object_ast
+        current_ast = foreign_parser.main(parser.main(inp))
+        for layer_cls in (analyzer.Analyzer, ):
+            layer = layer_cls()
+            current_ast = layers.transform_ast(
+                current_ast, registry=layer.get_registry())
+    return current_ast
 
 
 # def compile_repl(text, contexts, file_hash=""):

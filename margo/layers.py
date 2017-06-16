@@ -1,12 +1,58 @@
 """Helper for creating new layers."""
 
+import types
 import inspect
 import itertools
+import functools
 
-from . import astlib
+from vendor.paka import funcreg
+
+from . import astlib, context
+
+
+ALL = object()
 
 
 NODE_CLASSES = (astlib.BaseNode, astlib.Name)
+
+
+_PREREGISTERED_NODE_CLASSES_ATTR_NAME = "_layer_prereg_nodes_clss"
+_INTERNAL_REGISTRY_ATTR_NAME = "_registry"
+
+
+def preregister(*node_classes):
+    def _wrapper(func):
+        setattr(func, _PREREGISTERED_NODE_CLASSES_ATTR_NAME, node_classes)
+        return func
+    return _wrapper
+
+
+class LayerMeta(type):
+
+    def __new__(cls, name, bases, attrs):
+        # Layer does not have bases, so we filter it out this way.
+        if bases:
+            registry = funcreg.TypeRegistry()
+            for value in attrs.values():
+                if isinstance(value, types.FunctionType):
+                    for node_class in getattr(
+                            value, _PREREGISTERED_NODE_CLASSES_ATTR_NAME, ()):
+                        registry.register(value, node_class)
+            attrs[_INTERNAL_REGISTRY_ATTR_NAME] = registry
+        return type.__new__(cls, name, bases, attrs)
+
+
+class Layer(metaclass=LayerMeta):
+
+    def __init__(self):
+        pass
+
+    def get_registry(self):
+        reg = funcreg.TypeRegistry()
+        for node_class, func in getattr(
+                self, _INTERNAL_REGISTRY_ATTR_NAME).items():
+            reg.register(functools.partial(func, self), node_class)
+        return reg
 
 
 def take_first(iter_):
@@ -15,7 +61,7 @@ def take_first(iter_):
 
 
 def create_with(instance, **keywords):
-    return type(instance)(**keywords)
+    return type(instance)(**dict(get_child_nodes(instance), **keywords))
 
 
 def get_child_nodes(node):
@@ -37,26 +83,14 @@ def loop_transform_loop(node, node_func, *, registry):
     else:
         yield create_with(node, **kargs)
 
-
-def _old_transform_node(node, *, registry):
-    use_all = registry.get(ALL)
-    if use_all:
-        yield from loop_transform_loop(node, use_all, registry=registry)
-    node_func = registry.get(type(node))
-    if node_func:
-        yield from loop_transform_loop(node, node_func, registry=registry)
-    elif not use_all:
-        yield from loop_transform_loop(node, None, registry=registry)
-
-
 def transform_node(node, *, registry):
     use_all = registry.get(ALL)
+    context.set_position(0)
     if use_all:
         yield from loop_transform_loop(node, use_all, registry=registry)
     else:
         node_func = registry.get(type(node))
         yield from loop_transform_loop(node, node_func, registry=registry)
-
 
 def transform_ast(ast_, *, registry):
     return list(

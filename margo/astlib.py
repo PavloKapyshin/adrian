@@ -154,6 +154,17 @@ class Instance(Node):
         return self._args
 
 
+class Empty(BaseNode):
+
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "EMPTY"
+
+    __repr__ = __str__
+
+
 # Adrian language statements.
 class CallArgs(Node):
 
@@ -169,6 +180,15 @@ class CallArgs(Node):
     @property
     def rest(self):
         return self._rest
+
+    def as_list(self):
+        def _gen():
+            current_arg = self
+            yield current_arg.arg
+            while not isinstance(current_arg.rest, Empty):
+                yield current_arg.arg
+                current_arg = current_arg.rest
+        return list(_gen())
 
 
 class SExpr(Node):
@@ -444,17 +464,6 @@ class Arg(Node):
     @property
     def type_(self):
         return self._type
-
-
-class Empty(BaseNode):
-
-    def __init__(self):
-        pass
-
-    def __str__(self):
-        return "EMPTY"
-
-    __repr__ = __str__
 
 
 CTYPES = (
