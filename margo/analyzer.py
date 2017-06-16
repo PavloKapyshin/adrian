@@ -23,7 +23,7 @@ class Analyzer(layers.Layer):
                 (isinstance(expr.name, astlib.ModuleMember))):
             module = expr.name
             # args = (
-            #     [] if isinstance(expr.args, astlib.Empty)
+            #     [] if isinstance(expr, astlib.Empty)
             #     else expr.args.as_list())
             args = expr.args
             return getattr(astlib, "C" + str(module.member))(
