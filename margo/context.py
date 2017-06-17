@@ -10,9 +10,10 @@ def set_position(position):
 
 
 @contextlib.contextmanager
-def new_context(*, ns, ts, fs, exit_on_error):
+def new_context(*, ns, ts, fs, exit_on_error, file_hash):
     context.ns = ns
     context.ts = ts
     context.fs = fs
     context.exit_on_error = exit_on_error
+    context.file_hash = file_hash
     yield

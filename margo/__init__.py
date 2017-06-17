@@ -5,7 +5,7 @@ from . import naming_rules
 # from . import name_existence
 from . import type_inference
 # from . import type_checking
-#from . import name_mangling
+from . import name_mangling
 from . import structs
 from . import context
 from . import layers
@@ -26,14 +26,15 @@ from . import layers
 
 def compile_repl(inp, *, ns, ts, fs, exit_on_error):
     with context.new_context(
-            ns=ns, ts=ts, fs=fs, exit_on_error=exit_on_error):
+            ns=ns, ts=ts, fs=fs, exit_on_error=exit_on_error,
+            file_hash="mangled_"):
         current_ast = foreign_parser.main(parser.main(inp))
         # NameExistence layer must be after NamingRules layer.
         # TypeInference layer must be after NameExistence layer.
         # TypeChecking layer must be after TypeInference layer.
         for layer_cls in (
                 analyzer.Analyzer, naming_rules.NamingRules,
-                type_inference.TypeInference):
+                type_inference.TypeInference, name_mangling.NameMangling):
             layer = layer_cls()
             current_ast = layers.transform_ast(
                 current_ast, registry=layer.get_registry())
