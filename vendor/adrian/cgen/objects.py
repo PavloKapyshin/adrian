@@ -206,14 +206,14 @@ class Decl(_Object):
 
     _keys = ("name", "type_", "expr")
 
-    def __init__(self, name, type_or_expr):
+    def __init__(self, name, type_=None, expr=None):
         self._name = name
-        self._type = None
-        self._expr = None
-        if isinstance(type_or_expr, (Val, FuncCall, Var, Expr)):
-            self._expr = type_or_expr
-        else:
-            self._type = type_or_expr
+        self._type = None or type_
+        self._expr = None or expr
+        # if isinstance(type_or_expr, (Val, FuncCall, Var, Expr)):
+        #     self._expr = type_or_expr
+        # else:
+        #     self._type = type_or_expr
 
     @property
     def name(self):
