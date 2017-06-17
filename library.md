@@ -38,7 +38,7 @@ allocates memory and returns poiter to it.
 `c#sizeof(source: c#Any): c#Size`
 returns size (in bytes) of any c struct.
 
-`c#free(memory: c#Memory): None`
+`c#free(memory: c#Memory): c#Void`
 frees memory.
 
 
