@@ -1,4 +1,4 @@
-# C module
+# c module
 
 ## C types
 
@@ -15,14 +15,14 @@ c#UIntFast16
 c#UIntFast32
 c#UIntFast64
 
-c#SizeT
+c#Size
 ```
 
 Other types:
 ```
 c#Char
-c#Pointer
-c#Array
+c#Pointer(T)
+c#Array(T)
 c#Void
 ```
 
@@ -32,10 +32,10 @@ c#Void
 
 ## C functions
 
-`c#malloc(size: c#SizeT): c#Memory`
+`c#malloc(size: c#Size): c#Memory`
 allocates memory and returns poiter to it.
 
-`c#sizeof(source: c#Any): c#SizeT`
+`c#sizeof(source: c#Any): c#Size`
 returns size (in bytes) of any c struct.
 
 `c#free(memory: c#Memory): None`
@@ -43,7 +43,7 @@ frees memory.
 
 
 
-# STD types module
+# std_types module
 
 All types:
 
@@ -57,30 +57,19 @@ UnicodeString
 ByteString
 String
 
-LinkedList
 Vector
 Set
 Dict
-
-Stack
 ```
 
+`String` is equivalent to `linked_list#LinkedList(c#Char)`
 
-`String` is equivalent to `LinkedList(c#Char)`
 
 
-## LinkedList
+# linked_list module
+
+## Types:
 
 ```
-inf LinkedList
-
-sct Node(type) is (LinkedList, Lengthable, Printable) {
-
-    fun __init__(value: type; next: Maybe(LinkedList(type))): None
-    fun empty(): Bool
-    fun head(): type
-    fun tail(): Maybe(LinkedList(type))
-    fun cons(source: LinkedList(type)): None
-    fun append(source: LinkedList(type)): None
-}
+LinkedList
 ```
