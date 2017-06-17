@@ -1,6 +1,7 @@
 """Checks naming conventions."""
 
 from . import defs, layers, astlib, errors
+from .context import context
 
 
 def _matches_maker(regex, error):

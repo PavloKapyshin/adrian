@@ -13,6 +13,8 @@ Naming rules checking
 ↓
 Name existence checking
 ↓
+Type inference
+↓
 Type checking
 ↓
 Name mangling
@@ -51,6 +53,11 @@ Compiler checks naming conventions.
 Compiler checks name existence.
 
 
+## Type inference
+
+Compiler inferences types where needed.
+
+
 ## Type checking
 
 Compiler checks types for equality.
@@ -66,4 +73,4 @@ Compiler generates CGen AST.
 
 ## C source
 
-Compiler generates C source code using adrian.cgen library.
+Compiler generates C source code using `adrian.cgen` library.

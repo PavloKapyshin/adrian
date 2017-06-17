@@ -1,8 +1,7 @@
 """Analyzes names and translates them into more specific."""
 
-from . import layers
-from . import astlib
-from . import errors
+from . import layers, astlib, errors
+from .context import context
 
 
 class Analyzer(layers.Layer):
@@ -15,7 +14,7 @@ class Analyzer(layers.Layer):
                 member=astlib.TypeName(str(type_.member)))
         elif isinstance(type_, astlib.Empty):
             return type_
-        errors.not_implemented(context.position, context.exit_on_error)
+        errors.not_implemented()
 
     def _expr(self, expr):
         # Only c module is supported, for now.

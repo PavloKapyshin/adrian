@@ -3,7 +3,7 @@ from . import foreign_parser
 from . import analyzer
 from . import naming_rules
 # from . import name_existence
-# from . import type_inference
+from . import type_inference
 # from . import type_checking
 #from . import name_mangling
 from . import structs
@@ -32,7 +32,8 @@ def compile_repl(inp, *, ns, ts, fs, exit_on_error):
         # TypeInference layer must be after NameExistence layer.
         # TypeChecking layer must be after TypeInference layer.
         for layer_cls in (
-                analyzer.Analyzer, naming_rules.NamingRules):
+                analyzer.Analyzer, naming_rules.NamingRules,
+                type_inference.TypeInference):
             layer = layer_cls()
             current_ast = layers.transform_ast(
                 current_ast, registry=layer.get_registry())
