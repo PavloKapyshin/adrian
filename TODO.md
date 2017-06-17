@@ -1,11 +1,13 @@
-[X] Think about `c#malloc` and `c#sizeof` return type
-[X] Write about `c` module
-[ ] Write about standard types and `std_types` module
-[ ] Write about standard Adrian statements
-[ ] Write about `print` and `length` function
-[ ] Write about `Printable` and `Lengthable` interfaces
-[ ] Write about if, elif and else
-[ ] Write about constants
-[ ] Write about modules
-[ ] Write about methods
-[ ] Write about interfaces
+Think and write about:
+  Library:
+    [ ] standard types and `std_types` module
+    [ ] `print` and `length` function
+    [ ] `Printable` and `Lengthable` interfaces
+
+  Spec:
+    [ ] standard Adrian statements
+    [ ] if, elif and else
+    [ ] constants
+    [ ] modules
+    [ ] methods
+    [ ] interfaces
