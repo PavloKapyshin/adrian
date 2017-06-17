@@ -14,9 +14,9 @@ class NameMangling(layers.Layer):
     def _var_name(self, name):
         yield layers.create_with(name, data=mangle_name(name))
 
-    @layers.preregister(astlib.ModuleMember)
-    def _module_member(self, module):
-        if module.name == cdefs.CMODULE_NAME:
-            yield module
-        else:
-            errors.not_implemented()
+    # @layers.preregister(astlib.ModuleMember)
+    # def _module_member(self, module):
+    #     if module.name == cdefs.CMODULE_NAME:
+    #         yield module
+    #     else:
+    #         errors.not_implemented()
