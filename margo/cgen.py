@@ -35,8 +35,15 @@ class CGen(layers.Layer):
                 type_=getattr(cgen.CTypes, TO_CTYPE[expr.to_type().member]))
         errors.not_implemented()
 
-    @layers.preregister(astlib.Decl)
     def _decl(self, decl):
-        yield cgen.Decl(
+        return cgen.Decl(
             name=str(decl.name), type_=self._type(decl.type_),
             expr=self._expr(decl.expr))
+
+    reg = {
+        astlib.Decl: _decl
+    }
+
+    @layers.preregister(astlib.Pair)
+    def _pair(self, pair):
+        yield self.reg[type(pair.stmt)](self, pair.stmt)
