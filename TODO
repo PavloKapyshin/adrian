@@ -1,1 +1,48 @@
-[ ] Write TODO
+## Macro
+
+[X] Variable declaration
+[ ] Function declaration
+[ ] Struct declaration
+[ ] Method declaration
+
+[ ] Variable assignment
+[ ] Interface declaration
+[ ] Modules
+[ ] Parameterized types
+[ ] Private members
+[ ] Keyword arguments
+
+[ ] Maybe
+[ ] LinkedList
+[ ] Integer
+[ ] String
+
+[ ] Printable
+[ ] Lengthable
+
+[ ] print
+[ ] length
+
+
+## Micro (only for 2 macro todo elements, requires regular updates)
+
+### Function declaration
+
+[ ] Declarate syntax of the function declaration
+[ ] Add empty function declaration
+
+[ ] Add void function declaration
+
+[ ] Declarate syntax of the return declaration
+[ ] Add return statement
+
+[ ] Add C types as return types
+
+
+### Struct declaration
+
+[ ] Declarate syntax of the struct declaration
+[ ] Add empty struct declaration
+
+[ ] Add attributes to structs with support of c types
+[ ] Add methods to structs with support of c types
