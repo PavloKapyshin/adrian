@@ -26,14 +26,17 @@ _TOKENS = {
 
     "(": "LPAREN",
     ")": "RPAREN",
-    #"{": "LBRACE",
-    #"}": "RBRACE",
+    "{": "LBRACE",
+    "}": "RBRACE",
 
     ":": "COLON",
-    #";": "SEMI",
+    ";": "SEMI",
     ",": "COMMA",
     #".": "PERIOD",
-    "#": "HASH"
+    "#": "HASH",
+
+    # Some special types.
+    "None": "NONE_TYPE"
 }
 
 
@@ -131,6 +134,7 @@ def p_pair(content):
 def p_stmt(content):
     """
     stmt : decl
+         | func_decl
          | func_call
     """
     content[0] = content[1]
@@ -146,13 +150,49 @@ def p_func_call_1(content):
 #     content[0] = ast.Return(content[2])
 
 
-# def p_func_decl_1(content):
-#     """
-#     func_decl : FUN NAME LPAREN args RPAREN COLON type LBRACE func_body RBRACE
-#     """
-#     content[0] = ast.FuncDecl(
-#         name=content[2], args=content[4],
-#         type_=content[7], body=content[9])
+def p_func_decl_1(content):
+    """
+    func_decl : FUN NAME LPAREN args RPAREN COLON type LBRACE func_body RBRACE
+    """
+    #                                              name                         args       rettype       body
+    #                                      vvvvvvvvvvvvvvvvvvv               vvvvvvvvvv  vvvvvvvvvv  vvvvvvvvvv
+    content[0] = [parser_astlib.FUNC_DECL, [parser_astlib.NAME, content[2]], content[4], content[7], content[9]]
+
+
+def p_func_body_1(content):
+    """func_body : func_body_stmt func_body"""
+    content[0] = [parser_astlib.BODY, content[1], content[2]]
+
+
+def p_func_body_2(content):
+    """func_body : empty"""
+    content[0] = [parser_astlib.EMPTY]
+
+
+def p_func_body_stmt(content):
+    """
+    func_body_stmt : decl
+    """
+    content[0] = [parser_astlib.PAIR, content.lineno(0), content[1]]
+
+
+def p_args_1(content):
+    """args : NAME COLON type"""
+    #                                    name        type
+    #                                 vvvvvvvvvv  vvvvvvvvvv
+    content[0] = [parser_astlib.ARGS, content[1], content[3], [parser_astlib.EMPTY]]
+
+
+def p_args_2(content):
+    """args : NAME COLON type SEMI args"""
+    #                                    name        type        rest
+    #                                 vvvvvvvvvv  vvvvvvvvvv  vvvvvvvvvv
+    content[0] = [parser_astlib.ARGS, content[1], content[3], content[5]]
+
+
+def p_args_3(content):
+    """args : empty"""
+    content[0] = [parser_astlib.EMPTY]
 
 
 # def p_func_decl_2(content):
@@ -264,7 +304,10 @@ def p_call_args_3(content):
 
 
 def p_type(content):
-    """type : name_from_module"""
+    """
+    type : name_from_module
+         | NONE_TYPE
+    """
     content[0] = content[1]
 
 

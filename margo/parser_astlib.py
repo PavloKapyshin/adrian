@@ -1,8 +1,13 @@
 DECL = "Decl"
+FUNC_DECL = "FuncDecl"
+
 PAIR = "Pair"
 NAME = "Name"
 SEXPR = "SExpr"
+
+BODY = "Body"
 CALL_ARGS = "CallArgs"
+ARGS = "Args"
 
 INTEGER = "Integer"
 STRING = "String"

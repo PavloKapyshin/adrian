@@ -3,6 +3,7 @@ import re
 
 RESERVED_WORDS = (
     "var",
+    "fun",
 )
 
 TYPE_NAME_REGEX = re.compile(r"[A-Z_][a-zA-Z0-9]*")

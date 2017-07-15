@@ -166,6 +166,61 @@ class Empty(BaseNode):
 
 
 # Adrian language statements.
+class Body(Node):
+
+    def __init__(self, stmt, rest=None):
+        self._stmt = stmt
+        self._rest = rest or Empty()
+        self._keys = ("stmt", "rest")
+
+    @property
+    def stmt(self):
+        return self._stmt
+
+    @property
+    def rest(self):
+        return self._rest
+
+    def as_list(self):
+        def _gen():
+            current_stmt = self
+            yield current_stmt.stmt
+            while not isinstance(current_stmt.rest, Empty):
+                yield current_stmt.stmt
+                current_stmt = current_stmt.rest
+        return list(_gen())
+
+
+class Args(Node):
+
+    def __init__(self, name, type_, rest=None):
+        self._name = name
+        self._type = type_
+        self._rest = rest or Empty()
+        self._keys = ("name", "type_", "rest")
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def type_(self):
+        return self._type
+
+    @property
+    def rest(self):
+        return self._rest
+
+    def as_list(self):
+        def _gen():
+            current_arg = self
+            yield (current_arg.name, current_arg.type_)
+            while not isinstance(current_arg.rest, Empty):
+                yield (current_arg.name, current_arg.type_)
+                current_arg = current_arg.rest
+        return list(_gen())
+
+
 class CallArgs(Node):
 
     def __init__(self, arg, rest=None):

@@ -35,16 +35,36 @@ def compile_repl(inp, *, ns, ts, fs, exit_on_error):
         # NameExistence layer must be after NamingRules layer.
         # TypeInference layer must be after NameExistence layer.
         # TypeChecking layer must be after TypeInference layer.
-        for layer_cls in (
-                analyzer.Analyzer, naming_rules.NamingRules,
-                type_inference.TypeInference, name_mangling.NameMangling,
-                cgen.CGen):
-            layer = layer_cls()
-            current_ast = layers.transform_ast(
-                current_ast, registry=layer.get_registry())
-    generator = acgen.Generator()
-    generator.add_ast(current_ast)
-    return list(generator.generate())
+        # for layer_cls in (
+        #         analyzer.Analyzer, naming_rules.NamingRules,
+        #         type_inference.TypeInference, name_mangling.NameMangling,
+        #         cgen.CGen):
+        #     layer = layer_cls()
+        #     current_ast = layers.transform_ast(
+        #         current_ast, registry=layer.get_registry())
+    # generator = acgen.Generator()
+    # generator.add_ast(current_ast)
+    return current_ast
+
+# Stable:
+# def compile_repl(inp, *, ns, ts, fs, exit_on_error):
+#     with context.new_context(
+#             ns=ns, ts=ts, fs=fs, exit_on_error=exit_on_error,
+#             file_hash="mangled_"):
+#         current_ast = foreign_parser.main(parser.main(inp))
+#         # NameExistence layer must be after NamingRules layer.
+#         # TypeInference layer must be after NameExistence layer.
+#         # TypeChecking layer must be after TypeInference layer.
+#         for layer_cls in (
+#                 analyzer.Analyzer, naming_rules.NamingRules,
+#                 type_inference.TypeInference, name_mangling.NameMangling,
+#                 cgen.CGen):
+#             layer = layer_cls()
+#             current_ast = layers.transform_ast(
+#                 current_ast, registry=layer.get_registry())
+#     generator = acgen.Generator()
+#     generator.add_ast(current_ast)
+#     return list(generator.generate())
 
 
 # def compile_repl(text, contexts, file_hash=""):
