@@ -186,8 +186,8 @@ class Body(Node):
             current_stmt = self
             yield current_stmt.stmt
             while not isinstance(current_stmt.rest, Empty):
-                yield current_stmt.stmt
                 current_stmt = current_stmt.rest
+                yield current_stmt.stmt
         return list(_gen())
 
 
@@ -216,8 +216,8 @@ class Args(Node):
             current_arg = self
             yield (current_arg.name, current_arg.type_)
             while not isinstance(current_arg.rest, Empty):
-                yield (current_arg.name, current_arg.type_)
                 current_arg = current_arg.rest
+                yield (current_arg.name, current_arg.type_)
         return list(_gen())
 
 
@@ -241,8 +241,8 @@ class CallArgs(Node):
             current_arg = self
             yield current_arg.arg
             while not isinstance(current_arg.rest, Empty):
-                yield current_arg.arg
                 current_arg = current_arg.rest
+                yield current_arg.arg
         return list(_gen())
 
 

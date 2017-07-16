@@ -43,8 +43,10 @@ class Analyzer(layers.Layer):
             type_=self._type(decl.type_), expr=self._expr(decl.expr))
 
     def _func_decl_args(self, args):
-        # TODO: change all names to special names (VariableName, FunctionName, ...)
-        arg_list = ([] if isinstance(args, astlib.Empty) else args.as_list())
+        arg_list = []
+        for arg in ([] if isinstance(args, astlib.Empty) else args.as_list()):
+            arg_list.append(
+                (astlib.VariableName(str(arg[0])), self._type(arg[1])))
         return arg_list
 
     def _func_decl_body(self, body):
