@@ -13,3 +13,9 @@ class TypeInference(layers.Layer):
                 decl, type_=inferencelib.get_type_from_expr(decl.expr))
         else:
             yield decl
+
+    @layers.preregister(astlib.FuncDecl)
+    def _func_decl(self, func_decl):
+        # TODO: inference function's return type from return statements.
+        # For now we have only empty functions and we dont have None type.
+        yield func_decl

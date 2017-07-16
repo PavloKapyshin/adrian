@@ -38,7 +38,8 @@ def compile_repl(inp, *, ns, ts, fs, exit_on_error):
         for layer_cls in (
                 analyzer.Analyzer,
                 naming_rules.NamingRules,
-                #type_inference.TypeInference, name_mangling.NameMangling,
+                type_inference.TypeInference,
+                #name_mangling.NameMangling,
                 #cgen.CGen
                 ):
             layer = layer_cls()
