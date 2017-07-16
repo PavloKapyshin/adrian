@@ -41,3 +41,21 @@ class Analyzer(layers.Layer):
         yield layers.create_with(
             decl, name=astlib.VariableName(str(decl.name)),
             type_=self._type(decl.type_), expr=self._expr(decl.expr))
+
+    def _func_decl_args(self, args):
+        # TODO: change all names to special names (VariableName, FunctionName, ...)
+        arg_list = ([] if isinstance(args, astlib.Empty) else args.as_list())
+        return arg_list
+
+    def _func_decl_body(self, body):
+        # TODO: iterate through stmt_list and collect results
+        stmt_list = ([] if isinstance(body, astlib.Empty) else body.as_list())
+        return stmt_list
+
+    @layers.preregister(astlib.FuncDecl)
+    def _func_decl(self, func_decl):
+        yield layers.create_with(
+            func_decl, name=astlib.FunctionName(str(func_decl.name)),
+            args=self._func_decl_args(func_decl.args),
+            type_=self._type(func_decl.type_),
+            body=self._func_decl_body(func_decl.body))

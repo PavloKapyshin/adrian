@@ -33,10 +33,7 @@ _TOKENS = {
     ";": "SEMI",
     ",": "COMMA",
     #".": "PERIOD",
-    "#": "HASH",
-
-    # Some special types.
-    "None": "NONE_TYPE"
+    "#": "HASH"
 }
 
 
@@ -306,7 +303,6 @@ def p_call_args_3(content):
 def p_type(content):
     """
     type : name_from_module
-         | NONE_TYPE
     """
     content[0] = content[1]
 
