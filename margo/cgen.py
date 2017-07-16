@@ -40,8 +40,25 @@ class CGen(layers.Layer):
             name=str(decl.name), type_=self._type(decl.type_),
             expr=self._expr(decl.expr))
 
+    def _func_body(self, body):
+        # TODO: support non-empty-list body
+        return body
+        # for stmt in body:
+        #     yield self._pair(stmt)
+
+    def _func_args(self, args):
+        # TODO: support non-empty-list args.
+        return args
+
+    def _func_decl(self, func_decl):
+        return cgen.Func(
+            name=str(func_decl.name), rettype=self._type(func_decl.type_),
+            args=self._func_args(func_decl.args),
+            body=self._func_body(func_decl.body))
+
     reg = {
-        astlib.Decl: _decl
+        astlib.Decl: _decl,
+        astlib.FuncDecl: _func_decl
     }
 
     @layers.preregister(astlib.Pair)
