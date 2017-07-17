@@ -41,10 +41,11 @@ class CGen(layers.Layer):
             expr=self._expr(decl.expr))
 
     def _func_body(self, body):
-        # TODO: support non-empty-list body
         return ([] if isinstance(body, astlib.Empty) else body.as_list())
-        # for stmt in body:
-        #     yield self._pair(stmt)
+        # new_body = []
+        # for stmt in ([] if isinstance(body, astlib.Empty) else body.as_list()):
+        #     new_body.append(self.reg[type(stmt)](self, stmt))
+        # return new_body
 
     def _func_args(self, args):
         new_args = []

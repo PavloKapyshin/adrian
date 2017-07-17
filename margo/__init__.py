@@ -47,7 +47,7 @@ def compile_repl(inp, *, ns, ts, fs, exit_on_error):
     generator = acgen.Generator()
     generator.add_ast(current_ast)
     return list(generator.generate())
-    #return current_ast
+    # return current_ast
 
 # Stable:
 # def compile_repl(inp, *, ns, ts, fs, exit_on_error):

@@ -50,14 +50,23 @@ class Analyzer(layers.Layer):
             self._type(args.type_),
             self._func_decl_args(args.rest))
 
-    def _func_decl_body(self, body):
-        # TODO: iterate through stmt_list and collect results.
-        return body
+    def _body_stmt(self, stmt, registry):
+        # HARDCORE! FIXME!
+        return layers.transform_ast(
+            [stmt], registry=registry)[0]
+
+    def _func_decl_body(self, body, registry):
+        if isinstance(body, astlib.Empty):
+            return astlib.Empty()
+        return astlib.Body(
+            self._body_stmt(body.stmt, registry),
+            self._func_decl_body(body.rest, registry))
 
     @layers.preregister(astlib.FuncDecl)
     def _func_decl(self, func_decl):
+        registry = Analyzer().get_registry()
         yield layers.create_with(
             func_decl, name=astlib.FunctionName(str(func_decl.name)),
             args=self._func_decl_args(func_decl.args),
             type_=self._type(func_decl.type_),
-            body=self._func_decl_body(func_decl.body))
+            body=self._func_decl_body(func_decl.body, registry))
