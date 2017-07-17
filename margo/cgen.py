@@ -59,9 +59,13 @@ class CGen(layers.Layer):
             args=self._func_args(func_decl.args),
             body=self._func_body(func_decl.body))
 
+    def _return_stmt(self, return_stmt):
+        return cgen.Return(expr=self._expr(return_stmt.expr))
+
     reg = {
         astlib.Decl: _decl,
-        astlib.FuncDecl: _func_decl
+        astlib.FuncDecl: _func_decl,
+        astlib.Return: _return_stmt
     }
 
     @layers.preregister(astlib.Pair)

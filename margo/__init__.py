@@ -37,11 +37,10 @@ def compile_repl(inp, *, ns, ts, fs, exit_on_error):
         # TypeChecking layer must be after TypeInference layer.
         for layer_cls in (
                 analyzer.Analyzer,
-                #naming_rules.NamingRules,
-                #type_inference.TypeInference,
-                #name_mangling.NameMangling,
-                #cgen.CGen
-                ):
+                naming_rules.NamingRules,
+                type_inference.TypeInference,
+                name_mangling.NameMangling,
+                cgen.CGen):
             layer = layer_cls()
             current_ast = layers.transform_ast(
                 current_ast, registry=layer.get_registry())
