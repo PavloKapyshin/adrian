@@ -42,13 +42,15 @@ class CGen(layers.Layer):
 
     def _func_body(self, body):
         # TODO: support non-empty-list body
-        return body
+        return ([] if isinstance(body, astlib.Empty) else body.as_list())
         # for stmt in body:
         #     yield self._pair(stmt)
 
     def _func_args(self, args):
-        # TODO: support non-empty-list args.
-        return args
+        new_args = []
+        for arg in ([] if isinstance(args, astlib.Empty) else args.as_list()):
+            new_args.append(cgen.Decl(str(arg[0]), type_=self._type(arg[1])))
+        return new_args
 
     def _func_decl(self, func_decl):
         return cgen.Func(

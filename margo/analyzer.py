@@ -43,16 +43,16 @@ class Analyzer(layers.Layer):
             type_=self._type(decl.type_), expr=self._expr(decl.expr))
 
     def _func_decl_args(self, args):
-        arg_list = []
-        for arg in ([] if isinstance(args, astlib.Empty) else args.as_list()):
-            arg_list.append(
-                (astlib.VariableName(str(arg[0])), self._type(arg[1])))
-        return arg_list
+        if isinstance(args, astlib.Empty):
+            return astlib.Empty()
+        return astlib.Args(
+            astlib.VariableName(str(args.name)),
+            self._type(args.type_),
+            self._func_decl_args(args.rest))
 
     def _func_decl_body(self, body):
-        # TODO: iterate through stmt_list and collect results
-        stmt_list = ([] if isinstance(body, astlib.Empty) else body.as_list())
-        return stmt_list
+        # TODO: iterate through stmt_list and collect results.
+        return body
 
     @layers.preregister(astlib.FuncDecl)
     def _func_decl(self, func_decl):
