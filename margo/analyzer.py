@@ -70,3 +70,7 @@ class Analyzer(layers.Layer):
             args=self._func_decl_args(func_decl.args),
             type_=self._type(func_decl.type_),
             body=self._func_decl_body(func_decl.body, registry))
+
+    @layers.preregister(astlib.Return)
+    def _return_stmt(self, return_stmt):
+        yield layers.create_with(return_stmt, expr=self._expr(return_stmt.expr))
