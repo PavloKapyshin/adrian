@@ -1,4 +1,5 @@
 DECL = "Decl"
+RETURN = "Return"
 FUNC_DECL = "FuncDecl"
 
 PAIR = "Pair"

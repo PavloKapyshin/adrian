@@ -142,11 +142,6 @@ def p_func_call_1(content):
     content[0] = [parser_astlib.FUNC_CALL, content[1], content[3]]
 
 
-# def p_return(content):
-#     """return : RET bool_expr"""
-#     content[0] = ast.Return(content[2])
-
-
 def p_func_decl_1(content):
     """
     func_decl : FUN NAME LPAREN args RPAREN COLON type LBRACE func_body RBRACE
@@ -169,8 +164,14 @@ def p_func_body_2(content):
 def p_func_body_stmt(content):
     """
     func_body_stmt : decl
+                   | return_stmt
     """
     content[0] = [parser_astlib.PAIR, content.lineno(0), content[1]]
+
+
+def p_return_stmt(content):
+    """return_stmt : RET bool_expr"""
+    content[0] = [parser_astlib.RETURN, content[2]]
 
 
 def p_args_1(content):

@@ -4,6 +4,7 @@ import re
 RESERVED_WORDS = (
     "var",
     "fun",
+    "ret",
 )
 
 VAR_NAME_REGEX = re.compile(r"[a-z_][a-zA-Z0-9]*")
