@@ -40,7 +40,7 @@
 ### Struct declaration
 
 [X] Declarate syntax of the struct declaration
-[ ] Add empty struct declaration
+[X] Add empty struct declaration
 
 [ ] Add fields to structs with support of c types
 [ ] Add methods to structs with support of c types
