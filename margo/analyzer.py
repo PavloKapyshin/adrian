@@ -55,12 +55,12 @@ class Analyzer(layers.Layer):
         return layers.transform_ast(
             [stmt], registry=registry)[0]
 
-    def _func_decl_body(self, body, registry):
+    def _body(self, body, registry):
         if isinstance(body, astlib.Empty):
             return astlib.Empty()
         return astlib.Body(
             self._body_stmt(body.stmt, registry),
-            self._func_decl_body(body.rest, registry))
+            self._body(body.rest, registry))
 
     @layers.preregister(astlib.FuncDecl)
     def _func_decl(self, func_decl):
@@ -69,8 +69,15 @@ class Analyzer(layers.Layer):
             func_decl, name=astlib.FunctionName(str(func_decl.name)),
             args=self._func_decl_args(func_decl.args),
             type_=self._type(func_decl.type_),
-            body=self._func_decl_body(func_decl.body, registry))
+            body=self._body(func_decl.body, registry))
 
     @layers.preregister(astlib.Return)
     def _return_stmt(self, return_stmt):
         yield layers.create_with(return_stmt, expr=self._expr(return_stmt.expr))
+
+    @layers.preregister(astlib.StructDecl)
+    def _struct_decl(self, struct_decl):
+        registry = Analyzer().get_registry()
+        yield layers.create_with(
+            struct_decl, name=astlib.TypeName(str(struct_decl.name)),
+            body=self._body(struct_decl.body, registry))
