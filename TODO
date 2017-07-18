@@ -2,7 +2,7 @@
 
 [X] Variable declaration
 [X] Function declaration
-[ ] Struct declaration
+[X] Struct declaration
 [ ] Method declaration
 
 [ ] Variable assignment
@@ -42,5 +42,13 @@
 [X] Declarate syntax of the struct declaration
 [X] Add empty struct declaration
 
-[ ] Add fields to structs with support of c types
-[ ] Add methods to structs with support of c types
+[X] Add fields to structs with support of c types
+
+[ ] Think about new oop layers
+[ ] Add new oop layers
+[ ] Add __init__ method
+[ ] Add __deinit__ method
+[ ] Add empty methods
+[ ] Add other methods
+
+[ ] Add structs as types
