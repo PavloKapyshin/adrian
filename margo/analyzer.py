@@ -9,9 +9,9 @@ class Analyzer(layers.Layer):
     def _type(self, type_):
         # Only c module is supported, for now.
         if isinstance(type_, astlib.ModuleMember):
-            return layers.create_with(
-                type_, name=astlib.ModuleName(str(type_.name)),
-                member=astlib.TypeName(str(type_.member)))
+            return astlib.CType(str(type_.member))
+        elif isinstance(type_, astlib.CType):
+            return type_
         elif isinstance(type_, astlib.Empty):
             return type_
         errors.not_implemented()
@@ -81,3 +81,9 @@ class Analyzer(layers.Layer):
         yield layers.create_with(
             struct_decl, name=astlib.TypeName(str(struct_decl.name)),
             body=self._body(struct_decl.body, registry))
+
+    @layers.preregister(astlib.FieldDecl)
+    def _field_decl(self, field_decl):
+        yield layers.create_with(
+            field_decl, name=astlib.VariableName(str(field_decl.name)),
+            type_=self._type(field_decl.type_))

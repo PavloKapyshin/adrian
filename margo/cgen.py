@@ -16,9 +16,8 @@ class CGen(layers.Layer):
 
     def _type(self, type_):
         # Only c types are supported.
-        if isinstance(type_, astlib.ModuleMember):
-            if type_.name == cdefs.CMODULE_NAME:
-                return getattr(cgen.CTypes, TO_CTYPE[type_.member])
+        if isinstance(type_, astlib.CType):
+            return getattr(cgen.CTypes, TO_CTYPE[str(type_)])
         errors.not_implemented()
 
     def _expr(self, expr):
@@ -32,7 +31,7 @@ class CGen(layers.Layer):
                     astlib.CUIntFast8, astlib.CUIntFast32)):
             return cgen.Val(
                 literal=expr.literal,
-                type_=getattr(cgen.CTypes, TO_CTYPE[expr.to_type().member]))
+                type_=getattr(cgen.CTypes, TO_CTYPE[str(expr.to_type())]))
         errors.not_implemented()
 
     def _decl(self, decl):
@@ -65,7 +64,8 @@ class CGen(layers.Layer):
             body=self._body(struct_decl.body))
 
     def _field_decl(self, field_decl):
-        pass
+        return cgen.Decl(
+            name=str(field_decl.name), type_=self._type(field_decl.type_))
 
     def _return_stmt(self, return_stmt):
         return cgen.Return(expr=self._expr(return_stmt.expr))

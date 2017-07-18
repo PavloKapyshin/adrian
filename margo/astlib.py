@@ -61,6 +61,10 @@ class MethodName(Name):
     pass
 
 
+class CType(Name):
+    pass
+
+
 class ModuleMember(Node):
 
     def __init__(self, name, member):
@@ -473,39 +477,37 @@ class CLiteral(Literal):
 
     @classmethod
     def to_type(cls):
-        return ModuleMember(
-            name=ModuleName(cdefs.CMODULE_NAME),
-            member=cls._type)
+        return CType(cls._type)
 
 
 class CChar(CLiteral):
     """CChar in Adrian."""
-    _type = TypeName("Char")
+    _type = "Char"
 
 
 class CIntFast8(CLiteral):
     """CIntFast8 in Adrian."""
-    _type = TypeName("IntFast8")
+    _type = "IntFast8"
 
 
 class CIntFast32(CLiteral):
     """CIntFast32 in Adrian."""
-    _type = TypeName("IntFast32")
+    _type = "IntFast32"
 
 
 class CUIntFast8(CLiteral):
     """CUIntFast8 in Adrian."""
-    _type = TypeName("UIntFast8")
+    _type = "UIntFast8"
 
 
 class CUIntFast32(CLiteral):
     """CUIntFast32 in Adrian."""
-    _type = TypeName("UIntFast32")
+    _type = "UIntFast32"
 
 
 class CString(CLiteral):
     """CString in Adrian."""
-    _type = TypeName("String")
+    _type = "String"
 
 
 class CVoid(BaseNode):
@@ -552,4 +554,4 @@ CTYPES = (
     CChar,
     CString
 )
-CTYPES_NAMES = set(type_.to_type().member for type_ in CTYPES)
+CTYPES_NAMES = set(str(type_.to_type()) for type_ in CTYPES)
