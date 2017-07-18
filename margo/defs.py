@@ -5,6 +5,7 @@ RESERVED_WORDS = (
     "var",
     "fun",
     "ret",
+    "sct",
 )
 
 VAR_NAME_REGEX = re.compile(r"[a-z_][a-zA-Z0-9]*")

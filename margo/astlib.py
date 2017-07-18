@@ -402,6 +402,29 @@ class StructDecl(Node):
         return self._body
 
 
+class FieldDecl(Node):
+    """Declaration of field in struct.
+
+    sct MyType {
+        length: Integer     < FieldDecl
+        data: String        < FieldDecl
+    }
+    """
+
+    def __init__(self, name, type_):
+        self._name = name
+        self._type = type_
+        self._keys = ("name", "type_")
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def type_(self):
+        return self._type
+
+
 class Return(Node):
     """Return statement.
 

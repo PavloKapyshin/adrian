@@ -133,6 +133,7 @@ def p_stmt(content):
     stmt : decl
          | func_decl
          | func_call
+         | struct_decl
     """
     content[0] = content[1]
 
@@ -191,6 +192,34 @@ def p_args_2(content):
 def p_args_3(content):
     """args : empty"""
     content[0] = [parser_astlib.EMPTY]
+
+
+def p_struct_decl(content):
+    """struct_decl : SCT NAME LBRACE struct_body RBRACE"""
+    content[0] = [parser_astlib.STRUCT_DECL, [parser_astlib.NAME, content[2]], content[4]]
+
+
+def p_struct_body_1(content):
+    """struct_body : struct_body_stmt struct_body"""
+    content[0] = [parser_astlib.BODY, content[1], content[2]]
+
+
+def p_struct_body_2(content):
+    """struct_body : empty"""
+    content[0] = [parser_astlib.EMPTY]
+
+
+def p_struct_body_stmt(content):
+    """
+    struct_body_stmt : field_decl
+                     | func_decl
+    """
+    content[0] = [parser_astlib.PAIR, content.lineno(0), content[1]]
+
+
+def p_field_decl(content):
+    """field_decl : NAME COLON type"""
+    content[0] = [parser_astlib.FIELD_DECL, [parser_astlib.NAME, content[1]], content[3]]
 
 
 # def p_func_decl_2(content):

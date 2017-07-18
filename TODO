@@ -42,5 +42,5 @@
 [ ] Declarate syntax of the struct declaration
 [ ] Add empty struct declaration
 
-[ ] Add attributes to structs with support of c types
+[ ] Add fields to structs with support of c types
 [ ] Add methods to structs with support of c types

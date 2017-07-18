@@ -1,6 +1,8 @@
 DECL = "Decl"
 RETURN = "Return"
 FUNC_DECL = "FuncDecl"
+STRUCT_DECL = "StructDecl"
+FIELD_DECL = "FieldDecl"
 
 PAIR = "Pair"
 NAME = "Name"
