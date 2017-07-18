@@ -40,7 +40,7 @@ class CGen(layers.Layer):
             name=str(decl.name), type_=self._type(decl.type_),
             expr=self._expr(decl.expr))
 
-    def _func_body(self, body):
+    def _body(self, body):
         return ([] if isinstance(body, astlib.Empty) else body.as_list())
         # new_body = []
         # for stmt in ([] if isinstance(body, astlib.Empty) else body.as_list()):
@@ -57,7 +57,15 @@ class CGen(layers.Layer):
         return cgen.Func(
             name=str(func_decl.name), rettype=self._type(func_decl.type_),
             args=self._func_args(func_decl.args),
-            body=self._func_body(func_decl.body))
+            body=self._body(func_decl.body))
+
+    def _struct_decl(self, struct_decl):
+        return cgen.Struct(
+            name=str(struct_decl.name),
+            body=self._body(struct_decl.body))
+
+    def _field_decl(self, field_decl):
+        pass
 
     def _return_stmt(self, return_stmt):
         return cgen.Return(expr=self._expr(return_stmt.expr))
@@ -65,7 +73,9 @@ class CGen(layers.Layer):
     reg = {
         astlib.Decl: _decl,
         astlib.FuncDecl: _func_decl,
-        astlib.Return: _return_stmt
+        astlib.Return: _return_stmt,
+        astlib.StructDecl: _struct_decl,
+        astlib.FieldDecl: _field_decl,
     }
 
     @layers.preregister(astlib.Pair)
