@@ -34,7 +34,7 @@
 [X] Declarate syntax of the return declaration
 [X] Add return statement
 
-[ ] Add C types as return types
+[X] Add C types as return types
 
 
 ### Struct declaration
