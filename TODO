@@ -44,9 +44,9 @@
 
 [X] Add fields to structs with support of c types
 
-[ ] Think about new oop layers
-[ ] Add new oop layers
-[ ] Add __init__ method
+[X] Think about new oop layers
+[X] Add new oop layers
+[X] Add __init__ method
 [ ] Add __deinit__ method
 [ ] Add empty methods
 [ ] Add other methods
