@@ -10,6 +10,7 @@ _ILLEGAL_CHAR = "illegal character '{char}'"
 _BAD_NAME_FOR_VAR = "bad name '{name}' for variable"
 _BAD_NAME_FOR_CONST = "bad name '{name}' for constant"
 _BAD_NAME_FOR_FUNC = "bad name '{name}' for function"
+_BAD_NAME_FOR_METHOD = "bad name '{name}' for method"
 _BAD_NAME_FOR_MODULE = "bad name '{name}' for module"
 _BAD_NAME_FOR_TYPE = "bad name '{name}' for type"
 _BAD_NAME_IN_EXPR = "bad name '{name}' in expression"
@@ -55,6 +56,10 @@ def bad_name_for_const(line, exit_on_error, name):
 
 def bad_name_for_module(line, exit_on_error, name):
     _error(line, exit_on_error, _BAD_NAME_FOR_MODULE, name=name)
+
+
+def bad_name_for_method(line, exit_on_error, name):
+    _error(line, exit_on_error, _BAD_NAME_FOR_METHOD, name=name)
 
 
 def bad_name_for_type(line, exit_on_error, name):

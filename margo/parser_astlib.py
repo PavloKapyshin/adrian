@@ -1,6 +1,7 @@
 DECL = "Decl"
 RETURN = "Return"
 FUNC_DECL = "FuncDecl"
+METHOD_DECL = "MethodDecl"
 STRUCT_DECL = "StructDecl"
 FIELD_DECL = "FieldDecl"
 

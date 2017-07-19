@@ -381,6 +381,40 @@ class FuncDecl(Node):
         return self._body
 
 
+class MethodDecl(Node):
+    """Declaration of a method.
+
+          name                                      type_
+        vvvvvvvv                                  vvvvvvvvvv
+    fun myMethod(arg1: Type1; arg2, arg3: Type2): ReturnType {...}
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^               ^^^
+                             args                             body
+    """
+
+    def __init__(self, name, args, type_, body):
+        self._name = name
+        self._args = args
+        self._type = type_
+        self._body = body
+        self._keys = ("name", "args", "type_", "body")
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def args(self):
+        return self._args
+
+    @property
+    def type_(self):
+        return self._type
+
+    @property
+    def body(self):
+        return self._body
+
+
 class StructDecl(Node):
     """Declaration of struct.
          name

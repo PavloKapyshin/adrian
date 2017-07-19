@@ -20,6 +20,8 @@ module_name = _matches_maker(
     defs.MODULE_NAME_REGEX, errors.bad_name_for_module)
 func_name = _matches_maker(
     defs.FUNC_NAME_REGEX, errors.bad_name_for_func)
+method_name = _matches_maker(
+    defs.METHOD_NAME_REGEX, errors.bad_name_for_method)
 
 class NamingRules(layers.Layer):
 
@@ -38,3 +40,7 @@ class NamingRules(layers.Layer):
     @layers.preregister(astlib.FunctionName)
     def _function_name(self, name):
         yield func_name(name)
+
+    @layers.preregister(astlib.MethodName)
+    def _method_name(self, name):
+        yield method_name(name)

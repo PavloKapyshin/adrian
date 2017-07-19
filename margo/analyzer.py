@@ -71,6 +71,15 @@ class Analyzer(layers.Layer):
             type_=self._type(func_decl.type_),
             body=self._body(func_decl.body, registry))
 
+    @layers.preregister(astlib.MethodDecl)
+    def _method_decl(self, method_decl):
+        registry = Analyzer().get_registry()
+        yield layers.create_with(
+            method_decl, name=astlib.MethodName(str(method_decl.name)),
+            args=self._func_decl_args(method_decl.args),
+            type_=self._type(method_decl.type_),
+            body=self._body(method_decl.body, registry))
+
     @layers.preregister(astlib.Return)
     def _return_stmt(self, return_stmt):
         yield layers.create_with(return_stmt, expr=self._expr(return_stmt.expr))
