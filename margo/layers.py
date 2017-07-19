@@ -55,11 +55,6 @@ class Layer(metaclass=LayerMeta):
         return reg
 
 
-def take_first(iter_):
-    for item in iter_:
-        return item
-
-
 def create_with(instance, **keywords):
     return type(instance)(**dict(get_child_nodes(instance), **keywords))
 
@@ -71,17 +66,20 @@ def get_child_nodes(node):
 
 def loop_transform_loop(node, node_func, *, registry):
     child_nodes = get_child_nodes(node)
+    tail = []
     kargs = {}
     for param_name, param_value in child_nodes.items():
         if isinstance(param_value, NODE_CLASSES):
-            kargs[param_name] = take_first(
-                transform_node(param_value, registry=registry))
+            value = list(transform_node(param_value, registry=registry))
+            tail.extend(value[1:])
+            kargs[param_name] = value[0]
         else:
             kargs[param_name] = param_value
     if node_func:
         yield from node_func(create_with(node, **kargs))
     else:
         yield create_with(node, **kargs)
+    yield from map(lambda n: astlib.Pair(line=node.line, stmt=n), tail)
 
 def transform_node(node, *, registry):
     use_all = registry.get(ALL)

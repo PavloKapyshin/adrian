@@ -4,6 +4,7 @@ from . import parser
 from . import foreign_parser
 from . import analyzer
 from . import naming_rules
+from . import oop
 # from . import name_existence
 from . import type_inference
 # from . import type_checking
@@ -38,6 +39,7 @@ def compile_repl(inp, *, ns, ts, fs, exit_on_error):
         for layer_cls in (
                 analyzer.Analyzer,
                 naming_rules.NamingRules,
+                oop.OOP,
                 #type_inference.TypeInference,
                 #name_mangling.NameMangling,
                 #cgen.CGen

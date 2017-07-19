@@ -121,6 +121,10 @@ class FuncCall(Node):
         return self._args
 
 
+class CFuncCall(FuncCall):
+    pass
+
+
 class MethodCall(Node):
 
     def __init__(self, struct, method, args):
@@ -193,6 +197,18 @@ class Body(Node):
                 current_stmt = current_stmt.rest
                 yield current_stmt.stmt
         return list(_gen())
+
+    def append(self, stmt):
+        current_stmt = self
+        while not isinstance(current_stmt.rest, Empty):
+            current_stmt = current_stmt.rest
+        current_stmt._rest = Body(stmt, Empty())
+
+    def extend(self, body):
+        current_stmt = self
+        while not isinstance(current_stmt.rest, Empty):
+            current_stmt = current_stmt.rest
+        current_stmt._rest = body
 
 
 class Args(Node):
