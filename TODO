@@ -47,8 +47,9 @@
 [X] Think about new oop layers
 [X] Add new oop layers
 [X] Add __init__ method
+
 [ ] Add __deinit__ method
+[ ] Add structs as types
+
 [ ] Add empty methods
 [ ] Add other methods
-
-[ ] Add structs as types
