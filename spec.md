@@ -96,7 +96,7 @@ Default values for standard types:
 | Vector    | []            |
 | Set       | ()            |
 | Dict      | {}            |
-| None      | None          |
+| None      |               |
 ```
 
 ## Examples
