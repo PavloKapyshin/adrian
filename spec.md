@@ -71,11 +71,12 @@ Type names are named using camel case.
 ```adrian
 -- Good names:
 var myVar: _Integer
-var myVar: HTMLTag
+var myVar: HtmlTag
 var myVar: Context
 
 -- Bad names:
 var myVar: integer
+var myVar: HTMLTag
 var myVar: __Integer
 var myVar: Int_32
 ```
