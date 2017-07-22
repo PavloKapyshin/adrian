@@ -1,6 +1,5 @@
 """Objects that represent C language constructions."""
 
-
 class _Object(object):
     _keys = ()  # Override in subclass.
 
@@ -86,6 +85,11 @@ class _IntFast64(_Type):
     pass
 
 
+class _Int(_Type):
+    """int."""
+    pass
+
+
 class _SizeT(_Type):
     """size_t"""
     pass
@@ -96,8 +100,8 @@ class _Char(_Type):
     pass
 
 
-class _Array(_Type):
-    """C array."""
+class _Ptr(_Type):
+    """Pointer."""
 
     _keys = ("type_", )
 
@@ -109,13 +113,35 @@ class _Array(_Type):
         return self._type
 
 
-class _Ptr(_Array):
-    """Pointer."""
+class _Array(_Type):
+    """C Array."""
+
+    _keys = ("type_", "size")
+
+    def __init__(self, type_, size=None):
+        self._type = type_
+        assert type(size) in (int, str) or size is None
+        if isinstance(size, str):
+            assert size == "auto"
+        self._size = size
+
+    @property
+    def type_(self):
+        return self._type
+
+    @property
+    def size(self):
+        return self._size
+
+
+class _Void(_Type):
+    """void."""
     pass
 
 
 class CTypes(_Object):
     """Container to ease importing."""
+    int = _Int()
     int_fast8 = _IntFast8()
     int_fast32 = _IntFast32()
     int_fast64 = _IntFast64()
@@ -124,27 +150,41 @@ class CTypes(_Object):
     uint_fast64 = _UIntFast64()
     size_t = _SizeT()
     char = _Char()
+    void = _Void()
 
     @classmethod
     def ptr(cls, type_):
         return _Ptr(type_)
 
     @classmethod
-    def array(cls, type_):
-        return _Array(type_)
+    def array(cls, type_, size=None):
+        return _Array(type_, size=size)
+
+
+class StructType(_Object):
+    """Struct type"""
+
+    _keys = ("name", )
+
+    def __init__(self, name):
+        self._name = name
+
+    @property
+    def name(self):
+        return self._name
 
 
 class SizeOf(_Object):
     """sizeof operator."""
 
-    _keys = ("source", )
+    _keys = ("type_", )
 
-    def __init__(self, source):
-        self._source = source
+    def __init__(self, type_):
+        self._type = type_
 
     @property
-    def source(self):
-        return self._source
+    def type_(self):
+        return self._type
 
 
 class Val(_Object):
@@ -204,11 +244,12 @@ class Expr(_Object):
 class FuncCall(_Object):
     """Function call."""
 
-    _keys = ("name", "args")
+    _keys = ("name", "args", "includes")
 
-    def __init__(self, name, *args):
+    def __init__(self, name, *args, includes=None):
         self._name = name
         self._args = args
+        self._includes = includes or []
 
     @property
     def name(self):
@@ -218,18 +259,9 @@ class FuncCall(_Object):
     def args(self):
         return self._args
 
-
-class StructType(_Object):
-    """Struct type"""
-
-    _keys = ("name", )
-
-    def __init__(self, name):
-        self._name = name
-
     @property
-    def name(self):
-        return self._name
+    def includes(self):
+        return self._includes
 
 
 class Decl(_Object):
@@ -241,10 +273,6 @@ class Decl(_Object):
         self._name = name
         self._type = None or type_
         self._expr = None or expr
-        # if isinstance(type_or_expr, (Val, FuncCall, Var, Expr)):
-        #     self._expr = type_or_expr
-        # else:
-        #     self._type = type_or_expr
 
     @property
     def name(self):
@@ -497,7 +525,7 @@ class CFuncDescr(_Object):
         self._includes = includes
 
     def __call__(self, *args):
-        return FuncCall(self.name, *args)
+        return FuncCall(self.name, *args, includes=self._includes)
 
     @property
     def name(self):
