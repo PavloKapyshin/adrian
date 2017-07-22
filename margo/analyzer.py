@@ -13,6 +13,7 @@ class Analyzer(layers.Layer):
         elif isinstance(type_, astlib.Name):
             if type_ == "None":
                 return astlib.CType("Void")
+            return astlib.TypeName(str(type_))
         elif isinstance(type_, astlib.Empty):
             return astlib.Empty()
         errors.not_implemented("type is not supported")

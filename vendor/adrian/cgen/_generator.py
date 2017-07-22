@@ -115,12 +115,13 @@ class NodeGenerator(_layers.Layer):
         #elif isinstance(expr, objects._Ptr):
         #    return "*{}".format(self.expr(expr.type_))
         elif isinstance(expr, objects.StructElem):
-            struct_name = expr.struct_name
-            sep = "."
             if isinstance(expr.struct_name, objects._Ptr):
                 sep = "->"
-                struct_name = self.expr(struct_name.type_)
-            return "{}{}{}".format(struct_name, sep, expr.elem_name)
+                struct_name = self.expr(expr.struct_name.type_)
+            else:
+                sep = "."
+                struct_name = self.expr(expr.struct_name)
+            return "{}{}{}".format(struct_name, sep, self.expr(expr.elem_name))
         errors.not_implemented("expr is not supported")
 
     def sub_decl(self, decl):
@@ -145,6 +146,8 @@ class NodeGenerator(_layers.Layer):
         return result
 
     def args(self, args):
+        if isinstance(args, objects._Void):  # 0 arguments
+            return ["void"]
         return [self.sub_decl(arg) for arg in args]
 
     def sub_func_call(self, call):
@@ -183,8 +186,8 @@ class NodeGenerator(_layers.Layer):
                 objects.CTypes.uint_fast32, objects.CTypes.uint_fast64)))):
             self.add_include(objects.Include("stdint.h"))
             return value.literal
-        elif isinstance(value.type_, objects._Int):
-            return value.literal
+        elif isinstance(value.type_, (objects._Int, objects._SizeT)):
+            return str(value.literal)
         elif isinstance(value.type_, objects._Char):
             return "'{}'".format(value.literal)
         elif isinstance(value.type_, objects._Ptr):

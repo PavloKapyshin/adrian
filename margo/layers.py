@@ -5,7 +5,7 @@ import types
 #import itertools
 import functools
 
-from vendor.paka import funcreg
+from paka import funcreg
 
 from . import astlib, context
 

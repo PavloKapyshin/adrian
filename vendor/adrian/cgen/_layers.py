@@ -1,7 +1,7 @@
 import types
 import functools
 
-from vendor.paka import funcreg
+from paka import funcreg
 
 
 _PREREGISTERED_NODE_CLASSES_ATTR_NAME = "_layer_prereg_nodes_clss"

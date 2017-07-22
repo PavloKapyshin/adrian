@@ -1,4 +1,4 @@
-from vendor.adrian import cgen as acgen
+from adrian import cgen as acgen
 
 from . import parser
 from . import foreign_parser
@@ -44,10 +44,10 @@ def compile_repl(inp, *, ns, ts, fs, exit_on_error):
             layer = layer_cls()
             current_ast = list(layers.transform_ast(
                 current_ast, registry=layer.get_registry()))
-    # generator = acgen.Generator()
-    # generator.add_ast(current_ast)
-    # return list(generator.generate())
-    return current_ast
+    generator = acgen.Generator()
+    generator.add_ast(current_ast)
+    return list(generator.generate())
+    # return current_ast
 
 
 # def compile_repl(text, contexts, file_hash=""):

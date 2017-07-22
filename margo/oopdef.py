@@ -83,8 +83,8 @@ class OOPDef(layers.Layer):
             funcs.append(self.method_to_func(method, struct.name))
 
         add_funcs = []
-        if not have_init:
-            add_funcs.append(self.std_init_method(struct))
         if not have_deinit:
             add_funcs.append(self.std_deinit_method(struct))
+        if not have_init:
+            add_funcs.append(self.std_init_method(struct))
         yield from add_funcs + funcs

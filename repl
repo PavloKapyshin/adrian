@@ -1,1 +1,2 @@
-PYTHONPATH=:. python3 test/repl.py
+. ./zpath
+python3 test/repl.py
