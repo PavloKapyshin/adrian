@@ -134,7 +134,7 @@ def p_stmt(content):
     content[0] = content[1]
 
 
-def p_func_call_1(content):
+def p_func_call(content):
     """func_call : name_from_module LPAREN call_args RPAREN"""
     content[0] = [parser_astlib.FUNC_CALL, content[1], content[3]]
 

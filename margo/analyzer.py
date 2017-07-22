@@ -50,6 +50,13 @@ class Analyzer(layers.Layer):
             list(layers.transform_node(body.stmt, registry=registry))[0],
             self.body(body.rest, registry))
 
+    def call_args(self, args):
+        if isinstance(args, astlib.Empty):
+            return astlib.Empty()
+        return astlib.CallArgs(
+            self.expr(args.arg),
+            self.call_args(args.rest))
+
     def args(self, args):
         if isinstance(args, astlib.Empty):
             return astlib.Empty()
@@ -73,6 +80,12 @@ class Analyzer(layers.Layer):
         yield astlib.Assignment(
             self.expr(assignment.name), assignment.op,
             self.expr(assignment.expr))
+
+    @layers.register(astlib.FuncCall)
+    def func_call(self, call):
+        yield astlib.FuncCall(
+            astlib.FunctionName(str(call.name)),
+            self.call_args(call.args))
 
     @layers.register(astlib.Return)
     def return_(self, return_):
