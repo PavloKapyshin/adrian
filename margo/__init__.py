@@ -40,10 +40,9 @@ def compile_repl(inp, *, ns, ts, fs, exit_on_error):
                 analyzer.Analyzer,
                 naming_rules.NamingRules,
                 oop.OOP,
-                #type_inference.TypeInference,
-                #name_mangling.NameMangling,
-                #cgen.CGen
-                ):
+                type_inference.TypeInference,
+                name_mangling.NameMangling,
+                cgen.CGen):
             layer = layer_cls()
             current_ast = layers.transform_ast(
                 current_ast, registry=layer.get_registry())

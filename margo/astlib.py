@@ -121,8 +121,28 @@ class FuncCall(Node):
         return self._args
 
 
-class CFuncCall(FuncCall):
-    pass
+class CFuncCall(Node):
+    """C function call.
+
+              args
+             vvvvvv
+    c#myFunc(1 + 20)
+      ^^^^^^
+       name
+    """
+
+    def __init__(self, name, args):
+        self._name = name
+        self._args = args
+        self._keys = ("name", "args")
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def args(self):
+        return self._args
 
 
 class MethodCall(Node):

@@ -4,6 +4,8 @@
 
 
 CMODULE_NAME = "c"
+MALLOC_FUNC_NAME = "malloc"
+SIZEOF_FUNC_NAME = "sizeof"
 
 # CFUNCS = (
 #     "tpr",

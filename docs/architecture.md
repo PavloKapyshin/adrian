@@ -15,7 +15,15 @@ Name existence checking
 ↓
 Type inference
 ↓
+Default value
+↓
 Type checking
+↓
+OOPDef
+↓
+OOPCall
+↓
+Interface checking
 ↓
 Name mangling
 ↓
@@ -63,6 +71,26 @@ Compiler inferences types where needed.
 Compiler checks types for equality.
 
 
+## Default value
+
+Adds default value where needed.
+
+
+## OOPDef
+
+Translates methods to funcs.
+
+
+## OOPCall
+
+Translates method calls to func calls.
+
+
+## Interface checking
+
+Checks that struct implements interfaces.
+
+
 ## Name mangling
 
 Compiler mangles names using file hash.
@@ -70,6 +98,7 @@ Compiler mangles names using file hash.
 ## CGen
 
 Compiler generates CGen AST.
+
 
 ## C source
 

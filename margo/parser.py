@@ -226,74 +226,6 @@ def p_field_decl(content):
     content[0] = [parser_astlib.FIELD_DECL, [parser_astlib.NAME, content[1]], content[3]]
 
 
-# def p_func_decl_2(content):
-#     """func_decl : FUN NAME LPAREN args RPAREN LBRACE func_body RBRACE"""
-#     content[0] = ast.FuncDecl(
-#         name=content[2], args=content[4],
-#         type_=None, body=content[7])
-
-
-# def p_func_body_1(content):
-#     """func_body : func_body_stmt func_body"""
-#     content[0] = [content[1]] + content[2]
-
-
-# def p_func_body_2(content):
-#     """func_body : empty"""
-#     content[0] = []
-
-
-# def p_func_body_stmt(content):
-#     """
-#     func_body_stmt : decl
-#                    | assignment
-#                    | return
-#                    | func_call
-#     """
-#     content[0] = ast.Pair(content.lineno(0), column=1, stmt=content[1])
-
-# def p_args_1(content):
-#     """args : arg_names COLON type SEMI args"""
-#     return [ast.Arg(name, content[3]) for name in content[1]] + content[5]
-
-# def p_args_2(content):
-#     """args : empty"""
-#     content[0] = []
-
-
-# def p_arg_names_1(content):
-#     """arg_names : NAME COMMA arg_names"""
-#     content[0] = [content[1]] + content[3]
-
-
-# def p_arg_names_2(content):
-#     """arg_names : NAME"""
-#     content[0] = [content[1]]
-
-
-# def p_struct_decl(content):
-#     """struct_decl : SCT NAME LBRACE struct_body RBRACE"""
-#     content[0] = ast.StructDecl(content[2], content[4])
-
-
-# def p_struct_body_1(content):
-#     """struct_body : struct_body struct_body_stmt"""
-#     content[0] = content[1] + [content[2]]
-
-
-# def p_struct_body_2(content):
-#     """struct_body : empty"""
-#     content[0] = []
-
-
-# def p_struct_body_stmt(content):
-#     """
-#     struct_body_stmt : decl
-#                      | func_decl
-#     """
-#     content[0] = ast.Pair(content.lineno(0), column=1, stmt=content[1])
-
-
 def p_decl_1(content):
     """decl : VAR NAME COLON type EQ bool_expr"""
     content[0] = [parser_astlib.DECL, content[2], content[4], content[6]]
@@ -307,16 +239,6 @@ def p_decl_2(content):
 def p_decl_3(content):
     """decl : VAR NAME EQ bool_expr"""
     content[0] = [parser_astlib.DECL, content[2], [parser_astlib.EMPTY], content[4]]
-
-
-# def p_assignment(content):
-#     """assignment : name_from_struct assignop bool_expr"""
-#     content[0] = ast.Assignment(content[1], content[2], content[3])
-
-
-# def p_method_call(content):
-#     """method_call : type LPAREN call_args RPAREN"""
-#     content[0] = [parser_astlib.METHOD_CALL, content[1][0], content[1][1], content[3]]
 
 
 def p_call_args_1(content):
@@ -341,16 +263,6 @@ def p_type(content):
     content[0] = content[1]
 
 
-# def p_name_from_struct_1(content):
-#     """name_from_struct : name_from_module PERIOD name_from_struct"""
-#     content[0] = [parser_astlib.STRUCT_ELEM, content[1], content[3]]
-
-
-# def p_name_from_struct_2(content):
-#     """name_from_struct : name_from_module"""
-#     content[0] = content[1]
-
-
 def p_name_from_module_1(content):
     """name_from_module : NAME HASH NAME"""
     content[0] = [parser_astlib.MODULE_MEMBER, content[1], [parser_astlib.NAME, content[3]]]
@@ -359,11 +271,6 @@ def p_name_from_module_1(content):
 def p_name_from_module_2(content):
     """name_from_module : NAME"""
     content[0] = [parser_astlib.NAME, content[1]]
-
-
-# def p_assignop(content):
-#     """assignop : EQ"""
-#     content[0] = content[1]
 
 
 def p_boolop(content):

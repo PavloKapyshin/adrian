@@ -21,10 +21,6 @@ class Generator:
         for node in ast_:
             result.merge(self.generator.generate(node))
         return result
-        # result = Generated()
-        # for node in ast_:
-        #     result.merge(self.generator.generate(node))
-        # return result
 
     def generate(self):
         result = Generated()

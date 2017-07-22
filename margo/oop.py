@@ -8,7 +8,7 @@ class OOP(layers.Layer):
 
     def _init_method(self, method, struct_name):
         self_decl = astlib.Decl(
-            name="self",
+            name=astlib.VariableName("self"),
             type_=astlib.CType("Memory"),
             expr=astlib.CFuncCall(
                 name="malloc",
