@@ -3,6 +3,7 @@ from vendor.adrian import cgen as acgen
 from . import parser
 from . import foreign_parser
 from . import analyzer
+from . import oopdef
 #from . import naming_rules
 #from . import oop
 # from . import name_existence
@@ -38,8 +39,7 @@ def compile_repl(inp, *, ns, ts, fs, exit_on_error):
         # TypeChecking layer must be after TypeInference layer.
         for layer_cls in (
                 analyzer.Analyzer,
-                #naming_rules.NamingRules,
-                #oop.OOP,
+                oopdef.OOPDef,
                 #type_inference.TypeInference,
                 #name_mangling.NameMangling,
                 #cgen.CGen

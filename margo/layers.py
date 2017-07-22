@@ -98,7 +98,10 @@ class Layer(metaclass=LayerMeta):
 
 def transform_node(node, *, registry):
     node_func = registry.get(type(node))
-    yield from node_func(node)
+    if node_func:
+        yield from node_func(node)
+    else:
+        yield node
 
 
 def transform_ast(ast_, *, registry):
