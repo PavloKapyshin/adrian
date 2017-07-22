@@ -5,7 +5,6 @@ METHOD_DECL = "MethodDecl"
 STRUCT_DECL = "StructDecl"
 FIELD_DECL = "FieldDecl"
 
-PAIR = "Pair"
 NAME = "Name"
 SEXPR = "SExpr"
 

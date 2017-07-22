@@ -19,7 +19,7 @@ class REPL(cmd.Cmd):
                 margo.compile_repl(
                     inp, ns=self.ns, ts=self.ts,
                     fs=self.fs, exit_on_error=True))
-        except margo.errors.CompilationError as e:
+        except margo.errors.CompileTimeError as e:
             print(e.message, file=sys.stderr)
 
     def do_exit(self, arg):

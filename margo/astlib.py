@@ -67,14 +67,14 @@ class CType(Name):
 
 class ModuleMember(Node):
 
-    def __init__(self, name, member):
-        self._name = name
+    def __init__(self, module_name, member):
+        self._module_name = module_name
         self._member = member
-        self._keys = ("name", "member")
+        self._keys = ("module_name", "member")
 
     @property
-    def name(self):
-        return self._name
+    def module_name(self):
+        return self._module_name
 
     @property
     def member(self):
@@ -284,6 +284,14 @@ class CallArgs(Node):
                 current_arg = current_arg.rest
                 yield current_arg.arg
         return list(_gen())
+
+    def __len__(self):
+        length = 1
+        current_arg = self
+        while not isinstance(current_arg.rest, Empty):
+            current_arg = current_arg.rest
+            length += 1
+        return length
 
 
 class SExpr(Node):

@@ -3,13 +3,13 @@ from vendor.adrian import cgen as acgen
 from . import parser
 from . import foreign_parser
 from . import analyzer
-from . import naming_rules
-from . import oop
+#from . import naming_rules
+#from . import oop
 # from . import name_existence
-from . import type_inference
+#from . import type_inference
 # from . import type_checking
-from . import name_mangling
-from . import cgen
+#from . import name_mangling
+#from . import cgen
 from . import structs
 from . import context
 from . import layers
@@ -38,38 +38,19 @@ def compile_repl(inp, *, ns, ts, fs, exit_on_error):
         # TypeChecking layer must be after TypeInference layer.
         for layer_cls in (
                 analyzer.Analyzer,
-                naming_rules.NamingRules,
-                oop.OOP,
-                type_inference.TypeInference,
-                name_mangling.NameMangling,
-                cgen.CGen):
+                #naming_rules.NamingRules,
+                #oop.OOP,
+                #type_inference.TypeInference,
+                #name_mangling.NameMangling,
+                #cgen.CGen
+                ):
             layer = layer_cls()
-            current_ast = layers.transform_ast(
-                current_ast, registry=layer.get_registry())
+            current_ast = list(layers.transform_ast(
+                current_ast, registry=layer.get_registry()))
     # generator = acgen.Generator()
     # generator.add_ast(current_ast)
     # return list(generator.generate())
     return current_ast
-
-# Stable:
-# def compile_repl(inp, *, ns, ts, fs, exit_on_error):
-#     with context.new_context(
-#             ns=ns, ts=ts, fs=fs, exit_on_error=exit_on_error,
-#             file_hash="mangled_"):
-#         current_ast = foreign_parser.main(parser.main(inp))
-#         # NameExistence layer must be after NamingRules layer.
-#         # TypeInference layer must be after NameExistence layer.
-#         # TypeChecking layer must be after TypeInference layer.
-#         for layer_cls in (
-#                 analyzer.Analyzer, naming_rules.NamingRules,
-#                 type_inference.TypeInference, name_mangling.NameMangling,
-#                 cgen.CGen):
-#             layer = layer_cls()
-#             current_ast = layers.transform_ast(
-#                 current_ast, registry=layer.get_registry())
-#     generator = acgen.Generator()
-#     generator.add_ast(current_ast)
-#     return list(generator.generate())
 
 
 # def compile_repl(text, contexts, file_hash=""):

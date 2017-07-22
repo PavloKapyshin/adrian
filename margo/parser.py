@@ -114,18 +114,13 @@ def sexpr(expr):
 
 
 def p_ast_1(content):
-    """ast : pair ast"""
+    """ast : stmt ast"""
     content[0] = [content[1]] + content[2]
 
 
 def p_ast_2(content):
-    """ast : pair"""
+    """ast : stmt"""
     content[0] = [content[1]]
-
-
-def p_pair(content):
-    """pair : stmt"""
-    content[0] = [parser_astlib.PAIR, content.lineno(0), content[1]]
 
 
 def p_stmt(content):
@@ -167,7 +162,7 @@ def p_func_body_stmt(content):
     func_body_stmt : decl
                    | return_stmt
     """
-    content[0] = [parser_astlib.PAIR, content.lineno(0), content[1]]
+    content[0] = content[1]
 
 
 def p_return_stmt(content):
@@ -218,7 +213,7 @@ def p_struct_body_stmt(content):
     stmt = content[1]
     if stmt[0] == parser_astlib.FUNC_DECL:
         stmt = [parser_astlib.METHOD_DECL, stmt[1], stmt[2], stmt[3], stmt[4]]
-    content[0] = [parser_astlib.PAIR, content.lineno(0), stmt]
+    content[0] = stmt
 
 
 def p_field_decl(content):
