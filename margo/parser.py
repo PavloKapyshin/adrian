@@ -32,7 +32,7 @@ _TOKENS = {
     ":": "COLON",
     ";": "SEMI",
     ",": "COMMA",
-    #".": "PERIOD",
+    ".": "PERIOD",
     "#": "HASH"
 }
 
@@ -129,6 +129,7 @@ def p_stmt(content):
          | func_decl
          | func_call
          | struct_decl
+         | assignment
     """
     content[0] = content[1]
 
@@ -160,6 +161,7 @@ def p_func_body_2(content):
 def p_func_body_stmt(content):
     """
     func_body_stmt : decl
+                   | assignment
                    | return_stmt
     """
     content[0] = content[1]
@@ -236,6 +238,11 @@ def p_decl_3(content):
     content[0] = [parser_astlib.DECL, content[2], [parser_astlib.EMPTY], content[4]]
 
 
+def p_assignment(content):
+    """assignment : name_from_struct EQ bool_expr"""
+    content[0] = [parser_astlib.ASSIGNMENT, content[1], content[2], content[3]]
+
+
 def p_call_args_1(content):
     """call_args : bool_expr COMMA call_args"""
     content[0] = [parser_astlib.CALL_ARGS, content[1], content[3]]
@@ -256,6 +263,15 @@ def p_type(content):
     type : name_from_module
     """
     content[0] = content[1]
+
+
+def p_name_from_struct_1(content):
+    """name_from_struct : NAME PERIOD name_from_struct"""
+    content[0] = [parser_astlib.STRUCT_ELEM, [parser_astlib.NAME, content[1]], content[3]]
+
+def p_name_from_struct_2(content):
+    """name_from_struct : NAME"""
+    content[0] = [parser_astlib.NAME, content[1]]
 
 
 def p_name_from_module_1(content):

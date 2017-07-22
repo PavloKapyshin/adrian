@@ -391,7 +391,7 @@ class Assignment(Node):
         return self._expr
 
 
-class FuncDecl(Node):
+class Func(Node):
     """Declaration of function.
 
          name                                      type_
@@ -425,7 +425,7 @@ class FuncDecl(Node):
         return self._body
 
 
-class MethodDecl(Node):
+class Method(Node):
     """Declaration of a method.
 
           name                                      type_
@@ -459,7 +459,7 @@ class MethodDecl(Node):
         return self._body
 
 
-class StructDecl(Node):
+class Struct(Node):
     """Declaration of struct.
          name
         vvvvvv
@@ -484,12 +484,12 @@ class StructDecl(Node):
         return self._body
 
 
-class FieldDecl(Node):
+class Field(Node):
     """Declaration of field in struct.
 
     sct MyType {
-        length: Integer     < FieldDecl
-        data: String        < FieldDecl
+        length: Integer     < Field
+        data: String        < Field
     }
     """
 

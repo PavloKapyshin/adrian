@@ -96,7 +96,11 @@ class Layer(metaclass=LayerMeta):
 #             transform_node(node, registry=registry) for node in ast_))
 
 
+def transform_node(node, *, registry):
+    node_func = registry.get(type(node))
+    yield from node_func(node)
+
+
 def transform_ast(ast_, *, registry):
     for node in ast_:
-        node_func = registry.get(type(node))
-        yield from node_func(node)
+        yield from transform_node(node, registry=registry)
