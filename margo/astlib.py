@@ -190,6 +190,9 @@ class Empty(BaseNode):
     def __str__(self):
         return "EMPTY"
 
+    def as_list(self):
+        return []
+
     __repr__ = __str__
 
 

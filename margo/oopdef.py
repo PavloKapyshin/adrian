@@ -24,7 +24,7 @@ class OOPDef(layers.Layer):
         return_stmt = astlib.Return(astlib.VariableName("new"))
 
         field_inits = astlib.Empty()
-        for field in ([] if isinstance(struct.body, astlib.Empty) else struct.body.as_list()):
+        for field in struct.body.as_list():
             if isinstance(field, astlib.Field):
                 field_inits = self.add_to_body(
                     field_inits, astlib.Assignment(
@@ -58,7 +58,7 @@ class OOPDef(layers.Layer):
 
         field_inits = astlib.Empty()
         args = astlib.Empty()
-        for field in ([] if isinstance(struct.body, astlib.Empty) else struct.body.as_list()):
+        for field in struct.body.as_list():
             if isinstance(field, astlib.Field):
                 args = self.add_to_args(args, field.name, field.type_)
                 field_inits = self.add_to_body(
@@ -141,9 +141,7 @@ class OOPDef(layers.Layer):
         have_deinit = False
         have_copy = False
         funcs = []
-        for method in (
-                methods.as_list() if isinstance(methods, astlib.Body)
-                else []):
+        for method in methods.as_list():
             if method.name == defs.INIT_METHOD_NAME:
                 have_init = True
             elif method.name == defs.DEINIT_METHOD_NAME:
