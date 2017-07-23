@@ -6,6 +6,7 @@ from . import analyzer
 from . import oopdef
 from . import oopcall
 from . import simpex
+from . import arc
 from . import cgen
 #from . import naming_rules
 #from . import oop
