@@ -260,6 +260,18 @@ class Args(Node):
                 yield (current_arg.name, current_arg.type_)
         return list(_gen())
 
+    def append(self, name, type_):
+        current_arg = self
+        while not isinstance(current_arg.rest, Empty):
+            current_arg = current_arg.rest
+        current_arg._rest = Args(name, type_, Empty())
+
+    def extend(self, args):
+        current_stmt = self
+        while not isinstance(current_stmt.rest, Empty):
+            current_stmt = current_stmt.rest
+        current_stmt._rest = args
+
 
 class CallArgs(Node):
 
