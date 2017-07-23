@@ -31,7 +31,7 @@ class Analyzer(layers.Layer):
                 op=expr.op, expr1=self.expr(expr.expr1),
                 expr2=self.expr(expr.expr2))
         elif isinstance(expr, astlib.MethodCall):
-            return self.method_call(expr)
+            return list(self.method_call(expr))[0]
         elif isinstance(expr, astlib.FuncCall):
             if (isinstance(expr.name, astlib.ModuleMember) and \
                     expr.name.module_name == cdefs.CMODULE_NAME):
@@ -44,7 +44,7 @@ class Analyzer(layers.Layer):
                         context.exit_on_error, expected=1, got=arg_length)
                 arg = expr.args.arg
                 return getattr(astlib, "C" + str(module.member))(arg.literal)
-            return self.func_call(expr)
+            return list(self.func_call(expr))[0]
         elif isinstance(expr, astlib.StructElem):
             return astlib.StructElem(
                 self.expr(expr.name), self.expr(expr.elem))
@@ -90,13 +90,12 @@ class Analyzer(layers.Layer):
 
     @layers.register(astlib.FuncCall)
     def func_call(self, call):
-        # if defs.TYPE_NAME_REGEX.fullmatch(str(call.name)):
-        #     yield astlib.Instance(
-        #         struct=astlib.TypeName(str(call.name)),
-        #         args=self.call_args(call.args))
-        # else:
+        name = str(call.name)
+        if defs.TYPE_NAME_REGEX.fullmatch(str(call.name)):
+            name = "".join([
+                defs.INIT_METHOD_NAME, str(call.name)])
         yield astlib.FuncCall(
-            astlib.FunctionName(str(call.name)),
+            astlib.FunctionName(name),
             self.call_args(call.args))
 
     @layers.register(astlib.MethodCall)

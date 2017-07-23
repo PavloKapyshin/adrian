@@ -37,8 +37,8 @@ def compile_repl(inp, *, ns, ts, fs, exit_on_error):
         current_ast = foreign_parser.main(parser.main(inp))
         for layer_cls in (
                 analyzer.Analyzer,
-                #oopdef.OOPDef,
-                #oopcall.OOPCall,
+                oopdef.OOPDef,
+                oopcall.OOPCall,
                 #arc.ARC,
                 #cgen.CGen
                 ):
