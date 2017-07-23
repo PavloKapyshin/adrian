@@ -1,6 +1,6 @@
 """Translates method calls into function calls."""
 
-from . import layers, astlib, errors
+from . import layers, astlib, errors, defs
 from .context import context
 
 
@@ -13,6 +13,14 @@ class OOPCall(layers.Layer):
             return astlib.SExpr(
                 op=expr.op, expr1=self.expr(expr.expr1),
                 expr2=self.expr(expr.expr2))
+        elif isinstance(expr, astlib.VariableName):
+            type_ = context.ns.get(str(expr))["type_"]
+            if isinstance(type_, astlib.CType):
+                return expr
+            return astlib.FuncCall(
+                astlib.FunctionName(
+                    "".join([defs.COPY_METHOD_NAME, str(type_)])),
+                args=astlib.CallArgs(expr, astlib.Empty()))
         return expr
 
     def body(self, body, registry):

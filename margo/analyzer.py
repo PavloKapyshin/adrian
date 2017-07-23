@@ -36,7 +36,7 @@ class Analyzer(layers.Layer):
             if (isinstance(expr.name, astlib.ModuleMember) and \
                     expr.name.module_name == cdefs.CMODULE_NAME):
                 module = expr.name
-                arg_length = (len(expr.args.as_list())
+                arg_length = (len(expr.args)
                     if isinstance(expr.args, astlib.CallArgs)
                     else 0)
                 if arg_length != 1:

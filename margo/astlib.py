@@ -300,6 +300,18 @@ class CallArgs(Node):
                 yield current_arg.arg
         return list(_gen())
 
+    def append(self, arg):
+        current_arg = self
+        while not isinstance(current_arg.rest, Empty):
+            current_arg = current_arg.rest
+        current_arg._rest = CallArgs(arg, Empty())
+
+    def extend(self, args):
+        current_stmt = self
+        while not isinstance(current_stmt.rest, Empty):
+            current_stmt = current_stmt.rest
+        current_stmt._rest = args
+
     def __len__(self):
         length = 1
         current_arg = self

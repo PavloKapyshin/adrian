@@ -1,0 +1,103 @@
+"""Translates expressions into more simple."""
+
+from . import layers, astlib, errors, cdefs, defs
+from .context import context
+
+
+class SimpEx(layers.Layer):
+    tmp_string = "tmp"
+
+    def __init__(self, tmp_count=0):
+        self.tmp_count = tmp_count
+
+    def tmp(self, type_, expr):
+        self.tmp_count += 1
+        tmp_name = self.tmp_string + str(self.tmp_count)
+        return astlib.Decl(astlib.VariableName(tmp_name), type_, expr)
+
+    def info_from_call(self, name):
+        if isinstance(name, astlib.FunctionName):
+            return context.fs.get(name)
+        print(type(name))
+        errors.not_implemented("func is not supported")
+
+    def expr(self, expr):
+        if isinstance(expr, (
+                astlib.CIntFast8, astlib.CIntFast32,
+                astlib.CUIntFast8, astlib.CUIntFast32)):
+            return expr, []
+        elif isinstance(expr, astlib.SExpr):
+            decls = []
+            expr1_tmp, expr1_decls = self.expr(expr.expr1)
+            expr2_tmp, expr2_decls = self.expr(expr.expr2)
+            decls.extend(expr1_decls)
+            decls.extend(expr2_decls)
+            return astlib.SExpr(
+                expr.op, expr1_tmp, expr2_tmp), decls
+        elif isinstance(expr, astlib.VariableName):
+            return expr, []
+        elif isinstance(expr, astlib.FuncCall):
+            result = list(self.func_call(expr))
+            decls, tmp = result[:-1], result[-1]
+            return tmp, decls
+        errors.not_implemented("expr is not supported")
+
+    def add_to_call_args(self, args, arg):
+        if isinstance(args, astlib.Empty):
+            return astlib.CallArgs(arg, astlib.Empty())
+        args.append(arg)
+        return args
+
+    def call_args(self, args):
+        tmps, decls = astlib.Empty(), []
+        for arg in args.as_list():
+            if isinstance(arg, astlib.FuncCall):
+                func_info = self.info_from_call(arg.name)
+                res = list(self.func_call(arg))
+                res_tmp, res_decls = res[-1], res[:-1]
+                decl = self.tmp(func_info["rettype"], res_tmp)
+                tmp = str(decl.name)
+                decls.extend(res_decls)
+                decls.append(decl)
+                tmps = self.add_to_call_args(tmps, tmp)
+            else:
+                tmp, decls_ = self.expr(arg)
+                decls.extend(decls_)
+                tmps = self.add_to_call_args(tmps, tmp)
+        return tmps, decls
+
+    def body(self, body):
+        reg = SimpEx().get_registry()
+        if isinstance(body, astlib.Empty):
+            return astlib.Empty()
+        gened = list(layers.transform_node(body.stmt, registry=reg))
+        result = astlib.Body(gened[0], astlib.Empty())
+        result.extend(gened[1:])
+        result.extend(self.body(body.rest))
+        return result
+
+    @layers.register(astlib.Decl)
+    def decl(self, decl):
+        context.ns.add(str(decl.name), {
+            "type_": decl.type_
+        })
+        tmp, decls = self.expr(decl.expr)
+        yield from decls
+        yield astlib.Decl(decl.name, decl.type_, tmp)
+
+    @layers.register(astlib.FuncCall)
+    def void_func_call(self, call):
+        pass
+
+    def func_call(self, call):
+        tmps, decls = self.call_args(call.args)
+        yield from decls
+        yield astlib.FuncCall(call.name, tmps)
+
+    @layers.register(astlib.Func)
+    def func(self, func):
+        context.fs.add(str(func.name), {
+            "rettype": func.type_
+        })
+        yield astlib.Func(
+            func.name, func.args, func.type_, self.body(func.body))

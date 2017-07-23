@@ -5,6 +5,7 @@ from . import foreign_parser
 from . import analyzer
 from . import oopdef
 from . import oopcall
+from . import simpex
 from . import cgen
 #from . import naming_rules
 #from . import oop
@@ -39,15 +40,17 @@ def compile_repl(inp, *, ns, ts, fs, exit_on_error):
                 analyzer.Analyzer,
                 oopdef.OOPDef,
                 oopcall.OOPCall,
+                simpex.SimpEx,
                 #arc.ARC,
-                cgen.CGen):
+                #cgen.CGen
+                ):
             layer = layer_cls()
             current_ast = list(layers.transform_ast(
                 current_ast, registry=layer.get_registry()))
-    generator = acgen.Generator()
-    generator.add_ast(current_ast)
-    return list(generator.generate())
-    # return current_ast
+    # generator = acgen.Generator()
+    # generator.add_ast(current_ast)
+    # return list(generator.generate())
+    return current_ast
 
 
 # def compile_repl(text, contexts, file_hash=""):
