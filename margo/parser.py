@@ -127,16 +127,27 @@ def p_stmt(content):
     """
     stmt : decl
          | func_decl
-         | func_call
+         | call
          | struct_decl
          | assignment
     """
     content[0] = content[1]
 
 
-def p_func_call(content):
-    """func_call : name_from_module LPAREN call_args RPAREN"""
-    content[0] = [parser_astlib.FUNC_CALL, content[1], content[3]]
+def p_call_name(content):
+    """
+    call_name : name_from_module
+              | name_from_struct
+    """
+    content[0] = content[1]
+
+
+def p_call(content):
+    """call : call_name LPAREN call_args RPAREN"""
+    if content[1][0] == parser_astlib.STRUCT_ELEM:
+        content[0] = [parser_astlib.METHOD_CALL, content[1][1], content[1][2], content[3]]
+    else:
+        content[0] = [parser_astlib.FUNC_CALL, content[1], content[3]]
 
 
 def p_func_decl_1(content):
@@ -335,8 +346,8 @@ def p_atom_1(content):
     """
     atom : INTEGER
          | STRING
-         | name_from_module
-         | func_call
+         | call_name
+         | call
     """
     content[0] = content[1]
 

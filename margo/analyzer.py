@@ -1,6 +1,9 @@
-"""Analyzes names and translates them into more specific."""
+"""
+Analyzes names and translates them into more specific.
+Translates some FuncCalls to Instance objects.
+"""
 
-from . import layers, astlib, errors, cdefs
+from . import layers, astlib, errors, cdefs, defs
 from .context import context
 
 
@@ -27,18 +30,21 @@ class Analyzer(layers.Layer):
             return astlib.SExpr(
                 op=expr.op, expr1=self.expr(expr.expr1),
                 expr2=self.expr(expr.expr2))
-        elif (isinstance(expr, astlib.FuncCall) and \
-                isinstance(expr.name, astlib.ModuleMember) and \
-                expr.name.module_name == cdefs.CMODULE_NAME):
-            module = expr.name
-            length = (
-                len(expr.args) if isinstance(expr.args, astlib.CallArgs)
-                else 0)
-            if length != 1:
-                errors.wrong_number_of_args(
-                    context.exit_on_error, expected=1, got=length)
-            arg = expr.args.arg
-            return getattr(astlib, "C" + str(module.member))(arg.literal)
+        elif isinstance(expr, astlib.MethodCall):
+            return self.method_call(expr)
+        elif isinstance(expr, astlib.FuncCall):
+            if (isinstance(expr.name, astlib.ModuleMember) and \
+                    expr.name.module_name == cdefs.CMODULE_NAME):
+                module = expr.name
+                arg_length = (len(expr.args.as_list())
+                    if isinstance(expr.args, astlib.CallArgs)
+                    else 0)
+                if arg_length != 1:
+                    errors.wrong_number_of_args(
+                        context.exit_on_error, expected=1, got=arg_length)
+                arg = expr.args.arg
+                return getattr(astlib, "C" + str(module.member))(arg.literal)
+            return self.func_call(expr)
         elif isinstance(expr, astlib.StructElem):
             return astlib.StructElem(
                 self.expr(expr.name), self.expr(expr.elem))
@@ -84,8 +90,20 @@ class Analyzer(layers.Layer):
 
     @layers.register(astlib.FuncCall)
     def func_call(self, call):
+        # if defs.TYPE_NAME_REGEX.fullmatch(str(call.name)):
+        #     yield astlib.Instance(
+        #         struct=astlib.TypeName(str(call.name)),
+        #         args=self.call_args(call.args))
+        # else:
         yield astlib.FuncCall(
             astlib.FunctionName(str(call.name)),
+            self.call_args(call.args))
+
+    @layers.register(astlib.MethodCall)
+    def method_call(self, call):
+        yield astlib.MethodCall(
+            astlib.TypeName(str(call.struct)),
+            astlib.MethodName(str(call.method)),
             self.call_args(call.args))
 
     @layers.register(astlib.Return)

@@ -43,7 +43,8 @@ class CGen(layers.Layer):
             elif expr.name in cdefs.CFUNCS:
                 return getattr(cdefs, str(expr.name).upper() + "_FUNC_DESCR")(
                     *self.call_args(expr.args))
-        print(expr)
+        elif isinstance(expr, astlib.FuncCall):
+            return self.func_call(expr)
         errors.not_implemented("expr is not supported")
 
     def call_args(self, args):
@@ -89,6 +90,10 @@ class CGen(layers.Layer):
         elif call.name in cdefs.CFUNCS:
             yield getattr(cdefs, str(call.name).upper() + "_FUNC_DESCR")(
                 *self.call_args(call.args))
+
+    @layers.register(astlib.FuncCall)
+    def func_call(self, call):
+        yield cgen.FuncCall(str(call.name), *self.call_args(call.args))
 
     @layers.register(astlib.Return)
     def return_(self, return_):
