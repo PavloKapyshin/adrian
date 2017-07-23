@@ -44,7 +44,7 @@ class CGen(layers.Layer):
                 return getattr(cdefs, str(expr.name).upper() + "_FUNC_DESCR")(
                     *self.call_args(expr.args))
         elif isinstance(expr, astlib.FuncCall):
-            return self.func_call(expr)
+            return list(self.func_call(expr))[0]
         errors.not_implemented("expr is not supported")
 
     def call_args(self, args):
