@@ -7,7 +7,37 @@ from .context import context
 class OOPDef(layers.Layer):
 
     def std_copy_method(self, struct):
-        errors.not_implemented("write copy method, please :D")
+        # fun __copy__(self: STRUCT): STRUCT {
+        #   var new: STRUCT = c#malloc(c#sizeof(STRUCT))
+        #   for field in self.fields:
+        #       new.field = self.field
+        #   ret new
+        # }
+        new_decl = astlib.Decl(
+            astlib.VariableName("new"),
+            type_=struct.name,
+            expr=astlib.CFuncCall(
+                "malloc", args=astlib.CallArgs(astlib.CFuncCall(
+                    "sizeof", args=astlib.CallArgs(astlib.StructScalar(
+                        struct.name), astlib.Empty()),
+                ), astlib.Empty())))
+        return_stmt = astlib.Return(astlib.VariableName("new"))
+
+        field_inits = astlib.Empty()
+        for field in ([] if isinstance(struct.body, astlib.Empty) else struct.body.as_list()):
+            if isinstance(field, astlib.Field):
+                field_inits = self.add_to_body(
+                    field_inits, astlib.Assignment(
+                        astlib.StructElem(astlib.VariableName("new"), field.name),
+                        op="=", expr=astlib.StructElem(astlib.VariableName("self"), field.name)))
+        body = astlib.Body(new_decl, astlib.Empty())
+        body.extend(field_inits)
+        body.append(return_stmt)
+        return astlib.Func(
+            "".join([str(defs.COPY_METHOD_NAME), str(struct.name)]),
+            args=astlib.Args(astlib.VariableName("self"), struct.name, astlib.Empty()),
+            type_=struct.name,
+            body=body)
 
     def std_init_method(self, struct):
         # fun __init__(...): STRUCT {
@@ -121,8 +151,8 @@ class OOPDef(layers.Layer):
             funcs.append(self.method_to_func(method, struct.name))
 
         add_funcs = []
-        # if not have_copy:
-        #     add_funcs.append(self.std_copy_method(struct))
+        if not have_copy:
+            add_funcs.append(self.std_copy_method(struct))
         if not have_deinit:
             add_funcs.append(self.std_deinit_method(struct))
         if not have_init:

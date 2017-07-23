@@ -16,3 +16,4 @@ METHOD_NAME_REGEX = re.compile(r"[_][_][a-z][a-zA-Z0-9]*[_][_]")
 
 INIT_METHOD_NAME = "__init__"
 DEINIT_METHOD_NAME = "__deinit__"
+COPY_METHOD_NAME = "__copy__"
