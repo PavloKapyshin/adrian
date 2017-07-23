@@ -45,6 +45,7 @@ class CGen(layers.Layer):
                     *self.call_args(expr.args))
         elif isinstance(expr, astlib.FuncCall):
             return list(self.func_call(expr))[0]
+        print(expr)
         errors.not_implemented("expr is not supported")
 
     def call_args(self, args):

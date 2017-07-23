@@ -42,8 +42,7 @@ def compile_repl(inp, *, ns, ts, fs, exit_on_error):
                 oopcall.OOPCall,
                 simpex.SimpEx,
                 #arc.ARC,
-                #cgen.CGen
-                ):
+                cgen.CGen):
             layer = layer_cls()
             current_ast = list(layers.transform_ast(
                 current_ast, registry=layer.get_registry()))

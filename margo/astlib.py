@@ -233,6 +233,13 @@ class Body(Node):
             current_stmt = current_stmt.rest
         current_stmt._rest = body
 
+    def extend_from_list(self, body):
+        current_stmt = self
+        while not isinstance(current_stmt.rest, Empty):
+            current_stmt = current_stmt.rest
+        for stmt in body:
+            current_stmt._rest = Body(stmt, Empty())
+            current_stmt = current_stmt.rest
 
 class Args(Node):
 

@@ -55,7 +55,10 @@ class OOPCall(layers.Layer):
 
     @layers.register(astlib.Return)
     def return_(self, return_):
-        yield astlib.Return(self.expr(return_.expr))
+        expr = self.expr(return_.expr)
+        if isinstance(return_.expr, astlib.VariableName):
+            expr = return_.expr
+        yield astlib.Return(expr)
 
     @layers.register(astlib.Struct)
     def struct(self, struct):
@@ -66,6 +69,13 @@ class OOPCall(layers.Layer):
     @layers.register(astlib.Func)
     def func(self, func):
         registry = OOPCall().get_registry()
+        args_ = func.args
+        while not isinstance(args_, astlib.Empty):
+            context.ns.add(str(args_.name), {
+                "type_": args_.type_
+            })
+            args_ = args_.rest
+
         yield astlib.Func(
             func.name, args=func.args,
             type_=func.type_, body=self.body(func.body, registry))

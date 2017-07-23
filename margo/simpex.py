@@ -18,7 +18,6 @@ class SimpEx(layers.Layer):
     def info_from_call(self, name):
         if isinstance(name, astlib.FunctionName):
             return context.fs.get(name)
-        print(type(name))
         errors.not_implemented("func is not supported")
 
     def expr(self, expr):
@@ -36,10 +35,14 @@ class SimpEx(layers.Layer):
                 expr.op, expr1_tmp, expr2_tmp), decls
         elif isinstance(expr, astlib.VariableName):
             return expr, []
+        elif isinstance(expr, astlib.StructElem):
+            return expr, []
         elif isinstance(expr, astlib.FuncCall):
             result = list(self.func_call(expr))
             decls, tmp = result[:-1], result[-1]
             return tmp, decls
+        elif isinstance(expr, astlib.CFuncCall):
+            return expr, []
         errors.not_implemented("expr is not supported")
 
     def add_to_call_args(self, args, arg):
@@ -56,7 +59,7 @@ class SimpEx(layers.Layer):
                 res = list(self.func_call(arg))
                 res_tmp, res_decls = res[-1], res[:-1]
                 decl = self.tmp(func_info["rettype"], res_tmp)
-                tmp = str(decl.name)
+                tmp = decl.name
                 decls.extend(res_decls)
                 decls.append(decl)
                 tmps = self.add_to_call_args(tmps, tmp)
@@ -72,7 +75,7 @@ class SimpEx(layers.Layer):
             return astlib.Empty()
         gened = list(layers.transform_node(body.stmt, registry=reg))
         result = astlib.Body(gened[0], astlib.Empty())
-        result.extend(gened[1:])
+        result.extend_from_list(gened[1:])
         result.extend(self.body(body.rest))
         return result
 
@@ -85,14 +88,24 @@ class SimpEx(layers.Layer):
         yield from decls
         yield astlib.Decl(decl.name, decl.type_, tmp)
 
-    @layers.register(astlib.FuncCall)
-    def void_func_call(self, call):
-        pass
+    @layers.register(astlib.Assignment)
+    def assignment(self, assignment):
+        tmp, decls = self.expr(assignment.expr)
+        yield from decls
+        yield astlib.Assignment(
+            assignment.name, assignment.op, tmp)
 
+    @layers.register(astlib.FuncCall)
     def func_call(self, call):
         tmps, decls = self.call_args(call.args)
         yield from decls
         yield astlib.FuncCall(call.name, tmps)
+
+    @layers.register(astlib.Return)
+    def return_(self, return_):
+        tmp, decls = self.expr(return_.expr)
+        yield from decls
+        yield astlib.Return(tmp)
 
     @layers.register(astlib.Func)
     def func(self, func):
@@ -101,3 +114,7 @@ class SimpEx(layers.Layer):
         })
         yield astlib.Func(
             func.name, func.args, func.type_, self.body(func.body))
+
+    @layers.register(astlib.Struct)
+    def struct(self, struct):
+        yield astlib.Struct(struct.name, self.body(struct.body))
