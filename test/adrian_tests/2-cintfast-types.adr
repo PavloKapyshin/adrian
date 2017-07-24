@@ -1,0 +1,4 @@
+var a: c#IntFast8 = c#IntFast8(1)
+var b: c#IntFast32 = c#IntFast32(1)
+var c: c#UIntFast8 = c#UIntFast8(1)
+var d: c#UIntFast32 = c#UIntFast32(1)

@@ -174,6 +174,7 @@ def p_func_body_stmt(content):
     func_body_stmt : decl
                    | assignment
                    | return_stmt
+                   | call
     """
     content[0] = content[1]
 

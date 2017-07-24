@@ -10,7 +10,7 @@ class OOPDef(layers.Layer):
         args = astlib.Args(astlib.VariableName("self"), struct_name, method.args)
         return astlib.Func(
             "".join([str(method.name), str(struct_name)]),
-            args, type_=struct_name, body=method.body)
+            args, type_=method.type_, body=method.body)
 
     def std_copy_method(self, struct):
         # fun __copy__(self: STRUCT): STRUCT {

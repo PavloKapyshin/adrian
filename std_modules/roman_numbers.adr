@@ -11,7 +11,7 @@ sct RomanNumber {
         iff char in _ROMAN_NUMBER_TO_INTEGER {
             ret _ROMAN_NUMBER_TO_INTEGER[char]
         }
-        print("Unknown roman number \{char}.")
+        print(f"Unknown roman number \{char}.")
     }
 
     fun _parseStringToInteger(str: String) {
