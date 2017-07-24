@@ -169,22 +169,6 @@ class MethodCall(Node):
         return self._args
 
 
-class Instance(Node):
-
-    def __init__(self, struct, args):
-        self._struct = struct
-        self._args = args
-        self._keys = ("struct", "args")
-
-    @property
-    def struct(self):
-        return self._struct
-
-    @property
-    def args(self):
-        return self._args
-
-
 class Empty(BaseNode):
 
     def __init__(self):
@@ -199,7 +183,6 @@ class Empty(BaseNode):
     __repr__ = __str__
 
 
-# Adrian language statements.
 class Body(Node):
 
     def __init__(self, stmt, rest=None):
@@ -352,22 +335,6 @@ class SExpr(Node):
         return self._expr2
 
 
-class Pair(Node):
-
-    def __init__(self, line, stmt):
-        self._line = line
-        self._stmt = stmt
-        self._keys = ("line", "stmt")
-
-    @property
-    def line(self):
-        return self._line
-
-    @property
-    def stmt(self):
-        return self._stmt
-
-
 class Decl(Node):
     """Declaration and (optionally) initialization of variable.
 
@@ -463,7 +430,7 @@ class Func(Node):
 
 
 class Method(Node):
-    """Declaration of a method.
+    """Declaration of method.
 
           name                                      type_
         vvvvvvvv                                  vvvvvvvvvv
@@ -561,7 +528,6 @@ class Return(Node):
         return self._expr
 
 
-# Some Adrian and C atoms and special AST nodes.
 class Literal(Node):
 
     def __init__(self, literal):
@@ -643,22 +609,6 @@ class StructScalar(Node):
     @property
     def name(self):
         return self._name
-
-
-class Arg(Node):
-
-    def __init__(self, name, type_):
-        self._name = name
-        self._type = type_
-        self._keys = ("name", "type_")
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def type_(self):
-        return self._type
 
 
 CTYPES = (

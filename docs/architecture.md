@@ -1,35 +1,25 @@
 # Compiler architecture
 
 ```
-Adrian source code
-↓
-Parsing
+Parsing (Adrian source code)
 ↓
 Foreign parser interface
 ↓
 Analyzer
 ↓
-Naming rules checking
-↓
-Name existence checking
-↓
-Type inference
-↓
-Default value
-↓
-Type checking
-↓
 OOPDef
 ↓
 OOPCall
 ↓
-Interface checking
+SimpEx
 ↓
-Name mangling
+ARC
 ↓
 CGen
 ↓
-C source
+Main Function
+↓
+adrian.cgen (C source)
 ```
 
 
@@ -51,31 +41,6 @@ Translating parser AST to object-oriented AST.
 Compiler analyzes names and translates them into more specific.
 
 
-## Naming rules checking
-
-Compiler checks naming conventions.
-
-
-## Name existence checking
-
-Compiler checks name existence.
-
-
-## Type inference
-
-Compiler inferences types where needed.
-
-
-## Type checking
-
-Compiler checks types for equality.
-
-
-## Default value
-
-Adds default value where needed.
-
-
 ## OOPDef
 
 Translates methods to funcs.
@@ -86,20 +51,27 @@ Translates methods to funcs.
 Translates method calls to func calls.
 
 
-## Interface checking
+## SimpEx
 
-Checks that struct implements interfaces.
+Assigns some subexpressions to temp variables. That helps
+to deinit this subexpressions if needed.
 
 
-## Name mangling
+## ARC
 
-Compiler mangles names using file hash.
+Deinits variables.
+
 
 ## CGen
 
 Compiler generates CGen AST.
 
 
-## C source
+## Main Function
+
+Collects some global statements to main function.
+
+
+## adrian.cgen
 
 Compiler generates C source code using `adrian.cgen` library.

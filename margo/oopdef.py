@@ -13,12 +13,6 @@ class OOPDef(layers.Layer):
             args, type_=method.type_, body=method.body)
 
     def std_copy_method(self, struct):
-        # fun __copy__(self: STRUCT): STRUCT {
-        #   var new: STRUCT = c#malloc(c#sizeof(STRUCT))
-        #   for field in self.fields:
-        #       new.field = self.field
-        #   ret new
-        # }
         new_decl = astlib.Decl(
             astlib.VariableName("new"),
             type_=struct.name,
@@ -46,12 +40,6 @@ class OOPDef(layers.Layer):
             body=body)
 
     def std_init_method(self, struct):
-        # fun __init__(...): STRUCT {
-        #   var self: STRUCT = c#malloc(c#sizeof(STRUCT))
-        #   for field in self.fields:
-        #       self.field = field
-        #   ret self
-        # }
         self_decl = astlib.Decl(
             astlib.VariableName("self"),
             type_=struct.name,

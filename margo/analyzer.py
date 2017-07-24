@@ -23,7 +23,6 @@ class Analyzer(layers.Layer):
 
     def expr(self, expr):
         if isinstance(expr, astlib.Name):
-            #name_type = context.ns.get(str(expr))["name_type"]
             name_type = astlib.VariableName
             return name_type(str(expr))
         elif isinstance(expr, astlib.SExpr):
@@ -74,10 +73,6 @@ class Analyzer(layers.Layer):
 
     @layers.register(astlib.Decl)
     def decl(self, decl):
-        # Adding to namespace.
-        #context.ns.add(str(decl.name), {
-        #    "name_type": astlib.VariableName
-        #})
         yield astlib.Decl(
             astlib.VariableName(str(decl.name)),
             type_=self.type_(decl.type_), expr=self.expr(decl.expr))

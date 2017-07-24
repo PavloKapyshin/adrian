@@ -13,14 +13,3 @@ CFUNCS = (
 
 MALLOC_FUNC_DESCR = libc.malloc
 FREE_FUNC_DESCR = libc.free
-
-# CFUNCS = (
-#     "tpr",
-# )
-# CFUNCS_SIGNATURES = {
-#     "puts": cgen.CFuncDescr(
-#         "puts",
-#         rettype=cgen.CTypes.void,
-#         args=(cgen.CTypes.str, ),
-#         includes=[stdio])
-# }

@@ -223,7 +223,6 @@ def p_struct_body_stmt(content):
     struct_body_stmt : field_decl
                      | func_decl
     """
-    # if isinstance(content[1], FuncDecl)
     stmt = content[1]
     if stmt[0] == parser_astlib.FUNC_DECL:
         stmt = [parser_astlib.METHOD_DECL, stmt[1], stmt[2], stmt[3], stmt[4]]

@@ -42,7 +42,7 @@ class ARC(layers.Layer):
     @layers.register(astlib.Return)
     def return_(self, return_):
         arc = self.arc()
-        # Deleting from arc __deinit__ of return expr.
+        # Deleting from arc's result deinit of return's expr.
         if isinstance(return_.expr, astlib.VariableName):
             for free in arc:
                 if isinstance(free.args.arg, astlib.VariableName):

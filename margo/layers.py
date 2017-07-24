@@ -1,16 +1,11 @@
 """Helper for creating new layers."""
 
 import types
-#import inspect
-#import itertools
 import functools
 
 from paka import funcreg
 
 from . import astlib, context
-
-
-ALL = object()
 
 
 NODE_CLASSES = (astlib.BaseNode, astlib.Name)
