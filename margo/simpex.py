@@ -109,12 +109,16 @@ class SimpEx(layers.Layer):
 
     @layers.register(astlib.Func)
     def func(self, func):
+        context.ns.add_scope()
         context.fs.add(str(func.name), {
             "rettype": func.type_
         })
         yield astlib.Func(
             func.name, func.args, func.type_, self.body(func.body))
+        context.ns.del_scope()
 
     @layers.register(astlib.Struct)
     def struct(self, struct):
+        context.ns.add_scope()
         yield astlib.Struct(struct.name, self.body(struct.body))
+        context.ns.del_scope()

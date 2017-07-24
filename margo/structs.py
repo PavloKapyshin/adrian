@@ -10,6 +10,14 @@ class Namespace:
     def del_(self, name):
         del self._space[self._scope][name]
 
+    def add_scope(self):
+        self._scope += 1
+        self._space[self._scope] = {}
+
+    def del_scope(self):
+        del self._space[self._scope]
+        self._scope -= 1
+
     def exists(self, name):
         scope = self._scope
         while scope >= 0:

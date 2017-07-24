@@ -62,12 +62,15 @@ class OOPCall(layers.Layer):
 
     @layers.register(astlib.Struct)
     def struct(self, struct):
+        context.ns.add_scope()
         registry = OOPCall().get_registry()
         yield astlib.Struct(
             struct.name, self.body(struct.body, registry))
+        context.ns.del_scope()
 
     @layers.register(astlib.Func)
     def func(self, func):
+        context.ns.add_scope()
         registry = OOPCall().get_registry()
         args_ = func.args
         while not isinstance(args_, astlib.Empty):
@@ -79,13 +82,16 @@ class OOPCall(layers.Layer):
         yield astlib.Func(
             func.name, args=func.args,
             type_=func.type_, body=self.body(func.body, registry))
+        context.ns.del_scope()
 
     @layers.register(astlib.Method)
     def method(self, method):
+        context.ns.add_scope()
         registry = OOPCall().get_registry()
         yield astlib.Method(
             method.name, args=method.args,
             type_=method.type_, body=self.body(method.body, registry))
+        context.ns.del_scope()
 
     @layers.register(astlib.MethodCall)
     def method_call(self, call):

@@ -20,6 +20,8 @@ class CGen(layers.Layer):
             return getattr(cgen.CTypes, TO_CTYPE[str(type_)])
         elif isinstance(type_, astlib.TypeName):
             return cgen.CTypes.ptr(cgen.StructType(str(type_)))
+        elif isinstance(type_, astlib.Empty):
+            return None
         errors.not_implemented("type is not supported")
 
     def expr(self, expr):
@@ -45,25 +47,24 @@ class CGen(layers.Layer):
                     *self.call_args(expr.args))
         elif isinstance(expr, astlib.FuncCall):
             return list(self.func_call(expr))[0]
-        print(expr)
         errors.not_implemented("expr is not supported")
 
     def call_args(self, args):
         result = []
-        for arg in ([] if isinstance(args, astlib.Empty) else args.as_list()):
+        for arg in args.as_list():
             result.append(self.expr(arg))
         return result
 
     def args(self, args):
         result = []
-        for arg in ([] if isinstance(args, astlib.Empty) else args.as_list()):
+        for arg in args.as_list():
             result.append(cgen.Decl(str(arg[0]), type_=self.type_(arg[1])))
         return result
 
     def body(self, body):
         reg = CGen().get_registry()
         result = []
-        for stmt in ([] if isinstance(body, astlib.Empty) else body.as_list()):
+        for stmt in body.as_list():
             result.append(list(layers.transform_node(stmt, registry=reg))[0])
         return result
 
