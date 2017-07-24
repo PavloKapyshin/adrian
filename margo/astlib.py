@@ -576,6 +576,11 @@ class CIntFast32(CLiteral):
     _type = "IntFast32"
 
 
+class CIntFast64(CLiteral):
+    """CIntFast64 in Adrian."""
+    _type = "IntFast64"
+
+
 class CUIntFast8(CLiteral):
     """CUIntFast8 in Adrian."""
     _type = "UIntFast8"
@@ -584,6 +589,11 @@ class CUIntFast8(CLiteral):
 class CUIntFast32(CLiteral):
     """CUIntFast32 in Adrian."""
     _type = "UIntFast32"
+
+
+class CUIntFast64(CLiteral):
+    """CUIntFast64 in Adrian."""
+    _type = "UIntFast64"
 
 
 class CString(CLiteral):
@@ -614,8 +624,10 @@ class StructScalar(Node):
 CTYPES = (
     CIntFast8,
     CIntFast32,
+    CIntFast64,
     CUIntFast8,
     CUIntFast32,
+    CUIntFast64,
     CChar,
     CString
 )

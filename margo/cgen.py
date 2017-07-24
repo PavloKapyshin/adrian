@@ -7,8 +7,10 @@ from adrian import cgen
 TO_CTYPE = {
     "IntFast8": "int_fast8",
     "IntFast32": "int_fast32",
+    "IntFast64": "int_fast64",
     "UIntFast8": "uint_fast8",
     "UIntFast32": "uint_fast32",
+    "UIntFast64": "uint_fast64",
     "Void": "void",
 }
 
@@ -34,7 +36,8 @@ class CGen(layers.Layer):
     def expr(self, expr):
         if isinstance(expr, (
                 astlib.CIntFast8, astlib.CIntFast32,
-                astlib.CUIntFast8, astlib.CUIntFast32)):
+                astlib.CUIntFast8, astlib.CUIntFast32,
+                astlib.CIntFast64, astlib.CUIntFast64)):
             return cgen.Val(
                 literal=expr.literal,
                 type_=getattr(cgen.CTypes, TO_CTYPE[str(expr.to_type())]))

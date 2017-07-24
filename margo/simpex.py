@@ -23,7 +23,8 @@ class SimpEx(layers.Layer):
     def expr(self, expr):
         if isinstance(expr, (
                 astlib.CIntFast8, astlib.CIntFast32,
-                astlib.CUIntFast8, astlib.CUIntFast32)):
+                astlib.CUIntFast8, astlib.CUIntFast32,
+                astlib.CUIntFast64, astlib.CIntFast64)):
             return expr, []
         elif isinstance(expr, astlib.SExpr):
             decls = []

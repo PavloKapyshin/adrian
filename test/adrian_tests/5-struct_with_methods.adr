@@ -1,5 +1,5 @@
 sct Person {
-    id: c#UIntFast32
+    id: c#UIntFast64
     age: c#UIntFast8
 
     fun setAge(age: c#UIntFast8): None {
@@ -16,10 +16,10 @@ sct Person {
 }
 
 
-var john: Person = Person(c#UIntFast32(1), c#UIntFast8(30))
-var jack: Person = Person(c#UIntFast32(2), c#UIntFast8(32))
+var john: Person = Person(c#UIntFast64(1), c#UIntFast8(30))
+var jack: Person = Person(c#UIntFast64(2), c#UIntFast8(32))
 var mike: Person = john  -- mike and jack have the same id!
-mike.id = c#UIntFast32(3)
-var mikeId: c#UIntFast32 = mike.id
+mike.id = c#UIntFast64(3)
+var mikeId: c#UIntFast64 = mike.id
 var mikeAge: c#UIntFast8 = mike.getAge()
 mike.addOneYear()
