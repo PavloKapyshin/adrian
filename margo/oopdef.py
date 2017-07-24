@@ -6,6 +6,12 @@ from .context import context
 
 class OOPDef(layers.Layer):
 
+    def method(self, method, struct_name):
+        args = astlib.Args(astlib.VariableName("self"), struct_name, method.args)
+        return astlib.Func(
+            "".join([str(method.name), str(struct_name)]),
+            args, type_=struct_name, body=method.body)
+
     def std_copy_method(self, struct):
         # fun __copy__(self: STRUCT): STRUCT {
         #   var new: STRUCT = c#malloc(c#sizeof(STRUCT))
@@ -108,7 +114,7 @@ class OOPDef(layers.Layer):
     def method_to_func(self, method, struct_name):
         if method.name == defs.INIT_METHOD_NAME:
             return self.init_method(method, struct_name)
-        errors.not_implemented("method is not supported")
+        return self.method(method, struct_name)
 
     def add_to_args(self, args, name, type_):
         if isinstance(args, astlib.Empty):

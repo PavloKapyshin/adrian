@@ -101,7 +101,7 @@ class Analyzer(layers.Layer):
     @layers.register(astlib.MethodCall)
     def method_call(self, call):
         yield astlib.MethodCall(
-            astlib.TypeName(str(call.struct)),
+            astlib.VariableName(str(call.struct)),
             astlib.MethodName(str(call.method)),
             self.call_args(call.args))
 

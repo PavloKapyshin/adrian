@@ -96,7 +96,11 @@ class OOPCall(layers.Layer):
     @layers.register(astlib.MethodCall)
     def method_call(self, call):
         struct = context.ns.get(str(call.struct))["type_"]
+        if str(call.method) == defs.INIT_METHOD_NAME:
+            args = self.call_args(call.args)
+        else:
+            args = astlib.CallArgs(call.struct, self.call_args(call.args))
         yield astlib.FuncCall(
             astlib.FunctionName(
                 "".join([str(call.method), str(struct)])),
-            self.call_args(call.args))
+            args)

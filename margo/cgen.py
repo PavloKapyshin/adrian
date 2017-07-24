@@ -12,6 +12,13 @@ TO_CTYPE = {
     "Void": "void",
 }
 
+TO_COP = {
+    "+": cgen.COps.plus,
+    "-": cgen.COps.minus,
+    "*": cgen.COps.star,
+    "/": cgen.COps.slash,
+}
+
 
 class CGen(layers.Layer):
 
@@ -45,6 +52,10 @@ class CGen(layers.Layer):
             elif expr.name in cdefs.CFUNCS:
                 return getattr(cdefs, str(expr.name).upper() + "_FUNC_DESCR")(
                     *self.call_args(expr.args))
+        elif isinstance(expr, astlib.SExpr):
+            return cgen.Expr(
+                TO_COP[expr.op], self.expr(expr.expr1),
+                self.expr(expr.expr2))
         elif isinstance(expr, astlib.FuncCall):
             return list(self.func_call(expr))[0]
         errors.not_implemented("expr is not supported")
