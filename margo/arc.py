@@ -74,7 +74,7 @@ class ARC(layers.Layer):
         for node in ast_:
             node_func = registry.get(type(node))
             if node_func:
-                yield list(node_func(node))[0]
+                yield from list(node_func(node))
             else:
                 yield node
         yield from self.arc()
