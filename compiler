@@ -1,0 +1,2 @@
+. ./zpath
+python3 compiler.py "$@"
