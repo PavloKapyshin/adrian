@@ -1,0 +1,21 @@
+fun empty(): None {}
+
+
+fun one(): c#IntFast8 {
+    ret c#IntFast8(1)
+}
+
+
+fun plusOne(number: c#IntFast8): c#IntFast8 {
+    ret number + one()
+}
+
+
+fun plus(expr1: c#IntFast8; expr2: c#IntFast8): c#IntFast8 {
+    ret expr1 + expr2
+}
+
+
+var three: c#IntFast8 = plus(one(), plus(one(), one()))
+var four: c#IntFast8 = plusOne(three)
+empty()
