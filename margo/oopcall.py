@@ -19,7 +19,7 @@ class OOPCall(layers.Layer):
                 return expr
             return astlib.FuncCall(
                 astlib.FunctionName(
-                    "".join([defs.COPY_METHOD_NAME, str(type_)])),
+                    "".join([str(type_), defs.COPY_METHOD_NAME])),
                 args=astlib.CallArgs(expr, astlib.Empty()))
         return expr
 
@@ -102,5 +102,5 @@ class OOPCall(layers.Layer):
             args = astlib.CallArgs(call.struct, self.call_args(call.args))
         yield astlib.FuncCall(
             astlib.FunctionName(
-                "".join([str(call.method), str(struct)])),
+                "".join([str(struct), str(call.method)])),
             args)

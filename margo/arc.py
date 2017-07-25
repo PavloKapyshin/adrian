@@ -7,11 +7,13 @@ from .context import context
 class ARC(layers.Layer):
 
     def free(self, name, type_):
-        deinit_name = astlib.FunctionName(
-            "".join([defs.DEINIT_METHOD_NAME, str(type_)]))
+        deinit_name = astlib.Name(
+            "".join([
+                defs.FUNC_PREFIX, str(type_.replace(defs.STRUCT_PREFIX, "", 1)),
+                defs.DEINIT_METHOD_NAME]))
         return astlib.FuncCall(
             deinit_name,
-            astlib.CallArgs(astlib.VariableName(name), astlib.Empty()))
+            astlib.CallArgs(astlib.Name(name), astlib.Empty()))
 
     def arc(self):
         space = context.ns.space()
@@ -43,9 +45,9 @@ class ARC(layers.Layer):
     def return_(self, return_):
         arc = self.arc()
         # Deleting from arc's result deinit of return's expr.
-        if isinstance(return_.expr, astlib.VariableName):
+        if isinstance(return_.expr, astlib.Name):
             for free in arc:
-                if isinstance(free.args.arg, astlib.VariableName):
+                if isinstance(free.args.arg, astlib.Name):
                     if not str(free.args.arg) == str(return_.expr):
                         yield free
                 else:

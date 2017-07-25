@@ -9,7 +9,7 @@ class OOPDef(layers.Layer):
     def method(self, method, struct_name):
         args = astlib.Args(astlib.VariableName("self"), struct_name, method.args)
         return astlib.Func(
-            "".join([str(method.name), str(struct_name)]),
+            "".join([str(struct_name), str(method.name)]),
             args, type_=method.type_, body=method.body)
 
     def std_copy_method(self, struct):
@@ -34,7 +34,7 @@ class OOPDef(layers.Layer):
         body.extend(field_inits)
         body.append(return_stmt)
         return astlib.Func(
-            "".join([str(defs.COPY_METHOD_NAME), str(struct.name)]),
+            "".join([str(struct.name), defs.COPY_METHOD_NAME]),
             args=astlib.Args(astlib.VariableName("self"), struct.name, astlib.Empty()),
             type_=struct.name,
             body=body)
@@ -63,7 +63,7 @@ class OOPDef(layers.Layer):
         body.extend(field_inits)
         body.append(return_stmt)
         return astlib.Func(
-            "".join([str(defs.INIT_METHOD_NAME), str(struct.name)]),
+            "".join([str(struct.name), defs.INIT_METHOD_NAME]),
             args=args,
             type_=struct.name,
             body=body)
@@ -74,7 +74,7 @@ class OOPDef(layers.Layer):
                 astlib.VariableName("self"), astlib.Empty()))
         body = astlib.Body(free, astlib.Empty())
         return astlib.Func(
-            "".join([defs.DEINIT_METHOD_NAME, str(struct.name)]),
+            "".join([str(struct.name), defs.DEINIT_METHOD_NAME]),
             args=astlib.Args(
                 astlib.VariableName("self"), struct.name, astlib.Empty()),
             type_=astlib.CType("Void"),
@@ -94,7 +94,7 @@ class OOPDef(layers.Layer):
         body.extend(method.body)
         body.append(return_stmt)
         return astlib.Func(
-            "".join([str(method.name), str(struct_name)]),
+            "".join([str(struct_name), str(method.name)]),
             args=method.args,
             type_=struct_name,
             body=body)

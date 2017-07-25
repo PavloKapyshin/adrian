@@ -13,12 +13,12 @@ class SimpEx(layers.Layer):
     def tmp(self, type_, expr):
         self.tmp_count += 1
         tmp_name = self.tmp_string + str(self.tmp_count)
-        return astlib.Decl(astlib.VariableName(tmp_name), type_, expr)
+        return astlib.Decl(astlib.Name(defs.TMP_PREFIX + tmp_name), type_, expr)
 
     def info_from_call(self, name):
-        if isinstance(name, astlib.FunctionName):
+        if isinstance(name, astlib.Name):
             return context.fs.get(name)
-        errors.not_implemented("func is not supported")
+        errors.not_implemented("func is not supported (simpex layer)")
 
     def expr(self, expr):
         if isinstance(expr, (
@@ -34,7 +34,7 @@ class SimpEx(layers.Layer):
             decls.extend(expr2_decls)
             return astlib.SExpr(
                 expr.op, expr1_tmp, expr2_tmp), decls
-        elif isinstance(expr, astlib.VariableName):
+        elif isinstance(expr, astlib.Name):
             return expr, []
         elif isinstance(expr, astlib.StructElem):
             return expr, []
@@ -44,7 +44,7 @@ class SimpEx(layers.Layer):
             return tmp, decls
         elif isinstance(expr, astlib.CFuncCall):
             return expr, []
-        errors.not_implemented("expr is not supported")
+        errors.not_implemented("expr is not supported (simpex layer)")
 
     def add_to_call_args(self, args, arg):
         if isinstance(args, astlib.Empty):

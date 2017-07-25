@@ -5,6 +5,7 @@ from . import foreign_parser
 from . import analyzer
 from . import oopdef
 from . import oopcall
+from . import name_spacing
 from . import simpex
 from . import arc
 from . import cgen
@@ -23,6 +24,7 @@ def compile_repl(inp, *, ns, ts, fs, exit_on_error):
                 (analyzer.Analyzer, "transform_ast"),
                 (oopdef.OOPDef, "transform_ast"),
                 (oopcall.OOPCall, "transform_ast"),
+                (name_spacing.NameSpacing, "transform_ast"),
                 (simpex.SimpEx, "transform_ast"),
                 (arc.ARC, "expand_ast"),
                 (cgen.CGen, "transform_ast"),
@@ -33,22 +35,24 @@ def compile_repl(inp, *, ns, ts, fs, exit_on_error):
     generator = acgen.Generator()
     generator.add_ast(current_ast)
     return list(generator.generate())
+    # return current_ast
 
 
 def compile_from_string(inp, file_hash):
-    with context.new_context(
-            ns=structs.Namespace(), ts=structs.Namespace(),
-            fs=structs.Namespace(), exit_on_error=True,
-            file_hash=file_hash):
-        current_ast = foreign_parser.main(parser.main(inp))
-        for layer_cls, method_name in (
-                (analyzer.Analyzer, "transform_ast"),
-                (oopdef.OOPDef, "transform_ast"),
-                (oopcall.OOPCall, "transform_ast"),
-                (simpex.SimpEx, "transform_ast"),
-                (arc.ARC, "expand_ast"),
-                (cgen.CGen, "transform_ast"),
-                (main_func.MainFunc, "expand_ast")):
+    current_ast = foreign_parser.main(parser.main(inp))
+    for layer_cls, method_name in (
+            (analyzer.Analyzer, "transform_ast"),
+            (oopdef.OOPDef, "transform_ast"),
+            (oopcall.OOPCall, "transform_ast"),
+            (name_spacing.NameSpacing, "transform_ast"),
+            (simpex.SimpEx, "transform_ast"),
+            (arc.ARC, "expand_ast"),
+            (cgen.CGen, "transform_ast"),
+            (main_func.MainFunc, "expand_ast")):
+        with context.new_context(
+                ns=structs.Namespace(), ts=structs.Namespace(),
+                fs=structs.Namespace(), exit_on_error=True,
+                file_hash=file_hash):
             layer = layer_cls()
             current_ast = list(getattr(layers, method_name)(
                 current_ast, registry=layer.get_registry()))

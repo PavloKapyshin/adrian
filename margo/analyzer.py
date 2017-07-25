@@ -88,7 +88,7 @@ class Analyzer(layers.Layer):
         name = str(call.name)
         if defs.TYPE_NAME_REGEX.fullmatch(str(call.name)):
             name = "".join([
-                defs.INIT_METHOD_NAME, str(call.name)])
+                str(call.name), defs.INIT_METHOD_NAME])
         yield astlib.FuncCall(
             astlib.FunctionName(name),
             self.call_args(call.args))
