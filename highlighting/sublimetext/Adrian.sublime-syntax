@@ -1,0 +1,32 @@
+%YAML 1.2
+---
+name: Adrian
+file_extensions: [adr]
+scope: source.adrian
+
+
+contexts:
+  main:
+    - match: '"'
+      captures:
+        1: storage.type.string.adrian
+        2: punctuation.definition.string.begin.adrian
+      push:
+        - meta_scope: string.quoted.double.adrian
+        - match: '"'
+          scope: punctuation.definition.string.end.adrian
+          pop: true
+
+    - match: --
+      scope: punctuation.definition.comment.adrian
+      push:
+        - meta_scope: comment.line.double-minus.adrian
+        - match: '(\\)$\n'
+          captures:
+            1: punctuation.separator.continuation.adrian
+          pop: true
+        - match: (?=\n)
+          pop: true
+
+    - match: \b(iff|els|for|whl|fun|sct|ret|var|cst|ign|in|is|inf)\b
+      scope: keyword.control.adrian
