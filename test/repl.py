@@ -9,6 +9,7 @@ import margo
 class REPL(cmd.Cmd):
     intro = "Adrian testing REPL.\n"
     prompt = ">>> "
+    input_ = []
     contexts = {
         layer: {
             "ns": margo.structs.Namespace(),
@@ -21,9 +22,10 @@ class REPL(cmd.Cmd):
 
     def do_eval(self, inp):
         try:
+            self.input_.append(inp)
             pprint.pprint(
                 margo.compile_repl(
-                    inp, contexts=self.contexts))
+                    "\n".join(self.input_), contexts=self.contexts))
         except margo.errors.CompileTimeError as e:
             print(e.message, file=sys.stderr)
 
