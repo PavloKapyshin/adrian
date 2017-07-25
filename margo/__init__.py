@@ -15,40 +15,35 @@ from . import context
 from . import layers
 
 
-def compile_repl(inp, *, ns, ts, fs, exit_on_error):
-    with context.new_context(
-            ns=ns, ts=ts, fs=fs, exit_on_error=exit_on_error,
-            file_hash="mangled_"):
-        current_ast = foreign_parser.main(parser.main(inp))
-        for layer_cls, method_name in (
-                (analyzer.Analyzer, "transform_ast"),
-                (oopdef.OOPDef, "transform_ast"),
-                (oopcall.OOPCall, "transform_ast"),
-                (name_spacing.NameSpacing, "transform_ast"),
-                (simpex.SimpEx, "transform_ast"),
-                (arc.ARC, "expand_ast"),
-                (cgen.CGen, "transform_ast"),
-                (main_func.MainFunc, "expand_ast")):
+REPL_FILE_HASH = "mangled_"
+
+LAYERS = (
+    (analyzer.Analyzer, "transform_ast"),
+    (oopdef.OOPDef, "transform_ast"),
+    (oopcall.OOPCall, "transform_ast"),
+    (name_spacing.NameSpacing, "transform_ast"),
+    (simpex.SimpEx, "transform_ast"),
+    (arc.ARC, "expand_ast"),
+    (cgen.CGen, "transform_ast"),
+    (main_func.MainFunc, "expand_ast")
+)
+
+
+def compile_repl(inp, *, contexts):
+    current_ast = foreign_parser.main(parser.main(inp))
+    for layer_cls, method_name in LAYERS:
+        with context.new_context(**contexts[layer_cls]):
             layer = layer_cls()
             current_ast = list(getattr(layers, method_name)(
                 current_ast, registry=layer.get_registry()))
     generator = acgen.Generator()
     generator.add_ast(current_ast)
     return list(generator.generate())
-    # return current_ast
 
 
 def compile_from_string(inp, file_hash):
     current_ast = foreign_parser.main(parser.main(inp))
-    for layer_cls, method_name in (
-            (analyzer.Analyzer, "transform_ast"),
-            (oopdef.OOPDef, "transform_ast"),
-            (oopcall.OOPCall, "transform_ast"),
-            (name_spacing.NameSpacing, "transform_ast"),
-            (simpex.SimpEx, "transform_ast"),
-            (arc.ARC, "expand_ast"),
-            (cgen.CGen, "transform_ast"),
-            (main_func.MainFunc, "expand_ast")):
+    for layer_cls, method_name in LAYERS:
         with context.new_context(
                 ns=structs.Namespace(), ts=structs.Namespace(),
                 fs=structs.Namespace(), exit_on_error=True,

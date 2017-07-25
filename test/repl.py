@@ -9,16 +9,21 @@ import margo
 class REPL(cmd.Cmd):
     intro = "Adrian testing REPL.\n"
     prompt = ">>> "
-    ns = margo.structs.Namespace()
-    ts = margo.structs.Namespace()
-    fs = margo.structs.Namespace()
+    contexts = {
+        layer: {
+            "ns": margo.structs.Namespace(),
+            "ts": margo.structs.Namespace(),
+            "fs": margo.structs.Namespace(),
+            "exit_on_error": True,
+            "file_hash": margo.REPL_FILE_HASH}
+        for layer, _ in margo.LAYERS
+    }
 
     def do_eval(self, inp):
         try:
             pprint.pprint(
                 margo.compile_repl(
-                    inp, ns=self.ns, ts=self.ts,
-                    fs=self.fs, exit_on_error=True))
+                    inp, contexts=self.contexts))
         except margo.errors.CompileTimeError as e:
             print(e.message, file=sys.stderr)
 
