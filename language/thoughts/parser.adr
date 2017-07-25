@@ -1,0 +1,42 @@
+---- parser_lib.adr
+inf Token {
+    regex: String
+    value: String
+}
+
+fun parse(input: String; tokenTypeList: Vector(Token)): Vector(Token) {
+    -- Hardcore implementation here!
+}
+
+
+
+---- simple_parser.adr
+sct Word is Token {
+    -- We can access regex attr without an instance of this type!
+    regex: String = "[a-zA-Z]*"
+    value: String
+}
+
+cst TOKENS: Vector(Token) = [Word]
+
+
+---- using.adr
+var myInput = "Noob loves programming"
+var parsingResult = parser_lib#parse(myInput, tokenTypeList = simple_parser#TOKENS)
+
+-- Will print: [Word("Noob"), Word("loves"), Word("programming")]
+print(parsingResult)
+
+-- Will print: Noob loves programming
+for token in parsingResult {
+    print(token.value, end = " ")
+}
+
+
+----------
+
+var myFileAST = compiler#parseFile("my_file.adr")
+
+-- do something with AST
+
+compiler#writeFromAST("fixed_my_file.adr", ast = myFileAST)

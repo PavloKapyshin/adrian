@@ -1,0 +1,74 @@
+
+sct Right(valueType) is Either {
+    value: valueType
+}
+
+sct Left(valueType) is Either {
+    value: valueType
+}
+
+---
+
+sct Node(valueType) {
+    value: valueType
+    next: Maybe(Node(valueType))
+
+    fun getNth(n: Integer): Either(Error, Node(valueType)) {
+        var i = 0
+        var current = self
+        whl i < n {
+            var next = current.next
+            iff not isSome(next) {
+                ret Left("list is too short")
+            }
+            els {
+                current = valueOf(next)
+            }
+            i++
+        }
+        ret Right(current)
+    }
+
+    fun getNthValue(n: Integer): valueType {
+        ret self.getNth(n).value
+    }
+}
+
+var myLinkedList = Node(1, Node(2, Node(3, Nothing)))
+var firstElem = myLinkedList.getNth(2)
+
+--------------------------
+
+sct Some(valueType) is Maybe {
+    value: valueType
+}
+
+sct Nothing is Maybe {}
+
+
+
+fun fromMaybe(fallback: Integer, value: Maybe(Integer)): Integer {
+    ret cse value {
+        Some v -> v
+        Nothing -> fallback
+    }
+}
+
+
+
+var i = 0
+fromMaybe(cse i of {
+    1 -> 2
+    0 -> 3
+}, value = Nothing)
+
+--- ---- ---
+fun curry(func: Function(arg1_t, arg2_t), arg1: arg1_t): Function {
+    ret lambda(arg2: arg2_t) {
+        ret func(arg1, arg2)
+    }
+}
+
+--- ---- ---
+var results = [Just 3, Nothing, Just 9, Nothing, Nothing]
+ret map(curry(fromMaybe, 0))

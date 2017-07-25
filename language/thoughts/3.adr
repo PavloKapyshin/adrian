@@ -1,0 +1,35 @@
+-- Linked list library.
+
+struct Node(userType) {
+    var value: userType
+    var next: Node(userType) | None
+
+    fun init(value: userType; next: Node(userType) | None) {
+        self.value = value
+        self.next = next
+    }
+
+    fun push(next: Node(userType)): None {
+        self.next = next
+    }
+
+    fun pushValue(value: userType): None {
+        self.next = Node(value)
+    }
+
+    fun isEnd(): Bool {
+        iff self.next {
+            ret False
+        }
+        ret True
+
+        -- Pattern matching for future!
+        match self.next {
+            None -> ret True
+            Node(_, _) -> ret False
+        }
+    }
+}
+
+
+var myList: Node(Integer) = Node(1, Node(2, Node(3, None)))
