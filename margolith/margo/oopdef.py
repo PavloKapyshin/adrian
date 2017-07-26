@@ -69,10 +69,23 @@ class OOPDef(layers.Layer):
             body=body)
 
     def std_deinit_method(self, struct):
+        frees = []
+
+        for field in struct.body.as_list():
+            if (isinstance(field, astlib.Field) and \
+                    isinstance(field.type_, astlib.TypeName)):
+                frees.append(astlib.FuncCall(
+                    astlib.FunctionName(
+                        "".join([str(field.type_), defs.DEINIT_METHOD_NAME])),
+                    args=astlib.CallArgs(astlib.StructElem(
+                        name=astlib.VariableName("self"), elem=field.name), astlib.Empty())))
+
         free = astlib.CFuncCall(
             "free", args=astlib.CallArgs(
                 astlib.VariableName("self"), astlib.Empty()))
-        body = astlib.Body(free, astlib.Empty())
+        frees.append(free)
+        body = astlib.Body(frees[0], astlib.Empty())
+        body.extend_from_list(frees[1:])
         return astlib.Func(
             "".join([str(struct.name), defs.DEINIT_METHOD_NAME]),
             args=astlib.Args(
