@@ -20,3 +20,8 @@ sct HighLevelPerson {
 
 var jack: HighLevelPerson = HighLevelPerson(
     Person(Id(c#UIntFast64(1)), c#UIntFast8(20)))
+
+var johnId: Id = Id(c#UIntFast64(2))
+var johnAge: c#UIntFast8 = c#UIntFast8(30)
+var johnPerson: Person = Person(johnId, johnAge)
+var john: HighLevelPerson = HighLevelPerson(johnPerson)

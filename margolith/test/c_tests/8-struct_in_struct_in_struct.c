@@ -35,7 +35,7 @@ free(adr_var_self);
 }
 struct adr_struct_Person* adr_func_Person__init__(struct adr_struct_Id* adr_var_id, uint_fast8_t adr_var_age) {
 struct adr_struct_Person* adr_var_self = malloc(sizeof(struct adr_struct_Person));
-adr_var_self->adr_field_id = adr_func_Id__copy__(adr_var_id);
+adr_var_self->adr_field_id = adr_var_id;
 adr_var_self->adr_field_age = adr_var_age;
 return adr_var_self;
 }
@@ -53,15 +53,22 @@ free(adr_var_self);
 }
 struct adr_struct_HighLevelPerson* adr_func_HighLevelPerson__init__(struct adr_struct_Person* adr_var_lowLevelPerson) {
 struct adr_struct_HighLevelPerson* adr_var_self = malloc(sizeof(struct adr_struct_HighLevelPerson));
-adr_var_self->adr_field_lowLevelPerson = adr_func_Person__copy__(adr_var_lowLevelPerson);
+adr_var_self->adr_field_lowLevelPerson = adr_var_lowLevelPerson;
 return adr_var_self;
 }
 int main(void) {
 struct adr_struct_Id* adr_tmp_tmp1 = adr_func_Id__init__(1);
 struct adr_struct_Person* adr_tmp_tmp2 = adr_func_Person__init__(adr_tmp_tmp1, 20);
 struct adr_struct_HighLevelPerson* adr_var_jack = adr_func_HighLevelPerson__init__(adr_tmp_tmp2);
-adr_func_Id__deinit__(adr_tmp_tmp1);
-adr_func_Person__deinit__(adr_tmp_tmp2);
+struct adr_struct_Id* adr_var_johnId = adr_func_Id__init__(2);
+uint_fast8_t adr_var_johnAge = 30;
+struct adr_struct_Id* adr_tmp_tmp3 = adr_func_Id__copy__(adr_var_johnId);
+struct adr_struct_Person* adr_var_johnPerson = adr_func_Person__init__(adr_tmp_tmp3, adr_var_johnAge);
+struct adr_struct_Person* adr_tmp_tmp4 = adr_func_Person__copy__(adr_var_johnPerson);
+struct adr_struct_HighLevelPerson* adr_var_john = adr_func_HighLevelPerson__init__(adr_tmp_tmp4);
+adr_func_Id__deinit__(adr_var_johnId);
+adr_func_Person__deinit__(adr_var_johnPerson);
+adr_func_HighLevelPerson__deinit__(adr_var_john);
 adr_func_HighLevelPerson__deinit__(adr_var_jack);
 return 0;
 }
