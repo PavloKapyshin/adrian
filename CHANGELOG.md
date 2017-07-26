@@ -1,7 +1,7 @@
 # Changelog
 
 ## 0.2 (dev)
-* fixed aliasing of structs instead of copying in __copy__ method
+* fixed aliasing of structs instead of copying in `__copy__` method
 * fixed memory leak when struct instances were used as values for struct fields
 * added namespacing at C level, so now (for example) Adrian-level malloc function
   will not clash with C-level malloc function
