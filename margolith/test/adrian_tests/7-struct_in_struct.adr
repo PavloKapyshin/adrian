@@ -13,10 +13,4 @@ sct Person {
 }
 
 
-sct HighLevelPerson {
-    lowLevelPerson: Person
-}
-
-
-var jack: HighLevelPerson = HighLevelPerson(
-    Person(Id(c#UIntFast64(1)), c#UIntFast8(20)))
+var jack: Person = Person(Id(c#UIntFast64(1)), c#UIntFast8(20))
