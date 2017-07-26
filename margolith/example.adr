@@ -3,4 +3,9 @@ sct Person {
 	age: c#UIntFast8
 }
 
-var p1: Person = Person(c#UIntFast32(1), c#UIntFast8(30))
+sct P {
+	person: Person
+	id: c#UIntFast64
+}
+
+var p: P = P(Person(c#UIntFast32(1), c#UIntFast8(30)), c#UIntFast64(1))
