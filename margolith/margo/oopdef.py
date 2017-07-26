@@ -26,10 +26,18 @@ class OOPDef(layers.Layer):
         field_inits = astlib.Empty()
         for field in struct.body.as_list():
             if isinstance(field, astlib.Field):
-                field_inits = self.add_to_body(
-                    field_inits, astlib.Assignment(
-                        astlib.StructElem(astlib.VariableName("new"), field.name),
-                        op="=", expr=astlib.StructElem(astlib.VariableName("self"), field.name)))
+                if isinstance(field.type_, astlib.TypeName):
+                    field_inits = self.add_to_body(
+                        field_inits, astlib.Assignment(
+                            astlib.StructElem(astlib.VariableName("new"), field.name),
+                            op="=", expr=astlib.FuncCall(
+                                "".join([str(field.type_), defs.COPY_METHOD_NAME]),
+                                args=astlib.CallArgs(astlib.StructElem(astlib.VariableName("self"), field.name), astlib.Empty()))))
+                else:
+                    field_inits = self.add_to_body(
+                        field_inits, astlib.Assignment(
+                            astlib.StructElem(astlib.VariableName("new"), field.name),
+                            op="=", expr=astlib.StructElem(astlib.VariableName("self"), field.name)))
         body = astlib.Body(new_decl, astlib.Empty())
         body.extend(field_inits)
         body.append(return_stmt)
