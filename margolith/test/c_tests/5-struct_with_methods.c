@@ -1,43 +1,43 @@
 #include <stdint.h>
 #include <stdlib.h>
-struct Person {
-uint_fast64_t id;
-uint_fast8_t age;
+struct adr_struct_Person {
+uint_fast64_t adr_field_id;
+uint_fast8_t adr_field_age;
 };
-struct Person* __copy__Person(struct Person* self) {
-struct Person* new = malloc(sizeof(struct Person));
-new->id = self->id;
-new->age = self->age;
-return new;
+struct adr_struct_Person* adr_func_Person__copy__(struct adr_struct_Person* adr_var_self) {
+struct adr_struct_Person* adr_var_new = malloc(sizeof(struct adr_struct_Person));
+adr_var_new->adr_field_id = adr_var_self->adr_field_id;
+adr_var_new->adr_field_age = adr_var_self->adr_field_age;
+return adr_var_new;
 }
-void __deinit__Person(struct Person* self) {
-free(self);
+void adr_func_Person__deinit__(struct adr_struct_Person* adr_var_self) {
+free(adr_var_self);
 }
-struct Person* __init__Person(uint_fast64_t id, uint_fast8_t age) {
-struct Person* self = malloc(sizeof(struct Person));
-self->id = id;
-self->age = age;
-return self;
+struct adr_struct_Person* adr_func_Person__init__(uint_fast64_t adr_var_id, uint_fast8_t adr_var_age) {
+struct adr_struct_Person* adr_var_self = malloc(sizeof(struct adr_struct_Person));
+adr_var_self->adr_field_id = adr_var_id;
+adr_var_self->adr_field_age = adr_var_age;
+return adr_var_self;
 }
-void setAgePerson(struct Person* self, uint_fast8_t age) {
-self->age = age;
+void adr_func_PersonsetAge(struct adr_struct_Person* adr_var_self, uint_fast8_t adr_var_age) {
+adr_var_self->adr_field_age = adr_var_age;
 }
-void addOneYearPerson(struct Person* self) {
-setAgePerson(self, self->age + 1);
+void adr_func_PersonaddOneYear(struct adr_struct_Person* adr_var_self) {
+adr_func_PersonsetAge(adr_var_self, adr_var_self->adr_field_age + 1);
 }
-uint_fast8_t getAgePerson(struct Person* self) {
-return self->age;
+uint_fast8_t adr_func_PersongetAge(struct adr_struct_Person* adr_var_self) {
+return adr_var_self->adr_field_age;
 }
 int main(void) {
-struct Person* john = __init__Person(1, 30);
-struct Person* jack = __init__Person(2, 32);
-struct Person* mike = __copy__Person(john);
-mike->id = 3;
-uint_fast64_t mikeId = mike->id;
-uint_fast8_t mikeAge = getAgePerson(mike);
-addOneYearPerson(mike);
-__deinit__Person(jack);
-__deinit__Person(john);
-__deinit__Person(mike);
+struct adr_struct_Person* adr_var_john = adr_func_Person__init__(1, 30);
+struct adr_struct_Person* adr_var_jack = adr_func_Person__init__(2, 32);
+struct adr_struct_Person* adr_var_mike = adr_func_Person__copy__(adr_var_john);
+adr_var_mike->adr_field_id = 3;
+uint_fast64_t adr_var_mikeId = adr_var_mike->adr_field_id;
+uint_fast8_t adr_var_mikeAge = adr_func_PersongetAge(adr_var_mike);
+adr_func_PersonaddOneYear(adr_var_mike);
+adr_func_Person__deinit__(adr_var_jack);
+adr_func_Person__deinit__(adr_var_john);
+adr_func_Person__deinit__(adr_var_mike);
 return 0;
 }
