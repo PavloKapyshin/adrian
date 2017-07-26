@@ -25,7 +25,7 @@ uint_fast8_t adr_field_age;
 };
 struct adr_struct_Person* adr_func_Person__copy__(struct adr_struct_Person* adr_var_self) {
 struct adr_struct_Person* adr_var_new = malloc(sizeof(struct adr_struct_Person));
-adr_var_new->adr_field_id = adr_var_self->adr_field_id;
+adr_var_new->adr_field_id = adr_func_Id__copy__(adr_var_self->adr_field_id);
 adr_var_new->adr_field_age = adr_var_self->adr_field_age;
 return adr_var_new;
 }
@@ -44,7 +44,7 @@ struct adr_struct_Person* adr_field_lowLevelPerson;
 };
 struct adr_struct_HighLevelPerson* adr_func_HighLevelPerson__copy__(struct adr_struct_HighLevelPerson* adr_var_self) {
 struct adr_struct_HighLevelPerson* adr_var_new = malloc(sizeof(struct adr_struct_HighLevelPerson));
-adr_var_new->adr_field_lowLevelPerson = adr_var_self->adr_field_lowLevelPerson;
+adr_var_new->adr_field_lowLevelPerson = adr_func_Person__copy__(adr_var_self->adr_field_lowLevelPerson);
 return adr_var_new;
 }
 void adr_func_HighLevelPerson__deinit__(struct adr_struct_HighLevelPerson* adr_var_self) {
