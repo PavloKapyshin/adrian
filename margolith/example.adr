@@ -1,11 +1,16 @@
 sct Person {
-	id: c#UIntFast32
-	age: c#UIntFast8
-}
-
-sct P {
-	person: Person
 	id: c#UIntFast64
-}
+    age: c#UIntFast8
 
-var p: P = P(Person(c#UIntFast32(1), c#UIntFast8(30)), c#UIntFast64(1))
+    fun setAge(age: c#UIntFast8): None {
+        self.age = age
+    }
+
+    fun addOneYear(): None {
+        self.setAge(self.age + c#UIntFast8(1))
+    }
+
+    fun getAge(): c#UIntFast8 {
+        ret self.age
+    }
+}
