@@ -14,3 +14,6 @@ sct Person {
 
 
 var jack: Person = Person(Id(c#UIntFast64(1)), c#UIntFast8(20))
+
+var johnId: Id  = Id(c#UIntFast64(2))
+var john: Person = Person(johnId, c#UIntFast8(30))
