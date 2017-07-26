@@ -4,46 +4,87 @@ from . import layers, astlib, errors, cdefs, defs
 from .context import context
 
 
+SELF_VAR_NAME = astlib.VariableName("self")
+
+
+def to_method_name(struct_name, method_name):
+    return "".join([struct_name, method_name])
+
+
+def std_methods_maker(method_name):
+    def wrapper(struct_name):
+        return to_method_name(str(struct_name), method_name)
+    return wrapper
+
+
+to_copy_method_name = std_methods_maker(defs.COPY_METHOD_NAME)
+to_init_method_name = std_methods_maker(defs.INIT_METHOD_NAME)
+to_deinit_method_name = std_methods_maker(defs.DEINIT_METHOD_NAME)
+
+
+def field_of_maker(struct_name):
+    def wrapper(field_name):
+        return astlib.StructElem(struct_name, field_name)
+    return wrapper
+
+
+field_of_self = field_of_maker(SELF_VAR_NAME)
+
+
+def malloc(struct_name):
+    return astlib.CFuncCall(
+        name="malloc", args=astlib.CallArgs(
+            astlib.CFuncCall(
+                name="sizeof", args=astlib.CallArgs(
+                    astlib.StructScalar(struct_name), astlib.Empty())),
+            astlib.Empty()))
+
+
 class OOPDef(layers.Layer):
 
     def method(self, method, struct_name):
-        args = astlib.Args(astlib.VariableName("self"), struct_name, method.args)
+        # Just prepending self to args and translating method name to
+        # function name with adding of a namespace.
+        args = astlib.Args(
+            name=SELF_VAR_NAME, type_=struct_name, rest=method.args)
         return astlib.Func(
-            "".join([str(struct_name), str(method.name)]),
-            args, type_=method.type_, body=method.body)
+            name=astlib.FunctionName(
+                to_method_name(str(struct_name), str(method.name))),
+            args=args, type_=method.type_, body=method.body)
 
-    def std_copy_method(self, struct):
-        new_decl = astlib.Decl(
-            astlib.VariableName("new"),
-            type_=struct.name,
-            expr=astlib.CFuncCall(
-                "malloc", args=astlib.CallArgs(astlib.CFuncCall(
-                    "sizeof", args=astlib.CallArgs(astlib.StructScalar(
-                        struct.name), astlib.Empty()),
-                ), astlib.Empty())))
-        return_stmt = astlib.Return(astlib.VariableName("new"))
+    def default_copy_method(self, struct):
+        new_var_name = astlib.VariableName("new")
+
+        field_of_new = field_of_maker(new_var_name)
+
+        declaration_of_new = astlib.Decl(
+            new_var_name, type_=struct.name, expr=malloc(struct.name))
 
         field_inits = astlib.Empty()
-        for field in struct.body.as_list():
-            if isinstance(field, astlib.Field):
-                if isinstance(field.type_, astlib.TypeName):
-                    field_inits = self.add_to_body(
-                        field_inits, astlib.Assignment(
-                            astlib.StructElem(astlib.VariableName("new"), field.name),
-                            op="=", expr=astlib.FuncCall(
-                                "".join([str(field.type_), defs.COPY_METHOD_NAME]),
-                                args=astlib.CallArgs(astlib.StructElem(astlib.VariableName("self"), field.name), astlib.Empty()))))
-                else:
-                    field_inits = self.add_to_body(
-                        field_inits, astlib.Assignment(
-                            astlib.StructElem(astlib.VariableName("new"), field.name),
-                            op="=", expr=astlib.StructElem(astlib.VariableName("self"), field.name)))
-        body = astlib.Body(new_decl, astlib.Empty())
+        for field_decl in [
+                stmt for stmt in struct.body.as_list()
+                if isinstance(stmt, astlib.Field)]:
+            if isinstance(field_decl.type_, astlib.TypeName):
+                field_init_expr = astlib.FuncCall(
+                    name=astlib.FunctionName(
+                        to_copy_method_name(field_decl.type_)),
+                    args=astlib.CallArgs(
+                        field_of_self(field_decl.name), astlib.Empty()))
+            else:
+                field_init_expr = field_of_self(field_decl.name)
+            field_init_decl = astlib.Assignment(
+                name=field_of_new(field_decl.name), op="=", expr=field_init_expr)
+            field_inits = self.add_to_body(field_inits, field_init_decl)
+
+        return_new = astlib.Return(new_var_name)
+        body = astlib.Body(declaration_of_new, astlib.Empty())
         body.extend(field_inits)
-        body.append(return_stmt)
+        body.append(return_new)
         return astlib.Func(
-            "".join([str(struct.name), defs.COPY_METHOD_NAME]),
-            args=astlib.Args(astlib.VariableName("self"), struct.name, astlib.Empty()),
+            name=astlib.FunctionName(
+                to_copy_method_name(struct.name)),
+            args=astlib.Args(
+                name=SELF_VAR_NAME, type_=struct.name, rest=astlib.Empty()),
             type_=struct.name,
             body=body)
 
@@ -161,11 +202,13 @@ class OOPDef(layers.Layer):
                 have_init = True
             elif method.name == defs.DEINIT_METHOD_NAME:
                 have_deinit = True
+            elif method.name == defs.COPY_METHOD_NAME:
+                have_copy = True
             funcs.append(self.method_to_func(method, struct.name))
 
         add_funcs = []
         if not have_copy:
-            add_funcs.append(self.std_copy_method(struct))
+            add_funcs.append(self.default_copy_method(struct))
         if not have_deinit:
             add_funcs.append(self.std_deinit_method(struct))
         if not have_init:
