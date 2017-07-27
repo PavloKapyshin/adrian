@@ -22,10 +22,10 @@ LAYERS = (
     (oopdef.OOPDef, "transform_ast"),
     (oopcall.OOPCall, "transform_ast"),
     (name_spacing.NameSpacing, "transform_ast"),
-    #(simpex.SimpEx, "transform_ast"),
-    #(arc.ARC, "expand_ast"),
-    #(cgen.CGen, "transform_ast"),
-    #(main_func.MainFunc, "expand_ast")
+    (simpex.SimpEx, "transform_ast"),
+    (arc.ARC, "expand_ast"),
+    (cgen.CGen, "transform_ast"),
+    (main_func.MainFunc, "expand_ast")
 )
 
 
@@ -36,10 +36,9 @@ def compile_repl(inp, *, contexts):
             layer = layer_cls()
             current_ast = list(getattr(layers, method_name)(
                 current_ast, registry=layer.get_registry()))
-    # generator = acgen.Generator()
-    # generator.add_ast(current_ast)
-    # return list(generator.generate())
-    return current_ast
+    generator = acgen.Generator()
+    generator.add_ast(current_ast)
+    return list(generator.generate())
 
 
 def compile_from_string(inp, file_hash):
