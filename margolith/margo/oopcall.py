@@ -1,7 +1,25 @@
-"""Translates method calls into function calls."""
+"""
+Translates method calls into function calls and
+copies variables.
+"""
+
+import enum
 
 from . import layers, astlib, errors, defs
 from .context import context
+
+
+def to_method_name(struct_name, method_name):
+    return "".join([struct_name, method_name])
+
+
+def to_copy_method_name(struct_name):
+    return to_method_name(str(struct_name), defs.COPY_METHOD_NAME)
+
+
+class NodeTypes(enum.Enum):
+    variable = 1
+    argument = 2
 
 
 class OOPCall(layers.Layer):
@@ -14,13 +32,13 @@ class OOPCall(layers.Layer):
                 op=expr.op, expr1=self.expr(expr.expr1),
                 expr2=self.expr(expr.expr2))
         elif isinstance(expr, astlib.VariableName):
-            type_ = context.ns.get(str(expr))["type_"]
-            if isinstance(type_, astlib.CType):
-                return expr
-            return astlib.FuncCall(
-                astlib.FunctionName(
-                    "".join([str(type_), defs.COPY_METHOD_NAME])),
-                args=astlib.CallArgs(expr, astlib.Empty()))
+            var_info = context.ns.get(str(expr))
+            var_type = var_info["type_"]
+            if not isinstance(var_type, astlib.CType):
+                return astlib.FuncCall(
+                    astlib.FunctionName(
+                        to_copy_method_name(var_type)),
+                    args=astlib.CallArgs(expr, astlib.Empty()))
         return expr
 
     def body(self, body, registry):
@@ -36,11 +54,6 @@ class OOPCall(layers.Layer):
         return astlib.CallArgs(
             self.expr(args.arg),
             self.call_args(args.rest))
-
-    @layers.register(astlib.Decl)
-    def decl(self, decl):
-        context.ns.add(str(decl.name), {"type_": decl.type_})
-        yield astlib.Decl(decl.name, decl.type_, self.expr(decl.expr))
 
     @layers.register(astlib.Assignment)
     def assignment(self, assignment):
@@ -63,44 +76,50 @@ class OOPCall(layers.Layer):
     @layers.register(astlib.Struct)
     def struct(self, struct):
         context.ns.add_scope()
-        registry = OOPCall().get_registry()
+        reg = OOPCall().get_registry()
         yield astlib.Struct(
-            struct.name, self.body(struct.body, registry))
+            struct.name, self.body(struct.body, reg))
         context.ns.del_scope()
 
     @layers.register(astlib.Func)
     def func(self, func):
         context.ns.add_scope()
-        registry = OOPCall().get_registry()
+        context.fs.add(str(func.name), {
+            "rettype": func.type_,
+        })
+        reg = OOPCall().get_registry()
         args_ = func.args
         while not isinstance(args_, astlib.Empty):
             context.ns.add(str(args_.name), {
+                "node_type": NodeTypes.argument,
                 "type_": args_.type_
             })
             args_ = args_.rest
 
         yield astlib.Func(
             func.name, args=func.args,
-            type_=func.type_, body=self.body(func.body, registry))
+            type_=func.type_, body=self.body(func.body, reg))
         context.ns.del_scope()
 
     @layers.register(astlib.Method)
-    def method(self, method):
-        context.ns.add_scope()
-        registry = OOPCall().get_registry()
-        yield astlib.Method(
-            method.name, args=method.args,
-            type_=method.type_, body=self.body(method.body, registry))
-        context.ns.del_scope()
+    def _method(self, method):
+        errors.not_implemented("something went wrong (oopcall)")
 
     @layers.register(astlib.MethodCall)
     def method_call(self, call):
         struct = context.ns.get(str(call.struct))["type_"]
-        if str(call.method) == defs.INIT_METHOD_NAME:
-            args = self.call_args(call.args)
-        else:
-            args = astlib.CallArgs(call.struct, self.call_args(call.args))
+        args = self.call_args(call.args)
+        if str(call.method) != defs.INIT_METHOD_NAME:
+            args = astlib.CallArgs(call.struct, args)
         yield astlib.FuncCall(
             astlib.FunctionName(
-                "".join([str(struct), str(call.method)])),
+                to_method_name(str(struct), str(call.method))),
             args)
+
+    @layers.register(astlib.Decl)
+    def decl(self, decl):
+        context.ns.add(str(decl.name), {
+            "node_type": NodeTypes.variable,
+            "type_": decl.type_,
+        })
+        yield astlib.Decl(decl.name, decl.type_, self.expr(decl.expr))

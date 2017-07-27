@@ -31,6 +31,19 @@ def field_of_maker(struct_name):
 field_of_self = field_of_maker(SELF_VAR_NAME)
 
 
+def deinit(struct, arg):
+    return astlib.FuncCall(
+        name=astlib.FunctionName(
+            to_deinit_method_name(struct)),
+        args=astlib.CallArgs(arg, astlib.Empty()))
+
+
+def free(arg):
+    return astlib.CFuncCall(
+        name="free", args=astlib.CallArgs(
+            arg, astlib.Empty()))
+
+
 def malloc(struct_name):
     return astlib.CFuncCall(
         name="malloc", args=astlib.CallArgs(
@@ -40,9 +53,26 @@ def malloc(struct_name):
             astlib.Empty()))
 
 
+def _add_to_maker(llist_type):
+    def wrapper(llist, *args):
+        if isinstance(llist, astlib.Empty):
+            return llist_type(*args, rest=astlib.Empty())
+        llist.append(*args)
+        return llist
+    return wrapper
+
+
+add_to_args = _add_to_maker(astlib.Args)
+add_to_body = _add_to_maker(astlib.Body)
+
+
 class OOPDef(layers.Layer):
 
-    def method(self, method, struct_name):
+    def only_field_decls(self, body):
+        return [stmt for stmt in body.as_list()
+            if isinstance(stmt, astlib.Field)]
+
+    def other_method(self, method, struct_name):
         # Just prepending self to args and translating method name to
         # function name with adding of a namespace.
         args = astlib.Args(
@@ -54,16 +84,11 @@ class OOPDef(layers.Layer):
 
     def default_copy_method(self, struct):
         new_var_name = astlib.VariableName("new")
-
         field_of_new = field_of_maker(new_var_name)
-
         declaration_of_new = astlib.Decl(
             new_var_name, type_=struct.name, expr=malloc(struct.name))
-
         field_inits = astlib.Empty()
-        for field_decl in [
-                stmt for stmt in struct.body.as_list()
-                if isinstance(stmt, astlib.Field)]:
+        for field_decl in self.only_field_decls(struct.body):
             if isinstance(field_decl.type_, astlib.TypeName):
                 field_init_expr = astlib.FuncCall(
                     name=astlib.FunctionName(
@@ -74,7 +99,7 @@ class OOPDef(layers.Layer):
                 field_init_expr = field_of_self(field_decl.name)
             field_init_decl = astlib.Assignment(
                 name=field_of_new(field_decl.name), op="=", expr=field_init_expr)
-            field_inits = self.add_to_body(field_inits, field_init_decl)
+            field_inits = add_to_body(field_inits, field_init_decl)
 
         return_new = astlib.Return(new_var_name)
         body = astlib.Body(declaration_of_new, astlib.Empty())
@@ -88,75 +113,56 @@ class OOPDef(layers.Layer):
             type_=struct.name,
             body=body)
 
-    def std_init_method(self, struct):
-        self_decl = astlib.Decl(
-            astlib.VariableName("self"),
-            type_=struct.name,
-            expr=astlib.CFuncCall(
-                "malloc", args=astlib.CallArgs(astlib.CFuncCall(
-                    "sizeof", args=astlib.CallArgs(astlib.StructScalar(
-                        struct.name), astlib.Empty()),
-                ), astlib.Empty())))
-        return_stmt = astlib.Return(astlib.VariableName("self"))
-
-        field_inits = astlib.Empty()
+    def default_init_method(self, struct):
+        declaration_of_self = astlib.Decl(
+            SELF_VAR_NAME, type_=struct.name, expr=malloc(struct.name))
+        return_self = astlib.Return(SELF_VAR_NAME)
+        field_inits = []
         args = astlib.Empty()
-        for field in struct.body.as_list():
-            if isinstance(field, astlib.Field):
-                args = self.add_to_args(args, field.name, field.type_)
-                field_inits = self.add_to_body(
-                    field_inits, astlib.Assignment(
-                        astlib.StructElem(astlib.VariableName("self"), field.name),
-                        op="=", expr=field.name))
-        body = astlib.Body(self_decl, astlib.Empty())
-        body.extend(field_inits)
-        body.append(return_stmt)
+        for field_decl in self.only_field_decls(struct.body):
+            args = add_to_args(args, field_decl.name, field_decl.type_)
+            field_inits.append(
+                astlib.Assignment(
+                    field_of_self(field_decl.name), op="=",
+                    expr=field_decl.name))
+        body = astlib.Body(declaration_of_self, astlib.Empty())
+        body.extend_from_list(field_inits)
+        body.append(return_self)
         return astlib.Func(
-            "".join([str(struct.name), defs.INIT_METHOD_NAME]),
+            name=astlib.FunctionName(
+                to_init_method_name(struct.name)),
             args=args,
             type_=struct.name,
             body=body)
 
-    def std_deinit_method(self, struct):
-        frees = []
-
-        for field in struct.body.as_list():
-            if (isinstance(field, astlib.Field) and \
-                    isinstance(field.type_, astlib.TypeName)):
-                frees.append(astlib.FuncCall(
-                    astlib.FunctionName(
-                        "".join([str(field.type_), defs.DEINIT_METHOD_NAME])),
-                    args=astlib.CallArgs(astlib.StructElem(
-                        name=astlib.VariableName("self"), elem=field.name), astlib.Empty())))
-
-        free = astlib.CFuncCall(
-            "free", args=astlib.CallArgs(
-                astlib.VariableName("self"), astlib.Empty()))
-        frees.append(free)
-        body = astlib.Body(frees[0], astlib.Empty())
-        body.extend_from_list(frees[1:])
+    def default_deinit_method(self, struct):
+        frees_and_deinits = []
+        for field_decl in self.only_field_decls(struct.body):
+            if isinstance(field_decl.type_, astlib.TypeName):
+                frees_and_deinits.append(
+                    deinit(
+                        struct=field_decl.type_,
+                        arg=field_of_self(field_decl.name)))
+        frees_and_deinits.append(free(SELF_VAR_NAME))
+        body = astlib.Body(frees_and_deinits[0], astlib.Empty())
+        body.extend_from_list(frees_and_deinits[1:])
         return astlib.Func(
-            "".join([str(struct.name), defs.DEINIT_METHOD_NAME]),
+            name=astlib.FunctionName(
+                to_deinit_method_name(struct.name)),
             args=astlib.Args(
-                astlib.VariableName("self"), struct.name, astlib.Empty()),
+                name=SELF_VAR_NAME, type_=struct.name, rest=astlib.Empty()),
             type_=astlib.CType("Void"),
             body=body)
 
     def init_method(self, method, struct_name):
-        self_decl = astlib.Decl(
-            astlib.VariableName("self"),
-            type_=struct_name,
-            expr=astlib.CFuncCall(
-                "malloc", args=astlib.CallArgs(astlib.CFuncCall(
-                    "sizeof", args=astlib.CallArgs(astlib.StructScalar(
-                        struct_name), astlib.Empty()),
-                ), astlib.Empty())))
-        return_stmt = astlib.Return(astlib.VariableName("self"))
-        body = astlib.Body(self_decl, astlib.Empty())
+        declaration_of_self = astlib.Decl(
+            SELF_VAR_NAME, type_=struct_name, expr=malloc(struct_name))
+        return_self = astlib.Return(SELF_VAR_NAME)
+        body = astlib.Body(declaration_of_self, astlib.Empty())
         body.extend(method.body)
-        body.append(return_stmt)
+        body.append(return_self)
         return astlib.Func(
-            "".join([str(struct_name), str(method.name)]),
+            astlib.FunctionName(to_init_method_name(struct_name)),
             args=method.args,
             type_=struct_name,
             body=body)
@@ -164,28 +170,16 @@ class OOPDef(layers.Layer):
     def method_to_func(self, method, struct_name):
         if method.name == defs.INIT_METHOD_NAME:
             return self.init_method(method, struct_name)
-        return self.method(method, struct_name)
-
-    def add_to_args(self, args, name, type_):
-        if isinstance(args, astlib.Empty):
-            return astlib.Args(name, type_, astlib.Empty())
-        args.append(name, type_)
-        return args
-
-    def add_to_body(self, body, stmt):
-        if isinstance(body, astlib.Empty):
-            return astlib.Body(stmt, astlib.Empty())
-        body.append(stmt)
-        return body
+        return self.other_method(method, struct_name)
 
     def split_body(self, body):
         fields, methods = astlib.Empty(), astlib.Empty()
         current_stmt = body
         while not isinstance(current_stmt, astlib.Empty):
             if isinstance(current_stmt.stmt, astlib.Field):
-                fields = self.add_to_body(fields, current_stmt.stmt)
+                fields = add_to_body(fields, current_stmt.stmt)
             else:
-                methods = self.add_to_body(methods, current_stmt.stmt)
+                methods = add_to_body(methods, current_stmt.stmt)
             current_stmt = current_stmt.rest
         return fields, methods
 
@@ -210,7 +204,7 @@ class OOPDef(layers.Layer):
         if not have_copy:
             add_funcs.append(self.default_copy_method(struct))
         if not have_deinit:
-            add_funcs.append(self.std_deinit_method(struct))
+            add_funcs.append(self.default_deinit_method(struct))
         if not have_init:
-            add_funcs.append(self.std_init_method(struct))
+            add_funcs.append(self.default_init_method(struct))
         yield from add_funcs + funcs
