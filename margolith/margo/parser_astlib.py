@@ -15,6 +15,8 @@ ARGS = "Args"
 
 INTEGER = "Integer"
 STRING = "String"
+REF = "Ref"
+UNREF = "Unref"
 
 MODULE_MEMBER = "ModuleMember"
 STRUCT_ELEM = "StructElem"
