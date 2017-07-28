@@ -17,6 +17,8 @@ class Analyzer(layers.Layer):
             if type_ == "None":
                 return astlib.CType("Void")
             return astlib.TypeName(str(type_))
+        elif isinstance(type_, astlib.Ref):
+            return astlib.Ref(self.type_(type_.literal))
         elif isinstance(type_, astlib.Empty):
             return astlib.Empty()
         errors.not_implemented("type is not supported")
@@ -47,6 +49,10 @@ class Analyzer(layers.Layer):
         elif isinstance(expr, astlib.StructElem):
             return astlib.StructElem(
                 self.expr(expr.name), self.expr(expr.elem))
+        elif isinstance(expr, astlib.Ref):
+            return astlib.Ref(self.expr(expr.literal))
+        elif isinstance(expr, astlib.Unref):
+            return astlib.Unref(self.expr(expr.literal))
         errors.not_implemented("expr is not supported")
 
     def body(self, body, registry):

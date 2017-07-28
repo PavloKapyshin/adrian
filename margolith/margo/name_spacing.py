@@ -8,6 +8,8 @@ class NameSpacing(layers.Layer):
     def type_(self, type_):
         if isinstance(type_, astlib.CType):
             return type_
+        elif isinstance(type_, astlib.Ref):
+            return astlib.Ref(self.type_(type_.literal))
         elif isinstance(type_, astlib.TypeName):
             return astlib.Name(defs.STRUCT_PREFIX + str(type_))
         elif isinstance(type_, astlib.Empty):
@@ -18,6 +20,10 @@ class NameSpacing(layers.Layer):
     def expr(self, expr):
         if isinstance(expr, astlib.VariableName):
             return astlib.Name(defs.VAR_PREFIX + str(expr))
+        elif isinstance(expr, astlib.Ref):
+            return astlib.Ref(self.expr(expr.literal))
+        elif isinstance(expr, astlib.Unref):
+            return astlib.Unref(self.expr(expr.literal))
         elif isinstance(expr, astlib.StructElem):
             return astlib.StructElem(
                 self.expr(expr.name),

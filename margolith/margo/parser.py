@@ -269,11 +269,14 @@ def p_call_args_3(content):
     content[0] = [parser_astlib.EMPTY]
 
 
-def p_type(content):
-    """
-    type : name_from_module
-    """
+def p_type_1(content):
+    """type : name_from_module"""
     content[0] = content[1]
+
+
+def p_type_2(content):
+    """type : REF type"""
+    content[0] = [parser_astlib.REF, content[2]]
 
 
 def p_name_from_struct_1(content):
@@ -355,6 +358,16 @@ def p_atom_1(content):
 def p_atom_2(content):
     """atom : LPAREN bool_expr RPAREN"""
     content[0] = content[2]
+
+
+def p_atom_3(content):
+    """atom : REF bool_expr"""
+    content[0] = [parser_astlib.REF, content[2]]
+
+
+def p_atom_4(content):
+    """atom : UNREF bool_expr"""
+    content[0] = [parser_astlib.UNREF, content[2]]
 
 
 def p_empty(content):

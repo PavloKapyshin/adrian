@@ -27,6 +27,8 @@ class CGen(layers.Layer):
     def type_(self, type_):
         if isinstance(type_, astlib.CType):
             return getattr(cgen.CTypes, TO_CTYPE[str(type_)])
+        elif isinstance(type_, astlib.Ref):
+            return self.type_(type_.literal)
         elif isinstance(type_, astlib.Name):
             return cgen.CTypes.ptr(cgen.StructType(str(type_)))
         elif isinstance(type_, astlib.Empty):
@@ -41,6 +43,10 @@ class CGen(layers.Layer):
             return cgen.Val(
                 literal=expr.literal,
                 type_=getattr(cgen.CTypes, TO_CTYPE[str(expr.to_type())]))
+        elif isinstance(expr, astlib.Ref):
+            return self.expr(expr.literal)
+        elif isinstance(expr, astlib.Unref):
+            return self.expr(expr.literal)
         elif isinstance(expr, astlib.StructScalar):
             return cgen.StructType(str(expr.name))
         elif isinstance(expr, astlib.StructElem):

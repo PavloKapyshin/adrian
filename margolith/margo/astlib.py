@@ -543,6 +543,16 @@ class Literal(Node):
         return cls._type
 
 
+class Unref(Literal):
+    """unref in Adrian."""
+    _type = TypeName("Unref")
+
+
+class Ref(Literal):
+    """ref in Adrian."""
+    _type = TypeName("Ref")
+
+
 class Integer(Literal):
     """Integer in Adrian."""
     _type = TypeName("Integer")

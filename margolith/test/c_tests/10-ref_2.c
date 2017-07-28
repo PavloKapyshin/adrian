@@ -25,25 +25,14 @@ adr_var_new->adr_field_id = adr_var_self->adr_field_id;
 adr_var_new->adr_field_age = adr_var_self->adr_field_age;
 return adr_var_new;
 }
-void adr_func_PersonsetAge(struct adr_struct_Person* adr_var_self, uint_fast8_t adr_var_age) {
-adr_var_self->adr_field_age = adr_var_age;
-}
-void adr_func_PersonaddOneYear(struct adr_struct_Person* adr_var_self) {
-adr_func_PersonsetAge(adr_var_self, adr_var_self->adr_field_age + 1);
-}
-uint_fast8_t adr_func_PersongetAge(struct adr_struct_Person* adr_var_self) {
-return adr_var_self->adr_field_age;
+void adr_func_doSomethingWithJohn(struct adr_struct_Person* adr_var_john) {
+struct adr_struct_Person* adr_var_myJohn = adr_func_Person__copy__(adr_var_john);
+adr_func_Person__deinit__(adr_var_myJohn);
 }
 int main(void) {
-struct adr_struct_Person* adr_var_john = adr_func_Person__init__(1, 30);
-struct adr_struct_Person* adr_var_jack = adr_func_Person__init__(2, 32);
-struct adr_struct_Person* adr_var_mike = adr_func_Person__copy__(adr_var_john);
-adr_var_mike->adr_field_id = 3;
-uint_fast64_t adr_var_mikeId = adr_var_mike->adr_field_id;
-uint_fast8_t adr_var_mikeAge = adr_func_PersongetAge(adr_var_mike);
-adr_func_PersonaddOneYear(adr_var_mike);
-adr_func_Person__deinit__(adr_var_jack);
+struct adr_struct_Person* adr_var_john = adr_func_Person__init__(1, 20);
+struct adr_struct_Person* adr_var_secondJohn = adr_var_john;
+adr_func_doSomethingWithJohn(adr_var_secondJohn);
 adr_func_Person__deinit__(adr_var_john);
-adr_func_Person__deinit__(adr_var_mike);
 return 0;
 }

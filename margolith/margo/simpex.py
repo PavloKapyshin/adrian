@@ -44,6 +44,12 @@ class SimpEx(layers.Layer):
             return tmp, decls
         elif isinstance(expr, astlib.CFuncCall):
             return expr, []
+        elif isinstance(expr, astlib.Ref):
+            tmp, decls =  self.expr(expr.literal)
+            return astlib.Ref(tmp), decls
+        elif isinstance(expr, astlib.Unref):
+            tmp, decls =  self.expr(expr.literal)
+            return astlib.Unref(tmp), decls
         errors.not_implemented("expr is not supported (simpex layer)")
 
     def add_to_call_args(self, args, arg):
