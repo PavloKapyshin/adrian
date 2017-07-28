@@ -1,6 +1,7 @@
 # Changelog
 
 ## 0.2 (dev)
+* added `ref` and `unref` operators
 * fixed aliasing of structs instead of copying in `__copy__` method
 * fixed memory leak when struct instances were used as values for struct fields
 * added namespacing at C level, so now (for example) Adrian-level malloc function
