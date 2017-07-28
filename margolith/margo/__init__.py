@@ -22,8 +22,8 @@ LAYERS = (
     (oopdef.OOPDef, "transform_ast"),
     (oopcall.OOPCall, "transform_ast"),
     (name_spacing.NameSpacing, "transform_ast"),
-#    (simpex.SimpEx, "transform_ast"),
-#    (arc.ARC, "expand_ast"),
+    (simpex.SimpEx, "transform_ast"),
+    (arc.ARC, "expand_ast"),
     (cgen.CGen, "transform_ast"),
     (main_func.MainFunc, "expand_ast")
 )
