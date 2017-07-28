@@ -27,6 +27,8 @@ class OOPCall(layers.Layer):
     def expr(self, expr):
         if isinstance(expr, astlib.MethodCall):
             return list(self.method_call(expr))[0]
+        elif isinstance(expr, astlib.FuncCall):
+            return list(self.func_call(expr))[0]
         elif isinstance(expr, astlib.SExpr):
             return astlib.SExpr(
                 op=expr.op, expr1=self.expr(expr.expr1),
@@ -34,11 +36,32 @@ class OOPCall(layers.Layer):
         elif isinstance(expr, astlib.VariableName):
             var_info = context.ns.get(str(expr))
             var_type = var_info["type_"]
+            if isinstance(var_type, astlib.Ref):
+                return expr
             if not isinstance(var_type, astlib.CType):
                 return astlib.FuncCall(
                     astlib.FunctionName(
                         to_copy_method_name(var_type)),
                     args=astlib.CallArgs(expr, astlib.Empty()))
+        elif isinstance(expr, astlib.Unref):
+            literal = expr.literal
+            if isinstance(literal, astlib.StructElem):
+                type_ = context.ns.get(str(literal.name))["type_"]
+                if isinstance(type_, astlib.Ref):
+                    struct_info = context.ts.get(str(type_.literal))
+                else:
+                    struct_info = context.ts.get(str(type_))
+                var_type = struct_info["field_types"][str(literal.elem)]
+                if isinstance(var_type, astlib.Ref):
+                    var_type = var_type.literal
+            else:
+                var_info = context.ns.get(str(literal))
+                var_type = var_info["type_"].literal
+            if not isinstance(var_type, astlib.CType):
+                return astlib.FuncCall(
+                    astlib.FunctionName(
+                        to_copy_method_name(var_type)),
+                    args=astlib.CallArgs(literal, astlib.Empty()))
         return expr
 
     def body(self, body, registry):
@@ -77,8 +100,14 @@ class OOPCall(layers.Layer):
     def struct(self, struct):
         context.ns.add_scope()
         reg = OOPCall().get_registry()
-        yield astlib.Struct(
-            struct.name, self.body(struct.body, reg))
+        body = self.body(struct.body, reg)
+        field_types = {}
+        for field_decl in body.as_list():
+            field_types[str(field_decl.name)] = field_decl.type_
+        context.ts.add(str(struct.name), {
+            "field_types": field_types
+        })
+        yield astlib.Struct(struct.name, body)
         context.ns.del_scope()
 
     @layers.register(astlib.Func)
