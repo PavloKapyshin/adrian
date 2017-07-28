@@ -20,6 +20,7 @@ def std_methods_maker(method_name):
 to_copy_method_name = std_methods_maker(defs.COPY_METHOD_NAME)
 to_init_method_name = std_methods_maker(defs.INIT_METHOD_NAME)
 to_deinit_method_name = std_methods_maker(defs.DEINIT_METHOD_NAME)
+to_deepcopy_method_name = std_methods_maker(defs.DEEPCOPY_METHOD_NAME)
 
 
 def field_of_maker(struct_name):
@@ -81,6 +82,43 @@ class OOPDef(layers.Layer):
             name=astlib.FunctionName(
                 to_method_name(str(struct_name), str(method.name))),
             args=args, type_=method.type_, body=method.body)
+
+    def default_deepcopy_method(self, struct):
+        new_var_name = astlib.VariableName("new")
+        field_of_new = field_of_maker(new_var_name)
+        declaration_of_new = astlib.Decl(
+            new_var_name, type_=struct.name, expr=malloc(struct.name))
+        field_inits = astlib.Empty()
+        for field_decl in self.only_field_decls(struct.body):
+            if isinstance(field_decl.type_, astlib.TypeName):
+                field_init_expr = astlib.FuncCall(
+                    name=astlib.FunctionName(
+                        to_deepcopy_method_name(field_decl.type_)),
+                    args=astlib.CallArgs(
+                        field_of_self(field_decl.name), astlib.Empty()))
+            elif isinstance(field_decl.type_, astlib.Ref):
+                field_init_expr = astlib.FuncCall(
+                    name=astlib.FunctionName(
+                        to_deepcopy_method_name(field_decl.type_.literal)),
+                    args=astlib.CallArgs(
+                        astlib.Unref(field_of_self(field_decl.name)), astlib.Empty()))
+            else:
+                field_init_expr = field_of_self(field_decl.name)
+            field_init_decl = astlib.Assignment(
+                name=field_of_new(field_decl.name), op="=", expr=field_init_expr)
+            field_inits = add_to_body(field_inits, field_init_decl)
+
+        return_new = astlib.Return(new_var_name)
+        body = astlib.Body(declaration_of_new, astlib.Empty())
+        body.extend(field_inits)
+        body.append(return_new)
+        return astlib.Func(
+            name=astlib.FunctionName(
+                to_deepcopy_method_name(struct.name)),
+            args=astlib.Args(
+                name=SELF_VAR_NAME, type_=struct.name, rest=astlib.Empty()),
+            type_=struct.name,
+            body=body)
 
     def default_copy_method(self, struct):
         new_var_name = astlib.VariableName("new")
@@ -190,6 +228,7 @@ class OOPDef(layers.Layer):
         have_init = False
         have_deinit = False
         have_copy = False
+        have_deepcopy = False
         funcs = []
         for method in methods.as_list():
             if method.name == defs.INIT_METHOD_NAME:
@@ -198,13 +237,17 @@ class OOPDef(layers.Layer):
                 have_deinit = True
             elif method.name == defs.COPY_METHOD_NAME:
                 have_copy = True
+            elif method.name == defs.DEEPCOPY_METHOD_NAME:
+                have_deepcopy = True
             funcs.append(self.method_to_func(method, struct.name))
 
         add_funcs = []
-        if not have_copy:
-            add_funcs.append(self.default_copy_method(struct))
-        if not have_deinit:
-            add_funcs.append(self.default_deinit_method(struct))
         if not have_init:
             add_funcs.append(self.default_init_method(struct))
+        if not have_deinit:
+            add_funcs.append(self.default_deinit_method(struct))
+        if not have_copy:
+            add_funcs.append(self.default_copy_method(struct))
+        if not have_deepcopy:
+            add_funcs.append(self.default_deepcopy_method(struct))
         yield from add_funcs + funcs
