@@ -16,10 +16,14 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("in_file")  # TODO: use argparse.FileType
+    parser.add_argument(
+        "-o", "--out", default="-",
+        type=argparse.FileType("w", encoding="utf-8"))
     args = parser.parse_args()
 
     print(
         margo.compile_from_file(args.in_file, ""),
+        file=args.out,
         end="")
 
 
