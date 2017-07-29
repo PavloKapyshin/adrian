@@ -44,40 +44,20 @@ class Name(collections.UserString):
         return copy.deepcopy(self)
 
 
-class VariableName(Name):
-    pass
-
-
-class TypeName(Name):
-    pass
-
-
-class ModuleName(Name):
-    pass
-
-
-class FunctionName(Name):
-    pass
-
-
-class MethodName(Name):
-    pass
-
-
 class CType(Name):
     pass
 
 
 class ModuleMember(Node):
 
-    def __init__(self, module_name, member):
-        self._module_name = module_name
+    def __init__(self, module, member):
+        self._module = module
         self._member = member
-        self._keys = ("module_name", "member")
+        self._keys = ("module", "member")
 
     @property
-    def module_name(self):
-        return self._module_name
+    def module(self):
+        return self._module
 
     @property
     def member(self):
@@ -98,6 +78,30 @@ class StructElem(Node):
     @property
     def elem(self):
         return self._elem
+
+
+class Instance(Node):
+    """Instance.
+
+              args
+             vvvvvv
+    MyStruct(1 + 20)
+    ^^^^^^^^
+      name
+    """
+
+    def __init__(self, name, args):
+        self._name = name
+        self._args = args
+        self._keys = ("name", "args")
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def args(self):
+        return self._args
 
 
 class FuncCall(Node):
@@ -150,15 +154,15 @@ class CFuncCall(Node):
 
 class MethodCall(Node):
 
-    def __init__(self, struct, method, args):
-        self._struct = struct
+    def __init__(self, base, method, args):
+        self._base = base
         self._method = method
         self._args = args
-        self._keys = ("struct", "method", "args")
+        self._keys = ("base", "method", "args")
 
     @property
-    def struct(self):
-        return self._struct
+    def base(self):
+        return self._base
 
     @property
     def method(self):
@@ -314,7 +318,7 @@ class CallArgs(Node):
         return length
 
 
-class SExpr(Node):
+class Expr(Node):
 
     def __init__(self, op, expr1, expr2):
         self._op = op
@@ -372,19 +376,19 @@ class Assignment(Node):
           v
     myVar = 1 + 20
     ^^^^^   ^^^^^^
-    name     expr
+     var     expr
 
     """
 
-    def __init__(self, name, op, expr):
-        self._name = name
+    def __init__(self, var, op, expr):
+        self._var = var
         self._op = op
         self._expr = expr
-        self._keys = ("name", "op", "expr")
+        self._keys = ("var", "op", "expr")
 
     @property
-    def name(self):
-        return self._name
+    def var(self):
+        return self._var
 
     @property
     def op(self):
@@ -398,19 +402,19 @@ class Assignment(Node):
 class Func(Node):
     """Declaration of function.
 
-         name                                      type_
+         name                                     rettype
         vvvvvv                                  vvvvvvvvvv
     fun myFunc(arg1: Type1; arg2, arg3: Type2): ReturnType {...}
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^               ^^^
                            args                             body
     """
 
-    def __init__(self, name, args, type_, body):
+    def __init__(self, name, args, rettype, body):
         self._name = name
         self._args = args
-        self._type = type_
+        self._rettype = rettype
         self._body = body
-        self._keys = ("name", "args", "type_", "body")
+        self._keys = ("name", "args", "rettype", "body")
 
     @property
     def name(self):
@@ -421,8 +425,8 @@ class Func(Node):
         return self._args
 
     @property
-    def type_(self):
-        return self._type
+    def rettype(self):
+        return self._rettype
 
     @property
     def body(self):
@@ -432,19 +436,19 @@ class Func(Node):
 class Method(Node):
     """Declaration of method.
 
-          name                                      type_
+          name                                     rettype
         vvvvvvvv                                  vvvvvvvvvv
     fun myMethod(arg1: Type1; arg2, arg3: Type2): ReturnType {...}
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^               ^^^
                              args                             body
     """
 
-    def __init__(self, name, args, type_, body):
+    def __init__(self, name, args, rettype, body):
         self._name = name
         self._args = args
-        self._type = type_
+        self._rettype = rettype
         self._body = body
-        self._keys = ("name", "args", "type_", "body")
+        self._keys = ("name", "args", "rettype", "body")
 
     @property
     def name(self):
@@ -455,8 +459,8 @@ class Method(Node):
         return self._args
 
     @property
-    def type_(self):
-        return self._type
+    def rettype(self):
+        return self._rettype
 
     @property
     def body(self):
@@ -545,23 +549,23 @@ class Literal(Node):
 
 class Unref(Literal):
     """unref in Adrian."""
-    _type = TypeName("Unref")
+    _type = Name("Unref")
 
 
 class Ref(Literal):
     """ref in Adrian."""
-    _type = TypeName("Ref")
+    _type = Name("Ref")
 
 
 class Integer(Literal):
     """Integer in Adrian."""
-    _type = TypeName("Integer")
+    _type = Name("Integer")
 
 
 
 class String(Literal):
     """String in Adrian."""
-    _type = TypeName("String")
+    _type = Name("String")
 
 
 class CLiteral(Literal):

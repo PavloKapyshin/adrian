@@ -1,7 +1,7 @@
 import re
 import sys
 
-from vendor.ply import lex, yacc
+from ply import lex, yacc
 
 from . import parser_astlib, defs, errors
 
