@@ -1,2 +1,27 @@
-. ./zpath
-python3 compiler.py "$@"
+#!/usr/bin/env python3
+
+import os
+import sys
+import argparse
+import importlib
+
+
+VENDOR_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "vendor")
+
+
+def main():
+    sys.path.append(VENDOR_PATH)
+    margo = importlib.import_module("margo")
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("in_file")  # TODO: use argparse.FileType
+    args = parser.parse_args()
+
+    print(
+        margo.compile_from_file(args.in_file, ""),
+        end="")
+
+
+if __name__ == "__main__":
+    main()
