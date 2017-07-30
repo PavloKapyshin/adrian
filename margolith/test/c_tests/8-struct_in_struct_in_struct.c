@@ -1,94 +1,98 @@
 #include <stdint.h>
 #include <stdlib.h>
-struct adr_struct_Id {
-uint_fast64_t adr_field_realId;
+struct adr__Id {
+uint_fast64_t adr__realId;
 };
-struct adr_struct_Id* adr_func_Id__init__(uint_fast64_t adr_var_realId) {
-struct adr_struct_Id* adr_var_self = malloc(sizeof(struct adr_struct_Id));
-adr_var_self->adr_field_realId = adr_var_realId;
-return adr_var_self;
+struct adr__Id* adr__Id__init__(uint_fast64_t adr__realId) {
+struct adr__Id* adr__self = malloc(sizeof(struct adr__Id));
+adr__self->adr__realId = adr__realId;
+return adr__self;
 }
-void adr_func_Id__deinit__(struct adr_struct_Id* adr_var_self) {
-free(adr_var_self);
+void adr__Id__deinit__(struct adr__Id* adr__self) {
+free(adr__self);
 }
-struct adr_struct_Id* adr_func_Id__copy__(struct adr_struct_Id* adr_var_self) {
-struct adr_struct_Id* adr_var_new = malloc(sizeof(struct adr_struct_Id));
-adr_var_new->adr_field_realId = adr_var_self->adr_field_realId;
-return adr_var_new;
+struct adr__Id* adr__Id__copy__(struct adr__Id* adr__self) {
+struct adr__Id* adr__new = malloc(sizeof(struct adr__Id));
+adr__new->adr__realId = adr__self->adr__realId;
+return adr__new;
 }
-struct adr_struct_Id* adr_func_Id__deepCopy__(struct adr_struct_Id* adr_var_self) {
-struct adr_struct_Id* adr_var_new = malloc(sizeof(struct adr_struct_Id));
-adr_var_new->adr_field_realId = adr_var_self->adr_field_realId;
-return adr_var_new;
+struct adr__Id* adr__Id__deepCopy__(struct adr__Id* adr__self) {
+struct adr__Id* adr__new = malloc(sizeof(struct adr__Id));
+adr__new->adr__realId = adr__self->adr__realId;
+return adr__new;
 }
-uint_fast64_t adr_func_IdgetId(struct adr_struct_Id* adr_var_self) {
-return adr_var_self->adr_field_realId;
+uint_fast64_t adr__IdgetId(struct adr__Id* adr__self) {
+return adr__self->adr__realId;
 }
-struct adr_struct_Person {
-struct adr_struct_Id* adr_field_id;
-uint_fast8_t adr_field_age;
+struct adr__Person {
+struct adr__Id* adr__id;
+uint_fast8_t adr__age;
 };
-struct adr_struct_Person* adr_func_Person__init__(struct adr_struct_Id* adr_var_id, uint_fast8_t adr_var_age) {
-struct adr_struct_Person* adr_var_self = malloc(sizeof(struct adr_struct_Person));
-adr_var_self->adr_field_id = adr_func_Id__copy__(adr_var_id);
-adr_var_self->adr_field_age = adr_var_age;
-return adr_var_self;
+struct adr__Person* adr__Person__init__(struct adr__Id* adr__id, uint_fast8_t adr__age) {
+struct adr__Person* adr__self = malloc(sizeof(struct adr__Person));
+adr__self->adr__id = adr__Id__copy__(adr__id);
+adr__self->adr__age = adr__age;
+return adr__self;
 }
-void adr_func_Person__deinit__(struct adr_struct_Person* adr_var_self) {
-adr_func_Id__deinit__(adr_var_self->adr_field_id);
-free(adr_var_self);
+void adr__Person__deinit__(struct adr__Person* adr__self) {
+adr__Id__deinit__(adr__self->adr__id);
+free(adr__self);
 }
-struct adr_struct_Person* adr_func_Person__copy__(struct adr_struct_Person* adr_var_self) {
-struct adr_struct_Person* adr_var_new = malloc(sizeof(struct adr_struct_Person));
-adr_var_new->adr_field_id = adr_func_Id__copy__(adr_var_self->adr_field_id);
-adr_var_new->adr_field_age = adr_var_self->adr_field_age;
-return adr_var_new;
+struct adr__Person* adr__Person__copy__(struct adr__Person* adr__self) {
+struct adr__Person* adr__new = malloc(sizeof(struct adr__Person));
+adr__new->adr__id = adr__Id__copy__(adr__self->adr__id);
+adr__new->adr__age = adr__self->adr__age;
+return adr__new;
 }
-struct adr_struct_Person* adr_func_Person__deepCopy__(struct adr_struct_Person* adr_var_self) {
-struct adr_struct_Person* adr_var_new = malloc(sizeof(struct adr_struct_Person));
-adr_var_new->adr_field_id = adr_func_Id__deepCopy__(adr_var_self->adr_field_id);
-adr_var_new->adr_field_age = adr_var_self->adr_field_age;
-return adr_var_new;
+struct adr__Person* adr__Person__deepCopy__(struct adr__Person* adr__self) {
+struct adr__Person* adr__new = malloc(sizeof(struct adr__Person));
+adr__new->adr__id = adr__Id__deepCopy__(adr__self->adr__id);
+adr__new->adr__age = adr__self->adr__age;
+return adr__new;
 }
-struct adr_struct_HighLevelPerson {
-struct adr_struct_Person* adr_field_lowLevelPerson;
+struct adr__HighLevelPerson {
+struct adr__Person* adr__lowLevelPerson;
 };
-struct adr_struct_HighLevelPerson* adr_func_HighLevelPerson__init__(struct adr_struct_Person* adr_var_lowLevelPerson) {
-struct adr_struct_HighLevelPerson* adr_var_self = malloc(sizeof(struct adr_struct_HighLevelPerson));
-adr_var_self->adr_field_lowLevelPerson = adr_func_Person__copy__(adr_var_lowLevelPerson);
-return adr_var_self;
+struct adr__HighLevelPerson* adr__HighLevelPerson__init__(struct adr__Person* adr__lowLevelPerson) {
+struct adr__HighLevelPerson* adr__self = malloc(sizeof(struct adr__HighLevelPerson));
+adr__self->adr__lowLevelPerson = adr__Person__copy__(adr__lowLevelPerson);
+return adr__self;
 }
-void adr_func_HighLevelPerson__deinit__(struct adr_struct_HighLevelPerson* adr_var_self) {
-adr_func_Person__deinit__(adr_var_self->adr_field_lowLevelPerson);
-free(adr_var_self);
+void adr__HighLevelPerson__deinit__(struct adr__HighLevelPerson* adr__self) {
+adr__Person__deinit__(adr__self->adr__lowLevelPerson);
+free(adr__self);
 }
-struct adr_struct_HighLevelPerson* adr_func_HighLevelPerson__copy__(struct adr_struct_HighLevelPerson* adr_var_self) {
-struct adr_struct_HighLevelPerson* adr_var_new = malloc(sizeof(struct adr_struct_HighLevelPerson));
-adr_var_new->adr_field_lowLevelPerson = adr_func_Person__copy__(adr_var_self->adr_field_lowLevelPerson);
-return adr_var_new;
+struct adr__HighLevelPerson* adr__HighLevelPerson__copy__(struct adr__HighLevelPerson* adr__self) {
+struct adr__HighLevelPerson* adr__new = malloc(sizeof(struct adr__HighLevelPerson));
+adr__new->adr__lowLevelPerson = adr__Person__copy__(adr__self->adr__lowLevelPerson);
+return adr__new;
 }
-struct adr_struct_HighLevelPerson* adr_func_HighLevelPerson__deepCopy__(struct adr_struct_HighLevelPerson* adr_var_self) {
-struct adr_struct_HighLevelPerson* adr_var_new = malloc(sizeof(struct adr_struct_HighLevelPerson));
-adr_var_new->adr_field_lowLevelPerson = adr_func_Person__deepCopy__(adr_var_self->adr_field_lowLevelPerson);
-return adr_var_new;
+struct adr__HighLevelPerson* adr__HighLevelPerson__deepCopy__(struct adr__HighLevelPerson* adr__self) {
+struct adr__HighLevelPerson* adr__new = malloc(sizeof(struct adr__HighLevelPerson));
+adr__new->adr__lowLevelPerson = adr__Person__deepCopy__(adr__self->adr__lowLevelPerson);
+return adr__new;
 }
 int main(void) {
-struct adr_struct_Id* adr_tmp_tmp1 = adr_func_Id__init__(1);
-struct adr_struct_Person* adr_tmp_tmp2 = adr_func_Person__init__(adr_tmp_tmp1, 20);
-struct adr_struct_HighLevelPerson* adr_var_jack = adr_func_HighLevelPerson__init__(adr_tmp_tmp2);
-struct adr_struct_Id* adr_var_johnId = adr_func_Id__init__(2);
-uint_fast8_t adr_var_johnAge = 30;
-struct adr_struct_Id* adr_tmp_tmp3 = adr_func_Id__copy__(adr_var_johnId);
-struct adr_struct_Person* adr_var_johnPerson = adr_func_Person__init__(adr_tmp_tmp3, adr_var_johnAge);
-struct adr_struct_Person* adr_tmp_tmp4 = adr_func_Person__copy__(adr_var_johnPerson);
-struct adr_struct_HighLevelPerson* adr_var_john = adr_func_HighLevelPerson__init__(adr_tmp_tmp4);
-adr_func_Id__deinit__(adr_tmp_tmp1);
-adr_func_Person__deinit__(adr_tmp_tmp2);
-adr_func_Id__deinit__(adr_tmp_tmp3);
-adr_func_Person__deinit__(adr_tmp_tmp4);
-adr_func_HighLevelPerson__deinit__(adr_var_jack);
-adr_func_HighLevelPerson__deinit__(adr_var_john);
-adr_func_Id__deinit__(adr_var_johnId);
-adr_func_Person__deinit__(adr_var_johnPerson);
+struct adr__Id* adr__tmp_0 = adr__Id__init__(1);
+struct adr__Id* adr__tmp_2 = adr__Id__copy__(adr__tmp_0);
+struct adr__Person* adr__tmp_1 = adr__Person__init__(adr__tmp_2, 20);
+struct adr__Person* adr__tmp_3 = adr__Person__copy__(adr__tmp_1);
+struct adr__HighLevelPerson* adr__jack = adr__HighLevelPerson__init__(adr__tmp_3);
+struct adr__Id* adr__johnId = adr__Id__init__(2);
+uint_fast8_t adr__johnAge = 30;
+struct adr__Id* adr__tmp_4 = adr__Id__copy__(adr__johnId);
+struct adr__Person* adr__johnPerson = adr__Person__init__(adr__tmp_4, adr__johnAge);
+struct adr__Person* adr__tmp_5 = adr__Person__copy__(adr__johnPerson);
+struct adr__HighLevelPerson* adr__john = adr__HighLevelPerson__init__(adr__tmp_5);
+adr__HighLevelPerson__deinit__(adr__jack);
+adr__HighLevelPerson__deinit__(adr__john);
+adr__Id__deinit__(adr__johnId);
+adr__Person__deinit__(adr__johnPerson);
+adr__Id__deinit__(adr__tmp_0);
+adr__Person__deinit__(adr__tmp_1);
+adr__Id__deinit__(adr__tmp_2);
+adr__Person__deinit__(adr__tmp_3);
+adr__Id__deinit__(adr__tmp_4);
+adr__Person__deinit__(adr__tmp_5);
 return 0;
 }

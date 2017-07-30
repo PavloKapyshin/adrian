@@ -7,7 +7,7 @@ FIELD_DECL = "Field"
 ASSIGNMENT = "Assignment"
 
 NAME = "Name"
-SEXPR = "SExpr"
+SEXPR = "Expr"
 
 BODY = "Body"
 CALL_ARGS = "CallArgs"

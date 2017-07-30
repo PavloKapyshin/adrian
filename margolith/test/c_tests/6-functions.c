@@ -1,23 +1,23 @@
 #include <stdint.h>
-void adr_func_empty() {
+void adr__empty() {
 
 }
-int_fast8_t adr_func_one() {
+int_fast8_t adr__one() {
 return 1;
 }
-int_fast8_t adr_func_plusOne(int_fast8_t adr_var_number) {
-return adr_var_number + adr_func_one();
+int_fast8_t adr__plusOne(int_fast8_t adr__number) {
+return adr__number + adr__one();
 }
-int_fast8_t adr_func_plus(int_fast8_t adr_var_expr1, int_fast8_t adr_var_expr2) {
-return adr_var_expr1 + adr_var_expr2;
+int_fast8_t adr__plus(int_fast8_t adr__expr1, int_fast8_t adr__expr2) {
+return adr__expr1 + adr__expr2;
 }
 int main(void) {
-int_fast8_t adr_tmp_tmp1 = adr_func_one();
-int_fast8_t adr_tmp_tmp2 = adr_func_one();
-int_fast8_t adr_tmp_tmp3 = adr_func_one();
-int_fast8_t adr_tmp_tmp4 = adr_func_plus(adr_tmp_tmp2, adr_tmp_tmp3);
-int_fast8_t adr_var_three = adr_func_plus(adr_tmp_tmp1, adr_tmp_tmp4);
-int_fast8_t adr_var_four = adr_func_plusOne(adr_var_three);
-adr_func_empty();
+int_fast8_t adr__tmp_0 = adr__one();
+int_fast8_t adr__tmp_1 = adr__one();
+int_fast8_t adr__tmp_2 = adr__one();
+int_fast8_t adr__tmp_3 = adr__plus(adr__tmp_1, adr__tmp_2);
+int_fast8_t adr__three = adr__plus(adr__tmp_0, adr__tmp_3);
+int_fast8_t adr__four = adr__plusOne(adr__three);
+adr__empty();
 return 0;
 }

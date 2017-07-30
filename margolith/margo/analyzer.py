@@ -11,12 +11,12 @@ class Analyzer(layers.Layer):
 
     def type_(self, type_):
         if isinstance(type_, astlib.ModuleMember):
-            if type_.module_name == cdefs.CMODULE_NAME:
+            if type_.module == cdefs.CMODULE_NAME:
                 return astlib.CType(str(type_.member))
         elif isinstance(type_, astlib.Name):
             if type_ == "None":
                 return astlib.CType("Void")
-            return astlib.TypeName(str(type_))
+            return type_
         elif isinstance(type_, astlib.Ref):
             return astlib.Ref(self.type_(type_.literal))
         elif isinstance(type_, astlib.Empty):
@@ -25,17 +25,16 @@ class Analyzer(layers.Layer):
 
     def expr(self, expr):
         if isinstance(expr, astlib.Name):
-            name_type = astlib.VariableName
-            return name_type(str(expr))
-        elif isinstance(expr, astlib.SExpr):
-            return astlib.SExpr(
-                op=expr.op, expr1=self.expr(expr.expr1),
-                expr2=self.expr(expr.expr2))
+            return expr
+        elif isinstance(expr, astlib.Expr):
+            return astlib.Expr(
+                expr.op, lexpr=self.expr(expr.lexpr),
+                rexpr=self.expr(expr.rexpr))
         elif isinstance(expr, astlib.MethodCall):
             return list(self.method_call(expr))[0]
         elif isinstance(expr, astlib.FuncCall):
             if (isinstance(expr.name, astlib.ModuleMember) and \
-                    expr.name.module_name == cdefs.CMODULE_NAME):
+                    expr.name.module == cdefs.CMODULE_NAME):
                 module = expr.name
                 arg_length = (len(expr.args)
                     if isinstance(expr.args, astlib.CallArgs)
@@ -73,38 +72,32 @@ class Analyzer(layers.Layer):
         if isinstance(args, astlib.Empty):
             return astlib.Empty()
         return astlib.Args(
-            astlib.VariableName(str(args.name)),
+            args.name,
             self.type_(args.type_),
             self.args(args.rest))
 
     @layers.register(astlib.Decl)
     def decl(self, decl):
         yield astlib.Decl(
-            astlib.VariableName(str(decl.name)),
-            type_=self.type_(decl.type_), expr=self.expr(decl.expr))
+            decl.name, self.type_(decl.type_), self.expr(decl.expr))
 
     @layers.register(astlib.Assignment)
-    def assignment(self, assignment):
+    def assignment(self, assment):
         yield astlib.Assignment(
-            self.expr(assignment.name), assignment.op,
-            self.expr(assignment.expr))
+            self.expr(assment.var), assment.op,
+            self.expr(assment.expr))
 
     @layers.register(astlib.FuncCall)
     def func_call(self, call):
-        name = str(call.name)
+        node_cls = astlib.FuncCall
         if defs.TYPE_NAME_REGEX.fullmatch(str(call.name)):
-            name = "".join([
-                str(call.name), defs.INIT_METHOD_NAME])
-        yield astlib.FuncCall(
-            astlib.FunctionName(name),
-            self.call_args(call.args))
+            node_cls = astlib.Instance
+        yield node_cls(call.name, self.call_args(call.args))
 
     @layers.register(astlib.MethodCall)
     def method_call(self, call):
         yield astlib.MethodCall(
-            astlib.VariableName(str(call.struct)),
-            astlib.MethodName(str(call.method)),
-            self.call_args(call.args))
+            call.base, call.method, self.call_args(call.args))
 
     @layers.register(astlib.Return)
     def return_(self, return_):
@@ -113,30 +106,24 @@ class Analyzer(layers.Layer):
     @layers.register(astlib.Field)
     def field(self, field):
         yield astlib.Field(
-            astlib.VariableName(str(field.name)),
-            type_=self.type_(field.type_))
+            field.name, self.type_(field.type_))
 
     @layers.register(astlib.Struct)
     def struct(self, struct):
         registry = Analyzer().get_registry()
         yield astlib.Struct(
-            astlib.TypeName(str(struct.name)),
-            self.body(struct.body, registry))
+            struct.name, self.body(struct.body, registry))
 
     @layers.register(astlib.Func)
     def func(self, func):
         registry = Analyzer().get_registry()
         yield astlib.Func(
-            astlib.FunctionName(str(func.name)),
-            args=self.args(func.args),
-            type_=self.type_(func.type_),
-            body=self.body(func.body, registry))
+            func.name, self.args(func.args), self.type_(func.rettype),
+            self.body(func.body, registry))
 
     @layers.register(astlib.Method)
     def method(self, method):
         registry = Analyzer().get_registry()
         yield astlib.Method(
-            astlib.MethodName(str(method.name)),
-            args=self.args(method.args),
-            type_=self.type_(method.type_),
-            body=self.body(method.body, registry))
+            method.name, self.args(method.args), self.type_(method.rettype),
+            self.body(method.body, registry))

@@ -11,27 +11,21 @@ class ARC(layers.Layer):
 
     def no_return_in(self, body):
         current_body = body
-        no_return = True
         while not isinstance(current_body, astlib.Empty):
             # When iff, els, elf we need to look in it.
             if isinstance(current_body.stmt, astlib.Return):
-                no_return = False
+                return False
             current_body = current_body.rest
-        return no_return
+        return True
 
     def free(self, name, type_):
-        deinit_name = astlib.Name(
-            "".join([
-                defs.FUNC_PREFIX, str(type_.replace(defs.STRUCT_PREFIX, "", 1)),
-                defs.DEINIT_METHOD_NAME]))
-        return astlib.FuncCall(
-            deinit_name, astlib.CallArgs(astlib.Name(name), astlib.Empty()))
+        return astlib.MethodCall(
+            astlib.Name(name), defs.DEINIT_METHOD_NAME, astlib.Empty())
 
     def arc(self):
         space = self.to_free.space()
         scope = self.to_free.scope
-        for key, val in sorted(space[scope].copy().items()):
-            type_ = val["type_"]
+        for key, type_ in sorted(space[scope].copy().items()):
             if not isinstance(type_, astlib.CType):
                 yield self.free(key, type_)
 
@@ -49,26 +43,19 @@ class ARC(layers.Layer):
 
     @layers.register(astlib.Decl)
     def decl(self, decl):
-        context.ns.add(str(decl.name), {
-            "type_": decl.type_
-        })
+        context.ns.add(str(decl.name), decl.type_)
         if not isinstance(decl.expr, astlib.Ref):
-            if isinstance(decl.expr, astlib.Name):
-                type_ = context.ns.get(str(decl.expr))["type_"]
-                if not isinstance(type_, astlib.Ref):
-                    self.to_free.add(str(decl.name), {
-                        "type_": decl.type_
-                    })
-            elif isinstance(decl.expr, astlib.FuncCall):
-                type_ = context.fs.get(str(decl.expr.name))["rettype"]
-                if not isinstance(type_, astlib.Ref):
-                    self.to_free.add(str(decl.name), {
-                        "type_": decl.type_
-                    })
-            else:
-                self.to_free.add(str(decl.name), {
-                    "type_": decl.type_
-                })
+            type_ = decl.type_
+            if isinstance(decl.expr, astlib.FuncCall):
+                type_ = context.fs.get(str(decl.expr.name))
+            elif isinstance(decl.expr, astlib.MethodCall):
+                base_type = context.ns.get(str(decl.expr.base))
+                if isinstance(base_type, astlib.Ref):
+                    base_type = base_type.literal
+                method_to_rettype = context.ts.get(str(base_type))
+                type_ = method_to_rettype[str(decl.expr.method)]
+            if not isinstance(type_, astlib.Ref):
+                self.to_free.add(str(decl.name), decl.type_)
         yield decl
 
     @layers.register(astlib.Return)
@@ -76,8 +63,8 @@ class ARC(layers.Layer):
         arc = self.arc()
         if isinstance(return_.expr, astlib.Name):
             for free in arc:
-                if isinstance(free.args.arg, astlib.Name):
-                    if not str(free.args.arg) == str(return_.expr):
+                if isinstance(free.base, astlib.Name):
+                    if not str(free.base) == str(return_.expr):
                         yield free
                 else:
                     yield free
@@ -89,33 +76,56 @@ class ARC(layers.Layer):
     def func(self, func):
         self.to_free.add_scope()
         context.ns.add_scope()
-
-        context.fs.add(str(func.name), {
-            "rettype": func.type_,
-        })
-
+        context.fs.add(str(func.name), func.rettype)
         # Adding arguments to namespace.
-        args_ = func.args
-        while not isinstance(args_, astlib.Empty):
-            context.ns.add(str(args_.name), {
-                "type_": args_.type_
-            })
-            args_ = args_.rest
+        for arg in func.args.as_list():
+            context.ns.add(str(arg[0]), arg[1])
         body = self.body(func.body)
         if self.no_return_in(body):
             arc = self.arc()
             if not isinstance(body, astlib.Empty):
                 body.extend_from_list(arc)
         yield astlib.Func(
-            func.name, func.args, func.type_, body)
-
+            func.name, func.args, func.rettype, body)
         self.to_free.del_scope()
         context.ns.del_scope()
+
+    @layers.register(astlib.Method)
+    def method(self, method):
+        self.to_free.add_scope()
+        context.ns.add_scope()
+        # Adding arguments to namespace.
+        for arg in method.args.as_list():
+            context.ns.add(str(arg[0]), arg[1])
+        body = self.body(method.body)
+        if self.no_return_in(body):
+            arc = self.arc()
+            if not isinstance(body, astlib.Empty):
+                body.extend_from_list(arc)
+        yield astlib.Method(
+            method.name, method.args, method.rettype, body)
+        self.to_free.del_scope()
+        context.ns.del_scope()
+
+    def split_body(self, body):
+        fields, methods = [], []
+        for stmt in body.as_list():
+            if isinstance(stmt, astlib.Field):
+                fields.append(stmt)
+            else:
+                methods.append(stmt)
+        return fields, methods
 
     @layers.register(astlib.Struct)
     def struct(self, struct):
         self.to_free.add_scope()
         context.ns.add_scope()
+
+        fields, methods = self.split_body(struct.body)
+        method_to_rettype = {}
+        for method in methods:
+            method_to_rettype[str(method.name)] = method.rettype
+        context.ts.add(str(struct.name), method_to_rettype)
 
         yield astlib.Struct(
             struct.name, self.body(struct.body))

@@ -36,10 +36,7 @@ class CGen(layers.Layer):
         errors.not_implemented("type is not supported (cgen layer)")
 
     def expr(self, expr):
-        if isinstance(expr, (
-                astlib.CIntFast8, astlib.CIntFast32,
-                astlib.CUIntFast8, astlib.CUIntFast32,
-                astlib.CIntFast64, astlib.CUIntFast64)):
+        if isinstance(expr, astlib.CINT_TYPES):
             return cgen.Val(
                 literal=expr.literal,
                 type_=getattr(cgen.CTypes, TO_CTYPE[str(expr.to_type())]))
@@ -61,10 +58,10 @@ class CGen(layers.Layer):
             elif expr.name in cdefs.CFUNCS:
                 return getattr(cdefs, str(expr.name).upper() + "_FUNC_DESCR")(
                     *self.call_args(expr.args))
-        elif isinstance(expr, astlib.SExpr):
+        elif isinstance(expr, astlib.Expr):
             return cgen.Expr(
-                TO_COP[expr.op], self.expr(expr.expr1),
-                self.expr(expr.expr2))
+                TO_COP[expr.op], self.expr(expr.lexpr),
+                self.expr(expr.rexpr))
         elif isinstance(expr, astlib.FuncCall):
             return list(self.func_call(expr))[0]
         errors.not_implemented("expr is not supported (cgen layer)")
@@ -97,7 +94,7 @@ class CGen(layers.Layer):
     @layers.register(astlib.Func)
     def func(self, func):
         yield cgen.Func(
-            name=str(func.name), rettype=self.type_(func.type_),
+            name=str(func.name), rettype=self.type_(func.rettype),
             args=self.args(func.args), body=self.body(func.body))
 
     @layers.register(astlib.Struct)
@@ -128,5 +125,5 @@ class CGen(layers.Layer):
     @layers.register(astlib.Assignment)
     def assignment(self, assignment):
         yield cgen.Assignment(
-            name=self.expr(assignment.name),
+            name=self.expr(assignment.var),
             expr=self.expr(assignment.expr))
