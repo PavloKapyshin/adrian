@@ -92,7 +92,7 @@ class Copying(layers.Layer):
     def return_(self, return_):
         # Don't copy return expression.
         expr = self.expr(return_.expr)
-        if isinstance(return_.expr, astlib.VariableName):
+        if isinstance(return_.expr, astlib.Name):
             expr = return_.expr
         yield astlib.Return(expr)
 

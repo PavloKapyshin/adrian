@@ -7,6 +7,8 @@ from . import simpex
 from . import copying
 from . import object_inf
 from . import arc
+from . import method_to_func
+from . import method_calls_to_func_calls
 # from . import oopdef
 # from . import oopcall
 # from . import name_spacing
@@ -27,8 +29,8 @@ LAYERS = (
     (simpex.SimpEx, "transform_ast"),
     (arc.ARC, "expand_ast"),
     # (inlining.Inlining, "expand_ast")
-    # (oopdef.OOPDef, "transform_ast"),
-    # (oopcall.OOPCall, "transform_ast"),
+    (method_to_func.MethodToFunc, "transform_ast"),
+    (method_calls_to_func_calls.MethodCallsToFuncCalls, "transform_ast"),
     # (name_spacing.NameSpacing, "transform_ast"),
     # (cgen.CGen, "transform_ast"),
     # (main_func.MainFunc, "expand_ast")
