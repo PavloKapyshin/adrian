@@ -124,6 +124,17 @@ class ObjectInf(layers.Layer):
             astlib.Empty(),
             rettype=astlib.CType("Void"), body=body)
 
+    def complete_init_method(self, method, struct_name):
+        declaration_of_self = astlib.Decl(
+            SELF_NAME, type_=struct_name, expr=malloc(struct_name))
+        return_self = astlib.Return(SELF_NAME)
+        body = astlib.Body(declaration_of_self, astlib.Empty())
+        body.extend(method.body)
+        body.append(return_self)
+        return astlib.Method(
+            astlib.Name(method.name), method.args,
+            rettype=struct_name, body=body)
+
     def default_init_method(self, struct):
         declaration_of_self = astlib.Decl(
             SELF_NAME, type_=struct.name, expr=malloc(struct.name))
@@ -132,10 +143,15 @@ class ObjectInf(layers.Layer):
         args = astlib.Empty()
         for field_decl in self.only_field_decls(struct.body):
             args = add_to_args(args, field_decl.name, field_decl.type_)
+            if isinstance(field_decl.type_, astlib.Name):
+                field_init_expr = astlib.MethodCall(
+                    field_decl.name, defs.COPY_METHOD_NAME, astlib.Empty())
+            else:
+                field_init_expr = field_decl.name
             field_inits.append(
                 astlib.Assignment(
                     field_of_self(field_decl.name), op="=",
-                    expr=field_decl.name))
+                    expr=field_init_expr))
         body = astlib.Body(declaration_of_self, astlib.Empty())
         body.extend_from_list(field_inits)
         body.append(return_self)
@@ -154,6 +170,11 @@ class ObjectInf(layers.Layer):
             current_stmt = current_stmt.rest
         return fields, methods
 
+    def method(self, method, struct_name):
+        if str(method.name) == defs.INIT_METHOD_NAME:
+            return self.complete_init_method(method, struct_name)
+        return method
+
     @layers.register(astlib.Struct)
     def struct(self, struct):
         fields, methods = self.split_body(struct.body)
@@ -161,6 +182,7 @@ class ObjectInf(layers.Layer):
         have_deinit = False
         have_copy = False
         have_deepcopy = False
+        new_methods = []
         for method in methods.as_list():
             if method.name == defs.INIT_METHOD_NAME:
                 have_init = True
@@ -170,6 +192,7 @@ class ObjectInf(layers.Layer):
                 have_copy = True
             elif method.name == defs.DEEPCOPY_METHOD_NAME:
                 have_deepcopy = True
+            new_methods.append(self.method(method, struct.name))
         add_methods = []
         if not have_init:
             add_methods.append(self.default_init_method(struct))
@@ -179,7 +202,7 @@ class ObjectInf(layers.Layer):
             add_methods.append(self.default_copy_method(struct))
         if not have_deepcopy:
             add_methods.append(self.default_deepcopy_method(struct))
-        list_of_methods = add_methods + methods.as_list()
+        list_of_methods = add_methods + new_methods
         new_body = fields
         rest = list_of_methods
         if isinstance(new_body, astlib.Empty):

@@ -1,22 +1,27 @@
-sct Person {
-    id: c#UIntFast64
-    age: c#UIntFast8
-}
+sct Id {
+    realId: c#UIntFast64
 
-sct HighPerson {
-    person: ref Person
-
-    fun __init__(person: ref Person): None {
-        self.person = person
+    fun getId(): c#UIntFast64 {
+        ret self.realId
     }
 }
 
 
-fun doSomethingWithJohn(john: ref Person): HighPerson {
-    ret HighPerson(john)
+sct Person {
+    id: Id
+    age: c#UIntFast8
 }
 
 
-var john: Person = Person(c#UIntFast64(1), c#UIntFast8(20))
-var secondJohn: ref Person = ref john
-var anotherJohn: HighPerson = doSomethingWithJohn(secondJohn)
+sct HighLevelPerson {
+    lowLevelPerson: Person
+}
+
+
+var jack: HighLevelPerson = HighLevelPerson(
+    Person(Id(c#UIntFast64(1)), c#UIntFast8(20)))
+
+var johnId: Id = Id(c#UIntFast64(2))
+var johnAge: c#UIntFast8 = c#UIntFast8(30)
+var johnPerson: Person = Person(johnId, johnAge)
+var john: HighLevelPerson = HighLevelPerson(johnPerson)

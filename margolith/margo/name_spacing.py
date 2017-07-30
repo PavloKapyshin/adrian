@@ -40,6 +40,9 @@ class NameSpacing(layers.Layer):
         elif isinstance(expr, astlib.CFuncCall):
             return astlib.CFuncCall(
                 expr.name, self.call_args(expr.args))
+        elif isinstance(expr, str):
+            # LOL
+            return self.name(expr)
         errors.not_implemented(
             "expr is not supported (name spacing)")
 

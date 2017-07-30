@@ -16,9 +16,6 @@ def add_to_call_args(args, arg):
 class SimpEx(layers.Layer):
     tmp_string = "tmp_"
 
-    def __init__(self):
-        self.tmp_count = 0
-
     def get_func_rettype(self, call):
         if isinstance(call, astlib.FuncCall):
             return context.fs.get(str(call.name))
@@ -32,8 +29,8 @@ class SimpEx(layers.Layer):
 
     def new_tmp(self, type_, expr):
         tmp_name = astlib.Name(
-            "".join([self.tmp_string, str(self.tmp_count)]), is_tmp=True)
-        self.tmp_count += 1
+            "".join([self.tmp_string, str(context.tmp_count)]), is_tmp=True)
+        context.tmp_count += 1
         return astlib.Decl(tmp_name, type_, expr)
 
     def expr(self, expr):
@@ -46,7 +43,7 @@ class SimpEx(layers.Layer):
             rexpr_tmp, rexpr_decls = self.expr(expr.rexpr)
             decls.extend(lexpr_decls)
             decls.extend(rexpr_decls)
-            return astlib.Expr(expr.op, lexpr_tmp, rexpr_tmp)
+            return astlib.Expr(expr.op, lexpr_tmp, rexpr_tmp), decls
         elif isinstance(expr, (astlib.Ref, astlib.Unref)):
             expr_type = type(expr)
             tmp, decls = self.expr(expr.literal)
@@ -61,8 +58,6 @@ class SimpEx(layers.Layer):
             result = list(translating_function(expr))
             tmp, decls = result[-1], result[:-1]
             return tmp, decls
-        print("EXPR", expr, file=sys.stderr)
-        print("EXPR_TYPE", type(expr), file=sys.stderr)
         errors.not_implemented("expr is not supported (simpex)")
 
     def body(self, body):

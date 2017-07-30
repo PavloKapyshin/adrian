@@ -50,6 +50,8 @@ class ARC(layers.Layer):
                 type_ = context.fs.get(str(decl.expr.name))
             elif isinstance(decl.expr, astlib.MethodCall):
                 base_type = context.ns.get(str(decl.expr.base))
+                if isinstance(base_type, astlib.Ref):
+                    base_type = base_type.literal
                 method_to_rettype = context.ts.get(str(base_type))
                 type_ = method_to_rettype[str(decl.expr.method)]
             if not isinstance(type_, astlib.Ref):

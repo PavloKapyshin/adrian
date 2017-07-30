@@ -1,6 +1,7 @@
 """Make copies where needed."""
 
 import enum
+import sys
 
 from . import layers, astlib, errors, defs
 from .context import context
@@ -31,6 +32,8 @@ class Copying(layers.Layer):
             return list(self.method_call(expr))[0]
         elif isinstance(expr, astlib.FuncCall):
             return list(self.func_call(expr))[0]
+        elif isinstance(expr, astlib.Instance):
+            return list(self.instance(expr))[0]
         elif isinstance(expr, astlib.Unref):
             inner = expr.literal
             if isinstance(inner, astlib.StructElem):
@@ -70,7 +73,7 @@ class Copying(layers.Layer):
     @layers.register(astlib.Assignment)
     def assignment(self, assment):
         yield astlib.Assignment(
-            assment.name, assment.op,
+            assment.var, assment.op,
             self.expr(assment.expr))
 
     @layers.register(astlib.FuncCall)
@@ -103,7 +106,8 @@ class Copying(layers.Layer):
         body = self.body(struct.body, reg)
         field_types = {}
         for field_decl in body.as_list():
-            field_types[str(field_decl.name)] = field_decl.type_
+            if isinstance(field_decl, astlib.Field):
+                field_types[str(field_decl.name)] = field_decl.type_
         context.ts.add(str(struct.name), field_types)
         yield astlib.Struct(struct.name, body)
         context.ns.del_scope()

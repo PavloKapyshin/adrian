@@ -49,15 +49,23 @@ def compile_repl(inp, *, contexts):
 
 
 def compile_from_string(inp, file_hash):
+    contexts = {
+        layer: {
+            "ns": structs.Namespace(),
+            "ts": structs.Namespace(),
+            "fs": structs.Namespace(),
+            "exit_on_error": True,
+            "file_hash": file_hash,
+            "tmp_count": 0}
+        for layer, _ in LAYERS
+    }
     current_ast = foreign_parser.main(parser.main(inp))
     for layer_cls, method_name in LAYERS:
-        with context.new_context(
-                ns=structs.Namespace(), ts=structs.Namespace(),
-                fs=structs.Namespace(), exit_on_error=True,
-                file_hash=file_hash):
+        with context.new_context(**contexts[layer_cls]):
             layer = layer_cls()
             current_ast = list(getattr(layers, method_name)(
                 current_ast, registry=layer.get_registry()))
+            contexts[layer_cls]["tmp_count"] = context.context.tmp_count
     generator = adr_cgen.Generator()
     generator.add_ast(current_ast)
     return "\n".join(generator.generate())
