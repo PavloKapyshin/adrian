@@ -1,5 +1,7 @@
 """Translates expressions into more simple."""
 
+import sys
+
 from . import layers, astlib, errors
 from .context import context
 
@@ -46,13 +48,18 @@ class SimpEx(layers.Layer):
             expr_type = type(expr)
             tmp, decls = self.expr(expr.literal)
             return expr_type(tmp), decls
-        elif isinstance(expr, (astlib.FuncCall, astlib.Instance)):
+        elif isinstance(
+                expr, (astlib.FuncCall, astlib.Instance, astlib.MethodCall)):
             translating_function = self.func_call
             if isinstance(expr, astlib.Instance):
                 translating_function = self.instance
+            elif isinstance(expr, astlib.MethodCall):
+                translating_function = self.method_call
             result = list(translating_function(expr))
             tmp, decls = result[-1], result[:-1]
             return tmp, decls
+        print("EXPR", expr, file=sys.stderr)
+        print("EXPR_TYPE", type(expr), file=sys.stderr)
         errors.not_implemented("expr is not supported (simpex)")
 
     def body(self, body):
@@ -70,7 +77,7 @@ class SimpEx(layers.Layer):
         tmp, decls = self.expr(assment.expr)
         yield from decls
         yield astlib.Assignment(
-            assment.name, assment.op, tmp)
+            assment.var, assment.op, tmp)
 
     @layers.register(astlib.Return)
     def return_(self, return_):
@@ -139,7 +146,7 @@ class SimpEx(layers.Layer):
     def method_call(self, call):
         tmps, decls = self.call_args(call.args)
         yield from decls
-        yield astlib.MethodCall(call.name, tmps)
+        yield astlib.MethodCall(call.base, call.method, tmps)
 
     @layers.register(astlib.Instance)
     def instance(self, instance):

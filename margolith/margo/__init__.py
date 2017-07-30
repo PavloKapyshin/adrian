@@ -6,10 +6,10 @@ from . import analyzer
 from . import simpex
 from . import copying
 from . import object_inf
+from . import arc
 # from . import oopdef
 # from . import oopcall
 # from . import name_spacing
-# from . import arc
 # from . import cgen
 # from . import main_func
 from . import structs
@@ -24,11 +24,12 @@ LAYERS = (
     (simpex.SimpEx, "transform_ast"),
     (copying.Copying, "transform_ast"),
     (object_inf.ObjectInf, "transform_ast"),
+    (simpex.SimpEx, "transform_ast"),
+    (arc.ARC, "expand_ast"),
+    # (inlining.Inlining, "expand_ast")
     # (oopdef.OOPDef, "transform_ast"),
     # (oopcall.OOPCall, "transform_ast"),
     # (name_spacing.NameSpacing, "transform_ast"),
-    # (simpex.SimpEx, "transform_ast"),
-    # (arc.ARC, "expand_ast"),
     # (cgen.CGen, "transform_ast"),
     # (main_func.MainFunc, "expand_ast")
 )
