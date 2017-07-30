@@ -3,6 +3,19 @@
 from . import layers, astlib, errors, defs
 
 
+def _add_to_maker(llist_type):
+    def wrapper(llist, *args):
+        if isinstance(llist, astlib.Empty):
+            return llist_type(*args, rest=astlib.Empty())
+        llist.append(*args)
+        return llist
+    return wrapper
+
+
+add_to_args = _add_to_maker(astlib.Args)
+add_to_body = _add_to_maker(astlib.Body)
+
+
 class MethodToFunc(layers.Layer):
 
     def other_method(self, method, struct_name):

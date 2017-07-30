@@ -37,8 +37,9 @@ class Name(collections.UserString):
 
     """
 
-    def __init__(self, data):
+    def __init__(self, data, is_tmp=None):
         super().__init__(data)
+        self.is_tmp = is_tmp
 
     def copy(self):
         return copy.deepcopy(self)

@@ -6,6 +6,16 @@ from .context import context
 
 class MethodCallsToFuncCalls(layers.Layer):
 
+    def get_base_type(self, base):
+        if isinstance(base, astlib.Name):
+            return context.ns.get(str(base))
+        elif isinstance(base, astlib.StructElem):
+            name_type = context.ns.get(str(base.name))
+            return context.ts.get(str(name_type))[str(base.elem)]
+        elif isinstance(base, astlib.Unref):
+            return self.get_base_type(base.literal)
+        errors.not_implemented("can't get_base_type (mcall->fcall)")
+
     def expr(self, expr):
         if isinstance(expr, astlib.MethodCall):
             return list(self.method_call(expr))[0]
@@ -40,7 +50,9 @@ class MethodCallsToFuncCalls(layers.Layer):
 
     @layers.register(astlib.MethodCall)
     def method_call(self, call):
-        base_type = context.ns.get(str(call.base))
+        base_type = self.get_base_type(call.base)
+        if isinstance(base_type, astlib.Ref):
+            base_type = base_type.literal
         args = self.call_args(call.args)
         if str(call.method) != defs.INIT_METHOD_NAME:
             args = astlib.CallArgs(call.base, args)
@@ -66,13 +78,20 @@ class MethodCallsToFuncCalls(layers.Layer):
     def struct(self, struct):
         context.ns.add_scope()
         reg = MethodCallsToFuncCalls().get_registry()
-        yield astlib.Struct(struct.name, self.body(struct.body, reg))
+        body = self.body(struct.body, reg)
+        field_types = {}
+        for field_decl in body.as_list():
+            field_types[str(field_decl.name)] = field_decl.type_
+        context.ts.add(str(struct.name), field_types)
+        yield astlib.Struct(struct.name, body)
         context.ns.del_scope()
 
     @layers.register(astlib.Func)
     def func(self, func):
         context.ns.add_scope()
         reg = MethodCallsToFuncCalls().get_registry()
+        for arg in func.args.as_list():
+            context.ns.add(str(arg[0]), arg[1])
         yield astlib.Func(
             func.name, args=func.args,
             rettype=func.rettype, body=self.body(func.body, reg))

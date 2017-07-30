@@ -9,17 +9,15 @@ from . import object_inf
 from . import arc
 from . import method_to_func
 from . import method_calls_to_func_calls
-# from . import oopdef
-# from . import oopcall
-# from . import name_spacing
-# from . import cgen
-# from . import main_func
+from . import name_spacing
+from . import cgen
+from . import main_func
 from . import structs
 from . import context
 from . import layers
 
 
-REPL_FILE_HASH = "mangled_"
+REPL_FILE_HASH = "mangled"
 
 LAYERS = (
     (analyzer.Analyzer, "transform_ast"),
@@ -31,9 +29,9 @@ LAYERS = (
     # (inlining.Inlining, "expand_ast")
     (method_to_func.MethodToFunc, "transform_ast"),
     (method_calls_to_func_calls.MethodCallsToFuncCalls, "transform_ast"),
-    # (name_spacing.NameSpacing, "transform_ast"),
-    # (cgen.CGen, "transform_ast"),
-    # (main_func.MainFunc, "expand_ast")
+    (name_spacing.NameSpacing, "transform_ast"),
+    (cgen.CGen, "transform_ast"),
+    (main_func.MainFunc, "expand_ast")
 )
 
 
@@ -44,10 +42,10 @@ def compile_repl(inp, *, contexts):
             layer = layer_cls()
             current_ast = list(getattr(layers, method_name)(
                 current_ast, registry=layer.get_registry()))
-    # generator = adr_cgen.Generator()
-    # generator.add_ast(current_ast)
-    # return list(generator.generate())
-    return current_ast
+    generator = adr_cgen.Generator()
+    generator.add_ast(current_ast)
+    return list(generator.generate())
+    # return current_ast
 
 
 def compile_from_string(inp, file_hash):

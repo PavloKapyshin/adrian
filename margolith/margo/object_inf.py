@@ -81,8 +81,7 @@ class ObjectInf(layers.Layer):
         body.append(return_new)
         return astlib.Method(
             astlib.Name(defs.DEEPCOPY_METHOD_NAME),
-            astlib.Args(
-                name=SELF_NAME, type_=struct.name, rest=astlib.Empty()),
+            astlib.Empty(),
             rettype=struct.name, body=body)
 
     def default_copy_method(self, struct):
@@ -108,7 +107,7 @@ class ObjectInf(layers.Layer):
         body.append(return_new)
         return astlib.Method(
             astlib.Name(defs.COPY_METHOD_NAME),
-            astlib.Args(name=SELF_NAME, type_=struct.name, rest=astlib.Empty()),
+            astlib.Empty(),
             rettype=struct.name, body=body)
 
     def default_deinit_method(self, struct):
@@ -122,8 +121,7 @@ class ObjectInf(layers.Layer):
         body.extend_from_list(frees_and_deinits[1:])
         return astlib.Method(
             astlib.Name(defs.DEINIT_METHOD_NAME),
-            astlib.Args(
-                name=SELF_NAME, type_=struct.name, rest=astlib.Empty()),
+            astlib.Empty(),
             rettype=astlib.CType("Void"), body=body)
 
     def default_init_method(self, struct):

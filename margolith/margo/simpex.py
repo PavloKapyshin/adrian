@@ -14,7 +14,7 @@ def add_to_call_args(args, arg):
 
 
 class SimpEx(layers.Layer):
-    tmp_string = "__tmp"
+    tmp_string = "tmp_"
 
     def __init__(self):
         self.tmp_count = 0
@@ -32,7 +32,7 @@ class SimpEx(layers.Layer):
 
     def new_tmp(self, type_, expr):
         tmp_name = astlib.Name(
-            "".join([self.tmp_string, str(self.tmp_count)]))
+            "".join([self.tmp_string, str(self.tmp_count)]), is_tmp=True)
         self.tmp_count += 1
         return astlib.Decl(tmp_name, type_, expr)
 

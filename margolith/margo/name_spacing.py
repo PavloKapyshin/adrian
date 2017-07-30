@@ -3,23 +3,22 @@
 from . import layers, astlib, errors, defs
 from .context import context
 
+
 class NameSpacing(layers.Layer):
 
     def type_(self, type_):
-        if isinstance(type_, astlib.CType):
+        if isinstance(type_, (astlib.CType, astlib.Empty)):
             return type_
         elif isinstance(type_, astlib.Ref):
             return astlib.Ref(self.type_(type_.literal))
-        elif isinstance(type_, astlib.TypeName):
-            return astlib.Name(defs.STRUCT_PREFIX + str(type_))
-        elif isinstance(type_, astlib.Empty):
-            return astlib.Empty()
+        elif isinstance(type_, astlib.Name):
+            return self.name(type_)
         errors.not_implemented(
-            "type is not supported (name spacing layer)")
+            "type is not supported (name spacing)")
 
     def expr(self, expr):
-        if isinstance(expr, astlib.VariableName):
-            return astlib.Name(defs.VAR_PREFIX + str(expr))
+        if isinstance(expr, astlib.Name):
+            return self.name(expr)
         elif isinstance(expr, astlib.Ref):
             return astlib.Ref(self.expr(expr.literal))
         elif isinstance(expr, astlib.Unref):
@@ -27,26 +26,27 @@ class NameSpacing(layers.Layer):
         elif isinstance(expr, astlib.StructElem):
             return astlib.StructElem(
                 self.expr(expr.name),
-                astlib.Name(defs.FIELD_PREFIX + str(expr.elem)))
+                self.name(expr.elem))
         elif isinstance(expr, astlib.FuncCall):
             return list(self.func_call(expr))[0]
-        elif isinstance(expr, astlib.SExpr):
-            return astlib.SExpr(
-                expr.op, self.expr(expr.expr1),
-                self.expr(expr.expr2))
-        elif isinstance(expr, (
-                astlib.CIntFast8, astlib.CIntFast32,
-                astlib.CUIntFast8, astlib.CUIntFast32,
-                astlib.CUIntFast64, astlib.CIntFast64)):
+        elif isinstance(expr, astlib.Expr):
+            return astlib.Expr(
+                expr.op, self.expr(expr.lexpr),
+                self.expr(expr.rexpr))
+        elif isinstance(expr, astlib.CINT_TYPES):
             return expr
         elif isinstance(expr, astlib.StructScalar):
-            return astlib.StructScalar(
-                astlib.Name(defs.STRUCT_PREFIX + str(expr.name)))
+            return astlib.StructScalar(self.name(expr.name))
         elif isinstance(expr, astlib.CFuncCall):
             return astlib.CFuncCall(
                 expr.name, self.call_args(expr.args))
         errors.not_implemented(
-            "expr is not supported (name spacing layer)")
+            "expr is not supported (name spacing)")
+
+    def name(self, name):
+        string = "_".join([
+            defs.ADR_PREFIX, context.file_hash, str(name)])
+        return astlib.Name(string)
 
     def call_args(self, args):
         if isinstance(args, astlib.Empty):
@@ -73,20 +73,20 @@ class NameSpacing(layers.Layer):
 
     @layers.register(astlib.Decl)
     def decl(self, decl):
-        name = astlib.Name(defs.VAR_PREFIX + str(decl.name))
+        name = self.name(decl.name)
         yield astlib.Decl(
             name, self.type_(decl.type_), self.expr(decl.expr))
 
     @layers.register(astlib.Assignment)
-    def assignment(self, assignment):
+    def assignment(self, assment):
         yield astlib.Assignment(
-            self.expr(assignment.name), assignment.op,
-            self.expr(assignment.expr))
+            self.expr(assment.var), assment.op,
+            self.expr(assment.expr))
 
     @layers.register(astlib.FuncCall)
     def func_call(self, call):
         yield astlib.FuncCall(
-            astlib.Name(defs.FUNC_PREFIX + str(call.name)),
+            self.name(call.name),
             self.call_args(call.args))
 
     @layers.register(astlib.CFuncCall)
@@ -101,18 +101,15 @@ class NameSpacing(layers.Layer):
     @layers.register(astlib.Func)
     def func(self, func):
         yield astlib.Func(
-            astlib.Name(defs.FUNC_PREFIX + str(func.name)),
-            self.args(func.args), self.type_(func.type_),
-            self.body(func.body))
+            self.name(func.name), self.args(func.args),
+            self.type_(func.rettype), self.body(func.body))
 
     @layers.register(astlib.Struct)
     def struct(self, struct):
         yield astlib.Struct(
-            astlib.Name(defs.STRUCT_PREFIX + str(struct.name)),
-            self.body(struct.body))
+            self.name(struct.name), self.body(struct.body))
 
     @layers.register(astlib.Field)
     def field(self, field):
         yield astlib.Field(
-            astlib.Name(defs.FIELD_PREFIX + str(field.name)),
-            self.type_(field.type_))
+            self.name(field.name), self.type_(field.type_))
