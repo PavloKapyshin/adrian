@@ -44,8 +44,17 @@ class Name(collections.UserString):
         return copy.deepcopy(self)
 
 
-class CType(Name):
-    pass
+class CType(collections.UserString):
+    """CType concept in Adrian.
+
+    Is used to represent type from c module
+    """
+
+    def __init__(self, data):
+        super().__init__(data)
+
+    def copy(self):
+        return copy.deepcopy(self)
 
 
 class ModuleMember(Node):
@@ -320,23 +329,23 @@ class CallArgs(Node):
 
 class Expr(Node):
 
-    def __init__(self, op, expr1, expr2):
+    def __init__(self, op, lexpr, rexpr):
         self._op = op
-        self._expr1 = expr1
-        self._expr2 = expr2
-        self._keys = ("op", "expr1", "expr2")
+        self._lexpr = lexpr
+        self._rexpr = rexpr
+        self._keys = ("op", "lexpr", "rexpr")
 
     @property
     def op(self):
         return self._op
 
     @property
-    def expr1(self):
-        return self._expr1
+    def lexpr(self):
+        return self._lexpr
 
     @property
-    def expr2(self):
-        return self._expr2
+    def rexpr(self):
+        return self._rexpr
 
 
 class Decl(Node):
@@ -635,14 +644,17 @@ class StructScalar(Node):
         return self._name
 
 
-CTYPES = (
+CINT_TYPES = (
     CIntFast8,
     CIntFast32,
     CIntFast64,
     CUIntFast8,
     CUIntFast32,
-    CUIntFast64,
+    CUIntFast64
+)
+
+CTYPES = (
     CChar,
     CString
-)
+) + CINT_TYPES
 CTYPES_NAMES = set(str(type_.to_type()) for type_ in CTYPES)
