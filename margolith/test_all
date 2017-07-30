@@ -1,2 +1,1 @@
-. ./zpath
-python3 test/test.py
+./test/check-lang-to-c.py ./compiler test/adrian_tests/ test/c_tests/
