@@ -25,7 +25,10 @@ class SimpEx(layers.Layer):
         elif isinstance(call, astlib.Instance):
             # __init__ method must return struct instance.
             return call.name
-        errors.not_implemented("lol (simpex)")
+        elif isinstance(call, astlib.MethodCall):
+            base_type = context.ns.get(str(call.base))
+            return context.ts.get(base_type)[str(call.method)]
+        errors.not_implemented("argument type is not supported (simpex)")
 
     def new_tmp(self, type_, expr):
         tmp_name = astlib.Name(
@@ -109,18 +112,35 @@ class SimpEx(layers.Layer):
             self.body(method.body))
         context.ns.del_scope()
 
+    def split_body(self, body):
+        fields, methods = [], []
+        for stmt in body.as_list():
+            if isinstance(stmt, astlib.Field):
+                fields.append(stmt)
+            else:
+                methods.append(stmt)
+        return fields, methods
+
     @layers.register(astlib.Struct)
     def struct(self, struct):
         context.ns.add_scope()
+        fields, methods = self.split_body(struct.body)
+        method_to_rettype = {}
+        for method in methods:
+            method_to_rettype[str(method.name)] = method.rettype
+        context.ts.add(str(struct.name), method_to_rettype)
         yield astlib.Struct(struct.name, self.body(struct.body))
         context.ns.del_scope()
 
     def call_args(self, args):
         tmps, decls = astlib.Empty(), []
         for arg in args.as_list():
-            if isinstance(arg, (astlib.FuncCall, astlib.Instance)):
+            if isinstance(arg, (
+                        astlib.FuncCall, astlib.Instance, astlib.MethodCall)):
                 if isinstance(arg, astlib.FuncCall):
                     result = list(self.func_call(arg))
+                elif isinstance(arg, astlib.MethodCall):
+                    result = list(self.method_call(arg))
                 else:
                     result = list(self.instance(arg))
                 func_rettype = self.get_func_rettype(arg)
