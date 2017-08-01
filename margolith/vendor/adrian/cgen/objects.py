@@ -40,12 +40,49 @@ class _Slash(_Op):
     pass
 
 
+class _Eq(_Op):
+    """==."""
+    pass
+
+
+class _Neq(_Op):
+    """!=."""
+    pass
+
+
+class _Lt(_Op):
+    """<."""
+    pass
+
+
+class _Gt(_Op):
+    """>."""
+    pass
+
+
+class _Lte(_Op):
+    """<=."""
+    pass
+
+
+class _Gte(_Op):
+    """>=."""
+    pass
+
+
 class COps(_Object):
     """Container."""
     plus = _Plus()
     minus = _Minus()
     star = _Star()
     slash = _Slash()
+
+    eq = _Eq()
+    neq = _Neq()
+    lt = _Lt()
+    gt = _Gt()
+    lte = _Lte()
+    gte = _Gte()
 
 
 class _Type(_Object):
@@ -90,7 +127,7 @@ class _Int(_Type):
     pass
 
 
-class _SizeT(_Type):
+class _Size(_Type):
     """size_t"""
     pass
 
@@ -139,6 +176,10 @@ class _Void(_Type):
     pass
 
 
+class _File(_Type):
+    """FILE."""
+
+
 class CTypes(_Object):
     """Container to ease importing."""
     int = _Int()
@@ -148,9 +189,10 @@ class CTypes(_Object):
     uint_fast8 = _UIntFast8()
     uint_fast32 = _UIntFast32()
     uint_fast64 = _UIntFast64()
-    size_t = _SizeT()
+    size = _Size()
     char = _Char()
     void = _Void()
+    file = _File()
 
     @classmethod
     def ptr(cls, type_):
@@ -185,6 +227,30 @@ class SizeOf(_Object):
     @property
     def type_(self):
         return self._type
+
+
+class Cast(_Object):
+    """Type cast operator."""
+
+    _keys = ("expr", "to", )
+
+    def __init__(self, expr, to):
+        self._expr = expr
+        self._to = to
+
+    @property
+    def expr(self):
+        return self._expr
+
+    @property
+    def to(self):
+        return self._to
+
+
+class Null(_Object):
+    """NULL macro."""
+
+    _keys = ()
 
 
 class Val(_Object):
@@ -544,8 +610,8 @@ class CFuncDescr(_Object):
         return self._includes
 
 
-class CVarDescr(_Object):
-    """Definition of C variable or constant for FFI."""
+class CNameDescr(_Object):
+    """Definition of C name for FFI."""
 
     _keys = ("name", "type_", "includes")
 

@@ -1,5 +1,6 @@
 from . import errors
 from . import objects
+from . import includes
 from . import _context
 from . import _layers
 
@@ -18,6 +19,8 @@ _CTYPE_TO_STRING = {
             (objects.CTypes.int, "int"),
             (objects.CTypes.void, "void"),
             (objects.CTypes.char, "char"),
+            (objects.CTypes.file, "FILE"),
+            (objects.CTypes.size, "size_t"),
         ]]
 }
 
@@ -31,6 +34,12 @@ _COP_TO_STRING = {
             (objects.COps.minus, "-"),
             (objects.COps.star, "*"),
             (objects.COps.slash, "/"),
+            (objects.COps.eq, "=="),
+            (objects.COps.neq, "!="),
+            (objects.COps.lt, "<"),
+            (objects.COps.gt, ">"),
+            (objects.COps.gte, ">="),
+            (objects.COps.lte, "<=")
         ]]
 }
 
@@ -85,9 +94,11 @@ class NodeGenerator(_layers.Layer):
                 objects.CTypes.int_fast8, objects.CTypes.int_fast32,
                 objects.CTypes.int_fast64, objects.CTypes.uint_fast8,
                 objects.CTypes.uint_fast32, objects.CTypes.uint_fast64)))):
-            self.add_include(objects.Include("stdint.h"))
+            self.add_include(includes.stdint)
             return _CTYPE_TO_STRING[type(type_)]
-        elif isinstance(type_, (objects._Void, objects._Int)):
+        elif isinstance(
+                type_,
+                (objects._Void, objects._Int, objects._Char, objects._Size)):
             return _CTYPE_TO_STRING[type(type_)]
         elif isinstance(type_, objects.StructType):
             return "struct {}".format(type_.name)
@@ -97,7 +108,10 @@ class NodeGenerator(_layers.Layer):
         elif isinstance(type_, objects._Array):
             # Recursively call self.type_ with array's "inner" type.
             return self.type_(type_.type_)
-        errors.not_implemented("type is not supported")
+        elif isinstance(type_, objects._File):
+            self.add_include(includes.stdio)
+            return _CTYPE_TO_STRING[type(type_)]
+        errors.not_implemented("type is not supported")  # pragma: no cover
 
     def expr(self, expr):
         if isinstance(expr, objects.FuncCall):
@@ -112,6 +126,8 @@ class NodeGenerator(_layers.Layer):
             return self.sub_val(expr)
         elif isinstance(expr, objects.ArrayElemByIndex):
             return self.sub_array_elem_by_index(expr)
+        elif isinstance(expr, objects.CNameDescr):
+            return self.sub_name_descr(expr)
         #elif isinstance(expr, objects._Ptr):
         #    return "*{}".format(self.expr(expr.type_))
         elif isinstance(expr, objects.StructElem):
@@ -122,7 +138,18 @@ class NodeGenerator(_layers.Layer):
                 sep = "."
                 struct_name = self.expr(expr.struct_name)
             return "{}{}{}".format(struct_name, sep, self.expr(expr.elem_name))
-        errors.not_implemented("expr is not supported")
+        elif expr is objects.Null:
+            return "NULL"
+        elif isinstance(expr, objects.Cast):
+            return self.sub_cast(expr)
+        errors.not_implemented("expr is not supported")  # pragma: no cover
+
+    def sub_cast(self, cast):
+        return "({})({})".format(self.type_(cast.to), self.expr(cast.expr))
+
+    @_layers.register(objects.Cast)
+    def cast(self, cast):
+        return "".join([self.sub_cast(cast), ";"])
 
     def sub_decl(self, decl):
         """Generates declaration without semicolon."""
@@ -140,6 +167,9 @@ class NodeGenerator(_layers.Layer):
                 size = str(orig_size)
             elif orig_size == "auto":
                 size = str(len(decl.expr.literal))
+            else:
+                errors.not_implemented(  # pragma: no cover
+                    "unsupported array size")
             result = "".join([result, "[", size, "]"])
         if decl.expr:
             result = " ".join([result, "=", self.expr(decl.expr)])
@@ -150,11 +180,21 @@ class NodeGenerator(_layers.Layer):
             return ["void"]
         return [self.sub_decl(arg) for arg in args]
 
-    def sub_func_call(self, call):
-        # Updating includes.
-        for include in call.includes:
+    def update_includes(self, includes):
+        for include in includes:
             self.add_include(include)
+
+    def sub_func_call(self, call):
+        self.update_includes(call.includes)
         return "{}({})".format(call.name, ", ".join(map(self.expr, call.args)))
+
+    def sub_name_descr(self, descr):
+        self.update_includes(descr.includes)
+        return "{}".format(descr.name)
+
+    @_layers.register(objects.CNameDescr)
+    def name_descr(self, descr):
+        return "{};".format(self.sub_name_descr(descr))
 
     def sub_array_elem_by_index(self, expr):
         return "{}[{}]".format(expr.name, self.expr(expr.index))
@@ -184,9 +224,9 @@ class NodeGenerator(_layers.Layer):
                 objects.CTypes.int_fast8, objects.CTypes.int_fast32,
                 objects.CTypes.int_fast64, objects.CTypes.uint_fast8,
                 objects.CTypes.uint_fast32, objects.CTypes.uint_fast64)))):
-            self.add_include(objects.Include("stdint.h"))
+            self.add_include(includes.stdint)
             return value.literal
-        elif isinstance(value.type_, (objects._Int, objects._SizeT)):
+        elif isinstance(value.type_, (objects._Int, objects._Size)):
             return str(value.literal)
         elif isinstance(value.type_, objects._Char):
             return "'{}'".format(value.literal)
@@ -197,7 +237,7 @@ class NodeGenerator(_layers.Layer):
         elif isinstance(value.type_, objects._Array):
             return "{{{}}}".format(
                 ", ".join([self.expr(subexpr) for subexpr in value.literal]))
-        errors.not_implemented("val is not supported")
+        errors.not_implemented("val is not supported")  # pragma: no cover
 
     @_layers.register(objects.Val)
     def val(self, value):
