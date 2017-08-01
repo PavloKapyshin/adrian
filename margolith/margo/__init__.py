@@ -27,7 +27,7 @@ LAYERS = (
     (object_inf.ObjectInf, "transform_ast"),
     (simpex.SimpEx, "transform_ast"),
     (arc.ARC, "expand_ast"),
-    #(inlining.Inlining, "transform_ast"),
+    (inlining.Inlining, "transform_ast"),
     (method_to_func.MethodToFunc, "transform_ast"),
     (method_calls_to_func_calls.MethodCallsToFuncCalls, "transform_ast"),
     (name_spacing.NameSpacing, "transform_ast"),
@@ -46,7 +46,6 @@ def compile_repl(inp, *, contexts):
     generator = adr_cgen.Generator()
     generator.add_ast(current_ast)
     return list(generator.generate())
-    # return current_ast
 
 
 def compile_from_string(inp, file_hash):

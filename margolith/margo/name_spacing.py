@@ -13,6 +13,8 @@ class NameSpacing(layers.Layer):
             return astlib.Ref(self.type_(type_.literal))
         elif isinstance(type_, astlib.Name):
             return self.name(type_)
+        elif isinstance(type_, astlib.ParamedType):
+            return self.name(type_.base)
         errors.not_implemented(
             "type is not supported (name spacing)")
 

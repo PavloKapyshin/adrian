@@ -46,6 +46,8 @@ class MethodCallsToFuncCalls(layers.Layer):
         base_type = self.get_base_type(call.base)
         if isinstance(base_type, astlib.Ref):
             base_type = base_type.literal
+        elif isinstance(base_type, astlib.ParamedType):
+            base_type = base_type.base
         args = self.call_args(call.args)
         if str(call.method) != defs.INIT_METHOD_NAME:
             args = [call.base] + args
