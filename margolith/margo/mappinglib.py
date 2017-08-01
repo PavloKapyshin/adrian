@@ -1,6 +1,6 @@
 """MappingLib"""
 
-from . import astlib
+from . import astlib, defs
 
 
 class Mapping:
@@ -41,6 +41,16 @@ class Mapping:
         if isinstance(expr, astlib.Name):
             if str(expr) in self.expr_mapping:
                 return self.expr_mapping[str(expr)]
+        elif isinstance(expr, astlib.StructElem):
+            return astlib.StructElem(self.map_expr(expr.name), expr.elem)
+        elif isinstance(expr, astlib.MethodCall):
+            base = self.map_expr(expr.base)
+            if isinstance(base, astlib.CINT_TYPES):
+                if str(expr.method) == defs.COPY_METHOD_NAME:
+                    return base
+            return astlib.MethodCall(
+                base, expr.method,
+                self.apply_expr_mapping_on_args(expr.args))
         return expr
 
     def apply_expr_mapping_on_args(self, args):
@@ -52,6 +62,19 @@ class Mapping:
             if isinstance(stmt, astlib.CFuncCall):
                 yield astlib.CFuncCall(
                     stmt.name, list(self.apply_expr_mapping_on_args(stmt.args)))
+            elif isinstance(stmt, astlib.Assignment):
+                yield astlib.Assignment(
+                    self.map_expr(stmt.var), stmt.op, self.map_expr(stmt.expr))
+            elif isinstance(stmt, astlib.MethodCall):
+                base = self.map_expr(stmt.base)
+                if isinstance(base, astlib.CINT_TYPES):
+                    if str(stmt.method) == defs.COPY_METHOD_NAME:
+                        yield base
+                    #elif str(stmt.method) == defs.DEINIT_METHOD_NAME:
+                        #continue
+                yield astlib.MethodCall(
+                    base, stmt.method,
+                    list(self.apply_expr_mapping_on_args(stmt.args)))
             else:
                 yield stmt
 

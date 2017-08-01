@@ -59,6 +59,9 @@ class Inliner:
             if isinstance(stmt, astlib.Decl):
                 inlined.append(
                     astlib.Decl(stmt.name, stmt.type_, stmt.expr))
+            elif isinstance(stmt, astlib.Assignment):
+                inlined.append(
+                    astlib.Assignment(stmt.var, stmt.op, stmt.expr))
             elif isinstance(stmt, astlib.Return):
                 return_expr = stmt.expr
         return return_expr, inlined
@@ -70,6 +73,9 @@ class Inliner:
             if isinstance(stmt, astlib.CFuncCall):
                 inlined.append(
                     astlib.CFuncCall(stmt.name, stmt.args))
+            elif isinstance(stmt, astlib.MethodCall):
+                inlined.append(
+                    astlib.MethodCall(stmt.base, stmt.method, stmt.args))
             elif isinstance(stmt, astlib.Return):
                 return_expr = stmt.expr
         return return_expr, inlined

@@ -1,6 +1,7 @@
 """Generates CGen AST."""
 
-from . import cdefs, layers, astlib, errors
+from . import cdefs, layers, astlib, errors, defs
+from .context import context
 from adrian import cgen
 
 
@@ -113,7 +114,13 @@ class CGen(layers.Layer):
 
     @layers.register(astlib.Field)
     def field(self, field):
-        yield cgen.Decl(str(field.name), type_=self.type_(field.type_))
+        type_ = self.type_(field.type_)
+        if isinstance(field.type_, astlib.Name):
+            if defs.VAR_NAME_REGEX.fullmatch(
+                str(field.type_.replace(
+                    "_".join([defs.ADR_PREFIX, context.file_hash, ""]), ""))):
+                type_ = cgen.CTypes.ptr(cgen.CTypes.void)
+        yield cgen.Decl(str(field.name), type_=type_)
 
     @layers.register(astlib.Assignment)
     def assignment(self, assignment):

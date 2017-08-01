@@ -1,5 +1,7 @@
 """Translates method calls into function calls."""
 
+import sys
+
 from . import layers, astlib, errors, defs
 from .context import context
 
@@ -8,10 +10,16 @@ class MethodCallsToFuncCalls(layers.Layer):
 
     def get_base_type(self, base):
         if isinstance(base, astlib.Name):
-            return context.ns.get(str(base))
+            return context.ns.get(str(base))["type_"]
         elif isinstance(base, astlib.StructElem):
-            name_type = context.ns.get(str(base.name))
-            return context.ts.get(str(name_type))[str(base.elem)]
+            name_info = context.ns.get(str(base.name))
+            name_type = name_info["type_"]
+            if isinstance(name_type, astlib.ParamedType):
+                name_type = name_type.base
+            result = context.ts.get(str(name_type))["fields"][str(base.elem)]
+            if defs.VAR_NAME_REGEX.fullmatch(str(result)):
+                result = name_info["params"][str(result)]
+            return result
         elif isinstance(base, astlib.Unref):
             return self.get_base_type(base.literal)
         errors.not_implemented("can't get_base_type (mcall->fcall)")
@@ -72,12 +80,15 @@ class MethodCallsToFuncCalls(layers.Layer):
     @layers.register(astlib.Struct)
     def struct(self, struct):
         context.ns.add_scope()
+        field_types = {}
+        for field_decl in struct.body:
+            field_types[str(field_decl.name)] = field_decl.type_
+        context.ts.add(str(struct.name), {
+            "fields": field_types,
+            "param_types": struct.param_types
+        })
         reg = MethodCallsToFuncCalls().get_registry()
         body = self.body(struct.body, reg)
-        field_types = {}
-        for field_decl in body:
-            field_types[str(field_decl.name)] = field_decl.type_
-        context.ts.add(str(struct.name), field_types)
         yield astlib.Struct(struct.name, struct.param_types, body)
         context.ns.del_scope()
 
@@ -86,7 +97,10 @@ class MethodCallsToFuncCalls(layers.Layer):
         context.ns.add_scope()
         reg = MethodCallsToFuncCalls().get_registry()
         for arg in func.args:
-            context.ns.add(str(arg.name), arg.type_)
+            context.ns.add(str(arg.name), {
+                "type_": arg.type_,
+                "params": self.get_params(arg.type_),
+            })
         yield astlib.Func(
             func.name, args=func.args,
             rettype=func.rettype, body=self.body(func.body, reg))
@@ -96,7 +110,21 @@ class MethodCallsToFuncCalls(layers.Layer):
     def return_(self, return_):
         yield astlib.Return(self.expr(return_.expr))
 
+    def get_params(self, type_):
+        params = None
+        if isinstance(type_, astlib.ParamedType):
+            params = {}
+            index = 0
+            for param_type in context.ts.get(str(type_.base))["param_types"]:
+                params[str(param_type)] = type_.params[index]
+                index += 1
+        return params
+
     @layers.register(astlib.Decl)
     def decl(self, decl):
-        context.ns.add(str(decl.name), decl.type_)
+        params = self.get_params(decl.type_)
+        context.ns.add(str(decl.name), {
+            "type_": decl.type_,
+            "params": params
+        })
         yield astlib.Decl(decl.name, decl.type_, self.expr(decl.expr))
