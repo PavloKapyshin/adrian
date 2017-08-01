@@ -67,23 +67,16 @@ class CGen(layers.Layer):
         errors.not_implemented("expr is not supported (cgen layer)")
 
     def call_args(self, args):
-        result = []
-        for arg in args.as_list():
-            result.append(self.expr(arg))
-        return result
+        return [self.expr(arg) for arg in args]
 
     def args(self, args):
-        result = []
-        for arg in args.as_list():
-            result.append(cgen.Decl(str(arg[0]), type_=self.type_(arg[1])))
-        return result
+        return [cgen.Decl(str(arg.name), self.type_(arg.type_))
+                for arg in args]
 
     def body(self, body):
         reg = CGen().get_registry()
-        result = []
-        for stmt in body.as_list():
-            result.append(list(layers.transform_node(stmt, registry=reg))[0])
-        return result
+        return [list(layers.transform_node(stmt, registry=reg))[0]
+                for stmt in body]
 
     @layers.register(astlib.Decl)
     def decl(self, decl):

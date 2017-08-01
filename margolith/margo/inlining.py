@@ -6,6 +6,29 @@ from . import layers, astlib, errors, defs, structs
 from .context import context
 
 
+class Mapping:
+
+    def __init__(self):
+        self.expr = {}
+        self.type_ = {}
+
+    def fill_expr(self, entry, call):
+        index = 0
+        if isinstance(call, astlib.MethodCall):
+            self.expr["self"] = call.base
+        for arg in entry["args"]:
+            self.expr[str(arg.name)] = call.args[index]
+            index += 1
+
+    def fill_type(self, type_):
+        if isinstance(type_, astlib.ParamedType):
+            index = 0
+            param_types = context.ts.get(str(type_.base))["param_types"]
+            for param_type in param_types:
+                self.type_[str(param_type)] = type_.params[index]
+                index += 1
+
+
 class Inlining(layers.Layer):
 
     def __init__(self):
@@ -17,10 +40,9 @@ class Inlining(layers.Layer):
     def body_depends_on_param_types(self, body, mapping):
         for stmt in body:
             if isinstance(stmt, astlib.CFuncCall):
-
                 for arg in stmt.args:
                     if isinstance(arg, astlib.Name):
-                        if str(arg) in mapping:
+                        if str(arg) in mapping.expr:
                             return True
         return False
 
@@ -28,7 +50,7 @@ class Inlining(layers.Layer):
         name_type = context.ns.get(str(struct_elem.name))
         if isinstance(name_type, astlib.ParamedType):
             name_type = name_type.base
-        return context.ts.get(name_type)[str(struct_elem.elem)]
+        return context.ts.get(name_type)["fields"][str(struct_elem.elem)]
 
     def type_depends_on_param_types(self, type_):
         if isinstance(type_, astlib.Name):
@@ -40,27 +62,63 @@ class Inlining(layers.Layer):
                     return True
         return False
 
-    def make_mapping(self, entry, call):
-        mapping = {}
-        index = 0
-        if isinstance(call, astlib.MethodCall):
-            mapping["self"] = call.base
-        for arg in entry["args"]:
-            mapping[str(arg.name)] = call.args[index]
-            index += 1
-        return mapping
-
     def inline_call_args(self, args, mapping):
         exprs, inlined = [], []
         for arg in args:
             subres = arg
             if isinstance(subres, astlib.Name):
-                if str(subres) in mapping:
-                    subres = mapping[str(subres)]
+                if str(subres) in mapping.expr:
+                    subres = mapping.expr[str(subres)]
             expr, subinlined = self.inline_expr(subres, mapping)
             exprs.append(expr)
             inlined.extend(subinlined)
         return exprs, inlined
+
+    def _inline_method_call_struct_elem(self, call, mapping):
+        name = call.base.name
+        if str(name) in mapping.expr:
+            name = mapping.expr[str(name)]
+        elem_type = self._elem_info(astlib.StructElem(name, call.base.elem))
+        if (isinstance(elem_type, astlib.CType) and \
+                str(call.method) in (
+                    defs.COPY_METHOD_NAME, defs.DEINIT_METHOD_NAME)):
+            return astlib.StructElem(name, call.base.elem), []
+        if isinstance(elem_type, astlib.ParamedType):
+            elem_type = elem_type.base
+        if str(elem_type) in mapping.type_:
+            elem_type = mapping.type_[str(elem_type)]
+        print("TYPEMAPPING", mapping.type_, file=sys.stderr)
+        print("ELEM_TYPE", elem_type)
+        methods = self.struct_to_methods.get(str(elem_type))
+        method = methods[str(call.method)]
+        mapping_ = Mapping()
+        mapping_.fill_expr(method, call)
+        if self.need_to_inline(method, mapping_):
+            return self.inline(method, mapping_)
+        return astlib.MethodCall(
+            name, call.method, call.args), []
+
+    def inline_method_call(self, call, mapping):
+        base = call.base
+        if isinstance(base, astlib.StructElem):
+            return self._inline_method_call_struct_elem(call, mapping)
+        if str(base) in mapping.expr:
+            base = mapping.expr[str(base)]
+        if (isinstance(base, astlib.CINT_TYPES) and \
+                str(call.method) in (
+                    defs.COPY_METHOD_NAME, defs.DEINIT_METHOD_NAME)):
+            return base, []
+        type_ = context.ns.get(str(base))
+        if isinstance(type_, astlib.ParamedType):
+            type_ = type_.base
+        methods = self.struct_to_methods.get(str(type_))
+        method = methods[str(call.method)]
+        mapping_ = Mapping()
+        mapping_.fill_expr(method, call)
+        if self.need_to_inline(method, mapping_):
+            return self.inline(method, mapping_)
+        return astlib.MethodCall(
+            base, call.method, call.args), []
 
     def inline_type(self, type_):
         if isinstance(type_, astlib.ParamedType):
@@ -75,27 +133,13 @@ class Inlining(layers.Layer):
             return astlib.CFuncCall(
                 expr.name, exprs), inlined
         elif isinstance(expr, astlib.MethodCall):
-            base = expr.base
-            if str(base) in mapping:
-                base = mapping[str(base)]
-            # Don't copy ints!
-            if (str(expr.method) == defs.COPY_METHOD_NAME and \
-                    isinstance(base, astlib.CINT_TYPES)):
-                return base, []
-            type_ = context.ns.get(str(base))
-            if isinstance(type_, astlib.ParamedType):
-                type_ = type_.base
-            methods = self.struct_to_methods.get(str(type_))
-            method = methods[str(expr.method)]
-            mapping = self.make_mapping(method, expr)
-            if self.need_to_inline(method, mapping):
-                return self.inline(method, mapping)
-            return expr, []
+            # TODO: make it in function.
+            return self.inline_method_call(expr, mapping)
         elif isinstance(expr, astlib.StructScalar):
             return expr, []
         elif isinstance(expr, astlib.Name):
-            if str(expr) in mapping:
-                return mapping[str(expr)], []
+            if str(expr) in mapping.expr:
+                return mapping.expr[str(expr)], []
             return expr, []
         errors.not_implemented("inline expr ({} has t {})".format(
             expr, type(expr)))
@@ -131,18 +175,25 @@ class Inlining(layers.Layer):
                 inlined_result.extend(inlined)
                 inlined_result.append(astlib.CFuncCall(
                     stmt.name, exprs))
+            elif isinstance(stmt, astlib.MethodCall):
+                _, inlined = self.inline_expr(stmt, mapping)
+                inlined_result.extend(inlined)
             elif isinstance(stmt, astlib.Return):
                 expr, inlined = self.inline_expr(stmt.expr, mapping)
                 inlined_result.extend(inlined)
                 return_expr = expr
+            else:
+                errors.not_implemented("cant inline {}".format(type(stmt)))
         return return_expr, inlined_result
 
-
-    def expr(self, expr):
+    def expr(self, expr, type_=None):
         if isinstance(expr, astlib.Instance):
             methods = self.struct_to_methods.get(str(expr.name))
             init_method_entry = methods[defs.INIT_METHOD_NAME]
-            mapping = self.make_mapping(init_method_entry, expr)
+            mapping = Mapping()
+            mapping.fill_expr(init_method_entry, expr)
+            if type_:
+                mapping.fill_type(type_)
             if self.need_to_inline(init_method_entry, mapping):
                 return self.inline(init_method_entry, mapping)
             return expr, []
@@ -152,7 +203,10 @@ class Inlining(layers.Layer):
                 type_ = type_.base
             methods = self.struct_to_methods.get(str(type_))
             method = methods[str(expr.method)]
-            mapping = self.make_mapping(method, expr)
+            mapping = Mapping()
+            mapping.fill_expr(method, expr)
+            if type_:
+                mapping.fill_type(type_)
             if self.need_to_inline(method, mapping):
                 return self.inline(method, mapping)
             return expr, []
@@ -161,7 +215,7 @@ class Inlining(layers.Layer):
     @layers.register(astlib.Decl)
     def decl(self, decl):
         context.ns.add(str(decl.name), decl.type_)
-        expr, inlined = self.expr(decl.expr)
+        expr, inlined = self.expr(decl.expr, type_=decl.type_)
         yield from inlined
         yield astlib.Decl(decl.name, decl.type_, expr)
 
@@ -216,7 +270,10 @@ class Inlining(layers.Layer):
         fields_entries = {}
         for field in fields:
             fields_entries[str(field.name)] = field.type_
-        context.ts.add(str(struct.name), fields_entries)
+        context.ts.add(str(struct.name), {
+            "fields": fields_entries,
+            "param_types": struct.param_types
+        })
 
         if not struct.param_types:
             yield struct

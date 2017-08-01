@@ -3,25 +3,10 @@
 from . import layers, astlib, errors, defs
 
 
-def _add_to_maker(llist_type):
-    def wrapper(llist, *args):
-        if isinstance(llist, astlib.Empty):
-            return llist_type(*args, rest=astlib.Empty())
-        llist.append(*args)
-        return llist
-    return wrapper
-
-
-add_to_args = _add_to_maker(astlib.Args)
-add_to_body = _add_to_maker(astlib.Body)
-
-
 class MethodToFunc(layers.Layer):
 
     def other_method(self, method, struct_name):
-        args = astlib.Args(
-            name=astlib.Name("self"), type_=struct_name,
-            rest=method.args)
+        args = [astlib.Arg(astlib.Name("self"), struct_name)] + method.args
         return astlib.Func(
             astlib.Name("".join([str(struct_name), str(method.name)])),
             args, method.rettype, method.body)
@@ -37,19 +22,17 @@ class MethodToFunc(layers.Layer):
         return self.other_method(method, struct_name)
 
     def split_body(self, body):
-        fields, methods = astlib.Empty(), []
-        current_stmt = body
-        while not isinstance(current_stmt, astlib.Empty):
-            if isinstance(current_stmt.stmt, astlib.Field):
-                fields = add_to_body(fields, current_stmt.stmt)
+        fields, methods = [], []
+        for stmt in body:
+            if isinstance(stmt, astlib.Field):
+                fields.append(stmt)
             else:
-                methods.append(current_stmt.stmt)
-            current_stmt = current_stmt.rest
+                methods.append(stmt)
         return fields, methods
 
     @layers.register(astlib.Struct)
     def struct(self, struct):
         fields, methods = self.split_body(struct.body)
-        yield astlib.Struct(struct.name, fields)
+        yield astlib.Struct(struct.name, struct.param_types, fields)
         for method in methods:
             yield self.method_to_func(method, struct.name)

@@ -52,27 +52,16 @@ class NameSpacing(layers.Layer):
         return astlib.Name(string)
 
     def call_args(self, args):
-        if isinstance(args, astlib.Empty):
-            return astlib.Empty()
-        return astlib.CallArgs(
-            self.expr(args.arg),
-            self.call_args(args.rest))
+        return [self.expr(arg) for arg in args]
 
     def args(self, args):
-        if isinstance(args, astlib.Empty):
-            return astlib.Empty()
-        return astlib.Args(
-            self.expr(args.name),
-            self.type_(args.type_),
-            self.args(args.rest))
+        return [astlib.Arg(self.expr(arg.name), self.type_(arg.type_))
+                for arg in args]
 
     def body(self, body):
         reg = NameSpacing().get_registry()
-        if isinstance(body, astlib.Empty):
-            return astlib.Empty()
-        return astlib.Body(
-            list(layers.transform_node(body.stmt, registry=reg))[0],
-            self.body(body.rest))
+        return [list(layers.transform_node(stmt, registry=reg))[0]
+                for stmt in body]
 
     @layers.register(astlib.Decl)
     def decl(self, decl):
@@ -110,7 +99,7 @@ class NameSpacing(layers.Layer):
     @layers.register(astlib.Struct)
     def struct(self, struct):
         yield astlib.Struct(
-            self.name(struct.name), self.body(struct.body))
+            self.name(struct.name), struct.param_types, self.body(struct.body))
 
     @layers.register(astlib.Field)
     def field(self, field):

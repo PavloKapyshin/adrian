@@ -29,18 +29,11 @@ class MethodCallsToFuncCalls(layers.Layer):
         return expr
 
     def body(self, body, registry):
-        if isinstance(body, astlib.Empty):
-            return astlib.Empty()
-        return astlib.Body(
-            list(layers.transform_node(body.stmt, registry=registry))[0],
-            self.body(body.rest, registry))
+        return [list(layers.transform_node(stmt, registry=registry))[0]
+                for stmt in body]
 
     def call_args(self, args):
-        if isinstance(args, astlib.Empty):
-            return astlib.Empty()
-        return astlib.CallArgs(
-            self.expr(args.arg),
-            self.call_args(args.rest))
+        return [self.expr(arg) for arg in args]
 
     @layers.register(astlib.Assignment)
     def assignment(self, assment):
@@ -55,7 +48,7 @@ class MethodCallsToFuncCalls(layers.Layer):
             base_type = base_type.literal
         args = self.call_args(call.args)
         if str(call.method) != defs.INIT_METHOD_NAME:
-            args = astlib.CallArgs(call.base, args)
+            args = [call.base] + args
         yield astlib.FuncCall(
             astlib.Name("".join([str(base_type), str(call.method)])),
             args)
@@ -80,18 +73,18 @@ class MethodCallsToFuncCalls(layers.Layer):
         reg = MethodCallsToFuncCalls().get_registry()
         body = self.body(struct.body, reg)
         field_types = {}
-        for field_decl in body.as_list():
+        for field_decl in body:
             field_types[str(field_decl.name)] = field_decl.type_
         context.ts.add(str(struct.name), field_types)
-        yield astlib.Struct(struct.name, body)
+        yield astlib.Struct(struct.name, struct.param_types, body)
         context.ns.del_scope()
 
     @layers.register(astlib.Func)
     def func(self, func):
         context.ns.add_scope()
         reg = MethodCallsToFuncCalls().get_registry()
-        for arg in func.args.as_list():
-            context.ns.add(str(arg[0]), arg[1])
+        for arg in func.args:
+            context.ns.add(str(arg.name), arg.type_)
         yield astlib.Func(
             func.name, args=func.args,
             rettype=func.rettype, body=self.body(func.body, reg))
