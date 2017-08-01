@@ -16,7 +16,8 @@ class REPL(cmd.Cmd):
             "ts": margo.structs.Namespace(),
             "fs": margo.structs.Namespace(),
             "exit_on_error": True,
-            "file_hash": margo.REPL_FILE_HASH}
+            "file_hash": margo.REPL_FILE_HASH,
+            "tmp_count": 0}
         for layer, _ in margo.LAYERS
     }
 

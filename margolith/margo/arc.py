@@ -10,17 +10,15 @@ class ARC(layers.Layer):
         self.to_free = structs.Namespace()
 
     def no_return_in(self, body):
-        current_body = body
-        while not isinstance(current_body, astlib.Empty):
+        for stmt in body:
             # When iff, els, elf we need to look in it.
-            if isinstance(current_body.stmt, astlib.Return):
+            if isinstance(stmt, astlib.Return):
                 return False
-            current_body = current_body.rest
         return True
 
     def free(self, name, type_):
         return astlib.MethodCall(
-            astlib.Name(name), defs.DEINIT_METHOD_NAME, astlib.Empty())
+            astlib.Name(name), defs.DEINIT_METHOD_NAME, [])
 
     def arc(self):
         space = self.to_free.space()
@@ -33,12 +31,10 @@ class ARC(layers.Layer):
         new_instance = ARC()
         new_instance.to_free = self.to_free
         reg = new_instance.get_registry()
-        if isinstance(body, astlib.Empty):
-            return astlib.Empty()
-        gened = list(layers.transform_node(body.stmt, registry=reg))
-        result = astlib.Body(gened[0], astlib.Empty())
-        result.extend_from_list(gened[1:])
-        result.extend(self.body(body.rest))
+        result = []
+        for stmt in body:
+            result.extend(
+                list(layers.transform_node(stmt, registry=reg)))
         return result
 
     @layers.register(astlib.Decl)
@@ -78,13 +74,12 @@ class ARC(layers.Layer):
         context.ns.add_scope()
         context.fs.add(str(func.name), func.rettype)
         # Adding arguments to namespace.
-        for arg in func.args.as_list():
-            context.ns.add(str(arg[0]), arg[1])
+        for arg in func.args:
+            context.ns.add(str(arg.name), arg.type_)
         body = self.body(func.body)
         if self.no_return_in(body):
             arc = self.arc()
-            if not isinstance(body, astlib.Empty):
-                body.extend_from_list(arc)
+            body.extend(arc)
         yield astlib.Func(
             func.name, func.args, func.rettype, body)
         self.to_free.del_scope()
@@ -95,13 +90,12 @@ class ARC(layers.Layer):
         self.to_free.add_scope()
         context.ns.add_scope()
         # Adding arguments to namespace.
-        for arg in method.args.as_list():
-            context.ns.add(str(arg[0]), arg[1])
+        for arg in method.args:
+            context.ns.add(str(arg.name), arg.type_)
         body = self.body(method.body)
         if self.no_return_in(body):
             arc = self.arc()
-            if not isinstance(body, astlib.Empty):
-                body.extend_from_list(arc)
+            body.extend(arc)
         yield astlib.Method(
             method.name, method.args, method.rettype, body)
         self.to_free.del_scope()
@@ -109,7 +103,7 @@ class ARC(layers.Layer):
 
     def split_body(self, body):
         fields, methods = [], []
-        for stmt in body.as_list():
+        for stmt in body:
             if isinstance(stmt, astlib.Field):
                 fields.append(stmt)
             else:
@@ -128,7 +122,7 @@ class ARC(layers.Layer):
         context.ts.add(str(struct.name), method_to_rettype)
 
         yield astlib.Struct(
-            struct.name, self.body(struct.body))
+            struct.name, struct.param_types, self.body(struct.body))
 
         self.to_free.del_scope()
         context.ns.del_scope()

@@ -1,16 +1,7 @@
 """Translates expressions into more simple."""
 
-import sys
-
 from . import layers, astlib, errors
 from .context import context
-
-
-def add_to_call_args(args, arg):
-    if isinstance(args, astlib.Empty):
-        return astlib.CallArgs(arg, astlib.Empty())
-    args.append(arg)
-    return args
 
 
 class SimpEx(layers.Layer):
@@ -48,8 +39,8 @@ class SimpEx(layers.Layer):
             expr_type = type(expr)
             tmp, decls = self.expr(expr.literal)
             return expr_type(tmp), decls
-        elif isinstance(
-                expr, (astlib.FuncCall, astlib.Instance, astlib.MethodCall)):
+        elif isinstance(expr, (
+                astlib.FuncCall, astlib.Instance, astlib.MethodCall)):
             translating_function = self.func_call
             if isinstance(expr, astlib.Instance):
                 translating_function = self.instance
@@ -62,12 +53,9 @@ class SimpEx(layers.Layer):
 
     def body(self, body):
         reg = SimpEx().get_registry()
-        if isinstance(body, astlib.Empty):
-            return astlib.Empty()
-        gened = list(layers.transform_node(body.stmt, registry=reg))
-        result = astlib.Body(gened[0], astlib.Empty())
-        result.extend_from_list(gened[1:])
-        result.extend(self.body(body.rest))
+        result = []
+        for stmt in body:
+            result.extend(list(layers.transform_node(stmt, registry=reg)))
         return result
 
     @layers.register(astlib.Assignment)
@@ -109,7 +97,7 @@ class SimpEx(layers.Layer):
 
     def split_body(self, body):
         fields, methods = [], []
-        for stmt in body.as_list():
+        for stmt in body:
             if isinstance(stmt, astlib.Field):
                 fields.append(stmt)
             else:
@@ -124,14 +112,15 @@ class SimpEx(layers.Layer):
         for method in methods:
             method_to_rettype[str(method.name)] = method.rettype
         context.ts.add(str(struct.name), method_to_rettype)
-        yield astlib.Struct(struct.name, self.body(struct.body))
+        yield astlib.Struct(
+            struct.name, struct.param_types, self.body(struct.body))
         context.ns.del_scope()
 
     def call_args(self, args):
-        tmps, decls = astlib.Empty(), []
-        for arg in args.as_list():
+        tmps, decls = [], []
+        for arg in args:
             if isinstance(arg, (
-                        astlib.FuncCall, astlib.Instance, astlib.MethodCall)):
+                    astlib.FuncCall, astlib.Instance, astlib.MethodCall)):
                 if isinstance(arg, astlib.FuncCall):
                     result = list(self.func_call(arg))
                 elif isinstance(arg, astlib.MethodCall):
@@ -144,11 +133,11 @@ class SimpEx(layers.Layer):
                 tmp = tmp_decl.name
                 decls.extend(result_decls)
                 decls.append(tmp_decl)
-                tmps = add_to_call_args(tmps, tmp)
+                tmps.append(tmp)
             else:
                 tmp, decls_ = self.expr(arg)
                 decls.extend(decls_)
-                tmps = add_to_call_args(tmps, tmp)
+                tmps.append(tmp)
         return tmps, decls
 
     @layers.register(astlib.FuncCall)

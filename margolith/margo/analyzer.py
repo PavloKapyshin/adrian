@@ -1,6 +1,7 @@
 """
 Analyzes names and translates them into more specific.
 Translates some FuncCalls to Instance objects.
+Translates some llists to lists.
 """
 
 from . import layers, astlib, errors, cdefs, defs
@@ -13,6 +14,11 @@ class Analyzer(layers.Layer):
         if isinstance(type_, astlib.ModuleMember):
             if type_.module == cdefs.CMODULE_NAME:
                 return astlib.CType(str(type_.member))
+        elif isinstance(type_, astlib.ParamedType):
+            params = []
+            for sub_type in type_.params.as_list():
+                params.append(self.type_(sub_type))
+            return astlib.ParamedType(self.type_(type_.base), params)
         elif isinstance(type_, astlib.Name):
             if type_ == "None":
                 return astlib.CType("Void")
@@ -52,29 +58,23 @@ class Analyzer(layers.Layer):
             return astlib.Ref(self.expr(expr.literal))
         elif isinstance(expr, astlib.Unref):
             return astlib.Unref(self.expr(expr.literal))
+        elif isinstance(expr, astlib.Empty):
+            return astlib.Empty()
         errors.not_implemented("expr is not supported")
 
     def body(self, body, registry):
-        if isinstance(body, astlib.Empty):
-            return astlib.Empty()
-        return astlib.Body(
-            list(layers.transform_node(body.stmt, registry=registry))[0],
-            self.body(body.rest, registry))
+        return [list(layers.transform_node(stmt, registry=registry))[0]
+                for stmt in body.as_list()]
 
     def call_args(self, args):
-        if isinstance(args, astlib.Empty):
-            return astlib.Empty()
-        return astlib.CallArgs(
-            self.expr(args.arg),
-            self.call_args(args.rest))
+        return [self.expr(arg) for arg in args.as_list()]
 
     def args(self, args):
-        if isinstance(args, astlib.Empty):
-            return astlib.Empty()
-        return astlib.Args(
-            args.name,
-            self.type_(args.type_),
-            self.args(args.rest))
+        return [astlib.Arg(arg[0], self.type_(arg[1]))
+                for arg in args.as_list()]
+
+    def param_types(self, params):
+        return [type_ for type_ in params.as_list()]
 
     @layers.register(astlib.Decl)
     def decl(self, decl):
@@ -112,7 +112,8 @@ class Analyzer(layers.Layer):
     def struct(self, struct):
         registry = Analyzer().get_registry()
         yield astlib.Struct(
-            struct.name, self.body(struct.body, registry))
+            struct.name, self.param_types(struct.param_types),
+            self.body(struct.body, registry))
 
     @layers.register(astlib.Func)
     def func(self, func):

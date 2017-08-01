@@ -204,8 +204,28 @@ def p_args_3(content):
 
 
 def p_struct_decl(content):
-    """struct_decl : SCT NAME LBRACE struct_body RBRACE"""
-    content[0] = [parser_astlib.STRUCT_DECL, [parser_astlib.NAME, content[2]], content[4]]
+    """struct_decl : SCT NAME param_types LBRACE struct_body RBRACE"""
+    content[0] = [parser_astlib.STRUCT_DECL, [parser_astlib.NAME, content[2]], content[3], content[5]]
+
+
+def p_names_1(content):
+    """names : NAME COMMA names"""
+    content[0] = [parser_astlib.NAMES, [parser_astlib.NAME, content[1]], content[3]]
+
+
+def p_names_2(content):
+    """names : NAME"""
+    content[0] = [parser_astlib.NAMES, [parser_astlib.NAME, content[1]], [parser_astlib.EMPTY]]
+
+
+def p_param_types_1(content):
+    """param_types : LPAREN names RPAREN"""
+    content[0] = content[2]
+
+
+def p_param_types_2(content):
+    """param_types : empty"""
+    content[0] = [parser_astlib.EMPTY]
 
 
 def p_struct_body_1(content):
@@ -269,6 +289,16 @@ def p_call_args_3(content):
     content[0] = [parser_astlib.EMPTY]
 
 
+def p_types_1(content):
+    """types : type COMMA types"""
+    content[0] = [parser_astlib.TYPES, content[1], content[3]]
+
+
+def p_types_2(content):
+    """types : type"""
+    content[0] = [parser_astlib.TYPES, content[1], [parser_astlib.EMPTY]]
+
+
 def p_type_1(content):
     """type : name_from_module"""
     content[0] = content[1]
@@ -277,6 +307,11 @@ def p_type_1(content):
 def p_type_2(content):
     """type : REF type"""
     content[0] = [parser_astlib.REF, content[2]]
+
+
+def p_type_3(content):
+    """type : type LPAREN types RPAREN"""
+    content[0] = [parser_astlib.PARAMED_TYPE, content[1], content[3]]
 
 
 def p_name_from_struct_1(content):

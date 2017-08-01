@@ -90,6 +90,22 @@ class StructElem(Node):
         return self._elem
 
 
+class ParamedType(Node):
+
+    def __init__(self, base, params):
+        self._base = base
+        self._params = params
+        self._keys = ("base", "params")
+
+    @property
+    def base(self):
+        return self._base
+
+    @property
+    def params(self):
+        return self._params
+
+
 class Instance(Node):
     """Instance.
 
@@ -183,6 +199,22 @@ class MethodCall(Node):
         return self._args
 
 
+class Arg(Node):
+
+    def __init__(self, name, type_):
+        self._name = name
+        self._type = type_
+        self._keys = ("name", "type_")
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def type_(self):
+        return self._type
+
+
 class Empty(BaseNode):
 
     def __init__(self):
@@ -195,6 +227,96 @@ class Empty(BaseNode):
         return []
 
     __repr__ = __str__
+
+
+class Types(Node):
+
+    def __init__(self, type_, rest=None):
+        self._type = type_
+        self._rest = rest or Empty()
+        self._keys = ("type_", "rest")
+
+    @property
+    def type_(self):
+        return self._type
+
+    @property
+    def rest(self):
+        return self._rest
+
+    def as_list(self):
+        def _gen():
+            current_type = self
+            yield current_type.type_
+            while not isinstance(current_type.rest, Empty):
+                current_type = current_type.rest
+                yield current_type.type_
+        return list(_gen())
+
+    def append(self, type_):
+        current_type = self
+        while not isinstance(current_type.rest, Empty):
+            current_type = current_type.rest
+        current_type._rest = Types(type_, Empty())
+
+    def extend(self, types):
+        current_type = self
+        while not isinstance(current_type.rest, Empty):
+            current_type = current_type.rest
+        current_type._rest = types
+
+    def extend_from_list(self, types):
+        current_type = self
+        while not isinstance(current_type.rest, Empty):
+            current_type = current_type.rest
+        for type_ in types:
+            current_type._rest = Types(type_, Empty())
+            current_type = current_type.rest
+
+
+class Names(Node):
+
+    def __init__(self, name, rest=None):
+        self._name = name
+        self._rest = rest or Empty()
+        self._keys = ("name", "rest")
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def rest(self):
+        return self._rest
+
+    def as_list(self):
+        def _gen():
+            current_name = self
+            yield current_name.name
+            while not isinstance(current_name.rest, Empty):
+                current_name = current_name.rest
+                yield current_name.name
+        return list(_gen())
+
+    def append(self, name):
+        current_name = self
+        while not isinstance(current_name.rest, Empty):
+            current_name = current_name.rest
+        current_name._rest = Names(name, Empty())
+
+    def extend(self, names):
+        current_name = self
+        while not isinstance(current_name.rest, Empty):
+            current_name = current_name.rest
+        current_name._rest = names
+
+    def extend_from_list(self, names):
+        current_name = self
+        while not isinstance(current_name.rest, Empty):
+            current_name = current_name.rest
+        for name in names:
+            current_name._rest = Names(name, Empty())
+            current_name = current_name.rest
 
 
 class Body(Node):
@@ -488,14 +610,19 @@ class Struct(Node):
     """
 
 
-    def __init__(self, name, body):
+    def __init__(self, name, param_types, body):
         self._name = name
+        self._param_types = param_types
         self._body = body
-        self._keys = ("name", "body")
+        self._keys = ("name", "param_types", "body")
 
     @property
     def name(self):
         return self._name
+
+    @property
+    def param_types(self):
+        return self._param_types
 
     @property
     def body(self):
@@ -623,6 +750,27 @@ class CUIntFast64(CLiteral):
 class CString(CLiteral):
     """CString in Adrian."""
     _type = "String"
+
+
+class CPtr(CLiteral):
+    """CPtr in Adrian."""
+    _type = "Ptr"
+
+
+class CCast(Node):
+
+    def __init__(self, expr, to):
+        self._expr = expr
+        self._to = to
+        self._keys = ("expr", "to")
+
+    @property
+    def expr(self):
+        return self._expr
+
+    @property
+    def to(self):
+        return self._to
 
 
 class CVoid(BaseNode):

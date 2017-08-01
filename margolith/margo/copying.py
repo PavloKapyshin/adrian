@@ -1,7 +1,6 @@
 """Make copies where needed."""
 
 import enum
-import sys
 
 from . import layers, astlib, errors, defs
 from .context import context
@@ -14,8 +13,7 @@ class NodeTypes(enum.Enum):
 
 def copy(expr):
     return astlib.MethodCall(
-        base=expr, method=defs.COPY_METHOD_NAME,
-        args=astlib.Empty())
+        base=expr, method=defs.COPY_METHOD_NAME, args=[])
 
 
 class Copying(layers.Layer):
@@ -52,18 +50,12 @@ class Copying(layers.Layer):
         return expr
 
     def body(self, body, reg):
-        if isinstance(body, astlib.Empty):
-            return astlib.Empty()
-        return astlib.Body(
-            list(layers.transform_node(body.stmt, registry=reg))[0],
-            self.body(body.rest, reg))
+        return [list(layers.transform_node(stmt, registry=reg))[0]
+                for stmt in body]
 
     def call_args(self, args):
-        if isinstance(args, astlib.Empty):
-            return astlib.Empty()
-        return astlib.CallArgs(
-            self.expr(args.arg),
-            self.call_args(args.rest))
+        return [self.expr(arg)
+                for arg in args]
 
     @layers.register(astlib.Decl)
     def decl(self, decl):
@@ -105,19 +97,19 @@ class Copying(layers.Layer):
         reg = Copying().get_registry()
         body = self.body(struct.body, reg)
         field_types = {}
-        for field_decl in body.as_list():
+        for field_decl in body:
             if isinstance(field_decl, astlib.Field):
                 field_types[str(field_decl.name)] = field_decl.type_
         context.ts.add(str(struct.name), field_types)
-        yield astlib.Struct(struct.name, body)
+        yield astlib.Struct(struct.name, struct.param_types, body)
         context.ns.del_scope()
 
     @layers.register(astlib.Method)
     def method(self, method):
         context.ns.add_scope()
         reg = Copying().get_registry()
-        for arg in method.args.as_list():
-            context.ns.add(str(arg[0]), arg[1])
+        for arg in method.args:
+            context.ns.add(str(arg.name), arg.type_)
         yield astlib.Method(
             method.name, method.args, method.rettype,
             self.body(method.body, reg))
@@ -127,8 +119,8 @@ class Copying(layers.Layer):
     def func(self, func):
         context.ns.add_scope()
         reg = Copying().get_registry()
-        for arg in func.args.as_list():
-            context.ns.add(str(arg[0]), arg[1])
+        for arg in func.args:
+            context.ns.add(str(arg.name), arg.type_)
         yield astlib.Func(
             func.name, func.args, func.rettype, self.body(func.body, reg))
         context.ns.del_scope()
