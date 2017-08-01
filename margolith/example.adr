@@ -1,7 +1,8 @@
-sct Person {
-    id: c#UIntFast64
-    age: c#UIntFast8
+fun square(number: c#IntFast8): c#IntFast8 {
+    ret number * number
 }
 
-
-var john: Person = Person(c#UIntFast64(1), c#UIntFast8(30))
+var a: c#IntFast8 = c#IntFast8(10) + c#IntFast8(20)
+var b: c#IntFast8 = a + c#IntFast8(1)
+var c: c#IntFast8 = square(b)
+var d: c#IntFast8 = square(square(c)) - square(c#IntFast8(2))

@@ -1,6 +1,6 @@
 """InlineLib"""
 
-from . import astlib, mappinglib
+from . import astlib, mappinglib, structs, defs
 
 
 class Inliner:
@@ -8,9 +8,40 @@ class Inliner:
     def __init__(self):
         self.mapping = None
 
-    def need_to_inline(self, declaration):
-        # TODO: search for param type dependencies.
-        return True
+    def rettype_depends_on_param(self, rettype):
+        if isinstance(rettype, astlib.ParamedType):
+            for param in rettype.params:
+                if self.rettype_depends_on_param(param):
+                    return True
+        elif isinstance(rettype, astlib.Name):
+            if defs.VAR_NAME_REGEX.fullmatch(str(rettype)):
+                return True
+        return False
+
+    def body_depends_on_param(self, declaration, self_type=None):
+        ns = structs.Namespace()
+
+        for arg in declaration.args:
+            ns.add(str(arg.name), arg.type_)
+        if self_type:
+            ns.add("self", self_type)
+
+        def _call_args_depend_on_param(args):
+            for arg in args:
+                if isinstance(arg, astlib.Name):
+                    if self.rettype_depends_on_param(ns.get(str(arg))):
+                        return True
+            return False
+
+        for stmt in declaration.body:
+            if isinstance(stmt, astlib.CFuncCall):
+                if _call_args_depend_on_param(stmt.args):
+                    return True
+        return False
+
+    def need_to_inline(self, declaration, self_type=None):
+        return (self.rettype_depends_on_param(declaration.rettype) or \
+                self.body_depends_on_param(declaration, self_type=self_type))
 
     def inline(self, call, *, declaration, type_mapping, expr_mapping):
         self.mapping = mappinglib.Mapping(
