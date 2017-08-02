@@ -52,16 +52,19 @@ class MethodCallsToFuncCalls(layers.Layer):
     @layers.register(astlib.MethodCall)
     def method_call(self, call):
         base_type = self.get_base_type(call.base)
-        if isinstance(base_type, astlib.Ref):
-            base_type = base_type.literal
-        elif isinstance(base_type, astlib.ParamedType):
-            base_type = base_type.base
-        args = self.call_args(call.args)
-        if str(call.method) != defs.INIT_METHOD_NAME:
-            args = [call.base] + args
-        yield astlib.FuncCall(
-            astlib.Name("".join([str(base_type), str(call.method)])),
-            args)
+        if isinstance(base_type, astlib.CType):
+            pass
+        else:
+            if isinstance(base_type, astlib.Ref):
+                base_type = base_type.literal
+            elif isinstance(base_type, astlib.ParamedType):
+                base_type = base_type.base
+            args = self.call_args(call.args)
+            if str(call.method) != defs.INIT_METHOD_NAME:
+                args = [call.base] + args
+            yield astlib.FuncCall(
+                astlib.Name("".join([str(base_type), str(call.method)])),
+                args)
 
     @layers.register(astlib.FuncCall)
     def func_call(self, call):

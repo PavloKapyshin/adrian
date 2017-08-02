@@ -7,7 +7,7 @@ from .context import context
 class NameSpacing(layers.Layer):
 
     def type_(self, type_):
-        if isinstance(type_, (astlib.CType, astlib.Empty)):
+        if isinstance(type_, (astlib.CType, astlib.Empty, astlib.CPtr)):
             return type_
         elif isinstance(type_, astlib.Ref):
             return astlib.Ref(self.type_(type_.literal))
@@ -45,6 +45,8 @@ class NameSpacing(layers.Layer):
         elif isinstance(expr, str):
             # LOL
             return self.name(expr)
+        elif isinstance(expr, astlib.CCast):
+            return astlib.CCast(self.expr(expr.expr), to=self.type_(expr.to))
         errors.not_implemented(
             "expr is not supported (name spacing)")
 

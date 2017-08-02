@@ -34,6 +34,10 @@ class CGen(layers.Layer):
             return cgen.CTypes.ptr(cgen.StructType(str(type_)))
         elif isinstance(type_, astlib.Empty):
             return None
+        elif isinstance(type_, astlib.CPtr):
+            return cgen.CTypes.ptr(self.type_(type_.literal))
+        elif isinstance(type_, astlib.CVoid):
+            return cgen.CTypes.void
         errors.not_implemented("type is not supported (cgen layer)")
 
     def expr(self, expr):
@@ -65,6 +69,8 @@ class CGen(layers.Layer):
                 self.expr(expr.rexpr))
         elif isinstance(expr, astlib.FuncCall):
             return list(self.func_call(expr))[0]
+        elif isinstance(expr, astlib.CCast):
+            return cgen.Cast(self.expr(expr.expr), to=self.type_(expr.to))
         errors.not_implemented("expr is not supported (cgen layer)")
 
     def call_args(self, args):

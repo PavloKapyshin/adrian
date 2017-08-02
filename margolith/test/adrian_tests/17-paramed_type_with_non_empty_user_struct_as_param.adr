@@ -1,0 +1,11 @@
+sct User {
+    id: c#IntFast8
+}
+
+
+sct Person(t) {
+    data: t
+}
+
+
+var p: Person(User) = Person(User(c#IntFast8(10)))

@@ -1,6 +1,25 @@
 """InlineLib"""
 
+import sys
+
 from . import astlib, mappinglib, structs, defs
+from .context import context
+
+
+def get_type_of_assignment_expr(expr):
+    if isinstance(expr, astlib.Name):
+        return context.ns.get(str(expr))["type_"]
+    elif isinstance(expr, astlib.StructElem):
+        name_type = context.ns.get(str(expr.name))["type_"]
+        type_fields = get_type_info(name_type)["fields"]
+        return type_fields[str(expr.elem)].type_
+
+
+def get_type_info(type_):
+    search_request = type_
+    if isinstance(type_, astlib.ParamedType):
+        search_request = type_.base
+    return context.ts.get(str(search_request))
 
 
 class Inliner:
@@ -52,16 +71,31 @@ class Inliner:
             return self.inline_instance(call, declaration)
         return self.inline_func(call, declaration)
 
+    def check_for_cast(self, type_):
+        if isinstance(type_, astlib.Name):
+            return defs.VAR_NAME_REGEX.fullmatch(str(type_))
+
+    def maybe_cast(self, expr, type_):
+        if self.check_for_cast(type_):
+            if isinstance(expr, astlib.CINT_TYPES):
+                return astlib.CCast(expr, to=astlib.CPtr(astlib.CVoid()))
+        return expr
+
     def inline_instance(self, instance, declaration):
         body = self.mapping.apply(declaration.body)
         return_expr, inlined = None, []
         for stmt in body:
             if isinstance(stmt, astlib.Decl):
+                context.ns.add(str(stmt.name), {
+                    "type_": stmt.type_
+                })
                 inlined.append(
                     astlib.Decl(stmt.name, stmt.type_, stmt.expr))
             elif isinstance(stmt, astlib.Assignment):
+                expr = self.maybe_cast(
+                    stmt.expr, get_type_of_assignment_expr(stmt.var))
                 inlined.append(
-                    astlib.Assignment(stmt.var, stmt.op, stmt.expr))
+                    astlib.Assignment(stmt.var, stmt.op, expr))
             elif isinstance(stmt, astlib.Return):
                 return_expr = stmt.expr
         return return_expr, inlined

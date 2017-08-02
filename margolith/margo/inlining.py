@@ -2,7 +2,7 @@
 
 import sys
 
-from . import layers, astlib, errors, inlinelib
+from . import layers, astlib, errors, inlinelib, defs
 from .context import context
 
 
@@ -36,6 +36,15 @@ def get_self_type(self_entry):
     if param_types:
         return astlib.ParamedType(self_entry["type_"].base, param_types)
     return self_entry["type_"]
+
+
+def get_type_of_assignment_expr(expr):
+    if isinstance(expr, astlib.Name):
+        return context.ns.get(str(expr))["type_"]
+    elif isinstance(expr, astlib.StructElem):
+        name_type = context.ns.get(str(expr.name))["type_"]
+        type_fields = get_type_info(name_type)["fields"]
+        return type_fields[str(expr.elem)].type_
 
 
 def get_type_info(type_):
@@ -74,7 +83,7 @@ class Inlining(layers.Layer):
                 index += 1
             return type_
         return type_
-        # errors.not_implemented("type_ (inlining)")
+        #errors.not_implemented("type_ (inlining)")
 
     def expr(self, expr):
         """Returns (new expression, inlined block)."""
@@ -94,8 +103,23 @@ class Inlining(layers.Layer):
                     type_mapping=self.type_mapping,
                     expr_mapping=self.expr_mapping)
             return empty
+            expr_type = get_type_of_assignment_expr(expr.expr)
+        elif isinstance(expr, astlib.StructElem):
+            expr_type = get_type_of_assignment_expr(expr)
+            if (isinstance(expr_type, astlib.Name) and \
+                    defs.VAR_NAME_REGEX.fullmatch(str(expr_type))):
+                return astlib.CCast(expr, to=None), []
         return empty
-        # errors.not_implemented("expr (inlining)")
+        #errors.not_implemented("expr (inlining)")
+
+    def check_for_cast(self, expr, type_):
+        if isinstance(expr, astlib.CCast):
+            return astlib.CCast(expr.expr, to=type_)
+        elif isinstance(type_, astlib.Name):
+            if defs.VAR_NAME_REGEX.fullmatch(str(type_)):
+                if isinstance(expr, astlib.CINT_TYPES):
+                    return astlib.CCast(expr, to=astlib.CPtr(astlib.CVoid()))
+        return expr
 
     @layers.register(astlib.Decl)
     def decl(self, decl):
@@ -104,8 +128,17 @@ class Inlining(layers.Layer):
             "type_": type_
         })
         expr, inlined = self.expr(decl.expr)
+        expr = self.check_for_cast(expr, decl.type_)
         yield from inlined
         yield astlib.Decl(decl.name, type_, expr)
+        self.empty_maps()
+
+    @layers.register(astlib.Assignment)
+    def assignment(self, assment):
+        expr, inlined = self.expr(assment.expr)
+        expr = self.check_for_cast(expr, get_type_of_assignment_expr(assment.var))
+        yield from inlined
+        yield astlib.Assignment(assment.var, assment.op, expr)
         self.empty_maps()
 
     @layers.register(astlib.Struct)
@@ -116,9 +149,16 @@ class Inlining(layers.Layer):
                 if isinstance(stmt, astlib.Method)):
             methods[str(method.name)] = method
 
+        fields = {}
+        for field in (
+                stmt for stmt in struct.body
+                if isinstance(stmt, astlib.Field)):
+            fields[str(field.name)] = field
+
         context.ts.add(str(struct.name), {
             "methods": methods,
-            "param_types": struct.param_types
+            "param_types": struct.param_types,
+            "fields": fields,
         })
 
         if struct.param_types:
