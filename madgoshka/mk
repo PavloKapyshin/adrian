@@ -1,0 +1,3 @@
+#!/bin/sh
+
+ghc -o compiler --make Compiler
