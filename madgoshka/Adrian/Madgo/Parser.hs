@@ -2,10 +2,10 @@ module Adrian.Madgo.Parser where
 
 
 import Text.Parsec (parse, many, many1, eof, optional)
-import Text.Parsec.Char (string, oneOf, lower, upper, letter, digit)
+import Text.Parsec.Char (char, string, oneOf, lower, upper, letter, digit)
 import Text.Parsec.Error (ParseError)
 import Text.Parsec.String (Parser)
-import Control.Applicative ((<*>), (<*), (*>), (<$>), (<|>), liftA, liftA3)
+import Control.Applicative ((<*>), (<*), (*>), (<$>), (<|>), liftA, liftA2, liftA3)
 import Control.Monad (void)
 
 import qualified Adrian.Madgo.AST as AST
@@ -30,10 +30,27 @@ nameParser = liftA
     AST.Name (((:) <$> lower <*> many (letter <|> digit)) :: Parser String)
 
 
+typeNameParser :: Parser AST.Type
+typeNameParser = liftA
+    AST.Type (((:) <$> upper <*> many (letter <|> digit)) :: Parser String)
+
+
+underscore :: Parser Char
+underscore = char '_'
+
+
+-- Parse Adrian's module name.
+moduleNameParser :: Parser AST.ModuleName
+moduleNameParser = many1 (letter <|> underscore)
+
+
+typeFromModuleParser :: Parser AST.Type
+typeFromModuleParser = liftA2 AST.TypeFromModule (moduleNameParser <* char '#') typeNameParser
+
+
 -- Parse Adrian's type.
 typeParser :: Parser AST.Type
-typeParser = liftA
-    AST.Type (((:) <$> upper <*> many (letter <|> digit)) :: Parser String)
+typeParser = (typeFromModuleParser <|> typeNameParser)
 
 
 -- Parse Adrian's expression, only integer literal for now.
