@@ -2,10 +2,10 @@ module Adrian.Madgo.Parser where
 
 
 import Text.Parsec (parse, many, many1, eof, optional)
-import Text.Parsec.Char (string, oneOf, lower, upper, letter, digit)
+import Text.Parsec.Char (char, string, oneOf, lower, upper, letter, digit)
 import Text.Parsec.Error (ParseError)
 import Text.Parsec.String (Parser)
-import Control.Applicative ((<*>), (<*), (*>), (<$>), (<|>), liftA, liftA3)
+import Control.Applicative ((<*>), (<*), (*>), (<$>), (<|>), liftA, liftA2, liftA3)
 import Control.Monad (void)
 
 import qualified Adrian.Madgo.AST as AST
@@ -21,6 +21,11 @@ lexeme :: Parser a -> Parser a
 lexeme parser = whitespace *> (parser <* whitespace)
 
 
+-- Parse Adrian's module name.
+moduleNameParser :: Parser AST.ModuleName
+moduleNameParser = many1 (letter <|> char '_')
+
+
 -- Parse Adrian's name.
 -- Just parsing first char and then parsing the rest of string.
 -- in this case: (lower :: Char) (many :: Char -> [Char])
@@ -30,10 +35,27 @@ nameParser = liftA
     AST.Name (((:) <$> lower <*> many (letter <|> digit)) :: Parser String)
 
 
+-- Parse Adrian's type name.
+-- Right: Type  MyType  LOL
+-- Wrong: type  myType  l_o_l
+typeNameParser :: Parser AST.Type
+typeNameParser = liftA
+    AST.Type (((:) <$> upper <*> many (letter <|> digit)) :: Parser String)
+
+
+-- Parse Adrian's type from module.
+-- Typical example: some_module#SomeType
+-- There are no whitespaces around hash char.
+-- There are no modules inside of other modules so 
+-- you can't write something like `c#another_module#Type`.
+typeFromModuleParser :: Parser AST.Type
+typeFromModuleParser = liftA2
+    AST.TypeFromModule (moduleNameParser <* char '#') typeNameParser
+
+
 -- Parse Adrian's type.
 typeParser :: Parser AST.Type
-typeParser = liftA
-    AST.Type (((:) <$> upper <*> many (letter <|> digit)) :: Parser String)
+typeParser = (typeFromModuleParser <|> typeNameParser)
 
 
 -- Parse Adrian's expression, only integer literal for now.
@@ -48,10 +70,11 @@ declarationParser = liftA3
     ((lexeme $ string ":") *> typeParser) ((lexeme $ string "=") *> exprParser)
 
 
+-- Parse Adrian's source code and returns AST.
 astParser :: Parser AST.AST
 astParser = (many $ lexeme declarationParser) <* eof
 
 
--- Parse Adrian source code and returns AST.
+-- Wrapper around astParser. Use it instead of astParser.
 parseSourceCode :: String -> Either ParseError AST.AST
 parseSourceCode source_code = parse astParser "" source_code

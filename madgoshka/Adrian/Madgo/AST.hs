@@ -1,7 +1,9 @@
 module Adrian.Madgo.AST where
 
 
-data Type = Type String
+type ModuleName = String
+
+data Type = Type String | TypeFromModule ModuleName Type
     deriving (Show)
 
 data Name = Name String
