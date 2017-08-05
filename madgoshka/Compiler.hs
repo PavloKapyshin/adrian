@@ -1,14 +1,15 @@
 module Main where
 
 
+import Text.Parsec.Error (ParseError)
 import System.Environment (getArgs)
 
 import qualified Adrian.Madgo.AST as AST
 import qualified Adrian.Madgo.Parser as Parser
 
 
-compile :: String -> AST.AST
-compile source_code = Parser.parse source_code
+compile :: String -> Either ParseError AST.AST
+compile source_code = Parser.parseSourceCode source_code
 
 
 main :: IO ()
