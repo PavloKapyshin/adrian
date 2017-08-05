@@ -21,6 +21,11 @@ lexeme :: Parser a -> Parser a
 lexeme parser = whitespace *> (parser <* whitespace)
 
 
+-- Parse Adrian's module name.
+moduleNameParser :: Parser AST.ModuleName
+moduleNameParser = many1 (letter <|> char '_')
+
+
 -- Parse Adrian's name.
 -- Just parsing first char and then parsing the rest of string.
 -- in this case: (lower :: Char) (many :: Char -> [Char])
@@ -30,22 +35,22 @@ nameParser = liftA
     AST.Name (((:) <$> lower <*> many (letter <|> digit)) :: Parser String)
 
 
+-- Parse Adrian's type name.
+-- Right: Type  MyType  LOL
+-- Wrong: type  myType  l_o_l
 typeNameParser :: Parser AST.Type
 typeNameParser = liftA
     AST.Type (((:) <$> upper <*> many (letter <|> digit)) :: Parser String)
 
 
-underscore :: Parser Char
-underscore = char '_'
-
-
--- Parse Adrian's module name.
-moduleNameParser :: Parser AST.ModuleName
-moduleNameParser = many1 (letter <|> underscore)
-
-
+-- Parse Adrian's type from module.
+-- Typical example: some_module#SomeType
+-- There are no whitespaces around hash char.
+-- There are no modules inside of other modules so 
+-- you can't write something like `c#another_module#Type`.
 typeFromModuleParser :: Parser AST.Type
-typeFromModuleParser = liftA2 AST.TypeFromModule (moduleNameParser <* char '#') typeNameParser
+typeFromModuleParser = liftA2
+    AST.TypeFromModule (moduleNameParser <* char '#') typeNameParser
 
 
 -- Parse Adrian's type.
@@ -65,10 +70,11 @@ declarationParser = liftA3
     ((lexeme $ string ":") *> typeParser) ((lexeme $ string "=") *> exprParser)
 
 
+-- Parse Adrian's source code and returns AST.
 astParser :: Parser AST.AST
 astParser = (many $ lexeme declarationParser) <* eof
 
 
--- Parse Adrian source code and returns AST.
+-- Wrapper around astParser. Use it instead of astParser.
 parseSourceCode :: String -> Either ParseError AST.AST
 parseSourceCode source_code = parse astParser "" source_code
