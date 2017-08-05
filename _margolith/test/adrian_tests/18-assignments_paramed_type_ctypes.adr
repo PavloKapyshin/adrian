@@ -1,0 +1,8 @@
+sct Person(t) {
+    data: t
+}
+
+
+var p: Person(c#IntFast8) = Person(c#IntFast8(10))
+var m: c#IntFast8 = p.data
+p.data = c#IntFast8(20)

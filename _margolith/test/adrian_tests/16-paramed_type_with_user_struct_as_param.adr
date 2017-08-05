@@ -1,0 +1,10 @@
+sct UserStruct {}
+
+sct MyLinkedList(t) {
+    length: c#UIntFast64
+    data: t
+}
+
+
+var ll: MyLinkedList(UserStruct) = MyLinkedList(
+    c#UIntFast64(1), UserStruct())
