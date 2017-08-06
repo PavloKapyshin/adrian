@@ -5,7 +5,8 @@ import Text.Parsec (parse, many, many1, eof, optional, try)
 import Text.Parsec.Char (char, string, oneOf, lower, upper, letter, digit)
 import Text.Parsec.Error (ParseError)
 import Text.Parsec.String (Parser)
-import Control.Applicative ((<*>), (<*), (*>), (<$>), (<|>), liftA, liftA2, liftA3)
+import Control.Applicative (
+    (<*>), (<*), (*>), (<$>), (<|>), liftA, liftA2, liftA3)
 import Control.Monad (void)
 
 import qualified Adrian.Madgo.AST as AST
@@ -58,20 +59,38 @@ typeParser :: Parser AST.Type
 typeParser = ((try typeFromModuleParser) <|> typeNameParser)
 
 
--- Parse Adrian's expression, only integer literal for now.
+-- Parse integer literal.
 integerLiteralParser :: Parser AST.Expr
 integerLiteralParser = liftA AST.IntegerLiteral $ many1 digit
 
 
+-- Recursively parse arguments.
+-- Argument == expression.
+-- Don't use this function for parsing declaration arguments.
+--
+--              parsing these args
+--          vvvvvvvvvvvvvvvvvvvvvvvvvv
+-- someFunc(10, anotherFunc(), 30 + 40)
+--
+--           for these use declarationArgsParser (not written)
+--             vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+-- fun newFunc(someArg: c#IntFast8; anotherOne: c#IntFast32)
 argsParser :: Parser AST.Args
-argsParser = (try ((:) <$> (exprParser <* char ',' <* whitespaces) <*> argsParser)) <|> ((:) <$> exprParser <*> pure []) <|> (pure [])
+argsParser = (
+    -- parsing a lot of arguments.
+    try ((:) <$> (exprParser <* char ',' <* whitespaces) <*> argsParser)) <|>
+    ((:) <$> exprParser <*> pure []) <|>    -- parsing one argument.
+    (pure [])   -- parsing empty.
 
 
+-- Parse Adrian's struct call.
+-- Example: MyMegaStruct(10, 20, someFunc())
 structCallParser :: Parser AST.Expr
-structCallParser = liftA2 AST.StructCall typeParser (char '(' *> argsParser <* char ')')
+structCallParser = liftA2
+    AST.StructCall typeParser (char '(' *> argsParser <* char ')')
 
 
--- Parse Adrian's expression, only integer literal for now.
+-- Parse Adrian's expression, struct call or integer iteral for now.
 exprParser :: Parser AST.Expr
 exprParser = (structCallParser <|> integerLiteralParser)
 
