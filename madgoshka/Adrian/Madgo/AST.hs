@@ -9,7 +9,9 @@ data Type = Type String | TypeFromModule ModuleName Type
 data Name = Name String
     deriving (Show)
 
-data Expr = IntegerLiteral String
+type Args = [Expr]
+
+data Expr = IntegerLiteral String | StructCall Type Args
     deriving (Show)
 
 data Node = VariableDeclaration Name Type Expr

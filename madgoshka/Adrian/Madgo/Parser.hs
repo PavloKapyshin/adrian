@@ -1,7 +1,7 @@
 module Adrian.Madgo.Parser where
 
 
-import Text.Parsec (parse, many, many1, eof, optional)
+import Text.Parsec (parse, many, many1, eof, optional, try)
 import Text.Parsec.Char (char, string, oneOf, lower, upper, letter, digit)
 import Text.Parsec.Error (ParseError)
 import Text.Parsec.String (Parser)
@@ -11,14 +11,14 @@ import Control.Monad (void)
 import qualified Adrian.Madgo.AST as AST
 
 
--- Parse whitespace: spaces, newlines, tabs.
-whitespace :: Parser ()
-whitespace = void $ many $ oneOf " \n\t"
+-- Parse whitespaces: spaces, newlines, tabs.
+whitespaces :: Parser ()
+whitespaces = void $ many $ oneOf " \n\t"
 
 
 -- Parse something that can have whitespaces around.
 lexeme :: Parser a -> Parser a
-lexeme parser = whitespace *> (parser <* whitespace)
+lexeme parser = whitespaces *> (parser <* whitespaces)
 
 
 -- Parse Adrian's module name.
@@ -55,12 +55,25 @@ typeFromModuleParser = liftA2
 
 -- Parse Adrian's type.
 typeParser :: Parser AST.Type
-typeParser = (typeFromModuleParser <|> typeNameParser)
+typeParser = ((try typeFromModuleParser) <|> typeNameParser)
+
+
+-- Parse Adrian's expression, only integer literal for now.
+integerLiteralParser :: Parser AST.Expr
+integerLiteralParser = liftA AST.IntegerLiteral $ many1 digit
+
+
+argsParser :: Parser AST.Args
+argsParser = (try ((:) <$> (exprParser <* char ',' <* whitespaces) <*> argsParser)) <|> ((:) <$> exprParser <*> pure []) <|> (pure [])
+
+
+structCallParser :: Parser AST.Expr
+structCallParser = liftA2 AST.StructCall typeParser (char '(' *> argsParser <* char ')')
 
 
 -- Parse Adrian's expression, only integer literal for now.
 exprParser :: Parser AST.Expr
-exprParser = liftA AST.IntegerLiteral $ many1 digit
+exprParser = (structCallParser <|> integerLiteralParser)
 
 
 -- Parse Adrian's variable declaration statement.
