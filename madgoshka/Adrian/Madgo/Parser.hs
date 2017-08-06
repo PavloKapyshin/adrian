@@ -99,7 +99,7 @@ exprParser = (structCallParser <|> integerLiteralParser)
 declarationParser :: Parser AST.Node
 declarationParser = liftA3
     AST.VariableDeclaration ((lexeme $ string "var") *> nameParser)
-    ((lexeme $ string ":") *> typeParser) ((lexeme $ string "=") *> exprParser)
+    ((lexeme $ char ':') *> typeParser) ((lexeme $ char '=') *> exprParser)
 
 
 -- Parse Adrian's source code and returns AST.
