@@ -91,6 +91,8 @@ structCallParser = liftA2
     AST.StructCall typeParser (char '(' *> argsParser <* char ')')
 
 
+-- Operators with higher precedence must be first.
+-- Operators with the same precedence must be in the same list.
 operatorTable = [
     [Infix ((AST.SExpr "*") <$ (try $ lexeme $ string "*")) AssocLeft,
      Infix ((AST.SExpr "/") <$ (try $ lexeme $ string "/")) AssocLeft],
@@ -100,13 +102,15 @@ operatorTable = [
     ]
 
 
-termParser :: Parser AST.Expr
-termParser = (structCallParser <|> integerLiteralParser)
+-- Parse Adrian's atom.
+-- This is not an atom: 2 + 3
+atomParser :: Parser AST.Expr
+atomParser = (structCallParser <|> integerLiteralParser)
 
 
--- Parse Adrian's expression, struct call or integer iteral for now.
+-- Parse Adrian's expression.
 exprParser :: Parser AST.Expr
-exprParser = buildExpressionParser operatorTable termParser
+exprParser = buildExpressionParser operatorTable atomParser
 
 
 -- Parse Adrian's variable declaration statement.
