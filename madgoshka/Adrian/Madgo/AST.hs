@@ -11,7 +11,12 @@ data Name = Name String
 
 type Args = [Expr]
 
-data Expr = IntegerLiteral String | StructCall Type Args
+type Operator = String
+
+data Expr =
+    IntegerLiteral String
+  | StructCall Type Args
+  | SExpr Operator Expr Expr
     deriving (Show)
 
 data Node = VariableDeclaration Name Type Expr

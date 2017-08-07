@@ -3,10 +3,11 @@ module Adrian.Madgo.Parser where
 
 import Text.Parsec (parse, many, many1, eof, optional, try)
 import Text.Parsec.Char (char, string, oneOf, lower, upper, letter, digit)
+import Text.Parsec.Expr (buildExpressionParser, Operator(Infix), Assoc(AssocLeft))
 import Text.Parsec.Error (ParseError)
 import Text.Parsec.String (Parser)
 import Control.Applicative (
-    (<*>), (<*), (*>), (<$>), (<|>), liftA, liftA2, liftA3)
+    (<*>), (<*), (*>), (<$>), (<|>), (<$), liftA, liftA2, liftA3)
 import Control.Monad (void)
 
 import qualified Adrian.Madgo.AST as AST
@@ -90,9 +91,22 @@ structCallParser = liftA2
     AST.StructCall typeParser (char '(' *> argsParser <* char ')')
 
 
+operatorTable = [
+    [Infix ((AST.SExpr "*") <$ (try $ lexeme $ string "*")) AssocLeft,
+     Infix ((AST.SExpr "/") <$ (try $ lexeme $ string "/")) AssocLeft],
+
+    [Infix ((AST.SExpr "+") <$ (try $ lexeme $ string "+")) AssocLeft,
+     Infix ((AST.SExpr "-") <$ (try $ lexeme $ string "-")) AssocLeft]
+    ]
+
+
+termParser :: Parser AST.Expr
+termParser = (structCallParser <|> integerLiteralParser)
+
+
 -- Parse Adrian's expression, struct call or integer iteral for now.
 exprParser :: Parser AST.Expr
-exprParser = (structCallParser <|> integerLiteralParser)
+exprParser = buildExpressionParser operatorTable termParser
 
 
 -- Parse Adrian's variable declaration statement.
