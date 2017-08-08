@@ -17,6 +17,7 @@ data Expr =
     IntegerLiteral String
   | StructCall Type Args
   | SExpr Operator Expr Expr
+  | Parentheses Expr
     deriving (Show)
 
 data Node = VariableDeclaration Name Type Expr

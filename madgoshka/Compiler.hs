@@ -6,10 +6,16 @@ import System.Environment (getArgs)
 
 import qualified Adrian.Madgo.AST as AST
 import qualified Adrian.Madgo.Parser as Parser
+import qualified Adrian.Madgo.TAC as TAC
+import qualified Adrian.Madgo.Error as Error
 
 
-compile :: String -> Either ParseError AST.AST
-compile source_code = Parser.parseSourceCode source_code
+compile :: String -> Either Error.CompilationError AST.AST
+compile source_code =
+    let parseResult = Parser.parseSourceCode source_code in
+    case parseResult of
+        Left err -> Left err
+        Right ast -> Right $ TAC.translateAST ast
 
 
 main :: IO ()
@@ -19,4 +25,7 @@ main = do
             [file_name] -> file_name
             otherwise -> error "Supply an argument.")
     file_content <- readFile file_name
-    print $ compile file_content
+    case compile file_content of
+        Left e -> case e of
+            Error.CompilationError err -> putStrLn $ err
+        Right ast -> print $ ast

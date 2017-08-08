@@ -1,16 +1,19 @@
 module Adrian.Madgo.Parser where
 
 
-import Text.Parsec (parse, many, many1, eof, optional, try)
-import Text.Parsec.Char (char, string, oneOf, lower, upper, letter, digit)
-import Text.Parsec.Expr (buildExpressionParser, Operator(Infix), Assoc(AssocLeft))
-import Text.Parsec.Error (ParseError)
+import Text.Parsec (
+    parse, many, many1, eof, optional, try, sourceLine, sourceColumn)
 import Text.Parsec.String (Parser)
+import Text.Parsec.Char (char, string, oneOf, lower, upper, letter, digit)
+import Text.Parsec.Expr (
+    buildExpressionParser, Operator(Infix), Assoc(AssocLeft))
+import Text.Parsec.Error (ParseError, errorPos)
 import Control.Applicative (
     (<*>), (<*), (*>), (<$>), (<|>), (<$), liftA, liftA2, liftA3)
 import Control.Monad (void)
 
 import qualified Adrian.Madgo.AST as AST
+import qualified Adrian.Madgo.Error as Error
 
 
 -- Parse whitespaces: spaces, newlines, tabs.
@@ -91,6 +94,12 @@ structCallParser = liftA2
     AST.StructCall typeParser (char '(' *> argsParser <* char ')')
 
 
+-- Parse expression between parentheses.
+exprInParenthesesParser :: Parser AST.Expr
+exprInParenthesesParser = liftA
+    AST.Parentheses (char '(' *> exprParser <* char ')')
+
+
 -- Operators with higher precedence must be first.
 -- Operators with the same precedence must be in the same list.
 operatorTable = [
@@ -105,7 +114,8 @@ operatorTable = [
 -- Parse Adrian's atom.
 -- This is not an atom: 2 + 3
 atomParser :: Parser AST.Expr
-atomParser = (structCallParser <|> integerLiteralParser)
+atomParser = (
+    structCallParser <|> integerLiteralParser <|> exprInParenthesesParser)
 
 
 -- Parse Adrian's expression.
@@ -125,6 +135,19 @@ astParser :: Parser AST.AST
 astParser = (many $ lexeme declarationParser) <* eof
 
 
+makeCompilationErrorFromParseError :: ParseError -> Error.CompilationError
+makeCompilationErrorFromParseError err =
+    Error.CompilationError (
+        "Syntax Error(line:" ++ (show line) ++ "; column:" ++
+        (show column) ++ ")")
+    where
+        line = sourceLine $ errorPos err
+        column = sourceColumn $ errorPos err
+
+
 -- Wrapper around astParser. Use it instead of astParser.
-parseSourceCode :: String -> Either ParseError AST.AST
-parseSourceCode source_code = parse astParser "" source_code
+parseSourceCode :: String -> Either Error.CompilationError AST.AST
+parseSourceCode source_code =
+    case parse astParser "" source_code of
+        Left err -> Left $ makeCompilationErrorFromParseError err
+        Right ast -> Right ast
