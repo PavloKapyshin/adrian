@@ -1,12 +1,13 @@
 module Adrian.Madgo.Parser where
 
 
-import Text.Parsec (parse, many, many1, eof, optional, try)
+import Text.Parsec (
+    parse, many, many1, eof, optional, try, sourceLine, sourceColumn)
+import Text.Parsec.String (Parser)
 import Text.Parsec.Char (char, string, oneOf, lower, upper, letter, digit)
 import Text.Parsec.Expr (
     buildExpressionParser, Operator(Infix), Assoc(AssocLeft))
-import Text.Parsec.Error (ParseError)
-import Text.Parsec.String (Parser)
+import Text.Parsec.Error (ParseError, errorPos)
 import Control.Applicative (
     (<*>), (<*), (*>), (<$>), (<|>), (<$), liftA, liftA2, liftA3)
 import Control.Monad (void)
@@ -135,7 +136,13 @@ astParser = (many $ lexeme declarationParser) <* eof
 
 
 makeCompilationErrorFromParseError :: ParseError -> Error.CompilationError
-makeCompilationErrorFromParseError err = Error.CompilationError "ParseError"
+makeCompilationErrorFromParseError err =
+    Error.CompilationError (
+        "Syntax Error(line:" ++ (show line) ++ "; column:" ++
+        (show column) ++ ")")
+    where
+        line = sourceLine $ errorPos err
+        column = sourceColumn $ errorPos err
 
 
 -- Wrapper around astParser. Use it instead of astParser.

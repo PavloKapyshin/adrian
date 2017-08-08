@@ -25,4 +25,7 @@ main = do
             [file_name] -> file_name
             otherwise -> error "Supply an argument.")
     file_content <- readFile file_name
-    print $ compile file_content
+    case compile file_content of
+        Left e -> case e of
+            Error.CompilationError err -> putStrLn $ err
+        Right ast -> print $ ast
