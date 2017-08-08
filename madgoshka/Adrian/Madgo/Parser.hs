@@ -91,6 +91,12 @@ structCallParser = liftA2
     AST.StructCall typeParser (char '(' *> argsParser <* char ')')
 
 
+-- Parse expression between parentheses.
+exprInParenthesesParser :: Parser AST.Expr
+exprInParenthesesParser = liftA
+    AST.Parentheses (char '(' *> exprParser <* char ')')
+
+
 -- Operators with higher precedence must be first.
 -- Operators with the same precedence must be in the same list.
 operatorTable = [
@@ -105,7 +111,8 @@ operatorTable = [
 -- Parse Adrian's atom.
 -- This is not an atom: 2 + 3
 atomParser :: Parser AST.Expr
-atomParser = (structCallParser <|> integerLiteralParser)
+atomParser = (
+    structCallParser <|> integerLiteralParser <|> exprInParenthesesParser)
 
 
 -- Parse Adrian's expression.
