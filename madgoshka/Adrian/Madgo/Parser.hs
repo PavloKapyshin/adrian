@@ -3,7 +3,8 @@ module Adrian.Madgo.Parser where
 
 import Text.Parsec (parse, many, many1, eof, optional, try)
 import Text.Parsec.Char (char, string, oneOf, lower, upper, letter, digit)
-import Text.Parsec.Expr (buildExpressionParser, Operator(Infix), Assoc(AssocLeft))
+import Text.Parsec.Expr (
+    buildExpressionParser, Operator(Infix), Assoc(AssocLeft))
 import Text.Parsec.Error (ParseError)
 import Text.Parsec.String (Parser)
 import Control.Applicative (
@@ -11,6 +12,7 @@ import Control.Applicative (
 import Control.Monad (void)
 
 import qualified Adrian.Madgo.AST as AST
+import qualified Adrian.Madgo.Error as Error
 
 
 -- Parse whitespaces: spaces, newlines, tabs.
@@ -132,6 +134,13 @@ astParser :: Parser AST.AST
 astParser = (many $ lexeme declarationParser) <* eof
 
 
+makeCompilationErrorFromParseError :: ParseError -> Error.CompilationError
+makeCompilationErrorFromParseError err = Error.CompilationError "ParseError"
+
+
 -- Wrapper around astParser. Use it instead of astParser.
-parseSourceCode :: String -> Either ParseError AST.AST
-parseSourceCode source_code = parse astParser "" source_code
+parseSourceCode :: String -> Either Error.CompilationError AST.AST
+parseSourceCode source_code =
+    case parse astParser "" source_code of
+        Left err -> Left $ makeCompilationErrorFromParseError err
+        Right ast -> Right ast
