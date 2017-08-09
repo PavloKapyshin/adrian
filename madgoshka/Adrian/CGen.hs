@@ -50,7 +50,7 @@ genNode (Return (Val v _)) = [printf "return %s;" v]
 
 
 formatTypedName :: String -> Type -> String
-formatTypedName name t = undefined  -- TODO
+formatTypedName name t = printf "%s %s" (toS t) name
 
 
 main0 :: AST -> Node
