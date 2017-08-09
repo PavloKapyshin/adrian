@@ -17,6 +17,8 @@ data Node = Return Val
                 funcArgs :: [FuncArg],
                 funcBody :: AST}
           | FuncCall String [Val]
+          | Decl String Type
+          | DeclE String Val
 type AST = [Node]
 
 
@@ -58,6 +60,8 @@ genNode Func {funcName = name, funcRetType = rt, funcArgs = args, funcBody = bod
         ["}"]]
 genNode (FuncCall name args) = [printf "%s(%s)" name (intercalate ", " $ map toS args)]
 genNode (Return (Val v _)) = [printf "return %s;" v]
+genNode (Decl name t) = [printf "%s %s;" (toS t) name]
+genNode (DeclE name val@(Val _ t)) = [printf "%s %s = %s;" (toS t) name (toS val)]
 
 
 formatTypedName :: String -> Type -> String
