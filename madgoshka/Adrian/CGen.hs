@@ -6,7 +6,8 @@ import Data.List (intercalate)
 import Text.Printf (printf)
 
 
-data Type = Int
+data Type = Int | Char | Ptr Type
+-- TODO: Val as subset of Expr
 data Val = Val String Type
 data FuncArg = FuncArg String Type
 data Node = Return Val
@@ -15,6 +16,7 @@ data Node = Return Val
                 funcRetType :: Type,
                 funcArgs :: [FuncArg],
                 funcBody :: AST}
+          | FuncCall String [Val]
 type AST = [Node]
 
 
@@ -23,6 +25,14 @@ class ToString a where
 
 instance ToString Type where
     toS Int = "int"
+    toS Char = "char"
+    toS (Ptr t) = printf "%s*" (toS t)
+
+instance ToString Val where
+    toS (Val v Int) = v
+    toS (Val v Char) = printf "'%s'" v
+    toS (Val v (Ptr Char)) = printf "\"%s\"" v
+    toS (Val v (Ptr t)) = printf "%s*" (toS $ Val v t)
 
 instance ToString FuncArg where
     toS (FuncArg name t) = formatTypedName name t
@@ -46,6 +56,7 @@ genNode Func {funcName = name, funcRetType = rt, funcArgs = args, funcBody = bod
         [printf "%s %s(%s) {" (toS rt) name (toS args)],
         concatMap genNode body,
         ["}"]]
+genNode (FuncCall name args) = [printf "%s(%s)" name (intercalate ", " $ map toS args)]
 genNode (Return (Val v _)) = [printf "return %s;" v]
 
 
