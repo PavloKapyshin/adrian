@@ -6,6 +6,7 @@ import System.Exit (ExitCode(ExitSuccess, ExitFailure), exitWith)
 import Adrian.CGenTests (tests)
 
 
+main :: IO ()
 main = do
     Counts _ _ errors failures <- runTestTT tests
     let (msg, code) = case (errors, failures) of
