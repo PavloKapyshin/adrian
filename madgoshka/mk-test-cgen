@@ -1,0 +1,3 @@
+#!/bin/sh
+
+ghc -Wall -o test-cgen --make CGenTestRunner
