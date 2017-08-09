@@ -18,6 +18,7 @@ data Expr =
   | StructCall Type Args
   | SExpr Operator Expr Expr
   | Parentheses Expr
+  | NameInExpr String
     deriving (Show)
 
 data Node = VariableDeclaration Name Type Expr
