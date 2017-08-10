@@ -26,6 +26,15 @@ test3 = TestCase $ do
             C.DeclE "res" C.Int (C.Val "0" C.Int),
             C.Return (C.Var "res")]
 
+test4 :: Test
+test4 = TestCase $ do
+    assertEqual "" "#include <stdint.h>\nint main(void) {\n\
+        \int_fast8_t res = 3;\nreturn 0;\n}" (C.gens [func])
+    where
+        func = C.main0 [
+            C.DeclE "res" C.IntFast8 (C.Val "3" C.IntFast8),
+            C.Return (C.Val "0" C.Int)]
+
 
 tests :: Test
-tests = TestList [test1, test2, test3]
+tests = TestList [test1, test2, test3, test4]
