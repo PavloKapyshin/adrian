@@ -8,7 +8,7 @@ import Text.Printf (printf)
 
 data Op = Plus | Minus | Slash | Star
 data Type = Int | Char | Ptr Type
-data Expr = Expr Op Expr Expr | Val String Type
+data Expr = Expr Op Expr Expr | Val String Type | Var String
 data FuncArg = FuncArg String Type
 data Node = Return Expr
           | Func {
@@ -42,6 +42,7 @@ instance ToString Expr where
     toS (Val v (Ptr Char)) = printf "\"%s\"" v
     toS (Val v (Ptr t)) = printf "%s*" (toS $ Val v t)
     toS (Expr op expr1 expr2) = printf "%s %s %s" (toS expr1) (toS op) (toS expr2)
+    toS (Var name) = name
 
 instance ToString FuncArg where
     toS (FuncArg name t) = formatTypedName name t
