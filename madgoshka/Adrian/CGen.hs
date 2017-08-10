@@ -18,7 +18,7 @@ data Node = Return Expr
                 funcBody :: AST}
           | FuncCall String [Expr]
           | Decl String Type
-          | DeclE String Expr
+          | DeclE String Type Expr
 type AST = [Node]
 
 
@@ -68,15 +68,11 @@ genNode Func {funcName = name, funcRetType = rt, funcArgs = args, funcBody = bod
 genNode (FuncCall name args) = [printf "%s(%s)" name (intercalate ", " $ map toS args)]
 genNode (Return expr) = [printf "return %s;" (toS expr)]
 genNode (Decl name t) = [printf "%s %s;" (toS t) name]
-genNode (DeclE name expr) = [printf "%s %s = %s;" (toS $ getExprType expr) name (toS expr)]
+genNode (DeclE name t expr) = [printf "%s %s = %s;" (toS t) name (toS expr)]
 
 
 formatTypedName :: String -> Type -> String
 formatTypedName name t = printf "%s %s" (toS t) name
-
-getExprType :: Expr -> Type
-getExprType (Val _ t) = t
-getExprType (Expr _ expr1 _) = getExprType expr1
 
 
 main0 :: AST -> Node
