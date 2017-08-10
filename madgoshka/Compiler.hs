@@ -1,13 +1,12 @@
 module Main where
 
 
-import Text.Parsec.Error (ParseError)
 import System.Environment (getArgs)
 
 import qualified Adrian.Madgo.AST as AST
-import qualified Adrian.Madgo.Parser as Parser
 import qualified Adrian.Madgo.TAC as TAC
 import qualified Adrian.Madgo.Error as Error
+import qualified Adrian.Madgo.Parser as Parser
 
 
 compile :: String -> Either Error.CompilationError AST.AST
@@ -21,11 +20,11 @@ compile source_code =
 main :: IO ()
 main = do
     args <- getArgs
-    let file_name = (case args of
-            [file_name] -> file_name
-            otherwise -> error "Supply an argument.")
-    file_content <- readFile file_name
-    case compile file_content of
+    let fileName = (case args of
+            [fn] -> fn
+            _ -> error "Supply an argument.")
+    fileContent <- readFile fileName
+    case compile fileContent of
         Left e -> case e of
             Error.CompilationError err -> putStrLn $ err
         Right ast -> print $ ast

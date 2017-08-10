@@ -2,14 +2,16 @@ module Adrian.Madgo.Parser where
 
 
 import Text.Parsec (
-    parse, many, many1, eof, optional, try, sourceLine, sourceColumn)
-import Text.Parsec.String (Parser)
-import Text.Parsec.Char (char, string, oneOf, lower, upper, letter, digit)
+    parse, many, many1, eof, try, sourceLine, sourceColumn)
+import Text.Parsec.Char (
+    char, string, oneOf, lower, upper, letter, digit)
 import Text.Parsec.Expr (
     buildExpressionParser, Operator(Infix), Assoc(AssocLeft))
+import Text.Parsec.String (Parser)
 import Text.Parsec.Error (ParseError, errorPos)
-import Control.Applicative (
-    (<*>), (<*), (*>), (<$>), (<|>), (<$), liftA, liftA2, liftA3)
+
+import Data.Functor.Identity (Identity)
+import Control.Applicative ((<|>), liftA, liftA2, liftA3)
 import Control.Monad (void)
 
 import qualified Adrian.Madgo.AST as AST
@@ -102,6 +104,7 @@ exprInParenthesesParser = liftA
 
 -- Operators with higher precedence must be first.
 -- Operators with the same precedence must be in the same list.
+operatorTable :: [[Operator String () Identity AST.Expr]]
 operatorTable = [
     [Infix ((AST.SExpr "*") <$ (try $ lexeme $ string "*")) AssocLeft,
      Infix ((AST.SExpr "/") <$ (try $ lexeme $ string "/")) AssocLeft],
@@ -124,15 +127,15 @@ exprParser = buildExpressionParser operatorTable atomParser
 
 
 -- Parse Adrian's variable declaration statement.
-declarationParser :: Parser AST.Node
-declarationParser = liftA3
-    AST.VariableDeclaration ((lexeme $ string "var") *> nameParser)
+varDeclParser :: Parser AST.Node
+varDeclParser = liftA3
+    AST.VarDecl ((lexeme $ string "var") *> nameParser)
     ((lexeme $ char ':') *> typeParser) ((lexeme $ char '=') *> exprParser)
 
 
 -- Parse Adrian's source code and returns AST.
 astParser :: Parser AST.AST
-astParser = (many $ lexeme declarationParser) <* eof
+astParser = (many $ lexeme varDeclParser) <* eof
 
 
 makeCompilationErrorFromParseError :: ParseError -> Error.CompilationError
