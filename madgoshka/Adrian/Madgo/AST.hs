@@ -3,7 +3,9 @@ module Adrian.Madgo.AST where
 
 type ModuleName = String
 
-data Type = Type String | TypeFromModule ModuleName Type
+data Type =
+    Type String
+  | TypeFromModule ModuleName Type
     deriving (Show)
 
 data Name = Name String
@@ -21,7 +23,11 @@ data Expr =
   | NameInExpr String
     deriving (Show)
 
-data Node = VariableDeclaration Name Type Expr
+data Node =
+    VarDecl {
+        varName :: Name,
+        varType :: Type,
+        varExpr :: Expr}
     deriving (Show)
 
 type AST = [Node]
