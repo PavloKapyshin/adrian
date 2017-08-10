@@ -1,0 +1,101 @@
+{-# LANGUAGE FlexibleInstances #-}
+
+module Adrian.CGen.Generator where
+
+import qualified Data.List as List
+import qualified Data.Set as Set
+import Text.Printf (printf)
+import qualified Control.Monad.State as ST
+
+import Adrian.CGen.AST
+import Adrian.CGen.Includes
+
+
+data ASTGenState = ASTGenState (Set.Set Include)
+
+
+gen :: AST -> [String]
+gen ast = let
+    (ASTGenState includes, rest) = accumulateState (ASTGenState Set.empty) ast
+    in List.concat [map toS . Set.toList $ includes, rest]
+
+
+mergeStates :: ASTGenState -> ASTGenState -> ASTGenState
+mergeStates (ASTGenState aIncludes) (ASTGenState bIncludes) = let
+    in ASTGenState $ aIncludes `Set.union` bIncludes
+
+accumulateState :: ASTGenState -> AST -> (ASTGenState, [String])
+accumulateState initialState ast = let
+    accumState (oldState, oldLines) node = let
+        (newLines, newState) = ST.runState (genNode node) oldState
+        in (mergeStates oldState newState, concat [oldLines, newLines])
+    in List.foldl' accumState (initialState, []) ast
+
+
+addIncludes :: [Type] -> ST.State ASTGenState ()
+addIncludes types = do
+    let includes = concatMap typeToIncludes types
+    oldState <- ST.get
+    ST.put $ mergeStates oldState (ASTGenState $ Set.fromList includes)
+    return ()
+
+
+genNode :: Node -> ST.State ASTGenState [String]
+genNode Func {funcName = name, funcRetType = rt, funcArgs = args, funcBody = body} = do
+    oldState <- ST.get
+    let (newState, bodyLines) = accumulateState oldState body
+    ST.put newState
+    addIncludes $ concat [[rt], map (\(FuncArg _ t) -> t) args]
+    return $ concat [
+        [printf "%s %s(%s) {" (toS rt) name (toS args)],
+        bodyLines,
+        ["}"]]
+genNode (FuncCall name args) = do
+    return [printf "%s(%s)" name (List.intercalate ", " $ map toS args)]
+genNode (Return expr) = do
+    return [printf "return %s;" (toS expr)]
+genNode (Decl name t) = do
+    addIncludes [t]
+    return [printf "%s %s;" (toS t) name]
+genNode (DeclE name t expr) = do
+    addIncludes [t]
+    return [printf "%s %s = %s;" (toS t) name (toS expr)]
+
+
+formatTypedName :: String -> Type -> String
+formatTypedName name t = printf "%s %s" (toS t) name
+
+
+class ToString a where
+    toS :: a -> String
+
+instance ToString Op where
+    toS Plus = "+"
+    toS Minus = "-"
+    toS Slash = "/"
+    toS Star = "*"
+
+instance ToString Type where
+    toS IntFast8 = "int_fast8_t"
+    toS Int = "int"
+    toS Char = "char"
+    toS (Ptr t) = printf "%s*" (toS t)
+
+instance ToString Expr where
+    toS (Val v IntFast8) = v
+    toS (Val v Int) = v
+    toS (Val v Char) = printf "'%s'" v
+    toS (Val v (Ptr Char)) = printf "\"%s\"" v
+    toS (Val v (Ptr t)) = printf "%s*" (toS $ Val v t)
+    toS (Expr op expr1 expr2) = printf "%s %s %s" (toS expr1) (toS op) (toS expr2)
+    toS (Var name) = name
+
+instance ToString FuncArg where
+    toS (FuncArg name t) = formatTypedName name t
+
+instance ToString [FuncArg] where  -- FlexibleInstances
+    toS [] = "void"
+    toS args = List.intercalate ", " $ map toS args
+
+instance ToString Include where
+    toS (Include header) = printf "#include <%s>" header

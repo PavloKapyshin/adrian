@@ -13,7 +13,7 @@ test2 :: Test
 test2 = TestCase $ do
     assertEqual "" "int something = 42;" (C.gens [node])
     where
-        node = C.DeclE "something" (C.Val "42" C.Int)
+        node = C.DeclE "something" C.Int (C.Val "42" C.Int)
 
 test3 :: Test
 test3 = TestCase $ do
@@ -25,7 +25,7 @@ test4 :: Test
 test4 = TestCase $ do
     assertEqual "" "char* something = \"different\";" (C.gens [node])
     where
-        node = C.DeclE "something" (C.Val "different" (C.Ptr C.Char))
+        node = C.DeclE "something" (C.Ptr C.Char) (C.Val "different" (C.Ptr C.Char))
 
 test5 :: Test
 test5 = TestCase $ do
@@ -35,7 +35,7 @@ test5 = TestCase $ do
             (C.Val "3" C.Int) `C.star` (
                 (C.Val "5" C.Int) `C.minus` (
                     (C.Val "8" C.Int) `C.slash` (C.Val "4" C.Int))))
-        node = C.DeclE "r" expr
+        node = C.DeclE "r" C.Int expr
 
 
 tests :: Test

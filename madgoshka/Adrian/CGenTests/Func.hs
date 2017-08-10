@@ -29,6 +29,23 @@ test2 = TestCase $ do
             C.funcArgs = args,
             C.funcBody = body}
 
+test3 :: Test
+test3 = TestCase $ do
+    assertEqual "" "#include <stdint.h>\nint_fast8_t add(int_fast8_t a, \
+        \int_fast8_t b) {\nreturn a + b;\n}\nint_fast8_t sub(int_fast8_t x, \
+        \int_fast8_t y) {\nreturn x - y;\n}" (C.gens [add_func, sub_func])
+    where
+        add_func = C.Func {
+            C.funcName = "add",
+            C.funcRetType = C.IntFast8,
+            C.funcArgs = [C.FuncArg "a" C.IntFast8, C.FuncArg "b" C.IntFast8],
+            C.funcBody = [C.Return $ (C.Var "a") `C.plus` (C.Var "b")]}
+        sub_func = C.Func {
+            C.funcName = "sub",
+            C.funcRetType = C.IntFast8,
+            C.funcArgs = [C.FuncArg "x" C.IntFast8, C.FuncArg "y" C.IntFast8],
+            C.funcBody = [C.Return $ (C.Var "x") `C.minus` (C.Var "y")]}
+
 
 tests :: Test
-tests = TestList [test1, test2]
+tests = TestList [test1, test2, test3]
