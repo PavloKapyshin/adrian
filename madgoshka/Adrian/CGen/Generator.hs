@@ -39,6 +39,22 @@ addIncludes types = do
     ST.put $ mergeStates oldState (ASTGenState $ Set.fromList includes)
     return ()
 
+addIncludesFromExpr :: Expr -> ST.State ASTGenState ()
+addIncludesFromExpr expr = do
+    let includes = collectIncludes expr
+    oldState <- ST.get
+    ST.put $ mergeStates oldState (ASTGenState $ Set.fromList includes)
+    return ()
+
+collectIncludes :: Expr -> [Include]
+collectIncludes (Var _) = []
+collectIncludes (Val _ t) = typeToIncludes t
+collectIncludes (FuncCall _ exprs) = concatMap collectIncludes exprs
+collectIncludes (FuncDescrCall descr exprs) =
+    concat [funcDescrIncludes descr, concatMap collectIncludes exprs]
+collectIncludes (Expr _ expr1 expr2) =
+    concat [collectIncludes expr1, collectIncludes expr2]
+
 
 genNode :: Node -> ST.State ASTGenState [String]
 genNode Func {funcName = name, funcRetType = rt, funcArgs = args, funcBody = body} = do
@@ -50,16 +66,19 @@ genNode Func {funcName = name, funcRetType = rt, funcArgs = args, funcBody = bod
         [printf "%s %s(%s) {" (toS rt) name (toS args)],
         bodyLines,
         ["}"]]
-genNode (FuncCall name args) = do
-    return [printf "%s(%s)" name (List.intercalate ", " $ map toS args)]
 genNode (Return expr) = do
+    addIncludesFromExpr expr
     return [printf "return %s;" (toS expr)]
 genNode (Decl name t) = do
     addIncludes [t]
     return [printf "%s %s;" (toS t) name]
 genNode (DeclE name t expr) = do
     addIncludes [t]
+    addIncludesFromExpr expr
     return [printf "%s %s = %s;" (toS t) name (toS expr)]
+genNode (StmtE expr) = do
+    addIncludesFromExpr expr
+    return [printf "%s;" (toS expr)]
 
 
 formatTypedName :: String -> Type -> String
@@ -79,16 +98,23 @@ instance ToString Type where
     toS IntFast8 = "int_fast8_t"
     toS Int = "int"
     toS Char = "char"
+    toS Size = "size_t"
+    toS Void = "void"
     toS (Ptr t) = printf "%s*" (toS t)
 
 instance ToString Expr where
     toS (Val v IntFast8) = v
     toS (Val v Int) = v
     toS (Val v Char) = printf "'%s'" v
+    toS (Val v Size) = v
+    toS (Val _ Void) = undefined
     toS (Val v (Ptr Char)) = printf "\"%s\"" v
     toS (Val v (Ptr t)) = printf "%s*" (toS $ Val v t)
     toS (Expr op expr1 expr2) = printf "%s %s %s" (toS expr1) (toS op) (toS expr2)
     toS (Var name) = name
+    toS (FuncCall name args) = printf "%s(%s)" name (List.intercalate ", " $ map toS args)
+    toS (FuncDescrCall (FuncDescr {funcDescrName = name}) args) =
+        toS $ FuncCall name args
 
 instance ToString FuncArg where
     toS (FuncArg name t) = formatTypedName name t
