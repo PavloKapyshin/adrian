@@ -21,6 +21,7 @@ import Data.Map ((!), update)
 
 import qualified Adrian.Madgo.Env as Env
 import qualified Adrian.Madgo.AST as AST
+import qualified Adrian.Madgo.Inference as Inference
 
 
 newContext :: Env.Context
@@ -31,7 +32,7 @@ createTempVariable :: AST.Expr -> Env.Context -> (String, AST.Node, Env.Context)
 createTempVariable expr (envs, options) =
     let tempNameString = 't':(options ! "temp_count")
         tempDecl name =
-            AST.VarDecl (AST.Name name) (AST.Type "some_type") expr
+            AST.VarDecl (AST.Name name) (Inference.inferTypeFromExpr expr) expr
         modifiedContext =
             (envs, update (\n -> Just $ show ((read n :: Integer) + 1)) "temp_count" options)
     in (tempNameString, tempDecl tempNameString, modifiedContext)
