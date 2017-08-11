@@ -1,0 +1,3 @@
+#!/bin/sh
+
+./mk-test-cgen && ./test-cgen && ./mk-test-madgo && ./test-madgo
