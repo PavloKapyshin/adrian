@@ -6,10 +6,10 @@ type ModuleName = String
 data Type =
     Type String
   | TypeFromModule ModuleName Type
-    deriving (Show)
+    deriving (Show, Eq)
 
 data Name = Name String
-    deriving (Show)
+    deriving (Show, Eq)
 
 type Args = [Expr]
 
@@ -21,13 +21,13 @@ data Expr =
   | SExpr Operator Expr Expr
   | Parentheses Expr
   | NameInExpr String
-    deriving (Show)
+    deriving (Show, Eq)
 
 data Node =
     VarDecl {
         varName :: Name,
         varType :: Type,
         varExpr :: Expr}
-    deriving (Show)
+    deriving (Show, Eq)
 
 type AST = [Node]

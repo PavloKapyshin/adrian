@@ -19,39 +19,42 @@ module Adrian.Madgo.TAC where
 
 import Data.Map ((!), update)
 
+import qualified Adrian.Madgo.Env as Env
 import qualified Adrian.Madgo.AST as AST
-import qualified Adrian.Madgo.SymbolTable as STable
+import qualified Adrian.Madgo.Inference as Inference
 
 
-newContext :: STable.Context
-newContext = ([STable.emptyTable], STable.fromList [("temp_count", "0")])
+newContext :: Env.Context
+newContext = ([Env.emptyEnv], Env.fromList [("temp_count", "0")])
 
 
-createTempVariable :: AST.Expr -> STable.Context -> (String, AST.Node, STable.Context)
-createTempVariable expr (tables, compilerOptions) =
-    let nameString = 't':(compilerOptions ! "temp_count")
+createTempVariable :: AST.Expr -> Env.Context -> (String, AST.Node, Env.Context)
+createTempVariable expr (envs, options) =
+    let tempNameString = 't':(options ! "temp_count")
         tempDecl name =
-            AST.VarDecl (AST.Name name) (AST.Type "some_type") expr
-        updatedCompilerOptions =
-            update (\n -> Just $ show ((read n :: Integer) + 1)) "temp_count" compilerOptions
-    in (nameString, tempDecl nameString, (tables, updatedCompilerOptions))
+            AST.VarDecl (AST.Name name) (Inference.inferTypeFromExpr expr) expr
+        modifiedContext =
+            (envs, update (\n -> Just $ show ((read n :: Integer) + 1)) "temp_count" options)
+    in (tempNameString, tempDecl tempNameString, modifiedContext)
 
 
 -- Applies three address code tranformation to expression.
--- Returns a pair where first element is a new expression you need to put
--- instead of previous expression and second element is a list of
--- declarations of temporary variables.
-translateExpr :: AST.Expr -> STable.Context -> (AST.Expr, AST.AST, STable.Context)
-translateExpr expr context = case expr of
-    AST.SExpr op left right ->
-        let (tempName1, tempDecl1, context1) = createTempVariable left context in
-        let (tempName2, tempDecl2, context2) = createTempVariable right context1 in
-        (AST.SExpr op (AST.NameInExpr tempName1) (AST.NameInExpr tempName2),
-          [tempDecl1, tempDecl2], context2)
-    _ -> (expr, [], context)
+-- Returns a tuple where first element is a new expression you need to put
+-- instead of previous expression, second element is a list of
+-- declarations of temporary variables and third element is a
+-- modified context.
+translateExpr :: AST.Expr -> Env.Context -> (AST.Expr, AST.AST, Env.Context)
+translateExpr (AST.SExpr op left right) context =
+    (newExpr, decls, modifiedContext)
+    where
+        (nameOfTemp1, declOfTemp1, _modifiedContext) = createTempVariable left context
+        (nameOfTemp2, declOfTemp2, modifiedContext) = createTempVariable right _modifiedContext
+        newExpr = AST.SExpr op (AST.NameInExpr nameOfTemp1) (AST.NameInExpr nameOfTemp2)
+        decls = [declOfTemp1, declOfTemp2]
+translateExpr expr context = (expr, [], context)
 
 
-translateNode :: AST.Node -> STable.Context -> AST.AST
+translateNode :: AST.Node -> Env.Context -> AST.AST
 translateNode AST.VarDecl {AST.varName = name, AST.varType = type_, AST.varExpr = expr} context =
     let (newExpr, tempDeclarations, _) = translateExpr expr context in
     -- Declarations of temporary variables must be first, because we use them
