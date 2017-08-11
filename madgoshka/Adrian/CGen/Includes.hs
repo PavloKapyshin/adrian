@@ -3,11 +3,11 @@ module Adrian.CGen.Includes where
 import Adrian.CGen.AST
 
 
-data Include = Include String deriving (Eq, Ord)
-
-
 stdint :: Include
 stdint = Include "stdint.h"
+
+stdlib :: Include
+stdlib = Include "stdlib.h"
 
 
 typeToIncludes :: Type -> [Include]
