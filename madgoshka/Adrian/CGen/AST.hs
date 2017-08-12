@@ -30,4 +30,5 @@ data Node = Return Expr
           | Decl String Type
           | DeclE String Type Expr
           | StmtE Expr
+          | Assignment Expr Expr
 type AST = [Node]

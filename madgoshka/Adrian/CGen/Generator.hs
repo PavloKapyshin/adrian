@@ -80,6 +80,10 @@ genNode (DeclE name t expr) = do
 genNode (StmtE expr) = do
     addIncludesFromExpr expr
     return [printf "%s;" (toS expr)]
+genNode (Assignment expr1 expr2) = do
+    addIncludesFromExpr expr1
+    addIncludesFromExpr expr2
+    return [printf "%s = %s;" (toS expr1) (toS expr2)]
 
 
 formatTypedName :: String -> Type -> String
