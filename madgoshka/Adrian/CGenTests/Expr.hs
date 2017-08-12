@@ -23,6 +23,12 @@ test3 = TestCase $ do
     where
         expr = C.Cast ((C.Val "3" C.Int) `C.minus` (C.Val "1" C.Int)) C.UIntFast8
 
+test4 :: Test
+test4 = TestCase $ do
+    assertEqual "" "#include <stdint.h>\n*((uint_fast8_t)(3 - 1));" (C.gens [C.StmtE expr])
+    where
+        expr = C.DeRef $ C.Cast ((C.Val "3" C.Int) `C.minus` (C.Val "1" C.Int)) C.UIntFast8
+
 
 tests :: Test
-tests = TestList [test1, test2, test3]
+tests = TestList [test1, test2, test3, test4]

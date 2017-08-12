@@ -14,6 +14,8 @@ data Expr = Expr Op Expr Expr
           | FuncCall String [Expr]
           | FuncDescrCall FuncDescr [Expr]
           | Cast Expr Type
+          | Ref Expr
+          | DeRef Expr
 data Include = Include String deriving (Eq, Ord)
 data FuncDescr = FuncDescr {
     funcDescrName :: String,
