@@ -30,13 +30,13 @@ _lookupName (env:envs) name =
         Nothing -> _lookupName envs name
 
 
-getName :: Context -> String -> Maybe Entity
-getName (envs, _) name = _lookupName envs name
+getName :: Envs -> String -> Maybe Entity
+getName envs name = _lookupName envs name
 
 
 -- Add name to the first env.
-addName :: Context -> String -> Entity -> M.Map String Entity
-addName (env:_, _) name entity = M.insert name entity env
+addName :: Envs -> String -> Entity -> M.Map String Entity
+addName (env:_) name entity = M.insert name entity env
 
 
 fromList :: Ord k => [(k, a)] -> M.Map k a

@@ -6,6 +6,7 @@ type ModuleName = String
 data Type =
     Type String
   | TypeFromModule ModuleName Type
+  | StructTypeScalar Type
     deriving (Show, Eq)
 
 data Name =
@@ -14,9 +15,7 @@ data Name =
     deriving (Show, Eq)
 
 type Args = [Expr]
-
 type Operator = String
-
 data Expr =
     IntegerLiteral String
   | StructCall Type Args
@@ -24,7 +23,7 @@ data Expr =
   | Parentheses Expr
   | NameInExpr String
   | Dereference Expr
-  | StructTypeScalar Type
+  | ExprT Type
   | CFuncCall {
         cfuncName :: Name,
         cfuncArgs :: Args}

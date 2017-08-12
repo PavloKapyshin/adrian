@@ -19,7 +19,7 @@ translateNode AST.VarDecl {AST.varName = (AST.Name n), AST.varType = t, AST.varE
                             AST.CFuncCall {
                                 AST.cfuncName = (AST.Name "sizeof"),
                                 AST.cfuncArgs = [
-                                    AST.StructTypeScalar
+                                    AST.ExprT $ AST.StructTypeScalar
                                         (AST.TypeFromModule "c" ctype)]
                             }]
                     })
