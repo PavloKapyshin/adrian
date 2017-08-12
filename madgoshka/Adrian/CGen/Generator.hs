@@ -49,6 +49,7 @@ addIncludesFromExpr expr = do
 collectIncludes :: Expr -> [Include]
 collectIncludes (Var _) = []
 collectIncludes (Val _ t) = typeToIncludes t
+collectIncludes (Cast expr t) = concat [collectIncludes expr, typeToIncludes t]
 collectIncludes (FuncCall _ exprs) = concatMap collectIncludes exprs
 collectIncludes (FuncDescrCall descr exprs) =
     concat [funcDescrIncludes descr, concatMap collectIncludes exprs]
@@ -95,6 +96,7 @@ instance ToString Op where
     toS Star = "*"
 
 instance ToString Type where
+    toS UIntFast8 = "uint_fast8_t"
     toS IntFast8 = "int_fast8_t"
     toS Int = "int"
     toS Char = "char"
@@ -103,6 +105,7 @@ instance ToString Type where
     toS (Ptr t) = printf "%s*" (toS t)
 
 instance ToString Expr where
+    toS (Val v UIntFast8) = v
     toS (Val v IntFast8) = v
     toS (Val v Int) = v
     toS (Val v Char) = printf "'%s'" v
@@ -112,6 +115,7 @@ instance ToString Expr where
     toS (Val v (Ptr t)) = printf "%s*" (toS $ Val v t)
     toS (Expr op expr1 expr2) = printf "%s %s %s" (toS expr1) (toS op) (toS expr2)
     toS (Var name) = name
+    toS (Cast expr t) = printf "(%s)(%s)" (toS t) (toS expr)
     toS (FuncCall name args) = printf "%s(%s)" name (List.intercalate ", " $ map toS args)
     toS (FuncDescrCall (FuncDescr {funcDescrName = name}) args) =
         toS $ FuncCall name args

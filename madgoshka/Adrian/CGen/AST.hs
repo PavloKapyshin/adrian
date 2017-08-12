@@ -1,12 +1,19 @@
 module Adrian.CGen.AST where
 
 data Op = Plus | Minus | Slash | Star
-data Type = IntFast8 | Int | Char | Size | Void | Ptr Type
+data Type = UIntFast8
+          | IntFast8
+          | Int
+          | Char
+          | Size
+          | Void
+          | Ptr Type
 data Expr = Expr Op Expr Expr
           | Val String Type
           | Var String
           | FuncCall String [Expr]
           | FuncDescrCall FuncDescr [Expr]
+          | Cast Expr Type
 data Include = Include String deriving (Eq, Ord)
 data FuncDescr = FuncDescr {
     funcDescrName :: String,
