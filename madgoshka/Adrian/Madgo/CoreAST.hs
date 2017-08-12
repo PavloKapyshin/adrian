@@ -1,28 +1,28 @@
-module Adrian.Madgo.AST where
+module Adrian.Madgo.CoreAST where
 
 
 type ModuleName = String
-
-data Type =
-    Type String
-  | TypeFromModule ModuleName Type
-  | StructTypeScalar Type
-    deriving (Show, Eq)
 
 data Name =
     Name String
   | NameFromModule ModuleName Name
     deriving (Show, Eq)
 
+data Type =
+    Type String
+  | TypeFromModule ModuleName Type
+  | StructTypePtr Type
+    deriving (Show, Eq)
+
 type Args = [Expr]
 type Operator = String
 data Expr =
     IntegerLiteral String
-  | StructCall Type Args
+  | StructFuncCall Type Name Args
   | SExpr Operator Expr Expr
+  | Dereference Expr
   | Parentheses Expr
   | NameInExpr String
-  | Dereference Expr
   | ExprT Type
   | CFuncCall {
         cfuncName :: Name,
