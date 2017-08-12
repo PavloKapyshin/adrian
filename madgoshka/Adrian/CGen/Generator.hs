@@ -49,6 +49,9 @@ addIncludesFromExpr expr = do
 collectIncludes :: Expr -> [Include]
 collectIncludes (Var _) = []
 collectIncludes (Val _ t) = typeToIncludes t
+collectIncludes (Cast expr t) = concat [collectIncludes expr, typeToIncludes t]
+collectIncludes (Ref expr) = collectIncludes expr
+collectIncludes (DeRef expr) = collectIncludes expr
 collectIncludes (FuncCall _ exprs) = concatMap collectIncludes exprs
 collectIncludes (FuncDescrCall descr exprs) =
     concat [funcDescrIncludes descr, concatMap collectIncludes exprs]
@@ -79,6 +82,10 @@ genNode (DeclE name t expr) = do
 genNode (StmtE expr) = do
     addIncludesFromExpr expr
     return [printf "%s;" (toS expr)]
+genNode (Assignment expr1 expr2) = do
+    addIncludesFromExpr expr1
+    addIncludesFromExpr expr2
+    return [printf "%s = %s;" (toS expr1) (toS expr2)]
 
 
 formatTypedName :: String -> Type -> String
@@ -95,6 +102,7 @@ instance ToString Op where
     toS Star = "*"
 
 instance ToString Type where
+    toS UIntFast8 = "uint_fast8_t"
     toS IntFast8 = "int_fast8_t"
     toS Int = "int"
     toS Char = "char"
@@ -103,6 +111,7 @@ instance ToString Type where
     toS (Ptr t) = printf "%s*" (toS t)
 
 instance ToString Expr where
+    toS (Val v UIntFast8) = v
     toS (Val v IntFast8) = v
     toS (Val v Int) = v
     toS (Val v Char) = printf "'%s'" v
@@ -112,6 +121,9 @@ instance ToString Expr where
     toS (Val v (Ptr t)) = printf "%s*" (toS $ Val v t)
     toS (Expr op expr1 expr2) = printf "%s %s %s" (toS expr1) (toS op) (toS expr2)
     toS (Var name) = name
+    toS (Cast expr t) = printf "(%s)(%s)" (toS t) (toS expr)
+    toS (Ref expr) = printf "&(%s)" (toS expr)
+    toS (DeRef expr) = printf "*(%s)" (toS expr)
     toS (FuncCall name args) = printf "%s(%s)" name (List.intercalate ", " $ map toS args)
     toS (FuncDescrCall (FuncDescr {funcDescrName = name}) args) =
         toS $ FuncCall name args
