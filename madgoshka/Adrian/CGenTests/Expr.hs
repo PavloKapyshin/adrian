@@ -29,6 +29,15 @@ test4 = TestCase $ do
     where
         expr = C.DeRef $ C.Cast ((C.Val "3" C.Int) `C.minus` (C.Val "1" C.Int)) C.UIntFast8
 
+test5 :: Test
+test5 = TestCase $ do
+    -- (some C joke)(explicit cast with malloc and sizeof of char)
+    assertEqual "" "#include <stdlib.h>\n\
+        \char* thing = (char*)(malloc(sizeof(char)));" (C.gens [node])
+    where
+        expr = C.Cast (C.malloc [C.SizeOf C.Char]) (C.Ptr C.Char)
+        node = C.DeclE "thing" (C.Ptr C.Char) expr
+
 
 tests :: Test
-tests = TestList [test1, test2, test3, test4]
+tests = TestList [test1, test2, test3, test4, test5]

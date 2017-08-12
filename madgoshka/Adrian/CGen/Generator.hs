@@ -52,6 +52,7 @@ collectIncludes (Val _ t) = typeToIncludes t
 collectIncludes (Cast expr t) = concat [collectIncludes expr, typeToIncludes t]
 collectIncludes (Ref expr) = collectIncludes expr
 collectIncludes (DeRef expr) = collectIncludes expr
+collectIncludes (SizeOf t) = typeToIncludes t
 collectIncludes (FuncCall _ exprs) = concatMap collectIncludes exprs
 collectIncludes (FuncDescrCall descr exprs) =
     concat [funcDescrIncludes descr, concatMap collectIncludes exprs]
@@ -124,6 +125,7 @@ instance ToString Expr where
     toS (Cast expr t) = printf "(%s)(%s)" (toS t) (toS expr)
     toS (Ref expr) = printf "&(%s)" (toS expr)
     toS (DeRef expr) = printf "*(%s)" (toS expr)
+    toS (SizeOf t) = printf "sizeof(%s)" (toS t)
     toS (FuncCall name args) = printf "%s(%s)" name (List.intercalate ", " $ map toS args)
     toS (FuncDescrCall (FuncDescr {funcDescrName = name}) args) =
         toS $ FuncCall name args
