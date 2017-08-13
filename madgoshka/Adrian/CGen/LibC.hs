@@ -5,16 +5,16 @@ import Adrian.CGen.Includes
 
 
 malloc :: [Expr] -> Expr
-malloc = FuncDescrCall $ FuncDescr {
-    funcDescrName = "malloc",
-    funcDescrRetType = Ptr Void,
-    funcDescrArgs = [Size],
-    funcDescrIncludes = [stdlib]}
+malloc = CallableDescrCall $ CallableDescr {
+    callableDescrName = "malloc",
+    callableDescrRetType = Ptr Void,
+    callableDescrArgs = [Size],
+    callableDescrIncludes = [stdlib]}
 
 
 free :: [Expr] -> Expr
-free = FuncDescrCall $ FuncDescr {
-    funcDescrName = "free",
-    funcDescrRetType = Void,
-    funcDescrArgs = [Ptr Void],
-    funcDescrIncludes = [stdlib]}
+free = CallableDescrCall $ CallableDescr {
+    callableDescrName = "free",
+    callableDescrRetType = Void,
+    callableDescrArgs = [Ptr Void],
+    callableDescrIncludes = [stdlib]}
