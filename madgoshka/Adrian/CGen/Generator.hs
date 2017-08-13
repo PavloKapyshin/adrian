@@ -58,6 +58,7 @@ collectIncludes (FuncDescrCall descr exprs) =
     concat [funcDescrIncludes descr, concatMap collectIncludes exprs]
 collectIncludes (Expr _ expr1 expr2) =
     concat [collectIncludes expr1, collectIncludes expr2]
+collectIncludes (InitList exprs) = concatMap collectIncludes exprs
 
 
 genNode :: Node -> ST.State ASTGenState [String]
@@ -75,11 +76,11 @@ genNode (Return expr) = do
     return [printf "return %s;" (toS expr)]
 genNode (Decl name t) = do
     addIncludes [t]
-    return [printf "%s %s;" (toS t) name]
+    return [printf "%s;" $ formatDeclLValue t name]
 genNode (DeclE name t expr) = do
     addIncludes [t]
     addIncludesFromExpr expr
-    return [printf "%s %s = %s;" (toS t) name (toS expr)]
+    return [printf "%s = %s;" (formatDeclLValue t name) (toS expr)]
 genNode (StmtE expr) = do
     addIncludesFromExpr expr
     return [printf "%s;" (toS expr)]
@@ -90,7 +91,13 @@ genNode (Assignment expr1 expr2) = do
 
 
 formatTypedName :: String -> Type -> String
+formatTypedName name (Array t _) = printf "%s %s[]" (toS t) name
 formatTypedName name t = printf "%s %s" (toS t) name
+
+formatDeclLValue :: Type -> String -> String
+formatDeclLValue (Array t ArrayNoSize) name = printf "%s %s[]" (toS t) name
+formatDeclLValue (Array t (ArraySize size)) name = printf "%s %s[%d]" (toS t) name size
+formatDeclLValue t name = printf "%s %s" (toS t) name
 
 
 class ToString a where
@@ -110,6 +117,7 @@ instance ToString Type where
     toS Size = "size_t"
     toS Void = "void"
     toS (Ptr t) = printf "%s*" (toS t)
+    toS (Array _ _) = undefined
 
 instance ToString Expr where
     toS (Val v UIntFast8) = v
@@ -120,6 +128,8 @@ instance ToString Expr where
     toS (Val _ Void) = undefined
     toS (Val v (Ptr Char)) = printf "\"%s\"" v
     toS (Val v (Ptr t)) = printf "%s*" (toS $ Val v t)
+    toS (Val _ (Array _ _)) = undefined
+    toS (InitList exprs) = printf "{%s}" (List.intercalate ", " $ map toS exprs)
     toS (Expr op expr1 expr2) = printf "%s %s %s" (toS expr1) (toS op) (toS expr2)
     toS (Var name) = name
     toS (Cast expr t) = printf "(%s)(%s)" (toS t) (toS expr)

@@ -1,5 +1,5 @@
 module Adrian.CGen (
-    Type(..), Expr(..), FuncArg(..), Node(..), AST,
+    ArraySize(..), Type(..), Expr(..), FuncArg(..), Node(..), AST,
     gens, main0, plus, minus, star, slash,
     malloc, free) where
 

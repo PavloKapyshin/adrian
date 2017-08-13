@@ -1,6 +1,7 @@
 module Adrian.CGen.AST where
 
 data Op = Plus | Minus | Slash | Star
+data ArraySize = ArraySize Integer | ArrayNoSize
 data Type = UIntFast8
           | IntFast8
           | Int
@@ -8,6 +9,7 @@ data Type = UIntFast8
           | Size
           | Void
           | Ptr Type
+          | Array Type ArraySize
 data Expr = Expr Op Expr Expr
           | Val String Type
           | Var String
@@ -17,6 +19,7 @@ data Expr = Expr Op Expr Expr
           | Ref Expr
           | DeRef Expr
           | SizeOf Type
+          | InitList [Expr]
 data Include = Include String deriving (Eq, Ord)
 data FuncDescr = FuncDescr {
     funcDescrName :: String,

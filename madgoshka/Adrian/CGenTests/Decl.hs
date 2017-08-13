@@ -37,6 +37,33 @@ test5 = TestCase $ do
                     (C.Val "8" C.Int) `C.slash` (C.Val "4" C.Int))))
         node = C.DeclE "r" C.Int expr
 
+test6 :: Test
+test6 = TestCase $ do
+    assertEqual "" "int a[] = {0, 1};" (C.gens [node])
+    where
+        initializer = C.InitList [C.Val "0" C.Int, C.Val "1" C.Int]
+        node = C.DeclE "a" (C.Array C.Int C.ArrayNoSize) initializer
+
+test7 :: Test
+test7 = TestCase $ do
+    assertEqual "" "int a[2] = {0, 1};" (C.gens [node])
+    where
+        initializer = C.InitList [C.Val "0" C.Int, C.Val "1" C.Int]
+        node = C.DeclE "a" (C.Array C.Int (C.ArraySize 2)) initializer
+
+test8 :: Test
+test8 = TestCase $ do
+    assertEqual "" "int a[3] = {0, 1};" (C.gens [node])
+    where
+        initializer = C.InitList [C.Val "0" C.Int, C.Val "1" C.Int]
+        node = C.DeclE "a" (C.Array C.Int (C.ArraySize 3)) initializer
+
+test9 :: Test
+test9 = TestCase $ do
+    assertEqual "" "int a[2];" (C.gens [node])
+    where
+        node = C.Decl "a" (C.Array C.Int (C.ArraySize 2))
+
 
 tests :: Test
-tests = TestList [test1, test2, test3, test4, test5]
+tests = TestList [test1, test2, test3, test4, test5, test6, test7, test8, test9]
