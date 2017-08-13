@@ -20,6 +20,7 @@ data Expr = Expr Op Expr Expr
           | DeRef Expr
           | SizeOf Type
           | InitList [Expr]
+          | ArrayElem Expr Expr
 data Include = Include String deriving (Eq, Ord)
 data FuncDescr = FuncDescr {
     funcDescrName :: String,

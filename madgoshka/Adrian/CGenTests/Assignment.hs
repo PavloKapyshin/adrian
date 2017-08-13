@@ -17,6 +17,12 @@ test2 = TestCase $ do
     where
         node = C.Assignment (C.DeRef $ C.Var "myvar") (C.Ref $ C.Var "some_other_var")
 
+test3 :: Test
+test3 = TestCase $ do
+    assertEqual "" "a[1] = test;" (C.gens [node])
+    where
+        node = C.Assignment (C.ArrayElem (C.Var "a") (C.Val "1" C.Int)) (C.Var "test")
+
 
 tests :: Test
-tests = TestList [test1, test2]
+tests = TestList [test1, test2, test3]

@@ -59,6 +59,8 @@ collectIncludes (FuncDescrCall descr exprs) =
 collectIncludes (Expr _ expr1 expr2) =
     concat [collectIncludes expr1, collectIncludes expr2]
 collectIncludes (InitList exprs) = concatMap collectIncludes exprs
+collectIncludes (ArrayElem arrExpr indexExpr) =
+    concatMap collectIncludes [arrExpr, indexExpr]
 
 
 genNode :: Node -> ST.State ASTGenState [String]
@@ -130,6 +132,7 @@ instance ToString Expr where
     toS (Val v (Ptr t)) = printf "%s*" (toS $ Val v t)
     toS (Val _ (Array _ _)) = undefined
     toS (InitList exprs) = printf "{%s}" (List.intercalate ", " $ map toS exprs)
+    toS (ArrayElem arrExpr indexExpr) = printf "%s[%s]" (toS arrExpr) (toS indexExpr)
     toS (Expr op expr1 expr2) = printf "%s %s %s" (toS expr1) (toS op) (toS expr2)
     toS (Var name) = name
     toS (Cast expr t) = printf "(%s)(%s)" (toS t) (toS expr)
