@@ -1,10 +1,10 @@
 """
-Analyzes names and translates them into more specific.
-Translates some FuncCalls to Instance objects.
-Translates some llists to lists.
+Translates some FuncCalls to StructCall objects.
+Translates linked lists to python's lists.
 """
 
-from . import layers, astlib, errors, cdefs, defs
+from . import layers, astlib, errors, patterns
+from . import cdefs, defs
 from .context import context
 
 
