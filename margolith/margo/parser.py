@@ -4,6 +4,7 @@ import sys
 from ply import lex, yacc
 
 from . import parser_astlib, defs, errors
+from .context import context
 
 
 _RESERVED_WORDS = dict((word, word.upper()) for word in defs.RESERVED_WORDS)
@@ -411,14 +412,16 @@ def p_empty(content):
 
 def p_error(content):
     """Error handling function."""
-    errors.syntax_error(content.lineno, context.exit_on_error)
+    errors.syntax_error(context.exit_on_error, content.lineno)
 
 
-def main(code):
-    """Build lexer and build parser."""
-    lexer = lex.lex(module=sys.modules[__name__])
-    # Lex code.
-    lexer.input(code)
-    parser = yacc.yacc(module=sys.modules[__name__], debug=False)
-    # Parse data got from lexer.
-    return parser.parse(input=code, lexer=lexer, tracking=True)
+class Parser:
+
+    def parse(self, code):
+        """Build lexer and build parser."""
+        lexer = lex.lex(module=sys.modules[__name__])
+        # Lex code.
+        lexer.input(code)
+        parser = yacc.yacc(module=sys.modules[__name__], debug=False)
+        # Parse data got from lexer.
+        return parser.parse(input=code, lexer=lexer, tracking=True)
