@@ -102,10 +102,6 @@ genNode (StructDecl name memberDecls) = do
         ["};"]]
 
 
-formatTypedName :: String -> Type -> String
-formatTypedName name (Array t _) = printf "%s %s[]" (toS t) name
-formatTypedName name t = printf "%s %s" (toS t) name
-
 formatDeclLValue :: Type -> String -> String
 formatDeclLValue (Array t ArrayNoSize) name = printf "%s %s[]" (toS t) name
 formatDeclLValue (Array t (ArraySize size)) name = printf "%s %s[%d]" (toS t) name size
@@ -161,7 +157,9 @@ instance ToString Expr where
         toS $ FuncCall name args
 
 instance ToString FuncArg where
-    toS (FuncArg name t) = formatTypedName name t
+    toS (FuncArg _ (Array _ (ArraySize _))) = undefined
+    toS (FuncArg name (Array t ArrayNoSize)) = printf "%s %s[]" (toS t) name
+    toS (FuncArg name t) = printf "%s %s" (toS t) name
 
 instance ToString [FuncArg] where  -- FlexibleInstances
     toS [] = "void"
