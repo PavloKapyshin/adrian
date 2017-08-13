@@ -4,7 +4,7 @@ import sys
 
 
 # Error messages.
-_SYNTAX_ERROR = "syntax error"
+_SYNTAX_ERROR = "syntax error on line {line}"
 _ILLEGAL_CHAR = "illegal character '{char}'"
 
 _BAD_NAME_FOR_VAR = "bad name '{name}' for variable"
@@ -34,8 +34,8 @@ class CompileTimeError(Exception):
         self.message = message
 
 
-def syntax_error(exit_on_error):
-    _error(exit_on_error, _SYNTAX_ERROR)
+def syntax_error(exit_on_error, line):
+    _error(exit_on_error, _SYNTAX_ERROR, line=line)
 
 
 def illegal_char(exit_on_error, char):

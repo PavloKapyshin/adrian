@@ -3,6 +3,8 @@ __pycache__/
 *.o
 
 /example
+/example.adr
+/example.c
 parser.out
 parsetab.py
 

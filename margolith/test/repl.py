@@ -1,3 +1,5 @@
+import traceback
+
 import ast
 import cmd
 import sys
@@ -12,9 +14,7 @@ class REPL(cmd.Cmd):
     input_ = []
     contexts = {
         layer: {
-            "ns": margo.structs.Namespace(),
-            "ts": margo.structs.Namespace(),
-            "fs": margo.structs.Namespace(),
+            "env": margo.env.Env(),
             "exit_on_error": True,
             "file_hash": margo.REPL_FILE_HASH,
             "tmp_count": 0}
@@ -29,6 +29,8 @@ class REPL(cmd.Cmd):
                     "\n".join(self.input_), contexts=self.contexts))
         except margo.errors.CompileTimeError as e:
             print(e.message, file=sys.stderr)
+        except Exception as e:
+            traceback.print_exc(chain=False)
 
     def do_exit(self, arg):
         sys.exit(0)

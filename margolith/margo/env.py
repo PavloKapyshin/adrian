@@ -1,4 +1,4 @@
-class Namespace:
+class Env:
 
     def __init__(self):
         self._scope = 0
