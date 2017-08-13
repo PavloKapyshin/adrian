@@ -1,7 +1,6 @@
 module Adrian.CGen (
-    ArraySize(..), Type(..), Expr(..), FuncArg(..), Node(..), AST,
-    gens, main0, plus, minus, star, slash,
-    malloc, free) where
+    ArraySize(..), Type(..), Expr(..), FuncArg(..), StructMemberDecl(..),
+    Node(..), AST, gens, main0, plus, minus, star, slash, malloc, free) where
 
 import Data.List (intercalate)
 

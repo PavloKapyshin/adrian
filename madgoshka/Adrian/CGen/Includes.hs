@@ -13,4 +13,6 @@ stdlib = Include "stdlib.h"
 typeToIncludes :: Type -> [Include]
 typeToIncludes UIntFast8 = [stdint]
 typeToIncludes IntFast8 = [stdint]
+typeToIncludes UIntFast32 = [stdint]
+typeToIncludes IntFast32 = [stdint]
 typeToIncludes _ = []
