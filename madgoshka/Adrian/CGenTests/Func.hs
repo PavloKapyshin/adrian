@@ -46,6 +46,20 @@ test3 = TestCase $ do
             C.funcArgs = [C.FuncArg "x" C.IntFast8, C.FuncArg "y" C.IntFast8],
             C.funcBody = [C.Return $ (C.Var "x") `C.minus` (C.Var "y")]}
 
+test4 :: Test
+test4 = TestCase $ do
+    assertEqual "" "int add(int x[], char* y[]) {\nreturn 42;\n}" (C.gens [func])
+    where
+        args = [
+            C.FuncArg "x" (C.Array C.Int C.ArrayNoSize),
+            C.FuncArg "y" (C.Array (C.Ptr C.Char) C.ArrayNoSize)]
+        body = [C.Return $ C.Val "42" C.Int]
+        func = C.Func {
+            C.funcName = "add",
+            C.funcRetType = C.Int,
+            C.funcArgs = args,
+            C.funcBody = body}
+
 
 tests :: Test
-tests = TestList [test1, test2, test3]
+tests = TestList [test1, test2, test3, test4]
