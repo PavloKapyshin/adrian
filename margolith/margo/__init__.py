@@ -9,7 +9,7 @@ from . import arc
 # from . import inlining
 # from . import method_to_func
 # from . import method_calls_to_func_calls
-# from . import name_spacing
+from . import name_spacing
 from . import tocgen
 from . import main_func
 from . import env
@@ -28,7 +28,7 @@ LAYERS = (
     # (inlining.Inlining, "transform_ast"),
     # (method_to_func.MethodToFunc, "transform_ast"),
     # (method_calls_to_func_calls.MethodCallsToFuncCalls, "transform_ast"),
-    # (name_spacing.NameSpacing, "transform_ast"),
+    (name_spacing.NameSpacing, "transform_ast"),
     (tocgen.ToCGen, "transform_ast"),
     (main_func.MainFunc, "expand_ast")
 )
