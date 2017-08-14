@@ -41,7 +41,10 @@ class _Name(collections.UserString):
         return copy.deepcopy(self)
 
 class Name(_Name):
-    pass
+
+    def __init__(self, data, is_tmp=False):
+        super().__init__(data)
+        self.is_tmp = is_tmp
 
 class CType(_Name):
     pass
@@ -98,7 +101,7 @@ class FuncCall(_Callable):
     """
 
 
-class CFuncCall(Node):
+class CFuncCall(_Callable):
     """       args
              vvvvvv
     c#myFunc(1 + 20)
@@ -140,6 +143,9 @@ class Empty(BaseNode):
 
     def __str__(self):
         return "EMPTY"
+
+    def __len__(self):
+        return 0
 
     def as_list(self):
         return []
@@ -538,8 +544,5 @@ CINT_TYPES = (
     CUIntFast64
 )
 
-CTYPES = (
-    CChar,
-    CString
-) + CINT_TYPES
+CTYPES = CINT_TYPES
 CTYPES_NAMES = set(str(type_.to_type()) for type_ in CTYPES)

@@ -1,126 +1,47 @@
-"""Make copies where needed."""
-
-import enum
-
-from . import layers, astlib, errors, defs
-from .context import context
+from . import layers, astlib, errors, inference
+from .context import context, get
+from .patterns import A
 
 
-class NodeTypes(enum.Enum):
-    variable = 1
-    argument = 2
+def heapify(expr, name):
+    def get_val(value):
+        if value in A(astlib.Name):
+            return astlib.Deref(value)
+        if value in A(astlib.Expr):
+            return astlib.Expr(
+                value.op, get_val(value.lexpr), get_val(value.rexpr))
+        return value
+    type_ = inference.infer(expr)
+    allocation = astlib.CFuncCall(
+        "malloc", [astlib.CFuncCall(
+            "sizeof", [astlib.StructScalar(type_)])])
+    val = get_val(expr)
+    assignment = astlib.Assignment(
+        astlib.Deref(name), "=", val)
+    return allocation, [assignment]
 
+def e(expr, name):
+    if expr in A(astlib.CTYPES):
+        return heapify(expr, name)
 
-def copy(expr):
-    return astlib.MethodCall(
-        base=expr, method=defs.COPY_METHOD_NAME, args=[])
+    if expr in A(astlib.Name):
+        if get(expr)["type"] in A(astlib.CType):
+            return heapify(expr, name)
+        return expr, []
+
+    if expr in A(astlib.Expr):
+        return heapify(expr, name)
+
+    errors.not_implemented("copying:e (expr {})".format(expr))
 
 
 class Copying(layers.Layer):
 
-    def expr(self, expr):
-        if isinstance(expr, astlib.Name):
-            type_ = context.ns.get(str(expr))
-            if not isinstance(type_, (astlib.CType, astlib.Ref)):
-                return copy(expr)
-        elif isinstance(expr, astlib.Expr):
-            return astlib.Expr(
-                expr.op, self.expr(expr.lexpr), self.expr(expr.rexpr))
-        elif isinstance(expr, astlib.MethodCall):
-            return list(self.method_call(expr))[0]
-        elif isinstance(expr, astlib.FuncCall):
-            return list(self.func_call(expr))[0]
-        elif isinstance(expr, astlib.Instance):
-            return list(self.instance(expr))[0]
-        elif isinstance(expr, astlib.Unref):
-            inner = expr.literal
-            if isinstance(inner, astlib.StructElem):
-                type_ = context.ns.get(str(inner.name))
-                if isinstance(type_, astlib.Ref):
-                    field_types = context.ts.get(str(type_.literal))
-                else:
-                    field_types = context.ts.get(str(type_))
-                var_type = field_types[str(inner.elem)]
-                if isinstance(var_type, astlib.Ref):
-                    var_type = var_type.literal
-            else:
-                var_type = context.ns.get(str(inner)).literal
-            if not isinstance(var_type, astlib.CType):
-                return copy(inner)
-        return expr
-
-    def body(self, body, reg):
-        return [list(layers.transform_node(stmt, registry=reg))[0]
-                for stmt in body]
-
-    def call_args(self, args):
-        return [self.expr(arg)
-                for arg in args]
-
     @layers.register(astlib.Decl)
     def decl(self, decl):
-        context.ns.add(str(decl.name), decl.type_)
-        yield astlib.Decl(decl.name, decl.type_, self.expr(decl.expr))
-
-    @layers.register(astlib.Assignment)
-    def assignment(self, assment):
-        yield astlib.Assignment(
-            assment.var, assment.op,
-            self.expr(assment.expr))
-
-    @layers.register(astlib.FuncCall)
-    def func_call(self, call):
-        yield astlib.FuncCall(
-            call.name, self.call_args(call.args))
-
-    @layers.register(astlib.Instance)
-    def instance(self, instance):
-        yield astlib.Instance(
-            instance.name, self.call_args(instance.args))
-
-    @layers.register(astlib.MethodCall)
-    def method_call(self, call):
-        yield astlib.MethodCall(
-            call.base, call.method, self.call_args(call.args))
-
-    @layers.register(astlib.Return)
-    def return_(self, return_):
-        # Don't copy return expression.
-        expr = self.expr(return_.expr)
-        if isinstance(return_.expr, astlib.Name):
-            expr = return_.expr
-        yield astlib.Return(expr)
-
-    @layers.register(astlib.Struct)
-    def struct(self, struct):
-        context.ns.add_scope()
-        reg = Copying().get_registry()
-        body = self.body(struct.body, reg)
-        field_types = {}
-        for field_decl in body:
-            if isinstance(field_decl, astlib.Field):
-                field_types[str(field_decl.name)] = field_decl.type_
-        context.ts.add(str(struct.name), field_types)
-        yield astlib.Struct(struct.name, struct.param_types, body)
-        context.ns.del_scope()
-
-    @layers.register(astlib.Method)
-    def method(self, method):
-        context.ns.add_scope()
-        reg = Copying().get_registry()
-        for arg in method.args:
-            context.ns.add(str(arg.name), arg.type_)
-        yield astlib.Method(
-            method.name, method.args, method.rettype,
-            self.body(method.body, reg))
-        context.ns.del_scope()
-
-    @layers.register(astlib.Func)
-    def func(self, func):
-        context.ns.add_scope()
-        reg = Copying().get_registry()
-        for arg in func.args:
-            context.ns.add(str(arg.name), arg.type_)
-        yield astlib.Func(
-            func.name, func.args, func.rettype, self.body(func.body, reg))
-        context.ns.del_scope()
+        context.env.add(str(decl.name), {
+            "type": decl.type_
+        })
+        new_expr, assignments = e(decl.expr, decl.name)
+        yield astlib.Decl(decl.name, decl.type_, new_expr)
+        yield from assignments

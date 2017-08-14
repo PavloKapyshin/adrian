@@ -16,7 +16,7 @@ BODY = "Body"
 CALL_ARGS = "CallArgs"
 ARGS = "Args"
 
-INTEGER = "Integer"
+INTEGER = "IntLiteral"
 STRING = "String"
 REF = "Ref"
 UNREF = "Unref"
