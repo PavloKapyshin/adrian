@@ -399,7 +399,16 @@ class Method(_FuncOrMethodDecl):
     """
 
 
-class Interface(Node):
+class StructOrInterface(Node):
+
+    def __init__(self, name, param_types, body):
+        self.name = name
+        self.param_types = param_types
+        self.body = body
+        self._keys = ("name", "param_types", "body")
+
+
+class Interface(StructOrInterface):
     """    name
         vvvvvvvvvvv
     inf MyInferface {
@@ -407,13 +416,8 @@ class Interface(Node):
     }
     """
 
-    def __init__(self, name, body):
-        self.name = name
-        self.body = body
-        self._keys = ("name", "body")
 
-
-class Struct(Node):
+class Struct(StructOrInterface):
     """  name
         vvvvvv
     sct MyType {
@@ -421,13 +425,6 @@ class Struct(Node):
         data: String       < body
     }
     """
-
-
-    def __init__(self, name, param_types, body):
-        self.name = name
-        self.param_types = param_types
-        self.body = body
-        self._keys = ("name", "param_types", "body")
 
 
 class Field(Node):

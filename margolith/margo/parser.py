@@ -206,8 +206,8 @@ def p_args_3(content):
 
 
 def p_inf_decl(content):
-    """inf_decl : INF NAME LBRACE struct_body RBRACE"""
-    content[0] = [parser_astlib.INF_DECL, [parser_astlib.NAME, content[2]], content[4]]
+    """inf_decl : INF NAME param_types LBRACE struct_body RBRACE"""
+    content[0] = [parser_astlib.INF_DECL, [parser_astlib.NAME, content[2]], content[3], content[5]]
 
 
 def p_struct_decl(content):
