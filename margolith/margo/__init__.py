@@ -2,10 +2,9 @@ from adrian import cgen as adr_cgen
 
 from . import parser
 from . import foreign_parser
-# from . import analyzer
-# from . import simpex
-# from . import copying
-# from . import object_inf
+from . import analyzer
+from . import tac
+from . import copying
 # from . import arc
 # from . import inlining
 # from . import method_to_func
@@ -22,10 +21,9 @@ REPL_FILE_HASH = "mangled"
 
 LAYERS = (
     (parser.Parser, "parse"),
-    # (analyzer.Analyzer, "transform_ast"),
-    # (simpex.SimpEx, "transform_ast"),
-    # (copying.Copying, "transform_ast"),
-    # (object_inf.ObjectInf, "transform_ast"),
+    (analyzer.Analyzer, "transform_ast"),
+    (tac.TAC, "transform_ast"),
+    (copying.Copying, "transform_ast"),
     # (simpex.SimpEx, "transform_ast"),
     # (arc.ARC, "expand_ast"),
     # (inlining.Inlining, "transform_ast"),

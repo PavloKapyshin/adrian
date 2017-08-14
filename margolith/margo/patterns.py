@@ -1,7 +1,7 @@
 class A:
 
-    def __init__(self, types):
+    def __init__(self, *types):
         self.types = types
 
     def __contains__(self, other):
-        return isinstance(other, types)
+        return isinstance(other, self.types)

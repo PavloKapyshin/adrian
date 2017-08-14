@@ -5,7 +5,7 @@ import functools
 
 from paka import funcreg
 
-from . import astlib, context
+from . import astlib
 
 
 NODE_CLASSES = (astlib.BaseNode, astlib.Name)
