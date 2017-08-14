@@ -130,6 +130,7 @@ def p_stmt(content):
          | func_decl
          | call
          | struct_decl
+         | inf_decl
          | assignment
     """
     content[0] = content[1]
@@ -202,6 +203,11 @@ def p_args_2(content):
 def p_args_3(content):
     """args : empty"""
     content[0] = [parser_astlib.EMPTY]
+
+
+def p_inf_decl(content):
+    """inf_decl : INF NAME LBRACE struct_body RBRACE"""
+    content[0] = [parser_astlib.INF_DECL, [parser_astlib.NAME, content[2]], content[4]]
 
 
 def p_struct_decl(content):

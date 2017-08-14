@@ -87,3 +87,7 @@ class ToCGen(layers.Layer):
         yield cgen.Assignment(
             name=e(assignment.var),
             expr=e(assignment.expr))
+
+    @layers.register(astlib.Interface)
+    def inf(self, inf):
+        yield from []

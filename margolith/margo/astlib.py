@@ -399,6 +399,20 @@ class Method(_FuncOrMethodDecl):
     """
 
 
+class Interface(Node):
+    """    name
+        vvvvvvvvvvv
+    inf MyInferface {
+        ... < body
+    }
+    """
+
+    def __init__(self, name, body):
+        self.name = name
+        self.body = body
+        self._keys = ("name", "body")
+
+
 class Struct(Node):
     """  name
         vvvvvv
