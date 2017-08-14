@@ -399,7 +399,13 @@ class Method(_FuncOrMethodDecl):
     """
 
 
-class StructOrInterface(Node):
+class Interface(Node):
+    """    name
+        vvvvvvvvvvv
+    inf MyInferface {
+        ... < body
+    }
+    """
 
     def __init__(self, name, param_types, body):
         self.name = name
@@ -408,23 +414,21 @@ class StructOrInterface(Node):
         self._keys = ("name", "param_types", "body")
 
 
-class Interface(StructOrInterface):
-    """    name
-        vvvvvvvvvvv
-    inf MyInferface {
-        ... < body
+class Struct(Node):
+    """  name   param_types              interfaces
+        vvvvvv vvvvvvvvvvvvvv      vvvvvvvvvvvvvvvvvvvvvvvvv
+    sct MyType(valueType, ...) is (Legthable, Printable, ...) {
+        length: Integer         < body
+        data: valueType         < body
     }
     """
 
-
-class Struct(StructOrInterface):
-    """  name
-        vvvvvv
-    sct MyType {
-        length: Integer    < body
-        data: String       < body
-    }
-    """
+    def __init__(self, name, param_types, interfaces, body):
+        self.name = name
+        self.param_types = param_types
+        self.interfaces = interfaces
+        self.body = body
+        self._keys = ("name", "param_types", "interfaces", "body")
 
 
 class Field(Node):
