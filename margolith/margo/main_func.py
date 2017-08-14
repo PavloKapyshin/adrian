@@ -1,7 +1,6 @@
 """Collects some global statements to main function."""
 
-from . import layers, astlib, errors
-from .context import context
+from . import layers, astlib
 from adrian import cgen
 
 

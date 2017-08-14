@@ -10,4 +10,8 @@ def infer(expr):
     if expr in A(astlib.Name):
         return get(expr)["type"]
 
+    if expr in A(astlib.Expr):
+        # +, -, * and / returns the value of the same type.
+        return infer(expr.lexpr)
+
     errors.not_implemented(":) (infer)")

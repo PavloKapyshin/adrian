@@ -4,15 +4,20 @@ from .patterns import A
 
 
 def heapify(expr, name):
+    def get_val(value):
+        if value in A(astlib.Name):
+            return astlib.Deref(value)
+        if value in A(astlib.Expr):
+            return astlib.Expr(
+                value.op, get_val(value.lexpr), get_val(value.rexpr))
+        return value
     type_ = inference.infer(expr)
     allocation = astlib.CFuncCall(
         "malloc", [astlib.CFuncCall(
             "sizeof", [astlib.StructScalar(type_)])])
-    value = expr
-    if value in A(astlib.Name):
-        value = astlib.Deref(value)
+    val = get_val(expr)
     assignment = astlib.Assignment(
-        astlib.Deref(name), "=", value)
+        astlib.Deref(name), "=", val)
     return allocation, [assignment]
 
 def e(expr, name):
@@ -24,7 +29,10 @@ def e(expr, name):
             return heapify(expr, name)
         return expr, []
 
-    errors.not_implemented("objects:e (expr {})".format(expr))
+    if expr in A(astlib.Expr):
+        return heapify(expr, name)
+
+    errors.not_implemented("copying:e (expr {})".format(expr))
 
 
 class Copying(layers.Layer):

@@ -10,8 +10,8 @@ from . import arc
 # from . import method_to_func
 # from . import method_calls_to_func_calls
 # from . import name_spacing
-# from . import cgen
-# from . import main_func
+from . import tocgen
+from . import main_func
 from . import env
 from . import context
 from . import layers
@@ -29,8 +29,8 @@ LAYERS = (
     # (method_to_func.MethodToFunc, "transform_ast"),
     # (method_calls_to_func_calls.MethodCallsToFuncCalls, "transform_ast"),
     # (name_spacing.NameSpacing, "transform_ast"),
-    # (cgen.CGen, "transform_ast"),
-    # (main_func.MainFunc, "expand_ast")
+    (tocgen.ToCGen, "transform_ast"),
+    (main_func.MainFunc, "expand_ast")
 )
 
 
@@ -44,10 +44,10 @@ def compile_repl(inp, *, contexts):
             else:
                 current_ast = foreign_parser.main(
                     layer.parse(inp))
-    # generator = adr_cgen.Generator()
-    # generator.add_ast(current_ast)
-    # return list(generator.generate())
-    return current_ast
+    generator = adr_cgen.Generator()
+    generator.add_ast(current_ast)
+    return list(generator.generate())
+    # return current_ast
 
 
 def compile_from_string(inp, file_hash):

@@ -37,9 +37,9 @@ class TAC(layers.Layer):
 
     @layers.register(astlib.Decl)
     def decl(self, decl):
-        # env.add(str(decl.name), {
-        #     "type": decl.type_
-        # })
+        context.env.add(str(decl.name), {
+             "type": decl.type_
+        })
         new_expr, tmp_decls = expr(decl.expr)
         yield from tmp_decls
         yield astlib.Decl(decl.name, decl.type_, new_expr)
