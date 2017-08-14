@@ -5,7 +5,7 @@ from . import foreign_parser
 from . import analyzer
 from . import tac
 from . import copying
-# from . import arc
+from . import arc
 # from . import inlining
 # from . import method_to_func
 # from . import method_calls_to_func_calls
@@ -24,8 +24,7 @@ LAYERS = (
     (analyzer.Analyzer, "transform_ast"),
     (tac.TAC, "transform_ast"),
     (copying.Copying, "transform_ast"),
-    # (simpex.SimpEx, "transform_ast"),
-    # (arc.ARC, "expand_ast"),
+    (arc.ARC, "expand_ast"),
     # (inlining.Inlining, "transform_ast"),
     # (method_to_func.MethodToFunc, "transform_ast"),
     # (method_calls_to_func_calls.MethodCallsToFuncCalls, "transform_ast"),
