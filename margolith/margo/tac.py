@@ -43,3 +43,9 @@ class TAC(layers.Layer):
         new_expr, tmp_decls = expr(decl.expr)
         yield from tmp_decls
         yield astlib.Decl(decl.name, decl.type_, new_expr)
+
+    @layers.register(astlib.Assignment)
+    def assignment(self, assment):
+        new_expr, tmp_decls = expr(assment.expr)
+        yield from tmp_decls
+        yield astlib.Assignment(assment.var, assment.op, new_expr)

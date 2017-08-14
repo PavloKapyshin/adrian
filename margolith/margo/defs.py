@@ -22,3 +22,4 @@ DEINIT_METHOD_NAME = "__deinit__"
 DEEPCOPY_METHOD_NAME = "__deepCopy__"
 
 ADR_PREFIX = "adr"
+USER_PREFIX = "u"

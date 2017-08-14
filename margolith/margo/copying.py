@@ -3,21 +3,26 @@ from .context import context, get
 from .patterns import A
 
 
+def get_assment(name, val):
+    return astlib.Assignment(
+        astlib.Deref(name), "=", val)
+
+
+def get_val(value):
+    if value in A(astlib.Name):
+        return astlib.Deref(value)
+    if value in A(astlib.Expr):
+        return astlib.Expr(
+            value.op, get_val(value.lexpr), get_val(value.rexpr))
+    return value
+
+
 def heapify(expr, name):
-    def get_val(value):
-        if value in A(astlib.Name):
-            return astlib.Deref(value)
-        if value in A(astlib.Expr):
-            return astlib.Expr(
-                value.op, get_val(value.lexpr), get_val(value.rexpr))
-        return value
     type_ = inference.infer(expr)
     allocation = astlib.CFuncCall(
         "malloc", [astlib.CFuncCall(
             "sizeof", [astlib.StructScalar(type_)])])
-    val = get_val(expr)
-    assignment = astlib.Assignment(
-        astlib.Deref(name), "=", val)
+    assignment = get_assment(name, get_val(expr))
     return allocation, [assignment]
 
 def e(expr, name):
@@ -45,3 +50,7 @@ class Copying(layers.Layer):
         new_expr, assignments = e(decl.expr, decl.name)
         yield astlib.Decl(decl.name, decl.type_, new_expr)
         yield from assignments
+
+    @layers.register(astlib.Assignment)
+    def assignment(self, assment):
+        yield get_assment(assment.var, assment.expr)
