@@ -101,10 +101,10 @@ def t_error(token):
 
 # Parser defs.
 precedence = (
-    ("right", "LTEQ", "GTEQ", "LT", "GT"),
-    ("right", "EQEQ", "NEQ"),
-    ("right", "PLUS", "MINUS"),
-    ("right", "TIMES", "DIVIDE"),
+    ("left", "LTEQ", "GTEQ", "LT", "GT"),
+    ("left", "EQEQ", "NEQ"),
+    ("left", "PLUS", "MINUS"),
+    ("left", "TIMES", "DIVIDE"),
 )
 
 

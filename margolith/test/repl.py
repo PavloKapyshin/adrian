@@ -3,7 +3,6 @@ import traceback
 import ast
 import cmd
 import sys
-import pprint
 
 import margo
 
@@ -24,7 +23,7 @@ class REPL(cmd.Cmd):
     def do_eval(self, inp):
         try:
             self.input_.append(inp)
-            pprint.pprint(
+            print(
                 margo.compile_repl(
                     "\n".join(self.input_), contexts=self.contexts))
         except margo.errors.CompileTimeError as e:

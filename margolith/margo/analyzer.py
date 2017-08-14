@@ -13,7 +13,7 @@ def compute(expr):
     if expr in A(astlib.IntLiteral):
         return expr.literal
     if expr in A(astlib.Expr):
-        return eval(" ".join([compute(expr.lexpr), expr.op, compute(expr.rexpr)]))
+        return str(eval(" ".join([compute(expr.lexpr), expr.op, compute(expr.rexpr)])))
     errors.not_implemented("._.")
 
 

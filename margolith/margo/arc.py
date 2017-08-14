@@ -3,6 +3,10 @@ from .context import context
 from .patterns import A
 
 
+def is_ctype(expr):
+    return True
+
+
 class ARC(layers.Layer):
 
     def __init__(self):
@@ -22,6 +26,12 @@ class ARC(layers.Layer):
     def decl(self, decl):
         self.to_free.add(str(decl.name), decl.type_)
         yield decl
+
+    @layers.register(astlib.Assignment)
+    def assignment(self, assment):
+        if is_ctype(assment.expr):
+            # dont free
+            yield assment
 
     @layers.register(astlib.AST)
     def main(self, ast_, registry):
