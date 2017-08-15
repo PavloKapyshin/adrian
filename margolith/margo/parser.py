@@ -7,7 +7,7 @@ from . import parser_astlib, defs, errors
 from .context import context
 
 
-_RESERVED_WORDS = dict((word, word.upper()) for word in defs.RESERVED_WORDS)
+_RESERVED_WORDS = defs.RESERVED_WORDS
 
 
 _TOKENS = {
@@ -40,7 +40,6 @@ _TOKENS = {
 
 tokens = (
     "INTEGER",
-    "STRING",
     "NAME",
 ) + tuple(_TOKENS.values()) + tuple(_RESERVED_WORDS.values())
 
@@ -64,12 +63,6 @@ for tok_regex, const_name in sorted(
 def t_INTEGER(token):
     r"""[-]?\d+"""
     token.value = [parser_astlib.INTEGER, token.value]
-    return token
-
-
-def t_STRING(token):
-    r"""["][^"]*?["]"""
-    token.value = [parser_astlib.STRING, token.value[1:-1]]
     return token
 
 
@@ -330,11 +323,6 @@ def p_type_1(content):
 
 
 def p_type_2(content):
-    """type : REF type"""
-    content[0] = [parser_astlib.REF, content[2]]
-
-
-def p_type_3(content):
     """type : type LPAREN types RPAREN"""
     content[0] = [parser_astlib.PARAMED_TYPE, content[1], content[3]]
 
@@ -408,7 +396,6 @@ def p_atom_expr(content):
 def p_atom_1(content):
     """
     atom : INTEGER
-         | STRING
          | call_name
          | call
     """
@@ -423,11 +410,6 @@ def p_atom_2(content):
 def p_atom_3(content):
     """atom : REF bool_expr"""
     content[0] = [parser_astlib.REF, content[2]]
-
-
-def p_atom_4(content):
-    """atom : UNREF bool_expr"""
-    content[0] = [parser_astlib.UNREF, content[2]]
 
 
 def p_empty(content):

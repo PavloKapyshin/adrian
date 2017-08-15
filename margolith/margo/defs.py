@@ -1,16 +1,15 @@
 import re
 
 
-RESERVED_WORDS = (
-    "var",
-    "inf",
-    "is",
-    "fun",
-    "ret",
-    "sct",
-    "ref",
-    "unref",
-)
+RESERVED_WORDS = {
+    "var": "VAR",
+    "protocol": "INF",
+    "is": "IS",
+    "fun": "FUN",
+    "return": "RET",
+    "struct": "SCT",
+    "ref": "REF"
+}
 
 VAR_NAME_REGEX = re.compile(r"[a-z_][a-zA-Z0-9]*")
 FUNC_NAME_REGEX = re.compile(r"[a-z_][a-zA-Z0-9]*")

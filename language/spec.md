@@ -2,7 +2,7 @@
 
 Names must be named according to this rules.
 
-Private name must starts with an underscore `_`.
+Private names must start with an underscore `_`.
 
 ## Variables
 
@@ -13,15 +13,15 @@ Variables are named using camel case.
 
 ```adrian
 -- Good names:
-var myVeryLongName: None
-var _myPrivateName: None
-var short: None
-var _var1: None
+myVeryLongName
+_myPrivateName
+short
+_var1
 
 -- Bad names:
-var my_bad_name: None
-var _my_bad_private_name: None
-var var: None
+my_bad_name
+_my_bad_private_name
+var
 ```
 
 ## Functions
@@ -33,13 +33,13 @@ Functions are named using camel case.
 
 ```adrian
 -- Good names:
-fun _privateFunc(): None {}
-fun publicFunc(): None {}
-fun _func12(): None {}
+_privateFunc()
+publicFunc()
+_func12()
 
 -- Bad names:
-func _bad_func(): None {}
-func bad_Func(): None {}
+_bad_func()
+bad_Func()
 ```
 
 ## Modules
@@ -70,51 +70,15 @@ Type names are named using camel case.
 
 ```adrian
 -- Good names:
-var myVar: _Integer
-var myVar: HtmlTag
-var myVar: Context
+_Integer
+HtmlTag
+Context
 
 -- Bad names:
-var myVar: integer
-var myVar: HTMLTag
-var myVar: __Integer
-var myVar: Int_32
-```
-
-# Default values
-
-When value is not provided, the types are used for generating default value.
-
-Default values for standard types:
-
-```
-| Type Name | Default value |
-|-----------+---------------|
-| Integer   | 0             |
-| String    | ""            |
-| Decimal   | 0             |
-| Bool      | False         |
-| Vector    | []            |
-| Set       | ()            |
-| Dict      | {}            |
-| None      |               |
-```
-
-## Examples
-
-```adrian
--- These variable declarations are equivalent:
-var myVar: Integer = 0
-var myVar: Integer
-```
-
-```adrian
--- These functions are equivalent:
-fun myFunc(): Integer {}
-
-fun myFunc(): Integer {
-	return 0
-}
+integer
+HTMLTag
+__Integer
+Int_32
 ```
 
 # Variable declaration
@@ -170,11 +134,10 @@ fun n() {}
 ```
 
 ```adrian
-fun n(arg1: T1; arg2, arg3: T2; ...) {}
+fun n(arg1: T1, arg2: T2, ...) {}
 ```
 
-Where `arg1` has type `T1`, `arg2` and `arg3` have type `T2`. Different groups of
-arguments must be separated by semicolon. Arguments in groups must be separated by
+Where `arg1` has type `T1`, `arg2` have type `T2`. Arguments must be separated by
 comma. The passed function arguments must be in the order in which arguments in
 the function declaration are written.
 
@@ -191,28 +154,7 @@ Or `stmts` can consists of any statement exclude constant decalaration and inclu
 # Struct declaration
 
 ```adrian
-sct MyStruct(types) is (interfaces) {
+struct MyStruct {
     stmts
 }
 ```
-
-## types
-
-`types` can be empty:
-
-```adrian
-sct MyStruct {}
-```
-
-```adrian
-sct Node(someType1, someType2, ...) {}
-```
-
-Every type in `types` must be named as variable.
-Because it isn't a type name, it is an argument like in function.
-You can use these types inside of struct body.
-
-
-## interfaces
-
-TODO
