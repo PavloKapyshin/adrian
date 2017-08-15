@@ -3,6 +3,8 @@ import re
 
 RESERVED_WORDS = (
     "var",
+    "inf",
+    "is",
     "fun",
     "ret",
     "sct",

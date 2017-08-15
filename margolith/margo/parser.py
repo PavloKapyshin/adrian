@@ -130,6 +130,7 @@ def p_stmt(content):
          | func_decl
          | call
          | struct_decl
+         | inf_decl
          | assignment
     """
     content[0] = content[1]
@@ -204,9 +205,23 @@ def p_args_3(content):
     content[0] = [parser_astlib.EMPTY]
 
 
-def p_struct_decl(content):
+def p_inf_decl_1(content):
+    """inf_decl : INF NAME param_types LBRACE struct_body RBRACE"""
+    content[0] = [parser_astlib.INF_DECL, [parser_astlib.NAME, content[2]], content[3], content[5]]
+
+def p_inf_decl_2(content):
+    """inf_decl : INF NAME param_types"""
+    content[0] = [parser_astlib.INF_DECL, [parser_astlib.NAME, content[2]], content[3], [parser_astlib.EMPTY]]
+
+
+def p_struct_decl_1(content):
     """struct_decl : SCT NAME param_types LBRACE struct_body RBRACE"""
-    content[0] = [parser_astlib.STRUCT_DECL, [parser_astlib.NAME, content[2]], content[3], content[5]]
+    content[0] = [parser_astlib.STRUCT_DECL, [parser_astlib.NAME, content[2]], content[3], [parser_astlib.EMPTY], content[5]]
+
+
+def p_struct_decl_2(content):
+    """struct_decl : SCT NAME param_types IS interfaces LBRACE struct_body RBRACE"""
+    content[0] = [parser_astlib.STRUCT_DECL, [parser_astlib.NAME, content[2]], content[3], content[5], content[7]]
 
 
 def p_names_1(content):
@@ -227,6 +242,15 @@ def p_param_types_1(content):
 def p_param_types_2(content):
     """param_types : empty"""
     content[0] = [parser_astlib.EMPTY]
+
+
+def p_interfaces_1(content):
+    """interfaces : LPAREN names RPAREN"""
+    content[0] = content[2]
+
+def p_interfaces_2(content):
+    """interfaces : names"""
+    content[0] = content[1]
 
 
 def p_struct_body_1(content):
@@ -412,7 +436,10 @@ def p_empty(content):
 
 def p_error(content):
     """Error handling function."""
-    errors.syntax_error(context.exit_on_error, content.lineno)
+    line = 0
+    if content is not None:
+        line = content.lineno
+    errors.syntax_error(context.exit_on_error, line)
 
 
 class Parser:

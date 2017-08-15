@@ -1,20 +1,12 @@
+import copy
+
 from adrian import cgen as adr_cgen
 
-from . import parser
-from . import foreign_parser
-from . import analyzer
-from . import tac
-from . import copying
-from . import arc
-# from . import inlining
-# from . import method_to_func
-# from . import method_calls_to_func_calls
-from . import name_spacing
-from . import tocgen
-from . import main_func
-from . import env
-from . import context
-from . import layers
+from . import parser, foreign_parser, analyzer
+from . import name_existence_checking, types_phase
+from . import tac, copying, arc, name_spacing
+from . import tocgen, main_func
+from . import env, context, layers
 
 
 REPL_FILE_HASH = "mangled"
@@ -22,6 +14,8 @@ REPL_FILE_HASH = "mangled"
 LAYERS = (
     (parser.Parser, "parse"),
     (analyzer.Analyzer, "transform_ast"),
+    (name_existence_checking.NameExistence, "transform_ast"),
+    (types_phase.TypeInference, "transform_ast"),
     (tac.TAC, "transform_ast"),
     (copying.Copying, "transform_ast"),
     (arc.ARC, "expand_ast"),
@@ -33,7 +27,7 @@ LAYERS = (
 
 def compile_repl(inp, *, contexts):
     for layer_cls, method_name in LAYERS:
-        with context.new_context(**contexts[layer_cls]):
+        with context.new_context(**copy.deepcopy(contexts[layer_cls])):
             layer = layer_cls()
             if not method_name == "parse":
                 current_ast = list(getattr(layers, method_name)(

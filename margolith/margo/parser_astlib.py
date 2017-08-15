@@ -3,6 +3,7 @@ RETURN = "Return"
 FUNC_DECL = "Func"
 METHOD_DECL = "Method"
 STRUCT_DECL = "Struct"
+INF_DECL = "Interface"
 FIELD_DECL = "Field"
 ASSIGNMENT = "Assignment"
 

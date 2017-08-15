@@ -18,7 +18,7 @@ _BAD_NAME_IN_EXPR = "bad name '{name}' in expression"
 _NON_EXISTING_NAME = "non existing name '{name}'"
 _NON_EXISTING_TYPE = "non existing type '{type_}'"
 _NON_EXISTING_MODULE = "non existing module '{module}'"
-_CANT_REASSIGN_BUILTIN = "can't reassign builtin '{name}'"
+_CANT_REASSIGN = "can't reassign '{name}'"
 _CANT_FIND_NAME_IN_MODULE = "can't find name '{name}' in module '{module_name}'"
 
 _TYPES_ARE_NOT_EQUAL = "type '{type1}' and type '{type2}' are not equal"
@@ -82,8 +82,8 @@ def non_existing_module(exit_on_error, module):
     _error(exit_on_error, _NON_EXISTING_MODULE, module=module)
 
 
-def cant_reassign_builtin(exit_on_error, name):
-    _error(exit_on_error, _CANT_REASSIGN_BUILTIN, name=name)
+def cant_reassign(exit_on_error, name):
+    _error(exit_on_error, _CANT_REASSIGN, name=name)
 
 
 def cant_find_name_in_module(exit_on_error, name, module_name):
