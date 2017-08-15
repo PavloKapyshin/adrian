@@ -39,6 +39,9 @@ def t(type_):
         if type_.module == cdefs.CMODULE_NAME:
             return astlib.CType(str(type_.member))
         errors.not_implemented("only c module is supported")
+
+    if type_ in A(astlib.Empty):
+        return type_
     errors.not_implemented("analyzer:t (type_ {})".format(type_))
 
 
