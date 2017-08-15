@@ -14,7 +14,7 @@ class REPL(cmd.Cmd):
     contexts = {
         layer: {
             "env": margo.env.Env(),
-            "exit_on_error": True,
+            "exit_on_error": False,
             "file_hash": margo.REPL_FILE_HASH,
             "tmp_count": 0}
         for layer, _ in margo.LAYERS
@@ -33,6 +33,9 @@ class REPL(cmd.Cmd):
     def command(self, command):
         if command == "genc":
             self.do_eval(self.input_)
+        if command == "clear":
+            # Just clearing input.
+            self.input_ = []
 
     def do_exit(self, arg):
         sys.exit(0)

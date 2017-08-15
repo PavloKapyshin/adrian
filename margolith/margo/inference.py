@@ -14,4 +14,5 @@ def infer(expr):
         # +, -, * and / returns the value of the same type.
         return infer(expr.lexpr)
 
-    errors.not_implemented(":) (infer)")
+    errors.not_implemented(
+        context.exit_on_error, "can't infer type (infer)")

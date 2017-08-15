@@ -14,13 +14,15 @@ def compute(expr):
         return expr.literal
     if expr in A(astlib.Expr):
         return str(eval(" ".join([compute(expr.lexpr), expr.op, compute(expr.rexpr)])))
-    errors.not_implemented("can't compute D:")
+    errors.not_implemented(
+        context.exit_on_error, "can't compute D:")
 
 
 def func_call(call):
     if call.name in A(astlib.ModuleMember):
         if call.name.module != cdefs.CMODULE_NAME:
-            errors.not_implemented("only c module is supported")
+            errors.not_implemented(
+                context.exit_on_error, "only c module is supported")
         args = call.args.as_list()
         # you can't use c functions, only types, for now :D
         # computing at compile-time :D
@@ -38,11 +40,13 @@ def t(type_):
     if type_ in A(astlib.ModuleMember):
         if type_.module == cdefs.CMODULE_NAME:
             return astlib.CType(str(type_.member))
-        errors.not_implemented("only c module is supported")
+        errors.not_implemented(
+            context.exit_on_error, "only c module is supported")
 
     if type_ in A(astlib.Empty):
         return type_
-    errors.not_implemented("analyzer:t (type_ {})".format(type_))
+    errors.not_implemented(
+        context.exit_on_error, "analyzer:t (type_ {})".format(type_))
 
 
 def e(expr):
@@ -55,20 +59,25 @@ def e(expr):
     if expr in A(astlib.Name, astlib.Empty):
         return expr
 
-    errors.not_implemented("analyzer:e (expr {})".format(expr))
+    errors.not_implemented(
+        context.exit_on_error, "analyzer:e (expr {})".format(expr))
+
+
+def decl_args(args):
+    return [Arg(name, t(type_)) for name, type_ in args.as_list()]
 
 
 def call_args(args):
-    return map(expr, args.as_list())
+    return list(map(expr, args.as_list()))
 
 
 class Analyzer(layers.Layer):
 
     def b(self, body):
         reg = Analyzer().get_registry()
-        return map(
+        return list(map(
             lambda stmt: list(layers.transform_node(stmt, registry=reg))[0],
-            body.as_list())
+            body.as_list()))
 
     @layers.register(astlib.Decl)
     def decl(self, decl):
@@ -80,20 +89,46 @@ class Analyzer(layers.Layer):
         yield astlib.Assignment(
             e(assment.var), assment.op, e(assment.expr))
 
+    @layers.register(astlib.Func)
+    def func(self, func):
+        yield astlib.Func(
+            astlib.Name(func.name), decl_args(func.args),
+            t(func.rettype), self.b(func.body))
+
+    @layers.register(astlib.Return)
+    def return_(self, return_):
+        yield astlib.Return(e(return_.expr))
+
     @layers.register(astlib.FuncCall)
     def func_call(self, call):
         yield from func_call(call)
 
+    @layers.register(astlib.Method)
+    def method(self, method):
+        errors.not_implemented(
+            context.exit_on_error,
+            "method declaration is not supported")
+
     @layers.register(astlib.Struct)
     def struct(self, struct):
-        if struct.interfaces:
-            errors.not_implemented("interfaces are not supported")
-        if struct.param_types:
-            errors.not_implemented("parameterized structs are not supported")
-        yield astlib.Struct(
-            struct.name, struct.param_types, struct.interfaces,
-            self.b(struct.body))
+        if struct.protocols:
+            errors.not_implemented(
+                context.exit_on_error,
+                "protocols are not supported")
+        if struct.parameters:
+            errors.not_implemented(
+                context.exit_on_error,
+                "parameterized structs are not supported")
+        errors.not_implemented(
+            context.exit_on_error,
+            "struct declaration is not supported")
 
-    @layers.register(astlib.Interface)
-    def inf(self, inf):
-        errors.not_implemented("interface declaration is not supported")
+    @layers.register(astlib.Protocol)
+    def protocol(self, protocol):
+        if protocol.parameters:
+            errors.not_implemented(
+                context.exit_on_error,
+                "parameterized protocols are not supported")
+        errors.not_implemented(
+            context.exit_on_error,
+            "protocol declaration is not supported")

@@ -33,13 +33,17 @@ def cfunc_call(call):
 def t(type_):
     if type_ in A(astlib.CType):
         return cgen.CTypes.ptr(getattr(cgen.CTypes, TO_CTYPE[str(type_)]))
-    errors.not_implemented("tocgen: t (type_ {})".format(type_))
+    errors.not_implemented(
+        context.exit_on_error,
+        "tocgen: t (type_ {})".format(type_))
 
 
 def t_without_ptr(type_):
     if type_ in A(astlib.CType):
         return getattr(cgen.CTypes, TO_CTYPE[str(type_)])
-    errors.not_implemented("tocgen: t_without_ptr (type_ {})".format(type_))
+    errors.not_implemented(
+        context.exit_on_error,
+        "tocgen: t_without_ptr (type_ {})".format(type_))
 
 
 def e(expr):
@@ -64,7 +68,9 @@ def e(expr):
         return cgen.Expr(
             TO_COP[expr.op], e(expr.lexpr), e(expr.rexpr))
 
-    errors.not_implemented("tocgen: e (expr {} {})".format(expr, type(expr)))
+    errors.not_implemented(
+        context.exit_on_error,
+        "tocgen: e (expr {} {})".format(expr, type(expr)))
 
 
 def call_args(args):
@@ -94,8 +100,8 @@ class ToCGen(layers.Layer):
             name=e(assignment.var),
             expr=e(assignment.expr))
 
-    @layers.register(astlib.Interface)
-    def inf(self, inf):
+    @layers.register(astlib.Protocol)
+    def protocol(self, protocol):
         yield from []
 
     @layers.register(astlib.Struct)

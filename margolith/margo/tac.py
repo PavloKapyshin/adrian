@@ -1,3 +1,5 @@
+from itertools import chain
+
 from . import astlib, layers, inference, errors
 from .context import context
 from .patterns import A
@@ -7,45 +9,68 @@ from .patterns import A
 T_STRING = "t"
 
 
-def new_tmp(expr_):
+def new_tmp(expr):
     tmp_name = astlib.Name(
         "".join([T_STRING, str(context.tmp_count)]), is_tmp=True)
     context.tmp_count += 1
-    return tmp_name, [astlib.Decl(tmp_name, inference.infer(expr_), expr_)]
+    return tmp_name, [astlib.Decl(tmp_name, inference.infer(expr), expr)]
 
 
-def inner_expr(e):
-    if e in A(astlib.Expr):
-        return new_tmp(expr(e))
-    return new_tmp(e)
+def inner_expr(expr):
+    if expr in A(astlib.Expr):
+        return new_tmp(e(expr))
+    return new_tmp(expr)
 
 
-def expr(e):
-    if e in A(astlib.Expr):
-        lexpr_tmp, lexpr_decls = inner_expr(e.lexpr)
-        rexpr_tmp, rexpr_decls = inner_expr(e.rexpr)
+def e(expr):
+    if expr in A(astlib.Expr):
+        lexpr_tmp, lexpr_decls = inner_expr(expr.lexpr)
+        rexpr_tmp, rexpr_decls = inner_expr(expr.rexpr)
         tmp_decls = lexpr_decls + rexpr_decls
-        return astlib.Expr(e.op, lexpr_tmp, rexpr_tmp), tmp_decls
+        return astlib.Expr(expr.op, lexpr_tmp, rexpr_tmp), tmp_decls
 
-    if e in A(astlib.CTYPES + (astlib.Name, )):
-        return e, []
+    if expr in A(astlib.CTYPES + (astlib.Name, )):
+        return expr, []
 
-    errors.not_implemented("tac: expr (expr {})".format(e))
+    errors.not_implemented(
+        context.exit_on_error, "tac:e (expr {})".format(expr))
 
 
 class TAC(layers.Layer):
+
+    def b(self, body):
+        reg = TAC().get_registry()
+        return list(chain.from_iterable(
+            list(map(
+                lambda stmt: list(layers.transform_node(stmt, registry=reg)),
+            body))))
 
     @layers.register(astlib.Decl)
     def decl(self, decl):
         context.env.add(str(decl.name), {
              "type": decl.type_
         })
-        new_expr, tmp_decls = expr(decl.expr)
+        new_expr, tmp_decls = e(decl.expr)
         yield from tmp_decls
         yield astlib.Decl(decl.name, decl.type_, new_expr)
 
     @layers.register(astlib.Assignment)
     def assignment(self, assment):
-        new_expr, tmp_decls = expr(assment.expr)
+        new_expr, tmp_decls = e(assment.expr)
         yield from tmp_decls
         yield astlib.Assignment(assment.var, assment.op, new_expr)
+
+    @layers.register(astlib.Return)
+    def return_(self, return_):
+        new_expr, tmp_decls = e(return_.expr)
+        yield from tmp_decls
+        yield astlib.Return(new_expr)
+
+    @layers.register(astlib.Func)
+    def func(self, func):
+        context.env.add(str(func.name), {
+            "type": func.rettype
+        })
+        yield astlib.Func(
+            func.name, func.args, func.rettype,
+            self.b(func.body))

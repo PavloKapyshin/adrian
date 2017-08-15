@@ -3,11 +3,11 @@ import re
 
 RESERVED_WORDS = {
     "var": "VAR",
-    "protocol": "INF",
+    "protocol": "PROTOCOL",
     "is": "IS",
     "fun": "FUN",
-    "return": "RET",
-    "struct": "SCT",
+    "return": "RETURN",
+    "struct": "STRUCT",
     "ref": "REF"
 }
 

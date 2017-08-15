@@ -3,7 +3,7 @@ RETURN = "Return"
 FUNC_DECL = "Func"
 METHOD_DECL = "Method"
 STRUCT_DECL = "Struct"
-INF_DECL = "Interface"
+PROTOCOL_DECL = "Protocol"
 FIELD_DECL = "Field"
 ASSIGNMENT = "Assignment"
 
@@ -18,9 +18,7 @@ CALL_ARGS = "CallArgs"
 ARGS = "Args"
 
 INTEGER = "IntLiteral"
-STRING = "String"
 REF = "Ref"
-UNREF = "Unref"
 
 MODULE_MEMBER = "ModuleMember"
 STRUCT_ELEM = "StructElem"

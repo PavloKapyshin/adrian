@@ -22,7 +22,9 @@ def t(type_):
     if type_ in A(astlib.CType):
         return type_
 
-    errors.not_implemented("namespacing: type (type {})".format(type_))
+    errors.not_implemented(
+        context.exit_on_error,
+        "namespacing: type (type {})".format(type_))
 
 
 def call_args(args):
@@ -50,7 +52,9 @@ def e(expr):
     if expr in A(astlib.Deref):
         return astlib.Deref(e(expr.expr))
 
-    errors.not_implemented("namespacing: expr (expr {})".format(expr))
+    errors.not_implemented(
+        context.exit_on_error,
+        "namespacing: expr (expr {})".format(expr))
 
 
 class NameSpacing(layers.Layer):
