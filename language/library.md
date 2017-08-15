@@ -1,6 +1,6 @@
 # c module
 
-## C types
+## Types
 
 Numeric types:
 
@@ -18,58 +18,14 @@ c#UIntFast64
 c#Size
 ```
 
-Other types:
-```
-c#Char
-c#Pointer(T)
-c#Array(T)
-c#Void
-```
 
-`c#String` is an alias for `c#Pointer(c#Char)`.
-`c#Memory` is an alias for `c#Pointer(c#Void)`.
+## Functions
 
-
-## C functions
-
-`c#malloc(size: c#Size): c#Memory`
+`c#malloc(size: c#Size): Object`
 allocates memory and returns poiter to it.
 
-`c#sizeof(source: c#Any): c#Size`
+`c#sizeof(source: Object): c#Size`
 returns size (in bytes) of any c struct.
 
-`c#free(memory: c#Memory): c#Void`
+`c#free(memory: Object): Void`
 frees memory.
-
-
-
-# std_types module
-
-All types:
-
-```
-Bool
-None
-
-Integer
-
-UnicodeString
-ByteString
-String
-
-Vector
-Set
-Dict
-```
-
-`String` is equivalent to `linked_list#LinkedList(c#Char)`
-
-
-
-# linked_list module
-
-## Types:
-
-```
-LinkedList
-```
