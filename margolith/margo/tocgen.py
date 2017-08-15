@@ -73,6 +73,12 @@ def call_args(args):
 
 class ToCGen(layers.Layer):
 
+    def b(self, body):
+        reg = ToCGen().get_registry()
+        return map(
+            lambda stmt: list(layers.transform_node(stmt, registry=reg))[0],
+            body)
+
     @layers.register(astlib.Decl)
     def decl(self, decl):
         yield cgen.Decl(
@@ -91,3 +97,9 @@ class ToCGen(layers.Layer):
     @layers.register(astlib.Interface)
     def inf(self, inf):
         yield from []
+
+    @layers.register(astlib.Struct)
+    def struct(self, struct):
+        yield cgen.Struct(
+            name=str(struct.name),
+            body=self.b(struct.body))

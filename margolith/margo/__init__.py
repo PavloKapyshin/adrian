@@ -1,8 +1,11 @@
+import copy
+
 from adrian import cgen as adr_cgen
 
 from . import parser
 from . import foreign_parser
 from . import analyzer
+from . import name_existence_checking
 from . import tac
 from . import copying
 from . import arc
@@ -21,19 +24,20 @@ REPL_FILE_HASH = "mangled"
 
 LAYERS = (
     (parser.Parser, "parse"),
-    # (analyzer.Analyzer, "transform_ast"),
-    # (tac.TAC, "transform_ast"),
-    # (copying.Copying, "transform_ast"),
-    # (arc.ARC, "expand_ast"),
-    # (name_spacing.NameSpacing, "transform_ast"),
-    # (tocgen.ToCGen, "transform_ast"),
-    # (main_func.MainFunc, "expand_ast")
+    (analyzer.Analyzer, "transform_ast"),
+    (name_existence_checking.NameExistence, "transform_ast"),
+    (tac.TAC, "transform_ast"),
+    (copying.Copying, "transform_ast"),
+    (arc.ARC, "expand_ast"),
+    (name_spacing.NameSpacing, "transform_ast"),
+    (tocgen.ToCGen, "transform_ast"),
+    (main_func.MainFunc, "expand_ast")
 )
 
 
 def compile_repl(inp, *, contexts):
     for layer_cls, method_name in LAYERS:
-        with context.new_context(**contexts[layer_cls]):
+        with context.new_context(**copy.deepcopy(contexts[layer_cls])):
             layer = layer_cls()
             if not method_name == "parse":
                 current_ast = list(getattr(layers, method_name)(
@@ -41,10 +45,10 @@ def compile_repl(inp, *, contexts):
             else:
                 current_ast = foreign_parser.main(
                     layer.parse(inp))
-    # generator = adr_cgen.Generator()
-    # generator.add_ast(current_ast)
-    # return "\n".join(generator.generate())
-    return current_ast
+    generator = adr_cgen.Generator()
+    generator.add_ast(current_ast)
+    return "\n".join(generator.generate())
+    # return current_ast
 
 
 def compile_from_string(inp, file_hash):

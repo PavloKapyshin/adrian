@@ -436,7 +436,10 @@ def p_empty(content):
 
 def p_error(content):
     """Error handling function."""
-    errors.syntax_error(context.exit_on_error, content.lineno)
+    line = 0
+    if content is not None:
+        line = content.lineno
+    errors.syntax_error(context.exit_on_error, line)
 
 
 class Parser:
