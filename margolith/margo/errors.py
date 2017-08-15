@@ -98,8 +98,8 @@ def types_are_not_equal(exit_on_error, type1, type2):
         type1=type1, type2=type2)
 
 
-def not_implemented(message):
-    _error(True, "{} {}".format(_NOT_IMPLEMENTED, message))
+def not_implemented(exit_on_error, message):
+    _error(exit_on_error, "{} {}".format(_NOT_IMPLEMENTED, message))
 
 
 def wrong_number_of_args(exit_on_error, expected, got):

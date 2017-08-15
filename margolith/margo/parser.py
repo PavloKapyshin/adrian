@@ -31,7 +31,6 @@ _TOKENS = {
     "}": "RBRACE",
 
     ":": "COLON",
-    ";": "SEMI",
     ",": "COMMA",
     ".": "PERIOD",
     "#": "HASH"
@@ -123,7 +122,7 @@ def p_stmt(content):
          | func_decl
          | call
          | struct_decl
-         | inf_decl
+         | protocol_decl
          | assignment
     """
     content[0] = content[1]
@@ -175,7 +174,7 @@ def p_func_body_stmt(content):
 
 
 def p_return_stmt(content):
-    """return_stmt : RET bool_expr"""
+    """return_stmt : RETURN bool_expr"""
     content[0] = [parser_astlib.RETURN, content[2]]
 
 
@@ -187,7 +186,7 @@ def p_args_1(content):
 
 
 def p_args_2(content):
-    """args : NAME COLON type SEMI args"""
+    """args : NAME COLON type COMMA args"""
     #                                    name        type        rest
     #                                 vvvvvvvvvv  vvvvvvvvvv  vvvvvvvvvv
     content[0] = [parser_astlib.ARGS, content[1], content[3], content[5]]
@@ -198,22 +197,22 @@ def p_args_3(content):
     content[0] = [parser_astlib.EMPTY]
 
 
-def p_inf_decl_1(content):
-    """inf_decl : INF NAME param_types LBRACE struct_body RBRACE"""
-    content[0] = [parser_astlib.INF_DECL, [parser_astlib.NAME, content[2]], content[3], content[5]]
+def p_protocol_decl_1(content):
+    """protocol_decl : PROTOCOL NAME param_types LBRACE struct_body RBRACE"""
+    content[0] = [parser_astlib.PROTOCOL_DECL, [parser_astlib.NAME, content[2]], content[3], content[5]]
 
-def p_inf_decl_2(content):
-    """inf_decl : INF NAME param_types"""
-    content[0] = [parser_astlib.INF_DECL, [parser_astlib.NAME, content[2]], content[3], [parser_astlib.EMPTY]]
+def p_protocol_decl_2(content):
+    """protocol_decl : PROTOCOL NAME param_types"""
+    content[0] = [parser_astlib.PROTOCOL_DECL, [parser_astlib.NAME, content[2]], content[3], [parser_astlib.EMPTY]]
 
 
 def p_struct_decl_1(content):
-    """struct_decl : SCT NAME param_types LBRACE struct_body RBRACE"""
+    """struct_decl : STRUCT NAME param_types LBRACE struct_body RBRACE"""
     content[0] = [parser_astlib.STRUCT_DECL, [parser_astlib.NAME, content[2]], content[3], [parser_astlib.EMPTY], content[5]]
 
 
 def p_struct_decl_2(content):
-    """struct_decl : SCT NAME param_types IS interfaces LBRACE struct_body RBRACE"""
+    """struct_decl : STRUCT NAME param_types IS interfaces LBRACE struct_body RBRACE"""
     content[0] = [parser_astlib.STRUCT_DECL, [parser_astlib.NAME, content[2]], content[3], content[5], content[7]]
 
 

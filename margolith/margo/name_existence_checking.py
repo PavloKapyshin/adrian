@@ -30,6 +30,12 @@ def e(expr):
         cfunc_call(expr)
 
 
+def decl_args(args):
+    for arg in args:
+        context.env.add(str(arg.name), object())
+        t(arg.type_)
+
+
 def cfunc_name(name):
     print(name, type(name))
 
@@ -39,6 +45,11 @@ def call_args(args):
 
 
 class NameExistence(layers.Layer):
+
+    def b(self, body):
+        reg = NameExistence().get_registry()
+        for stmt in body:
+            list(layers.transform_node(stmt, registry=reg))
 
     @layers.register(astlib.Decl)
     def decl(self, decl):
@@ -60,3 +71,16 @@ class NameExistence(layers.Layer):
     def cfunc_call(self, call):
         cfunc_call(call)
         yield call
+
+    @layers.register(astlib.Return)
+    def return_(self, return_):
+        e(return_.expr)
+        yield return_
+
+    @layers.register(astlib.Func)
+    def func(self, func):
+        context.env.add(str(func.name), object())
+        decl_args(func.args)
+        t(func.rettype)
+        self.b(func.body)
+        yield func

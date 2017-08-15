@@ -339,7 +339,16 @@ class Expr(Node):
         self._keys = ("op", "lexpr", "rexpr")
 
 
-class Decl(Node):
+class _VarOrLetDecl(Node):
+
+    def __init__(self, name, type_, expr):
+        self.name = name
+        self.type_ = type_
+        self.expr = expr
+        self._keys = ("name", "type_", "expr")
+
+
+class Decl(_VarOrLetDecl):
     """         type_
                vvvvvvv
     var myVar: Integer = 1 + 20
@@ -347,12 +356,6 @@ class Decl(Node):
         name              expr
 
     """
-
-    def __init__(self, name, type_, expr):
-        self.name = name
-        self.type_ = type_
-        self.expr = expr
-        self._keys = ("name", "type_", "expr")
 
 
 class Assignment(Node):
@@ -391,7 +394,7 @@ class Func(_FuncOrMethodDecl):
 
 
 class Method(_FuncOrMethodDecl):
-    """  name                                      rettype
+    """   name                                     rettype
         vvvvvvvv                                  vvvvvvvvvv
     fun myMethod(arg1: Type1; arg2, arg3: Type2): ReturnType {...}
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^               ^^^
@@ -399,40 +402,40 @@ class Method(_FuncOrMethodDecl):
     """
 
 
-class Interface(Node):
-    """    name
-        vvvvvvvvvvv
-    inf MyInferface {
+class Protocol(Node):
+    """         name     parameters
+             vvvvvvvvvv vvvvvvvvvvvvv
+    protocol MyProtocol(SomeType, ...) {
         ... < body
     }
     """
 
-    def __init__(self, name, param_types, body):
+    def __init__(self, name, parameters, body):
         self.name = name
-        self.param_types = param_types
+        self.parameters = parameters
         self.body = body
-        self._keys = ("name", "param_types", "body")
+        self._keys = ("name", "parameters", "body")
 
 
 class Struct(Node):
-    """  name   param_types              interfaces
-        vvvvvv vvvvvvvvvvvvvv      vvvvvvvvvvvvvvvvvvvvvvvvv
-    sct MyType(valueType, ...) is (Legthable, Printable, ...) {
+    """     name    parameters             protocols
+           vvvvvv vvvvvvvvvvvvvv      vvvvvvvvvvvvvvvvvvvv
+    struct MyType(valueType, ...) is (Legthable, Printable) {
         length: Integer         < body
         data: valueType         < body
     }
     """
 
-    def __init__(self, name, param_types, interfaces, body):
+    def __init__(self, name, parameters, protocols, body):
         self.name = name
-        self.param_types = param_types
-        self.interfaces = interfaces
+        self.parameters = parameters
+        self.protocols = protocols
         self.body = body
-        self._keys = ("name", "param_types", "interfaces", "body")
+        self._keys = ("name", "parameters", "protocols", "body")
 
 
 class Field(Node):
-    """sct MyType {
+    """struct MyType {
            length: Integer     < Field
            data: String        < Field
        }
@@ -445,9 +448,9 @@ class Field(Node):
 
 
 class Return(Node):
-    """ret 1 + 2
-           ^^^^^
-           expr
+    """return 1 + 2
+              ^^^^^
+              expr
     """
 
     def __init__(self, expr):
@@ -460,10 +463,6 @@ class Literal(Node):
     def __init__(self, literal):
         self.literal = literal
         self._keys = ("literal", )
-
-
-class Unref(Literal):
-    """unref."""
 
 
 class Ref(Literal):

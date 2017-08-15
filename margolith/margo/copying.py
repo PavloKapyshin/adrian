@@ -37,7 +37,9 @@ def e(expr, name):
     if expr in A(astlib.Expr):
         return heapify(expr, name)
 
-    errors.not_implemented("copying:e (expr {})".format(expr))
+    errors.not_implemented(
+        context.exit_on_error,
+        "copying:e (expr {})".format(expr))
 
 
 class Copying(layers.Layer):
