@@ -12,9 +12,8 @@ class AdrianLexer(RegexLexer):
 
     tokens = {
         "root": [
-            (r"(print|iff|elif|else|ret)", Keyword.Reserved),
-            (r"(var|cst|fun)", Keyword.Declaration),
-            (r"(Integer|String|None)", Keyword.Type),
+            (r"(if|else|return|for|while|in|is)", Keyword.Reserved),
+            (r"(var|let|fun|struct|data|protocol)", Keyword.Declaration),
             (r"[a-zA-Z0-9_]+", Name),
             (r"[-]?\d+", Number.Integer),
             (r"--.+", Comment),
