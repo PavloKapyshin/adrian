@@ -20,6 +20,13 @@ def cfunc_call(call):
     call_args(call.args)
 
 
+def func_call(call):
+    if not name_exists(call.name):
+        errors.non_existing_name(
+            context.exit_on_error, name=str(call.name))
+    call_args(call.args)
+
+
 def e(expr):
     if expr in A(astlib.Name):
         if not name_exists(expr):
@@ -29,6 +36,9 @@ def e(expr):
     if expr in A(astlib.CFuncCall):
         cfunc_call(expr)
 
+    if expr in A(astlib.FuncCall):
+        func_call(expr)
+
 
 def decl_args(args):
     for arg in args:
@@ -37,6 +47,9 @@ def decl_args(args):
 
 
 def cfunc_name(name):
+    errors.not_implemented(
+        context.exit_on_error,
+        "user calls of functions from c module are not supported")
     print(name, type(name))
 
 

@@ -36,6 +36,9 @@ def e(expr, name):
             return heapify(expr, name)
         return expr, []
 
+    if expr in A(astlib.FuncCall):
+        return astlib.FuncCall(expr.name, expr.args), []
+
     if expr in A(astlib.Expr):
         return heapify(expr, name)
 

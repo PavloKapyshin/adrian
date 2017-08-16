@@ -1,0 +1,27 @@
+fun zero(): c#IntFast8 {
+    return c#IntFast8(1 - 1)
+}
+
+
+fun addOne(src: c#IntFast8): c#IntFast8 {
+    return src + c#IntFast8(1)
+}
+
+
+fun add(lvalue: c#IntFast8, rvalue: c#IntFast8): c#IntFast8 {
+    return lvalue + rvalue
+}
+
+
+fun increment(value: c#IntFast8, by: c#IntFast8): c#IntFast8 {
+    var copyOfBy = by
+    return value + copyOfBy
+}
+
+
+var zeroVar = zero()
+var oneVar = addOne(zero())
+var twoVar = addOne(addOne(zero()))
+
+var fiveVar = add(c#IntFast8(3), c#IntFast8(2))
+var sixVar = increment(fiveVar, oneVar)
