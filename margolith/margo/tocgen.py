@@ -73,17 +73,24 @@ def e(expr):
         "tocgen: e (expr {} {})".format(expr, type(expr)))
 
 
+def decl_args(args):
+    result = []
+    for arg in args:
+        result.append(cgen.Decl(str(arg.name), type_=t(arg.type_)))
+    return result
+
+
 def call_args(args):
-    return map(e, args)
+    return list(map(e, args))
 
 
 class ToCGen(layers.Layer):
 
     def b(self, body):
         reg = ToCGen().get_registry()
-        return map(
+        return list(map(
             lambda stmt: list(layers.transform_node(stmt, registry=reg))[0],
-            body)
+            body))
 
     @layers.register(astlib.Decl)
     def decl(self, decl):
@@ -99,6 +106,16 @@ class ToCGen(layers.Layer):
         yield cgen.Assignment(
             name=e(assignment.var),
             expr=e(assignment.expr))
+
+    @layers.register(astlib.Return)
+    def return_(self, return_):
+        yield cgen.Return(e(return_.expr))
+
+    @layers.register(astlib.Func)
+    def func(self, func):
+        yield cgen.Func(
+            str(func.name), t(func.rettype),
+            decl_args(func.args), self.b(func.body))
 
     @layers.register(astlib.Protocol)
     def protocol(self, protocol):

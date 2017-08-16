@@ -68,7 +68,7 @@ def decl_args(args):
 
 
 def call_args(args):
-    return list(map(expr, args.as_list()))
+    return list(map(e, args.as_list()))
 
 
 class Analyzer(layers.Layer):

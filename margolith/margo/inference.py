@@ -15,4 +15,5 @@ def infer(expr):
         return infer(expr.lexpr)
 
     errors.not_implemented(
-        context.exit_on_error, "can't infer type (infer)")
+        context.exit_on_error,
+        "can't infer type (expr {})".format(expr))
