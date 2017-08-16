@@ -1,0 +1,24 @@
+-- fun seq(): Void {
+--     var t0 = c#IntFast8(1)
+-- }
+
+
+fun zero(): c#IntFast8 {
+    return c#IntFast8(1 - 1)
+}
+
+
+fun addOne(src: c#IntFast8): c#IntFast8 {
+    return src + c#IntFast8(1)
+}
+
+
+fun add(lvalue: c#IntFast8, rvalue: c#IntFast8): c#IntFast8 {
+    return lvalue + rvalue
+}
+
+
+fun increment(value: c#IntFast8, by: c#IntFast8): c#IntFast8 {
+    var copyOfBy = by
+    return value + copyOfBy
+}

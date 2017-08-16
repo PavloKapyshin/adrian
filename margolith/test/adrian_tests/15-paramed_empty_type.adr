@@ -1,4 +1,0 @@
-sct Dummy(someType) {}
-
-
-var d: Dummy(c#IntFast8) = Dummy()

@@ -21,15 +21,15 @@ class ARC(layers.Layer):
     def __init__(self):
         self.to_free = env.Env()
 
-    def free(self, name, type_):
-        if type_ in A(astlib.CType):
-            return astlib.CFuncCall("free", [astlib.Name(name)])
+    def free(self, name, val):
+        if val["type"] in A(astlib.CType):
+            return astlib.CFuncCall("free", [astlib.Name(name, is_tmp=val["is_tmp"])])
 
     def arc(self):
         space = self.to_free.space()
         scope = self.to_free.scope
-        for key, type_ in sorted(space[scope].copy().items()):
-            yield self.free(key, type_)
+        for key, val in sorted(space[scope].copy().items()):
+            yield self.free(key, val)
 
     def b(self, body):
         reg = ARC().get_registry()
@@ -39,7 +39,10 @@ class ARC(layers.Layer):
 
     @layers.register(astlib.Decl)
     def decl(self, decl):
-        self.to_free.add(str(decl.name), decl.type_)
+        self.to_free.add(str(decl.name), {
+            "type": decl.type_,
+            "is_tmp": decl.name.is_tmp
+        })
         yield decl
 
     @layers.register(astlib.Assignment)

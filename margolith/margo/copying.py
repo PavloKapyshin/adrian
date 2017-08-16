@@ -75,6 +75,11 @@ class Copying(layers.Layer):
         context.env.add(str(func.name), {
             "type": func.rettype
         })
+        for arg in func.args:
+            context.env.add(str(arg.name), {
+                "type": arg.type_
+            })
+
         yield astlib.Func(
             func.name, func.args, func.rettype,
             self.b(func.body))

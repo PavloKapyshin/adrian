@@ -1,0 +1,22 @@
+-- Just a simple test.
+var m1: c#IntFast8 = c#IntFast8(10)
+
+-- Testing type inference.
+var mTypeInference = c#IntFast8(10)
+
+var mValuePropagating = c#IntFast16(200 + 3 - 5 * 2)
+
+
+-- Testing c int types
+var m3: c#IntFast8 = c#IntFast8(0)
+var m4: c#UIntFast8 = c#UIntFast8(0)
+var m5: c#IntFast16 = c#IntFast16(0)
+var m6: c#UIntFast16 = c#UIntFast16(0)
+var m7: c#IntFast32 = c#IntFast32(0)
+var m8: c#UIntFast32 = c#UIntFast32(0)
+var m9: c#IntFast64 = c#IntFast64(0)
+var m10: c#UIntFast64 = c#UIntFast64(0)
+
+
+-- Name as expression with type inference.
+var mName = m3

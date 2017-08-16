@@ -8,9 +8,11 @@ from adrian import cgen
 
 TO_CTYPE = {
     "IntFast8": "int_fast8",
+    "IntFast16": "int_fast16",
     "IntFast32": "int_fast32",
     "IntFast64": "int_fast64",
     "UIntFast8": "uint_fast8",
+    "UIntFast16": "uint_fast16",
     "UIntFast32": "uint_fast32",
     "UIntFast64": "uint_fast64",
 }
@@ -62,6 +64,8 @@ def e(expr):
         return list(cfunc_call(expr))[0]
 
     if expr in A(astlib.StructScalar):
+        if expr.type_ in A(astlib.CType):
+            return t_without_ptr(expr.type_)
         return cgen.StructType(t_without_ptr(expr.type_))
 
     if expr in A(astlib.Expr):

@@ -36,6 +36,8 @@ class REPL(cmd.Cmd):
         if command == "clear":
             # Just clearing input.
             self.input_ = []
+        if command == "undo":
+            self.input_ = self.input_[:-1]
 
     def do_exit(self, arg):
         sys.exit(0)

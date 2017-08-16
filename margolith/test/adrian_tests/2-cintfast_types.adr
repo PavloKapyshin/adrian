@@ -1,8 +1,0 @@
-var i8: c#IntFast8 = c#IntFast8(1)
-var ui8: c#UIntFast8 = c#UIntFast8(1)
-
-var i32: c#IntFast32 = c#IntFast32(1)
-var ui32: c#UIntFast32 = c#UIntFast32(1)
-
-var i64: c#IntFast64 = c#IntFast64(1)
-var ui64: c#UIntFast64 = c#UIntFast64(1)

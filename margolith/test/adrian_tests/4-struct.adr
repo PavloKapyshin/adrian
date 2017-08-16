@@ -1,7 +1,0 @@
-sct Person {
-    id: c#UIntFast64
-    age: c#UIntFast8
-}
-
-
-var john: Person = Person(c#UIntFast64(1), c#UIntFast8(30))
