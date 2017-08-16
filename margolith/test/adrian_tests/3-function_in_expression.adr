@@ -1,8 +1,0 @@
-fun square(number: c#IntFast8): c#IntFast8 {
-    ret number * number
-}
-
-var a: c#IntFast8 = c#IntFast8(10) + c#IntFast8(20)
-var b: c#IntFast8 = a + c#IntFast8(1)
-var c: c#IntFast8 = square(b)
-var d: c#IntFast8 = square(square(c)) - square(c#IntFast8(2))

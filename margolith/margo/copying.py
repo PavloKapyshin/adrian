@@ -1,3 +1,5 @@
+from itertools import chain
+
 from . import layers, astlib, errors, inference
 from .context import context, get
 from .patterns import A
@@ -44,6 +46,12 @@ def e(expr, name):
 
 class Copying(layers.Layer):
 
+    def b(self, body):
+        reg = Copying().get_registry()
+        return list(chain.from_iterable(
+            map(lambda stmt: list(layers.transform_node(stmt, registry=reg)),
+                body)))
+
     @layers.register(astlib.Decl)
     def decl(self, decl):
         context.env.add(str(decl.name), {
@@ -56,3 +64,22 @@ class Copying(layers.Layer):
     @layers.register(astlib.Assignment)
     def assignment(self, assment):
         yield get_assment(assment.var, assment.expr)
+
+    @layers.register(astlib.Return)
+    def return_(self, return_):
+        # We don't use e function, for now.
+        yield return_
+
+    @layers.register(astlib.Func)
+    def func(self, func):
+        context.env.add(str(func.name), {
+            "type": func.rettype
+        })
+        for arg in func.args:
+            context.env.add(str(arg.name), {
+                "type": arg.type_
+            })
+
+        yield astlib.Func(
+            func.name, func.args, func.rettype,
+            self.b(func.body))

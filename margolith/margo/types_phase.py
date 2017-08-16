@@ -27,6 +27,14 @@ class TypeInference(layers.Layer):
     @layers.register(astlib.Func)
     def func(self, func):
         # We don't have type inference for func rettype, for now.
+        context.env.add(str(func.name), {
+            "type": func.rettype
+        })
+        for arg in func.args:
+            context.env.add(str(arg.name), {
+                "type": arg.type_
+            })
+
         yield astlib.Func(
             func.name, func.args, func.rettype,
             self.b(func.body))

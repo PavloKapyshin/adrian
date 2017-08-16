@@ -485,6 +485,11 @@ class CIntFast8(CLiteral):
     _type = "IntFast8"
 
 
+class CIntFast16(CLiteral):
+    """CIntFast16."""
+    _type = "IntFast16"
+
+
 class CIntFast32(CLiteral):
     """CIntFast32."""
     _type = "IntFast32"
@@ -498,6 +503,11 @@ class CIntFast64(CLiteral):
 class CUIntFast8(CLiteral):
     """CUIntFast8."""
     _type = "UIntFast8"
+
+
+class CUIntFast16(CLiteral):
+    """CUIntFast16."""
+    _type = "UIntFast16"
 
 
 class CUIntFast32(CLiteral):
@@ -552,8 +562,10 @@ class StructScalar(_TypeModifier):
 CINT_TYPES = (
     CIntFast8,
     CIntFast32,
+    CIntFast16,
     CIntFast64,
     CUIntFast8,
+    CUIntFast16,
     CUIntFast32,
     CUIntFast64
 )

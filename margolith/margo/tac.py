@@ -12,13 +12,19 @@ T_STRING = "t"
 def new_tmp(expr):
     tmp_name = astlib.Name(
         "".join([T_STRING, str(context.tmp_count)]), is_tmp=True)
+    type_ = inference.infer(expr)
+    context.env.add(str(tmp_name), {
+        "type": type_
+    })
     context.tmp_count += 1
-    return tmp_name, [astlib.Decl(tmp_name, inference.infer(expr), expr)]
+    return tmp_name, [astlib.Decl(tmp_name, type_, expr)]
 
 
 def inner_expr(expr):
     if expr in A(astlib.Expr):
-        return new_tmp(e(expr))
+        expr_, decls_ = e(expr)
+        tmp, decls = new_tmp(expr_)
+        return tmp, decls_ + decls
     return new_tmp(expr)
 
 
@@ -41,9 +47,8 @@ class TAC(layers.Layer):
     def b(self, body):
         reg = TAC().get_registry()
         return list(chain.from_iterable(
-            list(map(
-                lambda stmt: list(layers.transform_node(stmt, registry=reg)),
-            body))))
+            map(lambda stmt: list(layers.transform_node(stmt, registry=reg)),
+                body)))
 
     @layers.register(astlib.Decl)
     def decl(self, decl):
@@ -62,7 +67,7 @@ class TAC(layers.Layer):
 
     @layers.register(astlib.Return)
     def return_(self, return_):
-        new_expr, tmp_decls = e(return_.expr)
+        new_expr, tmp_decls = inner_expr(return_.expr)
         yield from tmp_decls
         yield astlib.Return(new_expr)
 
@@ -71,6 +76,11 @@ class TAC(layers.Layer):
         context.env.add(str(func.name), {
             "type": func.rettype
         })
+        for arg in func.args:
+            context.env.add(str(arg.name), {
+                "type": arg.type_
+            })
+
         yield astlib.Func(
             func.name, func.args, func.rettype,
             self.b(func.body))

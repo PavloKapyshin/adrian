@@ -27,8 +27,14 @@ def t(type_):
         "namespacing: type (type {})".format(type_))
 
 
+def decl_args(args):
+    result = []
+    for arg in args:
+        result.append(astlib.Arg(n(arg.name), t(arg.type_)))
+    return result
+
 def call_args(args):
-    return map(e, args)
+    return list(map(e, args))
 
 
 def e(expr):
@@ -59,6 +65,12 @@ def e(expr):
 
 class NameSpacing(layers.Layer):
 
+    def b(self, body):
+        reg = NameSpacing().get_registry()
+        return list(map(
+            lambda stmt: list(layers.transform_node(stmt, registry=reg))[0],
+            body))
+
     @layers.register(astlib.Decl)
     def decl(self, decl):
         yield astlib.Decl(
@@ -74,3 +86,13 @@ class NameSpacing(layers.Layer):
     def cfunc_call(self, call):
         yield astlib.CFuncCall(
             call.name, call_args(call.args))
+
+    @layers.register(astlib.Return)
+    def return_(self, return_):
+        yield astlib.Return(e(return_.expr))
+
+    @layers.register(astlib.Func)
+    def func(self, func):
+        yield astlib.Func(
+            n(func.name), decl_args(func.args),
+            t(func.rettype), self.b(func.body))

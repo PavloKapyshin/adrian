@@ -64,11 +64,11 @@ def e(expr):
 
 
 def decl_args(args):
-    return [Arg(name, t(type_)) for name, type_ in args.as_list()]
+    return [astlib.Arg(name, t(type_)) for name, type_ in args.as_list()]
 
 
 def call_args(args):
-    return list(map(expr, args.as_list()))
+    return list(map(e, args.as_list()))
 
 
 class Analyzer(layers.Layer):
