@@ -52,6 +52,10 @@ def e(expr):
         return astlib.CFuncCall(
             expr.name, call_args(expr.args))
 
+    if expr in A(astlib.FuncCall):
+        return astlib.FuncCall(
+            n(expr.name), call_args(expr.args))
+
     if expr in A(astlib.StructScalar):
         return astlib.StructScalar(t(expr.type_))
 

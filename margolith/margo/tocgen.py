@@ -32,6 +32,12 @@ def cfunc_call(call):
         yield getattr(cdefs, str(call.name).upper() + "_FUNC_DESCR")(
             *call_args(call.args))
 
+
+def func_call(call):
+    yield cgen.FuncCall(
+        str(call.name), *call_args(call.args))
+
+
 def t(type_):
     if type_ in A(astlib.CType):
         return cgen.CTypes.ptr(getattr(cgen.CTypes, TO_CTYPE[str(type_)]))
@@ -62,6 +68,9 @@ def e(expr):
 
     if expr in A(astlib.CFuncCall):
         return list(cfunc_call(expr))[0]
+
+    if expr in A(astlib.FuncCall):
+        return list(func_call(expr))[0]
 
     if expr in A(astlib.StructScalar):
         if expr.type_ in A(astlib.CType):

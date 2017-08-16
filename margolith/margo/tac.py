@@ -25,7 +25,20 @@ def inner_expr(expr):
         expr_, decls_ = e(expr)
         tmp, decls = new_tmp(expr_)
         return tmp, decls_ + decls
+    if expr in A(astlib.FuncCall):
+        new_args, decls_ = call_args(expr.args)
+        tmp, decls = new_tmp(astlib.FuncCall(expr.name, new_args))
+        return tmp, decls_ + decls
     return new_tmp(expr)
+
+
+def call_args(args):
+    new_args, decls = [], []
+    for arg in args:
+        arg_, decls_ = inner_expr(arg)
+        decls.extend(decls_)
+        new_args.append(arg_)
+    return new_args, decls
 
 
 def e(expr):
@@ -34,6 +47,10 @@ def e(expr):
         rexpr_tmp, rexpr_decls = inner_expr(expr.rexpr)
         tmp_decls = lexpr_decls + rexpr_decls
         return astlib.Expr(expr.op, lexpr_tmp, rexpr_tmp), tmp_decls
+
+    if expr in A(astlib.FuncCall):
+        new_args, decls = call_args(expr.args)
+        return astlib.FuncCall(expr.name, new_args), decls
 
     if expr in A(astlib.CTYPES + (astlib.Name, )):
         return expr, []
