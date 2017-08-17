@@ -100,3 +100,9 @@ class NameSpacing(layers.Layer):
         yield astlib.Func(
             n(func.name), decl_args(func.args),
             t(func.rettype), self.b(func.body))
+
+    @layers.register(astlib.Struct)
+    def struct(self, struct):
+        yield astlib.Struct(
+            n(struct.name), struct.parameters, struct.protocols,
+            self.b(struct.body))

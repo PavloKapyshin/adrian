@@ -92,8 +92,20 @@ class NameExistence(layers.Layer):
 
     @layers.register(astlib.Func)
     def func(self, func):
+        if name_exists(func.name):
+            errors.cant_reassign(
+                context.exit_on_error, name=str(func.name))
         context.env.add(str(func.name), object())
         decl_args(func.args)
         t(func.rettype)
         self.b(func.body)
         yield func
+
+    @layers.register(astlib.Struct)
+    def struct(self, struct):
+        if name_exists(struct.name):
+            errors.cant_reassign(
+                context.exit_on_error, name=str(struct.name))
+        context.env.add(str(struct.name), object())
+        self.b(struct.body)
+        yield struct
