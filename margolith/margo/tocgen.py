@@ -139,3 +139,9 @@ class ToCGen(layers.Layer):
         yield cgen.Struct(
             name=str(struct.name),
             body=self.b(struct.body))
+
+    @layers.register(astlib.Field)
+    def field(self, field):
+        yield cgen.Decl(
+            name=str(field.name),
+            type_=t(field.type_))

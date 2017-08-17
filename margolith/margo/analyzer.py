@@ -43,8 +43,13 @@ def t(type_):
         errors.not_implemented(
             context.exit_on_error, "only c module is supported")
 
+    # if type_ in A(astlib.Name):
+    #     if str(type_) == "Void":
+    #         return astlib.CType("Void")
+
     if type_ in A(astlib.Empty):
         return type_
+
     errors.not_implemented(
         context.exit_on_error, "analyzer:t (type_ {})".format(type_))
 
@@ -119,9 +124,9 @@ class Analyzer(layers.Layer):
             errors.not_implemented(
                 context.exit_on_error,
                 "parameterized structs are not supported")
-        errors.not_implemented(
-            context.exit_on_error,
-            "struct declaration is not supported")
+        yield astlib.Struct(
+            astlib.Name(struct.name), [], [],
+            self.b(struct.body))
 
     @layers.register(astlib.Protocol)
     def protocol(self, protocol):
@@ -132,3 +137,8 @@ class Analyzer(layers.Layer):
         errors.not_implemented(
             context.exit_on_error,
             "protocol declaration is not supported")
+
+    @layers.register(astlib.Field)
+    def field(self, field):
+        yield astlib.Field(
+            astlib.Name(field.name), t(field.type_))

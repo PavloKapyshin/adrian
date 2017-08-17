@@ -1,11 +1,15 @@
 from . import layers, astlib, errors
 from . import cdefs, defs
-from .context import context, get
+from .context import context, get, get_in_current_scope
 from .patterns import A
 
 
 def name_exists(name):
     return get(name) is not None
+
+
+def name_exists_in_current_scope(name):
+    return get_in_current_scope(name) is not None
 
 
 def t(type_):
@@ -92,8 +96,33 @@ class NameExistence(layers.Layer):
 
     @layers.register(astlib.Func)
     def func(self, func):
+        context.env.add_scope()
+        if name_exists(func.name):
+            errors.cant_reassign(
+                context.exit_on_error, name=str(func.name))
         context.env.add(str(func.name), object())
         decl_args(func.args)
         t(func.rettype)
         self.b(func.body)
         yield func
+        context.env.del_scope()
+
+    @layers.register(astlib.Struct)
+    def struct(self, struct):
+        context.env.add_scope()
+        if name_exists(struct.name):
+            errors.cant_reassign(
+                context.exit_on_error, name=str(struct.name))
+        context.env.add(str(struct.name), object())
+        self.b(struct.body)
+        yield struct
+        context.env.del_scope()
+
+    @layers.register(astlib.Field)
+    def field(self, field):
+        if name_exists_in_current_scope(field.name):
+            errors.cant_reassign(
+                context.exit_on_error, name=str(field.name))
+        context.env.add(str(field.name), object())
+        t(field.type_)
+        yield field

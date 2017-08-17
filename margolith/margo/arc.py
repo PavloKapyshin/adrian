@@ -71,6 +71,17 @@ class ARC(layers.Layer):
             func.name, func.args, func.rettype, body)
         self.to_free.del_scope()
 
+    @layers.register(astlib.Struct)
+    def struct(self, struct):
+        self.to_free.add_scope()
+        context.env.add(str(struct.name), {
+            "type": struct.name
+        })
+        yield astlib.Struct(
+            struct.name, struct.parameters, struct.protocols,
+            self.b(struct.body))
+        self.to_free.del_scope()
+
     @layers.register(astlib.AST)
     def main(self, ast_, registry):
         yield from layers.transform_ast(ast_, registry=registry)

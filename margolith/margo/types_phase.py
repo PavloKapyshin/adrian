@@ -38,3 +38,13 @@ class TypeInference(layers.Layer):
         yield astlib.Func(
             func.name, func.args, func.rettype,
             self.b(func.body))
+
+    @layers.register(astlib.Struct)
+    def struct(self, struct):
+        context.env.add(str(struct.name), {
+            "type": struct.name
+        })
+
+        yield astlib.Struct(
+            struct.name, struct.parameters, struct.protocols,
+            self.b(struct.body))
