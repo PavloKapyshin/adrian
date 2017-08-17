@@ -106,3 +106,8 @@ class NameSpacing(layers.Layer):
         yield astlib.Struct(
             n(struct.name), struct.parameters, struct.protocols,
             self.b(struct.body))
+
+    @layers.register(astlib.Field)
+    def field(self, field):
+        yield astlib.Field(
+            n(field.name), t(field.type_))

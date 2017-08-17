@@ -137,3 +137,8 @@ class Analyzer(layers.Layer):
         errors.not_implemented(
             context.exit_on_error,
             "protocol declaration is not supported")
+
+    @layers.register(astlib.Field)
+    def field(self, field):
+        yield astlib.Field(
+            astlib.Name(field.name), t(field.type_))
