@@ -71,6 +71,19 @@ class ARC(layers.Layer):
             func.name, func.args, func.rettype, body)
         self.to_free.del_scope()
 
+    @layers.register(astlib.Method)
+    def method(self, method):
+        self.to_free.add_scope()
+        context.env.add(str(method.name), {
+            "type": method.rettype
+        })
+        body = self.b(method.body)
+        if not return_in_func(body):
+            body.extend(self.arc())
+        yield astlib.Method(
+            method.name, method.args, method.rettype, body)
+        self.to_free.del_scope()
+
     @layers.register(astlib.Struct)
     def struct(self, struct):
         self.to_free.add_scope()

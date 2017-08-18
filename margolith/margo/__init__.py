@@ -18,7 +18,7 @@ LAYERS = (
     (types_phase.TypeInference, "transform_ast"),
     (tac.TAC, "transform_ast"),
     (copying.Copying, "transform_ast"),
-    # (arc.ARC, "expand_ast"),
+    (arc.ARC, "expand_ast"),
     # (name_spacing.NameSpacing, "transform_ast"),
     # (tocgen.ToCGen, "transform_ast"),
     # (main_func.MainFunc, "expand_ast")
