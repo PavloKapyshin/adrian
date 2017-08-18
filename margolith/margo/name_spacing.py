@@ -3,12 +3,14 @@ from .patterns import A
 from .context import context
 
 
-def n(name):
+def n(name, struct=None):
     for_processing = name
     is_tmp = False
     if name in A(astlib.Name):
         for_processing = str(name)
         is_tmp = name.is_tmp
+    if not struct is None:
+        for_processing = "_".join([struct, for_processing])
     result = defs.ADR_PREFIX
     if not is_tmp:
         result += "_".join(["", defs.USER_PREFIX])
@@ -72,8 +74,11 @@ def e(expr):
 
 class NameSpacing(layers.Layer):
 
+    def __init__(self, struct=None):
+        self.struct = struct
+
     def b(self, body):
-        reg = NameSpacing().get_registry()
+        reg = NameSpacing(struct=self.struct).get_registry()
         return list(map(
             lambda stmt: list(layers.transform_node(stmt, registry=reg))[0],
             body))
@@ -107,11 +112,12 @@ class NameSpacing(layers.Layer):
     @layers.register(astlib.Method)
     def method(self, method):
         yield astlib.Method(
-            n(method.name), decl_args(method.args),
+            n(method.name, struct=self.struct), decl_args(method.args),
             t(method.rettype), self.b(method.body))
 
     @layers.register(astlib.Struct)
     def struct(self, struct):
+        self.struct = str(struct.name)
         yield astlib.Struct(
             n(struct.name), struct.parameters, struct.protocols,
             self.b(struct.body))
