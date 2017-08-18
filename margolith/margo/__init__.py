@@ -14,8 +14,8 @@ REPL_FILE_HASH = "mangled"
 LAYERS = (
     (parser.Parser, "parse"),
     (analyzer.Analyzer, "transform_ast"),
-    # (name_existence_checking.NameExistence, "transform_ast"),
-    # (types_phase.TypeInference, "transform_ast"),
+    (name_existence_checking.NameExistence, "transform_ast"),
+    (types_phase.TypeInference, "transform_ast"),
     # (tac.TAC, "transform_ast"),
     # (copying.Copying, "transform_ast"),
     # (arc.ARC, "expand_ast"),

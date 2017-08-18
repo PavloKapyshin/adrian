@@ -43,6 +43,12 @@ def e(expr):
     if expr in A(astlib.FuncCall):
         func_call(expr)
 
+    if expr in A(astlib.StructElem):
+        # We hope that elem really exists in this struct :D
+        if not name_exists(expr.name):
+            errors.non_existing_name(
+                context.exit_on_error, name=str(expr.name))
+
 
 def decl_args(args):
     for arg in args:
@@ -70,7 +76,7 @@ class NameExistence(layers.Layer):
 
     @layers.register(astlib.Decl)
     def decl(self, decl):
-        if name_exists(decl.name):
+        if name_exists_in_current_scope(decl.name):
             errors.cant_reassign(
                 context.exit_on_error, name=str(decl.name))
         t(decl.type_)
@@ -96,11 +102,11 @@ class NameExistence(layers.Layer):
 
     @layers.register(astlib.Func)
     def func(self, func):
-        context.env.add_scope()
-        if name_exists(func.name):
+        if name_exists_in_current_scope(func.name):
             errors.cant_reassign(
                 context.exit_on_error, name=str(func.name))
         context.env.add(str(func.name), object())
+        context.env.add_scope()
         decl_args(func.args)
         t(func.rettype)
         self.b(func.body)
@@ -109,14 +115,30 @@ class NameExistence(layers.Layer):
 
     @layers.register(astlib.Struct)
     def struct(self, struct):
-        context.env.add_scope()
         if name_exists(struct.name):
             errors.cant_reassign(
                 context.exit_on_error, name=str(struct.name))
         context.env.add(str(struct.name), object())
+        context.env.add_scope()
         self.b(struct.body)
         yield struct
         context.env.del_scope()
+
+    @layers.register(astlib.Method)
+    def method(self, method):
+        if name_exists_in_current_scope(method.name):
+            errors.cant_reassign(
+                context.exit_on_error, name=str(method.name))
+        context.env.add(str(method.name), object())
+        context.env.add_scope()
+        context.env.add("self", object())
+
+        decl_args(method.args)
+        t(method.rettype)
+        self.b(method.body)
+        yield method
+        context.env.del_scope()
+
 
     @layers.register(astlib.Field)
     def field(self, field):

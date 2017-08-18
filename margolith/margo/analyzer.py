@@ -140,6 +140,5 @@ class Analyzer(layers.Layer):
 
     @layers.register(astlib.Field)
     def field(self, field):
-        print(type(field.name))
         yield astlib.Field(
             field.name, t(field.type_))
