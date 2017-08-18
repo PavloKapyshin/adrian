@@ -29,6 +29,13 @@ def inner_expr(expr):
         new_args, decls_ = call_args(expr.args)
         tmp, decls = new_tmp(astlib.FuncCall(expr.name, new_args))
         return tmp, decls_ + decls
+    if expr in A(astlib.StructElem):
+        if expr.elem in A(astlib.StructElem):
+            tmp, decls_ = new_tmp(astlib.StructElem(expr.name, expr.elem.name))
+            result_tmp, decls = inner_expr(astlib.StructElem(tmp, expr.elem.elem))
+            return result_tmp, decls_ + decls
+        else:
+            return new_tmp(expr)
     return new_tmp(expr)
 
 
@@ -51,6 +58,12 @@ def e(expr):
     if expr in A(astlib.FuncCall):
         new_args, decls = call_args(expr.args)
         return astlib.FuncCall(expr.name, new_args), decls
+
+    if expr in A(astlib.StructElem):
+        if expr.elem in A(astlib.StructElem):
+            return inner_expr(expr)
+        else:
+            return expr, []
 
     if expr in A(astlib.CTYPES + (astlib.Name, )):
         return expr, []
@@ -111,3 +124,18 @@ class TAC(layers.Layer):
         yield astlib.Struct(
             struct.name, struct.parameters, struct.protocols,
             self.b(struct.body))
+
+    @layers.register(astlib.Method)
+    def method(self, method):
+        context.env.add(str(method.name), {
+            "type": method.rettype
+        })
+
+        for arg in method.args:
+            context.env.add(str(arg.name), {
+                "type": arg.type_
+            })
+
+        yield astlib.Method(
+            method.name, method.args, method.rettype,
+            self.b(method.body))
