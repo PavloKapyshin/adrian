@@ -77,6 +77,9 @@ def e(expr):
             return t_without_ptr(expr.type_)
         return cgen.StructType(t_without_ptr(expr.type_))
 
+    if expr in A(astlib.StructElem):
+        return cgen.StructElem(cgen.CTypes.ptr(e(expr.name)), e(expr.elem))
+
     if expr in A(astlib.Expr):
         return cgen.Expr(
             TO_COP[expr.op], e(expr.lexpr), e(expr.rexpr))

@@ -62,6 +62,9 @@ def e(expr):
     if expr in A(astlib.Deref):
         return astlib.Deref(e(expr.expr))
 
+    if expr in A(astlib.StructElem):
+        return astlib.StructElem(e(expr.name), e(expr.elem))
+
     errors.not_implemented(
         context.exit_on_error,
         "namespacing: expr (expr {})".format(expr))
@@ -100,6 +103,12 @@ class NameSpacing(layers.Layer):
         yield astlib.Func(
             n(func.name), decl_args(func.args),
             t(func.rettype), self.b(func.body))
+
+    @layers.register(astlib.Method)
+    def method(self, method):
+        yield astlib.Method(
+            n(method.name), decl_args(method.args),
+            t(method.rettype), self.b(method.body))
 
     @layers.register(astlib.Struct)
     def struct(self, struct):

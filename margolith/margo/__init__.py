@@ -5,7 +5,7 @@ from adrian import cgen as adr_cgen
 from . import parser, foreign_parser, analyzer
 from . import name_existence_checking, types_phase
 from . import tac, copying, arc, name_spacing
-from . import tocgen, main_func
+from . import method_to_func, tocgen, main_func
 from . import env, context, layers
 
 
@@ -19,9 +19,10 @@ LAYERS = (
     (tac.TAC, "transform_ast"),
     (copying.Copying, "transform_ast"),
     (arc.ARC, "expand_ast"),
-    # (name_spacing.NameSpacing, "transform_ast"),
-    # (tocgen.ToCGen, "transform_ast"),
-    # (main_func.MainFunc, "expand_ast")
+    (name_spacing.NameSpacing, "transform_ast"),
+    (method_to_func.MethodToFunc, "transform_ast"),
+    (tocgen.ToCGen, "transform_ast"),
+    (main_func.MainFunc, "expand_ast")
 )
 
 
@@ -35,10 +36,10 @@ def compile_repl(inp, *, contexts):
             else:
                 current_ast = foreign_parser.main(
                     layer.parse(inp))
-    # generator = adr_cgen.Generator()
-    # generator.add_ast(current_ast)
-    # return "\n".join(generator.generate())
-    return current_ast
+    generator = adr_cgen.Generator()
+    generator.add_ast(current_ast)
+    return "\n".join(generator.generate())
+    # return current_ast
 
 
 def compile_from_string(inp, file_hash):
