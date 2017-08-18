@@ -61,7 +61,7 @@ def e(expr):
     if expr in A(astlib.Expr):
         return astlib.Expr(expr.op, e(expr.lexpr), e(expr.rexpr))
 
-    if expr in A(astlib.Name, astlib.Empty):
+    if expr in A(astlib.Name, astlib.Empty, astlib.StructElem):
         return expr
 
     errors.not_implemented(
@@ -110,9 +110,9 @@ class Analyzer(layers.Layer):
 
     @layers.register(astlib.Method)
     def method(self, method):
-        errors.not_implemented(
-            context.exit_on_error,
-            "method declaration is not supported")
+        yield astlib.Method(
+            astlib.Name(method.name), decl_args(method.args),
+            t(method.rettype), self.b(method.body))
 
     @layers.register(astlib.Struct)
     def struct(self, struct):
@@ -140,5 +140,6 @@ class Analyzer(layers.Layer):
 
     @layers.register(astlib.Field)
     def field(self, field):
+        print(type(field.name))
         yield astlib.Field(
-            astlib.Name(field.name), t(field.type_))
+            field.name, t(field.type_))
