@@ -1,3 +1,4 @@
+import sys
 from itertools import chain
 
 from . import layers, astlib, errors, defs, env
@@ -18,8 +19,8 @@ def return_in_func(body):
 
 class ARC(layers.Layer):
 
-    def __init__(self):
-        self.to_free = env.Env()
+    def __init__(self, to_free=None):
+        self.to_free = to_free or env.Env()
 
     def free(self, name, val):
         if val["type"] in A(astlib.CType):
@@ -32,7 +33,7 @@ class ARC(layers.Layer):
             yield self.free(key, val)
 
     def b(self, body):
-        reg = ARC().get_registry()
+        reg = ARC(to_free=self.to_free).get_registry()
         return list(chain.from_iterable(
             map(lambda stmt: list(layers.transform_node(stmt, registry=reg)),
                 body)))

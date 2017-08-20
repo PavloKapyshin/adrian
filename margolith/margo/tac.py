@@ -36,6 +36,8 @@ def inner_expr(expr):
             return result_tmp, decls_ + decls
         else:
             return new_tmp(expr)
+    if expr in A(astlib.Name):
+        return expr, []
     return new_tmp(expr)
 
 
@@ -65,7 +67,7 @@ def e(expr):
         else:
             return expr, []
 
-    if expr in A(astlib.CTYPES + (astlib.Name, )):
+    if expr in A(astlib.CTYPES + (astlib.Name, astlib.CFuncCall)):
         return expr, []
 
     errors.not_implemented(
@@ -88,6 +90,13 @@ class TAC(layers.Layer):
         new_expr, tmp_decls = e(decl.expr)
         yield from tmp_decls
         yield astlib.Decl(decl.name, decl.type_, new_expr)
+
+    @layers.register(astlib.AssignmentAndAlloc)
+    def assment_and_alloc(self, stmt):
+        new_expr, tmp_decls = e(stmt.expr)
+        yield from tmp_decls
+        yield astlib.AssignmentAndAlloc(
+            stmt.name, stmt.type_, new_expr)
 
     @layers.register(astlib.Assignment)
     def assignment(self, assment):

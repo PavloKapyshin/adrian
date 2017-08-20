@@ -24,6 +24,9 @@ def t(type_):
     if type_ in A(astlib.CType):
         return type_
 
+    if type_ in A(astlib.Name):
+        return n(type_)
+
     errors.not_implemented(
         context.exit_on_error,
         "namespacing: type (type {})".format(type_))

@@ -14,10 +14,19 @@ def split_body(body):
     return fields, methods
 
 
+def decl_args(struct_name, name, args):
+    if str(name) == defs.INIT_METHOD_NAME:
+        return args
+    return [astlib.Arg("self", struct_name)] + args
+
+
 class MethodToFunc(layers.Layer):
 
+    def __init__(self, struct_name=None):
+        self.struct_name = struct_name
+
     def b(self, body):
-        reg = MethodToFunc().get_registry()
+        reg = MethodToFunc(struct_name=self.struct_name).get_registry()
         return list(map(
             lambda stmt: list(layers.transform_node(stmt, registry=reg))[0],
             body))
@@ -25,11 +34,13 @@ class MethodToFunc(layers.Layer):
     @layers.register(astlib.Method)
     def method(self, method):
         yield astlib.Func(
-            method.name, method.args, method.rettype,
-            method.body)
+            method.name,
+            decl_args(self.struct_name, method.name, method.args),
+            method.rettype, method.body)
 
     @layers.register(astlib.Struct)
     def struct(self, struct):
+        self.struct_name = struct.name
         fields, methods = split_body(struct.body)
 
         yield astlib.Struct(

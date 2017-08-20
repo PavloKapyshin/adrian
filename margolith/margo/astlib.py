@@ -358,6 +358,10 @@ class Decl(_VarOrLetDecl):
     """
 
 
+class AssignmentAndAlloc(_VarOrLetDecl):
+    pass
+
+
 class Assignment(Node):
     """   op
           v

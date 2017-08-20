@@ -43,9 +43,9 @@ def t(type_):
         errors.not_implemented(
             context.exit_on_error, "only c module is supported")
 
-    # if type_ in A(astlib.Name):
-    #     if str(type_) == "Void":
-    #         return astlib.CType("Void")
+    if type_ in A(astlib.Name):
+        if str(type_) == "Void":
+            return astlib.CType("Void")
 
     if type_ in A(astlib.Empty):
         return type_

@@ -3,7 +3,7 @@ import copy
 from adrian import cgen as adr_cgen
 
 from . import parser, foreign_parser, analyzer
-from . import name_existence_checking, types_phase
+from . import name_existence_checking, types_phase, object_proto
 from . import tac, copying, arc, name_spacing
 from . import method_to_func, tocgen, main_func
 from . import env, context, layers
@@ -16,11 +16,12 @@ LAYERS = (
     (analyzer.Analyzer, "transform_ast"),
     (name_existence_checking.NameExistence, "transform_ast"),
     (types_phase.TypeInference, "transform_ast"),
+    (object_proto.ObjectProto, "transform_ast"),
     (tac.TAC, "transform_ast"),
     (copying.Copying, "transform_ast"),
     (arc.ARC, "expand_ast"),
-    (name_spacing.NameSpacing, "transform_ast"),
     (method_to_func.MethodToFunc, "transform_ast"),
+    (name_spacing.NameSpacing, "transform_ast"),
     (tocgen.ToCGen, "transform_ast"),
     (main_func.MainFunc, "expand_ast")
 )

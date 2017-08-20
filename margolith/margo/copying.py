@@ -53,6 +53,9 @@ def e(expr, name):
     if expr in A(astlib.Expr, astlib.StructElem):
         return heapify(expr, name)
 
+    if expr in A(astlib.CFuncCall):
+        return expr, []
+
     errors.not_implemented(
         context.exit_on_error,
         "copying:e (expr {})".format(expr))
@@ -73,6 +76,12 @@ class Copying(layers.Layer):
         })
         new_expr, assignments = e(decl.expr, decl.name)
         yield astlib.Decl(decl.name, decl.type_, new_expr)
+        yield from assignments
+
+    @layers.register(astlib.AssignmentAndAlloc)
+    def assment_and_alloc(self, stmt):
+        new_expr, assignments = e(stmt.expr, stmt.name)
+        yield astlib.Assignment(stmt.name, "=", new_expr)
         yield from assignments
 
     @layers.register(astlib.Assignment)

@@ -40,7 +40,12 @@ def func_call(call):
 
 def t(type_):
     if type_ in A(astlib.CType):
+        if str(type_) == "Void":
+            return cgen.CTypes.void
         return cgen.CTypes.ptr(getattr(cgen.CTypes, TO_CTYPE[str(type_)]))
+
+    if type_ in A(astlib.Name):
+        return cgen.CTypes.ptr(cgen.StructType(str(type_)))
     errors.not_implemented(
         context.exit_on_error,
         "tocgen: t (type_ {})".format(type_))
@@ -49,6 +54,9 @@ def t(type_):
 def t_without_ptr(type_):
     if type_ in A(astlib.CType):
         return getattr(cgen.CTypes, TO_CTYPE[str(type_)])
+
+    if type_ in A(astlib.Name):
+        return str(type_)
     errors.not_implemented(
         context.exit_on_error,
         "tocgen: t_without_ptr (type_ {})".format(type_))
