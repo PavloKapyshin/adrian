@@ -34,7 +34,7 @@ class MethodToFunc(layers.Layer):
     @layers.register(astlib.Method)
     def method(self, method):
         yield astlib.Func(
-            method.name,
+            "_".join([str(self.struct_name), str(method.name)]),
             decl_args(self.struct_name, method.name, method.args),
             method.rettype, method.body)
 

@@ -98,7 +98,7 @@ def complete_init_method(method, struct):
         SELF, struct.name, malloc(struct.name))
     return_self = astlib.Return(SELF)
     new_method_body = []
-    fields_ = only_field_decls(struct)
+    fields_ = only_field_decls(struct.body)
     fields = {}
     for decl in fields_:
         fields[str(decl.name)] = decl.type_
