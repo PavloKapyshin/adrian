@@ -49,6 +49,12 @@ def e(expr):
             errors.non_existing_name(
                 context.exit_on_error, name=str(expr.name))
 
+    if expr in A(astlib.StructCall):
+        if not name_exists(expr.name):
+            errors.non_existing_name(
+                context.exit_on_error, name=str(expr.name))
+        call_args(expr.args)
+
 
 def decl_args(args):
     for arg in args:
