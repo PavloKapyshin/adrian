@@ -25,6 +25,11 @@ class ARC(layers.Layer):
     def free(self, name, val):
         if val["type"] in A(astlib.CType):
             return astlib.CFuncCall("free", [astlib.Name(name, is_tmp=val["is_tmp"])])
+        if val["type"] in A(astlib.Name):
+            return astlib.MethodCall(
+                base=astlib.Name(name, is_tmp=val["is_tmp"]),
+                method=astlib.Name(defs.DEINIT_METHOD_NAME),
+                args=[])
 
     def arc(self):
         space = self.to_free.space()

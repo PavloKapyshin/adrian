@@ -18,6 +18,16 @@ def compute(expr):
         context.exit_on_error, "can't compute D:")
 
 
+def method_call(call):
+    if call.method in A(astlib.StructElem):
+        errors.not_implemented(
+            context.exit_on_error,
+            ("nested struct elements and method calls are not supported\n" +
+                "How to fix: try to extract some of these statements to variables"))
+    yield astlib.MethodCall(
+        e(call.base), call.method, call_args(call.args))
+
+
 def func_call(call):
     if call.name in A(astlib.ModuleMember):
         if call.name.module != cdefs.CMODULE_NAME:
@@ -57,6 +67,9 @@ def t(type_):
 def e(expr):
     if expr in A(astlib.FuncCall):
         return list(func_call(expr))[0]
+
+    if expr in A(astlib.MethodCall):
+        return list(method_call(expr))[0]
 
     if expr in A(astlib.Expr):
         return astlib.Expr(expr.op, e(expr.lexpr), e(expr.rexpr))
@@ -107,6 +120,10 @@ class Analyzer(layers.Layer):
     @layers.register(astlib.FuncCall)
     def func_call(self, call):
         yield from func_call(call)
+
+    @layers.register(astlib.MethodCall)
+    def method_call(self, call):
+        yield from method_call(call)
 
     @layers.register(astlib.Method)
     def method(self, method):

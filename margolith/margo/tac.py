@@ -5,6 +5,16 @@ from .context import context
 from .patterns import A
 
 
+def split_body(body):
+    fields, methods = [], []
+    for stmt in body:
+        if stmt in A(astlib.Field):
+            fields.append(stmt)
+        if stmt in A(astlib.Method):
+            methods.append(stmt)
+    return fields, methods
+
+
 # Temporary variable prefix.
 T_STRING = "t"
 
@@ -25,10 +35,17 @@ def inner_expr(expr):
         expr_, decls_ = e(expr)
         tmp, decls = new_tmp(expr_)
         return tmp, decls_ + decls
-    if expr in A(astlib.FuncCall):
+
+    if expr in A(astlib.FuncCall, astlib.StructCall):
         new_args, decls_ = call_args(expr.args)
-        tmp, decls = new_tmp(astlib.FuncCall(expr.name, new_args))
+        tmp, decls = new_tmp(type(expr)(expr.name, new_args))
         return tmp, decls_ + decls
+
+    if expr in A(astlib.MethodCall):
+        new_args, decls_ = call_args(expr.args)
+        tmp, decls = new_tmp(astlib.MethodCall(expr.base, expr.method, new_args))
+        return tmp, decls_ + decls
+
     if expr in A(astlib.StructElem):
         if expr.elem in A(astlib.StructElem):
             tmp, decls_ = new_tmp(astlib.StructElem(expr.name, expr.elem.name))
@@ -38,6 +55,7 @@ def inner_expr(expr):
             return new_tmp(expr)
     if expr in A(astlib.Name):
         return expr, []
+
     return new_tmp(expr)
 
 
@@ -57,9 +75,14 @@ def e(expr):
         tmp_decls = lexpr_decls + rexpr_decls
         return astlib.Expr(expr.op, lexpr_tmp, rexpr_tmp), tmp_decls
 
-    if expr in A(astlib.FuncCall):
+    if expr in A(astlib.FuncCall, astlib.StructCall):
         new_args, decls = call_args(expr.args)
-        return astlib.FuncCall(expr.name, new_args), decls
+        return type(expr)(expr.name, new_args), decls
+
+    if expr in A(astlib.MethodCall):
+        new_args, decls = call_args(expr.args)
+        return astlib.MethodCall(
+            expr.base, expr.method, new_args), decls
 
     if expr in A(astlib.StructElem):
         if expr.elem in A(astlib.StructElem):
@@ -112,6 +135,7 @@ class TAC(layers.Layer):
 
     @layers.register(astlib.Func)
     def func(self, func):
+        context.env.add_scope()
         context.env.add(str(func.name), {
             "type": func.rettype
         })
@@ -123,19 +147,41 @@ class TAC(layers.Layer):
         yield astlib.Func(
             func.name, func.args, func.rettype,
             self.b(func.body))
+        context.env.del_scope()
 
     @layers.register(astlib.Struct)
     def struct(self, struct):
+        field_decls, method_decls = split_body(struct.body)
+        fields = {}
+        for field_decl in field_decls:
+            fields[str(field_decl.name)] = field_decl.type_
+
+        methods = {}
+        for method in method_decls:
+            methods[str(method.name)] = {
+                "type": method.rettype
+            }
+
         context.env.add(str(struct.name), {
+            "type": struct.name,
+            "fields": fields,
+            "methods": methods
+        })
+
+        context.env.add_scope()
+
+        context.env.add("self", {
             "type": struct.name
         })
 
         yield astlib.Struct(
             struct.name, struct.parameters, struct.protocols,
             self.b(struct.body))
+        context.env.del_scope()
 
     @layers.register(astlib.Method)
     def method(self, method):
+        context.env.add_scope()
         context.env.add(str(method.name), {
             "type": method.rettype
         })
@@ -148,3 +194,4 @@ class TAC(layers.Layer):
         yield astlib.Method(
             method.name, method.args, method.rettype,
             self.b(method.body))
+        context.env.del_scope()

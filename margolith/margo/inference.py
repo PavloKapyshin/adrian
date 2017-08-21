@@ -41,6 +41,14 @@ def infer(expr):
             errors.non_existing_name(
                 context.exit_on_error, name=str(expr.name))
 
+    if expr in A(astlib.StructCall):
+        return expr.name
+
+    if expr in A(astlib.MethodCall):
+        type_of_base = get(expr.base)["type"]
+        methods = get(type_of_base)["methods"]
+        return methods[str(expr.method)]["type"]
+
     errors.not_implemented(
         context.exit_on_error,
         "can't infer type (expr {})".format(expr))

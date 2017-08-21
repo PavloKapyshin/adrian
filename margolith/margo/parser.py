@@ -325,10 +325,9 @@ def p_type_2(content):
     """type : type LPAREN types RPAREN"""
     content[0] = [parser_astlib.PARAMED_TYPE, content[1], content[3]]
 
-
 def p_name_from_struct_1(content):
     """name_from_struct : NAME PERIOD name_from_struct"""
-    content[0] = [parser_astlib.STRUCT_ELEM, [parser_astlib.NAME, content[1]], content[3]]
+    content[0] =  [parser_astlib.STRUCT_ELEM, [parser_astlib.NAME, content[1]], content[3]]
 
 def p_name_from_struct_2(content):
     """name_from_struct : NAME"""

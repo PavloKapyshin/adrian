@@ -5,12 +5,14 @@ from .context import context, get
 from .patterns import A
 
 
-def only_fields(body):
-    fields = []
+def split_body(body):
+    fields, methods = [], []
     for stmt in body:
         if stmt in A(astlib.Field):
             fields.append(stmt)
-    return fields
+        if stmt in A(astlib.Method):
+            methods.append(stmt)
+    return fields, methods
 
 
 def get_assment(name, val):
@@ -47,13 +49,10 @@ def e(expr, name):
             return heapify(expr, name)
         return expr, []
 
-    if expr in A(astlib.FuncCall):
-        return astlib.FuncCall(expr.name, expr.args), []
-
     if expr in A(astlib.Expr, astlib.StructElem):
         return heapify(expr, name)
 
-    if expr in A(astlib.CFuncCall):
+    if expr in A(astlib.CFuncCall, astlib.FuncCall, astlib.StructCall, astlib.MethodCall):
         return expr, []
 
     errors.not_implemented(
@@ -127,14 +126,21 @@ class Copying(layers.Layer):
 
     @layers.register(astlib.Struct)
     def struct(self, struct):
-        field_decls = only_fields(struct.body)
+        field_decls, method_decls = split_body(struct.body)
         fields = {}
         for field_decl in field_decls:
             fields[str(field_decl.name)] = field_decl.type_
 
+        methods = {}
+        for method in method_decls:
+            methods[str(method.name)] = {
+                "type": method.rettype
+            }
+
         context.env.add(str(struct.name), {
             "type": struct.name,
-            "fields": fields
+            "fields": fields,
+            "methods": methods
         })
 
         context.env.add_scope()

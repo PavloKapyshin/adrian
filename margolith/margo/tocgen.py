@@ -125,6 +125,10 @@ class ToCGen(layers.Layer):
     def cfunc_call(self, call):
         yield from cfunc_call(call)
 
+    @layers.register(astlib.FuncCall)
+    def func_call(self, call):
+        yield from func_call(call)
+
     @layers.register(astlib.Assignment)
     def assignment(self, assignment):
         yield cgen.Assignment(

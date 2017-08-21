@@ -102,6 +102,11 @@ class NameSpacing(layers.Layer):
         yield astlib.CFuncCall(
             call.name, call_args(call.args))
 
+    @layers.register(astlib.FuncCall)
+    def func_call(self, call):
+        yield astlib.FuncCall(
+            n(call.name), call_args(call.args))
+
     @layers.register(astlib.Return)
     def return_(self, return_):
         yield astlib.Return(e(return_.expr))
