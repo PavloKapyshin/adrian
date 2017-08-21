@@ -103,6 +103,11 @@ class Analyzer(layers.Layer):
         yield astlib.Decl(
             astlib.Name(decl.name), t(decl.type_), e(decl.expr))
 
+    @layers.register(astlib.LetDecl)
+    def let_decl(self, let_decl):
+        yield astlib.LetDecl(
+            astlib.Name(let_decl.name), t(let_decl.type_), e(let_decl.expr))
+
     @layers.register(astlib.Assignment)
     def assignment(self, assment):
         yield astlib.Assignment(

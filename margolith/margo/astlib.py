@@ -358,6 +358,16 @@ class Decl(_VarOrLetDecl):
     """
 
 
+class LetDecl(_VarOrLetDecl):
+    """         type_
+               vvvvvvv
+    let myVar: Integer = 1 + 20
+        ^^^^^            ^^^^^^
+        name              expr
+
+    """
+
+
 class AssignmentAndAlloc(_VarOrLetDecl):
     pass
 

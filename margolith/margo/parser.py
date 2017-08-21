@@ -124,6 +124,7 @@ def p_stmt(content):
          | struct_decl
          | protocol_decl
          | assignment
+         | let_decl
     """
     content[0] = content[1]
 
@@ -166,6 +167,7 @@ def p_func_body_2(content):
 def p_func_body_stmt(content):
     """
     func_body_stmt : decl
+                   | let_decl
                    | assignment
                    | return_stmt
                    | call
@@ -284,6 +286,15 @@ def p_decl_2(content):
 def p_decl_3(content):
     """decl : VAR NAME EQ bool_expr"""
     content[0] = [parser_astlib.DECL, content[2], [parser_astlib.EMPTY], content[4]]
+
+def p_let_decl_1(content):
+    """let_decl : LET NAME COLON type EQ bool_expr"""
+    content[0] = [parser_astlib.LET_DECL, content[2], content[4], content[6]]
+
+
+def p_let_decl_2(content):
+    """let_decl : LET NAME EQ bool_expr"""
+    content[0] = [parser_astlib.LET_DECL, content[2], [parser_astlib.EMPTY], content[4]]
 
 
 def p_assignment(content):

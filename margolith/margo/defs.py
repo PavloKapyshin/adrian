@@ -3,6 +3,7 @@ import re
 
 RESERVED_WORDS = {
     "var": "VAR",
+    "let": "LET",
     "protocol": "PROTOCOL",
     "is": "IS",
     "fun": "FUN",
@@ -20,7 +21,6 @@ METHOD_NAME_REGEX = re.compile(r"[_][_][a-z][a-zA-Z0-9]*[_][_]")
 INIT_METHOD_NAME = "__init__"
 COPY_METHOD_NAME = "__copy__"
 DEINIT_METHOD_NAME = "__deinit__"
-DEEPCOPY_METHOD_NAME = "__deepCopy__"
 
 ADR_PREFIX = "adr"
 USER_PREFIX = "u"

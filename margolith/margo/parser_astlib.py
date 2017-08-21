@@ -1,4 +1,5 @@
 DECL = "Decl"
+LET_DECL = "LetDecl"
 RETURN = "Return"
 FUNC_DECL = "Func"
 METHOD_DECL = "Method"
