@@ -3,8 +3,7 @@ Translates some FuncCalls to StructCall objects.
 Translates linked lists to python's lists.
 """
 
-from . import layers, astlib, errors
-from . import cdefs, defs
+from . import layers, astlib, errors, defs
 from .context import context
 from .patterns import A
 
@@ -30,7 +29,7 @@ def method_call(call):
 
 def func_call(call):
     if call.name in A(astlib.ModuleMember):
-        if call.name.module != cdefs.CMODULE_NAME:
+        if call.name.module != defs.CMODULE_NAME:
             errors.not_implemented(
                 context.exit_on_error, "only c module is supported")
         args = call.args.as_list()
@@ -48,7 +47,7 @@ def func_call(call):
 
 def t(type_):
     if type_ in A(astlib.ModuleMember):
-        if type_.module == cdefs.CMODULE_NAME:
+        if type_.module == defs.CMODULE_NAME:
             return astlib.CType(str(type_.member))
         errors.not_implemented(
             context.exit_on_error, "only c module is supported")

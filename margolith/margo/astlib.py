@@ -1,7 +1,5 @@
 import copy, collections
 
-from . import cdefs
-
 
 AST = object()
 class BaseNode:

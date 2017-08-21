@@ -1,5 +1,4 @@
-from . import layers, astlib, errors
-from . import cdefs, defs
+from . import layers, astlib, errors, defs
 from .context import context
 from .patterns import A
 

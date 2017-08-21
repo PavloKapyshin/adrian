@@ -1,7 +1,6 @@
 import enum
 
-from . import layers, astlib, errors
-from . import cdefs, defs
+from . import layers, astlib, errors, defs
 from .context import context, get, get_in_current_scope
 from .patterns import A
 

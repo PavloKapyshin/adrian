@@ -1,15 +1,15 @@
 import re
 
+from adrian.cgen import libc
+
 
 RESERVED_WORDS = {
-    "var": "VAR",
-    "let": "LET",
-    "protocol": "PROTOCOL",
-    "is": "IS",
-    "fun": "FUN",
-    "return": "RETURN",
-    "struct": "STRUCT",
-    "ref": "REF"
+    keyword: keyword.upper()
+    for keyword in (
+        "var", "let", "fun", "ref",
+        "protocol", "return", "is",
+        "struct"
+    )
 }
 
 VAR_NAME_REGEX = re.compile(r"[a-z_][a-zA-Z0-9]*")
@@ -24,3 +24,20 @@ DEINIT_METHOD_NAME = "__deinit__"
 
 ADR_PREFIX = "adr"
 USER_PREFIX = "u"
+
+
+
+# c module definitions.
+
+CMODULE_NAME = "c"
+FREE_FUNC_NAME = "free"
+MALLOC_FUNC_NAME = "malloc"
+SIZEOF_FUNC_NAME = "sizeof"
+
+CFUNCS = (
+    FREE_FUNC_NAME,
+    MALLOC_FUNC_NAME
+)
+
+MALLOC_FUNC_DESCR = libc.malloc
+FREE_FUNC_DESCR = libc.free

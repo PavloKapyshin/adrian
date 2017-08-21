@@ -1,6 +1,6 @@
 import sys
 
-from . import cdefs, layers, astlib, errors, defs
+from . import defs, layers, astlib, errors
 from .context import context
 from .patterns import A
 from adrian import cgen
@@ -26,10 +26,10 @@ TO_COP = {
 
 
 def cfunc_call(call):
-    if call.name == cdefs.SIZEOF_FUNC_NAME:
+    if call.name == defs.SIZEOF_FUNC_NAME:
         yield cgen.SizeOf(*call_args(call.args))
-    elif call.name in cdefs.CFUNCS:
-        yield getattr(cdefs, str(call.name).upper() + "_FUNC_DESCR")(
+    elif call.name in defs.CFUNCS:
+        yield getattr(defs, str(call.name).upper() + "_FUNC_DESCR")(
             *call_args(call.args))
 
 
