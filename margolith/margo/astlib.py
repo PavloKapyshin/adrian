@@ -1,4 +1,4 @@
-import copy, collections
+import collections
 
 
 AST = object()
@@ -10,16 +10,14 @@ class Node(BaseNode):
     _keys = ()  # Override in subclass.
 
     def __str__(self):
+        fields = ", ".join(
+            "{}={!r}".format(
+                key, getattr(self, key))
+            for key in self._keys)
         return "{}({})".format(
-            self.__class__.__name__,
-            ", ".join(
-                "{}={!r}".format(key, getattr(self, key))
-                for key in self._keys))
+            self.__class__.__name__, fields)
 
     __repr__ = __str__
-
-    def copy(self):
-        return copy.deepcopy(self)
 
 
 class _Name(collections.UserString):
@@ -35,14 +33,22 @@ class _Name(collections.UserString):
     def __init__(self, data):
         super().__init__(data)
 
-    def copy(self):
-        return copy.deepcopy(self)
+    def __eq__(self, other):
+        if isinstance(other, str):
+            return self.data == other
+        elif isinstance(other, _Name):
+            return self.data == other.data
+        raise TypeError(
+            "comparison cannot be applied to {} and {}.".format(
+                type(self), type(other)))
+
 
 class Name(_Name):
 
     def __init__(self, data, is_tmp=False):
         super().__init__(data)
         self.is_tmp = is_tmp
+
 
 class CType(_Name):
     pass
@@ -56,20 +62,21 @@ class ModuleMember(Node):
         self._keys = ("module", "member")
 
 
+class StructMember(Node):
+
+    def __init__(self, struct, member):
+        self.struct = struct
+        self.member = member
+        self._keys = ("struct", "member")
+
+
+# TODO: replace with StructMember.
 class StructElem(Node):
 
     def __init__(self, name, elem):
         self.name = name
         self.elem = elem
         self._keys = ("name", "elem")
-
-
-class ParamedType(Node):
-
-    def __init__(self, base, params):
-        self.base = base
-        self.params = params
-        self._keys = ("base", "params")
 
 
 class _Callable(Node):
@@ -87,7 +94,6 @@ class StructCall(_Callable):
     ^^^^^^^^
       name
     """
-    pass
 
 
 class FuncCall(_Callable):
@@ -117,6 +123,7 @@ class StructFuncCall(Node):
         self._keys = ("struct", "method_name", "args")
 
 
+# TODO: replace with StructFuncCall in second half of the compiler.
 class MethodCall(Node):
 
     def __init__(self, base, method, args):

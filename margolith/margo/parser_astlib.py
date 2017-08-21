@@ -9,7 +9,6 @@ FIELD_DECL = "Field"
 ASSIGNMENT = "Assignment"
 
 NAME = "Name"
-PARAMED_TYPE = "ParamedType"
 SEXPR = "Expr"
 
 NAMES = "Names"
