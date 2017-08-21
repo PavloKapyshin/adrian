@@ -68,6 +68,10 @@ class MethodToFunc(layers.Layer):
         context.env.add(str(new_name), {
             "type": method.rettype
         })
+        for arg in method.args:
+            context.env.add(str(arg.name), {
+                "type": arg.type_
+            })
         yield astlib.Func(
             new_name,
             self.decl_args(method.name, method.args),
@@ -87,6 +91,10 @@ class MethodToFunc(layers.Layer):
         context.env.add(str(func.name), {
             "type": func.rettype
         })
+        for arg in func.args:
+            context.env.add(str(arg.name), {
+                "type": arg.type_
+            })
         yield astlib.Func(
             func.name, func.args, func.rettype, self.b(func.body))
         context.env.del_scope()
@@ -94,15 +102,30 @@ class MethodToFunc(layers.Layer):
     @layers.register(astlib.Struct)
     def struct(self, struct):
         self.struct_name = struct.name
+        field_decls, method_decls = split_body(struct.body)
         context.env.add_scope()
+
+        fields = {}
+        for field_decl in field_decls:
+            fields[str(field_decl.name)] = field_decl.type_
+
+        methods = {}
+        for method_decl in method_decls:
+            methods[str(method_decl.name)] = {
+                "type": method_decl.rettype
+            }
         context.env.add(str(struct.name), {
+            "type": struct.name,
+            "fields": fields,
+            "methods": methods
+        })
+        context.env.add("self", {
             "type": struct.name
         })
-        fields, methods = split_body(struct.body)
 
         yield astlib.Struct(
             struct.name, struct.parameters, struct.protocols,
-            fields)
+            field_decls)
 
-        yield from self.b(methods)
+        yield from self.b(method_decls)
         context.env.del_scope()

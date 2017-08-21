@@ -85,7 +85,13 @@ class Copying(layers.Layer):
 
     @layers.register(astlib.Assignment)
     def assignment(self, assment):
-        yield get_assment(assment.var, assment.expr)
+        expr_type = inference.infer(assment.expr)
+        if expr_type in A(astlib.Name):
+            yield from self.assment_and_alloc(
+                astlib.AssignmentAndAlloc(
+                    assment.var, expr_type, assment.expr))
+        else:
+            yield get_assment(assment.var, assment.expr)
 
     @layers.register(astlib.Return)
     def return_(self, return_):

@@ -56,6 +56,7 @@ def t(type_):
     if type_ in A(astlib.Name):
         if str(type_) == "Void":
             return astlib.CType("Void")
+        return type_
 
     if type_ in A(astlib.Empty):
         return type_

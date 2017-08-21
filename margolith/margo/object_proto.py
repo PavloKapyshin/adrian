@@ -68,7 +68,7 @@ def default_copy_method(struct):
         if field_decl.type_ in A(astlib.Name):
             field_init_expr = astlib.MethodCall(
                 field_of_self(field_decl.name),
-                astlib.Name(defs.COPY_METHOD_NAME),
+                defs.COPY_METHOD_NAME,
                 [])
         else:
             field_init_expr = field_of_self(field_decl.name)
@@ -128,7 +128,7 @@ def default_init_method(struct):
         if field_decl.type_ in A(astlib.Name):
             field_init_expr = astlib.MethodCall(
                 field_decl.name,
-                astlib.Name(defs.COPY_METHOD_NAME),
+                defs.COPY_METHOD_NAME,
                 [])
         else:
             field_init_expr = field_decl.name
