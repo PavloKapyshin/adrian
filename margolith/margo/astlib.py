@@ -143,9 +143,6 @@ class Arg(Node):
 
 class Empty(BaseNode):
 
-    def __init__(self):
-        pass
-
     def __str__(self):
         return "EMPTY"
 
@@ -158,181 +155,51 @@ class Empty(BaseNode):
     __repr__ = __str__
 
 
-class Types(Node):
+class LinkedList:
 
-    def __init__(self, type_, rest=None):
-        self.type_ = type_
+    def __init__(self, value, rest=None):
+        self.value = value
         self.rest = rest or Empty()
-        self._keys = ("type_", "rest")
 
     def as_list(self):
         def _gen():
-            current_type = self
-            yield current_type.type_
-            while not isinstance(current_type.rest, Empty):
-                current_type = current_type.rest
-                yield current_type.type_
+            current = self
+            yield current.value
+            while not isinstance(current.rest, Empty):
+                current = current.rest
+                yield current.value
+
         return list(_gen())
 
-    def append(self, type_):
-        current_type = self
-        while not isinstance(current_type.rest, Empty):
-            current_type = current_type.rest
-        current_type.rest = Types(type_, Empty())
 
-    def extend(self, types):
-        current_type = self
-        while not isinstance(current_type.rest, Empty):
-            current_type = current_type.rest
-        current_type.rest = types
+class LinkedListNode(LinkedList, Node):
 
-    def extend_from_list(self, types):
-        current_type = self
-        while not isinstance(current_type.rest, Empty):
-            current_type = current_type.rest
-        for type_ in types:
-            current_type.rest = Types(type_, Empty())
-            current_type = current_type.rest
+    def __init__(self, value, rest=None):
+        super().__init__(value, rest)
+        self._keys = ("value", "rest")
 
 
-class Names(Node):
-
-    def __init__(self, name, rest=None):
-        self.name = name
-        self.rest = rest or Empty()
-        self._keys = ("name", "rest")
-
-    def as_list(self):
-        def _gen():
-            current_name = self
-            yield current_name.name
-            while not isinstance(current_name.rest, Empty):
-                current_name = current_name.rest
-                yield current_name.name
-        return list(_gen())
-
-    def append(self, name):
-        current_name = self
-        while not isinstance(current_name.rest, Empty):
-            current_name = current_name.rest
-        current_name.rest = Names(name, Empty())
-
-    def extend(self, names):
-        current_name = self
-        while not isinstance(current_name.rest, Empty):
-            current_name = current_name.rest
-        current_name.rest = names
-
-    def extend_from_list(self, names):
-        current_name = self
-        while not isinstance(current_name.rest, Empty):
-            current_name = current_name.rest
-        for name in names:
-            current_name.rest = Names(name, Empty())
-            current_name = current_name.rest
+class Types(LinkedListNode):
+    pass
 
 
-class Body(Node):
+class Names(LinkedListNode):
+    pass
 
-    def __init__(self, stmt, rest=None):
-        self.stmt = stmt
-        self.rest = rest or Empty()
-        self._keys = ("stmt", "rest")
 
-    def as_list(self):
-        def _gen():
-            current_stmt = self
-            yield current_stmt.stmt
-            while not isinstance(current_stmt.rest, Empty):
-                current_stmt = current_stmt.rest
-                yield current_stmt.stmt
-        return list(_gen())
+class Body(LinkedListNode):
+    pass
 
-    def append(self, stmt):
-        current_stmt = self
-        while not isinstance(current_stmt.rest, Empty):
-            current_stmt = current_stmt.rest
-        current_stmt.rest = Body(stmt, Empty())
 
-    def extend(self, body):
-        current_stmt = self
-        while not isinstance(current_stmt.rest, Empty):
-            current_stmt = current_stmt.rest
-        current_stmt.rest = body
-
-    def extend_from_list(self, body):
-        current_stmt = self
-        while not isinstance(current_stmt.rest, Empty):
-            current_stmt = current_stmt.rest
-        for stmt in body:
-            current_stmt.rest = Body(stmt, Empty())
-            current_stmt = current_stmt.rest
-
-class Args(Node):
+class Args(LinkedListNode):
 
     def __init__(self, name, type_, rest=None):
-        self.name = name
-        self.type_ = type_
-        self.rest = rest or Empty()
-        self._keys = ("name", "type_", "rest")
-
-    def as_list(self):
-        def _gen():
-            current_arg = self
-            yield (current_arg.name, current_arg.type_)
-            while not isinstance(current_arg.rest, Empty):
-                current_arg = current_arg.rest
-                yield (current_arg.name, current_arg.type_)
-        return list(_gen())
-
-    def append(self, name, type_):
-        current_arg = self
-        while not isinstance(current_arg.rest, Empty):
-            current_arg = current_arg.rest
-        current_arg.rest = Args(name, type_, Empty())
-
-    def extend(self, args):
-        current_stmt = self
-        while not isinstance(current_stmt.rest, Empty):
-            current_stmt = current_stmt.rest
-        current_stmt.rest = args
+        super().__init__((name, type_), rest)
+        self._keys = ("value", "rest")
 
 
-class CallArgs(Node):
-
-    def __init__(self, arg, rest=None):
-        self.arg = arg
-        self.rest = rest or Empty()
-        self._keys = ("arg", "rest")
-
-    def as_list(self):
-        def _gen():
-            current_arg = self
-            yield current_arg.arg
-            while not isinstance(current_arg.rest, Empty):
-                current_arg = current_arg.rest
-                yield current_arg.arg
-        return list(_gen())
-
-    def append(self, arg):
-        current_arg = self
-        while not isinstance(current_arg.rest, Empty):
-            current_arg = current_arg.rest
-        current_arg.rest = CallArgs(arg, Empty())
-
-    def extend(self, args):
-        current_stmt = self
-        while not isinstance(current_stmt.rest, Empty):
-            current_stmt = current_stmt.rest
-        current_stmt.rest = args
-
-    def __len__(self):
-        length = 1
-        current_arg = self
-        while not isinstance(current_arg.rest, Empty):
-            current_arg = current_arg.rest
-            length += 1
-        return length
+class CallArgs(LinkedListNode):
+    pass
 
 
 class Expr(Node):
