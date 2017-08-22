@@ -3,6 +3,8 @@ Translates some FuncCalls to StructCall and StructFuncCall objects.
 Translates linked lists to python's lists.
 """
 
+import sys
+
 from . import layers, astlib, errors, defs, inference
 from .context import (
     context, add_to_env, add_scope, del_scope,
@@ -112,6 +114,8 @@ class Analyzer(layers.Layer):
     @layers.register(astlib.VarDecl)
     def var_decl(self, declaration):
         expr = e(declaration.expr)
+        if declaration.type_ in A(astlib.Empty):
+            declaration.type_ = inference.infer(expr)
         # Add to env after translation of the expression because
         # self-linking is an error.
         add_to_env(declaration)
@@ -121,6 +125,8 @@ class Analyzer(layers.Layer):
     @layers.register(astlib.LetDecl)
     def let_decl(self, declaration):
         expr = e(declaration.expr)
+        if declaration.type_ in A(astlib.Empty):
+            declaration.type_ = inference.infer(expr)
         # Add to env after translation of the expression because
         # self-linking is an error.
         add_to_env(declaration)

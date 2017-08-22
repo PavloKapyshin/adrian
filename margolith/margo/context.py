@@ -114,7 +114,7 @@ def get(name):
     result = raw_get(name)
     if result:
         return result
-    errors.non_existing_name(context.exit_on_error, name=result)
+    errors.non_existing_name(context.exit_on_error, name=name)
 
 
 def get_in_current_scope(name):

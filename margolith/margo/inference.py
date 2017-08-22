@@ -23,9 +23,9 @@ def infer(expr):
         return method["type"]
 
     if expr in A(astlib.StructMember):
-        type_of_struct = infer(struct_member.struct)
+        type_of_struct = infer(expr.struct)
         fields = get(type_of_struct)["fields"]
-        field = fields[str(struct_member.member)]
+        field = fields[str(expr.member)]
         return field["type"]
 
     errors.not_implemented(
