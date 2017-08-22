@@ -1,6 +1,7 @@
 """
 Translates some FuncCalls to StructCall and StructFuncCall objects.
 Translates linked lists to python's lists.
+Infer types.
 """
 
 import sys
