@@ -6,8 +6,8 @@ from adrian.cgen import libc
 RESERVED_WORDS = {
     keyword: keyword.upper()
     for keyword in (
-        "var", "let", "fun", "ref",
-        "protocol", "return", "is",
+        "var", "let", "fun", "return",
+        #"protocol", "ref", "is",
         "struct"
     )
 }

@@ -70,15 +70,6 @@ class StructMember(Node):
         self._keys = ("struct", "member")
 
 
-# TODO: replace with StructMember.
-class StructElem(Node):
-
-    def __init__(self, name, elem):
-        self.name = name
-        self.elem = elem
-        self._keys = ("name", "elem")
-
-
 class _Callable(Node):
 
     def __init__(self, name, args):
@@ -121,16 +112,6 @@ class StructFuncCall(Node):
         self.method_name = method_name
         self.args = args
         self._keys = ("struct", "method_name", "args")
-
-
-# TODO: replace with StructFuncCall in second half of the compiler.
-class MethodCall(Node):
-
-    def __init__(self, base, method, args):
-        self.base = base
-        self.method = method
-        self.args = args
-        self._keys = ("base", "method", "args")
 
 
 class Arg(Node):
@@ -179,14 +160,6 @@ class LinkedListNode(LinkedList, Node):
         self._keys = ("value", "rest")
 
 
-class Types(LinkedListNode):
-    pass
-
-
-class Names(LinkedListNode):
-    pass
-
-
 class Body(LinkedListNode):
     pass
 
@@ -202,23 +175,13 @@ class Args(LinkedListNode):
         self._keys = ("value", "rest")
 
 
-class NewExpr(Node):
+class Expr(Node):
 
     def __init__(self, op, left_expr, right_expr):
         self.op = op
         self.left_expr = left_expr
         self.right_expr = right_expr
         self._keys = ("op", "left_expr", "right_expr")
-
-
-# TODO: replace with NewExpr.
-class Expr(Node):
-
-    def __init__(self, op, lexpr, rexpr):
-        self.op = op
-        self.lexpr = lexpr
-        self.rexpr = rexpr
-        self._keys = ("op", "lexpr", "rexpr")
 
 
 class _VarOrLetDecl(Node):
@@ -230,7 +193,7 @@ class _VarOrLetDecl(Node):
         self._keys = ("name", "type_", "expr")
 
 
-class Decl(_VarOrLetDecl):
+class VarDecl(_VarOrLetDecl):
     """         type_
                vvvvvvv
     var myVar: Integer = 1 + 20
@@ -253,7 +216,7 @@ class AssignmentAndAlloc(_VarOrLetDecl):
     pass
 
 
-class NewAssignment(Node):
+class Assignment(Node):
     """        op
                v
     myVariable = 1 + 20
@@ -268,16 +231,6 @@ class NewAssignment(Node):
         self._keys = ("variable", "op", "expr")
 
 
-# TODO: replace with NewAssignment.
-class Assignment(Node):
-
-    def __init__(self, var, op, expr):
-        self.var = var
-        self.op = op
-        self.expr = expr
-        self._keys = ("var", "op", "expr")
-
-
 class _FuncOrMethodDecl(Node):
 
     def __init__(self, name, args, rettype, body):
@@ -288,7 +241,7 @@ class _FuncOrMethodDecl(Node):
         self._keys = ("name", "args", "rettype", "body")
 
 
-class Func(_FuncOrMethodDecl):
+class FuncDecl(_FuncOrMethodDecl):
     """  name                                    rettype
         vvvvvv                                  vvvvvvvvvv
     fun myFunc(arg1: Type1; arg2, arg3: Type2): ReturnType {...}
@@ -297,7 +250,7 @@ class Func(_FuncOrMethodDecl):
     """
 
 
-class Method(_FuncOrMethodDecl):
+class MethodDecl(_FuncOrMethodDecl):
     """   name                                     rettype
         vvvvvvvv                                  vvvvvvvvvv
     fun myMethod(arg1: Type1; arg2, arg3: Type2): ReturnType {...}
@@ -306,7 +259,7 @@ class Method(_FuncOrMethodDecl):
     """
 
 
-class Protocol(Node):
+class ProtocolDecl(Node):
     """         name     parameters
              vvvvvvvvvv vvvvvvvvvvvvv
     protocol MyProtocol(SomeType, ...) {
@@ -321,24 +274,22 @@ class Protocol(Node):
         self._keys = ("name", "parameters", "body")
 
 
-class Struct(Node):
-    """     name    parameters             protocols
-           vvvvvv vvvvvvvvvvvvvv      vvvvvvvvvvvvvvvvvvvv
-    struct MyType(valueType, ...) is (Legthable, Printable) {
+class StructDecl(Node):
+    """     name
+           vvvvvv
+    struct MyType {
         length: Integer         < body
         data: valueType         < body
     }
     """
 
-    def __init__(self, name, parameters, protocols, body):
+    def __init__(self, name, body):
         self.name = name
-        self.parameters = parameters
-        self.protocols = protocols
         self.body = body
-        self._keys = ("name", "parameters", "protocols", "body")
+        self._keys = ("name", "body")
 
 
-class Field(Node):
+class FieldDecl(Node):
     """struct MyType {
            length: Integer     < Field
            data: String        < Field

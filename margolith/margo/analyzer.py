@@ -1,166 +1,180 @@
 """
-Translates some FuncCalls to StructCall objects.
+Translates some FuncCalls to StructCall and StructFuncCall objects.
 Translates linked lists to python's lists.
 """
 
-from . import layers, astlib, errors, defs
-from .context import context
+from . import layers, astlib, errors, defs, inference
+from .context import (
+    context, add_to_env, add_scope, del_scope,
+    get_node_type, NodeType)
 from .patterns import A
 
 
-def compute(expr):
-    if expr in A(astlib.IntLiteral):
-        return expr.literal
-    if expr in A(astlib.Expr):
-        return str(eval(" ".join([compute(expr.lexpr), expr.op, compute(expr.rexpr)])))
+def unsupported_module():
     errors.not_implemented(
-        context.exit_on_error, "can't compute D:")
+        context.exit_on_error, "only c module is supported")
 
 
-def method_call(call):
-    if call.method in A(astlib.StructElem):
-        errors.not_implemented(
-            context.exit_on_error,
-            ("nested struct elements and method calls are not supported\n" +
-                "How to fix: try to extract some of these statements to variables"))
-    yield astlib.MethodCall(
-        e(call.base), call.method, call_args(call.args))
+def is_type(name):
+    return get_node_type(name) == NodeType.struct
 
 
-def func_call(call):
-    if call.name in A(astlib.ModuleMember):
-        if call.name.module != defs.CMODULE_NAME:
-            errors.not_implemented(
-                context.exit_on_error, "only c module is supported")
-        args = call.args.as_list()
-        # you can't use c functions, only types, for now :D
-        # computing at compile-time :D
-        arg = str(compute(args[0]))
+def e_func_call(func_call):
+    if func_call.name in A(astlib.ModuleMember):
+        if func_call.name.module != defs.CMODULE_NAME:
+            unsupported_module()
+        args = func_call.args.as_list()
         yield getattr(
-            astlib, "C" + str(call.name.member))(arg)
+            astlib, "C" + call.name.member)(*args)
+    elif is_type(func_call.name):
+        yield astlib.StructCall(
+            func_call.name, call_args(func_call.args))
     else:
-        node_cls = astlib.FuncCall
-        if defs.TYPE_NAME_REGEX.fullmatch(str(call.name)):
-            node_cls = astlib.StructCall
-        yield node_cls(call.name, call_args(call.args))
+        yield astlib.FuncCall(
+            func_call.name, call_args(func_call.args))
 
 
-def t(type_):
-    if type_ in A(astlib.ModuleMember):
-        if type_.module == defs.CMODULE_NAME:
-            return astlib.CType(str(type_.member))
-        errors.not_implemented(
-            context.exit_on_error, "only c module is supported")
+def e_struct_member(struct_member):
+    if struct_member in A(astlib.FuncCall):
+        return list(e_func_call(struct_member))[0]
 
-    if type_ in A(astlib.Name):
-        if str(type_) == "Void":
-            return astlib.CType("Void")
-        return type_
+    if struct_member in A(astlib.Name):
+        return struct_member
 
-    if type_ in A(astlib.Empty):
-        return type_
+    if struct_member in A(astlib.StructMember):
+        if struct_member.member in A(astlib.FuncCall):
+            func_call = struct_member.member
+            analyzed_member = e_struct_member(struct_member.struct)
+            return astlib.StructFuncCall(
+                struct=inference.infer(
+                    analyzed_member),
+                method_name=func_call.name,
+                args=[analyzed_member] + call_args(func_call.args))
 
-    errors.not_implemented(
-        context.exit_on_error, "analyzer:t (type_ {})".format(type_))
-
-
-def e(expr):
-    if expr in A(astlib.FuncCall):
-        return list(func_call(expr))[0]
-
-    if expr in A(astlib.MethodCall):
-        return list(method_call(expr))[0]
-
-    if expr in A(astlib.Expr):
-        return astlib.Expr(expr.op, e(expr.lexpr), e(expr.rexpr))
-
-    if expr in A(astlib.Name, astlib.Empty, astlib.StructElem):
-        return expr
+        if struct_member.member in A(astlib.Name):
+            return astlib.StructMember(
+                struct=e_struct_member(struct_member.struct),
+                member=struct_member.member)
 
     errors.not_implemented(
-        context.exit_on_error, "analyzer:e (expr {})".format(expr))
-
-
-def decl_args(args):
-    return [astlib.Arg(name, t(type_)) for name, type_ in args.as_list()]
+        context.exit_on_error,
+        "something went wrong in analyzer.e_struct_member")
 
 
 def call_args(args):
     return list(map(e, args.as_list()))
 
 
+def decl_args(args):
+    return [
+        astlib.Arg(name, t(type_))
+        for name, type_ in args.as_list()]
+
+
+def t(type_):
+    if type_ in A(astlib.ModuleMember):
+        if type_.module == defs.CMODULE_NAME:
+            return astlib.CType(str(type_.member))
+        unsupported_module()
+
+    if type_ in A(astlib.Name):
+        if type_ == "Void":
+            return astlib.CType("Void")
+
+    return type_
+
+
+def e(expr):
+    if expr in A(astlib.FuncCall):
+        return list(e_func_call(expr))[0]
+
+    if expr in A(astlib.StructMember):
+        return e_struct_member(expr)
+
+    if expr in A(astlib.Expr):
+        return astlib.Expr(
+            expr.op,
+            e(expr.left_expr),
+            e(expr.right_expr))
+
+    return expr
+
+
 class Analyzer(layers.Layer):
 
-    def b(self, body):
+    def body(self, body):
         reg = Analyzer().get_registry()
         return list(map(
-            lambda stmt: list(layers.transform_node(stmt, registry=reg))[0],
+            lambda stmt: list(
+                layers.transform_node(stmt, registry=reg))[0],
             body.as_list()))
 
-    @layers.register(astlib.Decl)
-    def decl(self, decl):
-        yield astlib.Decl(
-            astlib.Name(decl.name), t(decl.type_), e(decl.expr))
+    @layers.register(astlib.VarDecl)
+    def var_decl(self, declaration):
+        expr = e(declaration.expr)
+        # Add to env after translation of the expression because
+        # self-linking is an error.
+        add_to_env(declaration)
+        yield astlib.VarDecl(
+            declaration.name, t(declaration.type_), expr)
 
     @layers.register(astlib.LetDecl)
-    def let_decl(self, let_decl):
+    def let_decl(self, declaration):
+        expr = e(declaration.expr)
+        # Add to env after translation of the expression because
+        # self-linking is an error.
+        add_to_env(declaration)
         yield astlib.LetDecl(
-            astlib.Name(let_decl.name), t(let_decl.type_), e(let_decl.expr))
+            declaration.name, t(declaration.type_), expr)
 
     @layers.register(astlib.Assignment)
-    def assignment(self, assment):
+    def assignment(self, assignment):
         yield astlib.Assignment(
-            e(assment.var), assment.op, e(assment.expr))
-
-    @layers.register(astlib.Func)
-    def func(self, func):
-        yield astlib.Func(
-            astlib.Name(func.name), decl_args(func.args),
-            t(func.rettype), self.b(func.body))
+            e(assignment.variable), assignment.op,
+            e(assignment.expr))
 
     @layers.register(astlib.Return)
     def return_(self, return_):
         yield astlib.Return(e(return_.expr))
 
+    @layers.register(astlib.FuncDecl)
+    def func_decl(self, declaration):
+        add_to_env(declaration)
+        # Add to env before translation of the body because
+        # self-linking is NOT an error.
+        add_scope()
+        body = self.body(declaration.body)
+        yield astlib.FuncDecl(
+            declaration.name, decl_args(declaration.args),
+            t(declaration.rettype), body)
+        del_scope()
+
+    @layers.register(astlib.MethodDecl)
+    def method_decl(self, declaration):
+        add_scope()
+        body = self.body(declaration.body)
+        yield astlib.MethodDecl(
+            declaration.name, decl_args(declaration.args),
+            t(declaration.rettype), body)
+        del_scope()
+
+    @layers.register(astlib.FieldDecl)
+    def field_decl(self, declaration):
+        yield astlib.FieldDecl(
+            declaration.name, t(declaration.type_))
+
+    @layers.register(astlib.StructMember)
+    def struct_member(self, struct_member):
+        yield e_struct_member(struct_member)
+
     @layers.register(astlib.FuncCall)
-    def func_call(self, call):
-        yield from func_call(call)
+    def func_call(self, func_call):
+        yield from e_func_call(func_call)
 
-    @layers.register(astlib.MethodCall)
-    def method_call(self, call):
-        yield from method_call(call)
-
-    @layers.register(astlib.Method)
-    def method(self, method):
-        yield astlib.Method(
-            astlib.Name(method.name), decl_args(method.args),
-            t(method.rettype), self.b(method.body))
-
-    @layers.register(astlib.Struct)
-    def struct(self, struct):
-        if struct.protocols:
-            errors.not_implemented(
-                context.exit_on_error,
-                "protocols are not supported")
-        if struct.parameters:
-            errors.not_implemented(
-                context.exit_on_error,
-                "parameterized structs are not supported")
-        yield astlib.Struct(
-            astlib.Name(struct.name), [], [],
-            self.b(struct.body))
-
-    @layers.register(astlib.Protocol)
-    def protocol(self, protocol):
-        if protocol.parameters:
-            errors.not_implemented(
-                context.exit_on_error,
-                "parameterized protocols are not supported")
-        errors.not_implemented(
-            context.exit_on_error,
-            "protocol declaration is not supported")
-
-    @layers.register(astlib.Field)
-    def field(self, field):
-        yield astlib.Field(
-            field.name, t(field.type_))
+    @layers.register(astlib.StructDecl)
+    def struct_decl(self, declaration):
+        add_to_env(declaration)
+        add_scope()
+        body = self.body(declaration.body)
+        yield astlib.StructDecl(declaration.name, body)
+        del_scope()
