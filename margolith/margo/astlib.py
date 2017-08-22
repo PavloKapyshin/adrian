@@ -241,6 +241,18 @@ class _FuncOrMethodDecl(Node):
         self._keys = ("name", "args", "rettype", "body")
 
 
+class StructFuncDecl(Node):
+
+    def __init__(self, struct, func, args, rettype, body):
+        self.struct = struct
+        self.func = func
+        self.args = args
+        self.rettype = rettype
+        self.body = body
+        self._keys = (
+            "struct", "func", "args", "rettype", "body")
+
+
 class FuncDecl(_FuncOrMethodDecl):
     """  name                                    rettype
         vvvvvv                                  vvvvvvvvvv

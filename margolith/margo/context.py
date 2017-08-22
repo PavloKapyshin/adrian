@@ -75,6 +75,21 @@ def add_to_env(statement):
                 "node_type": NodeType.var
             })
 
+    if statement in A(astlib.StructFuncDecl):
+        entity = get(statement.struct)
+        methods = entity["methods"]
+        methods[str(statement.func)] = {
+            "node_type": NodeType.fun,
+            "type": statement.rettype
+        }
+        entity["methods"] = methods
+        for arg in statement.args:
+            context.env.add(str(arg.name), {
+                "type": arg.type_,
+                "node_type": NodeType.var
+            })
+        context.env.add(str(statement.struct), entity)
+
     if statement in A(astlib.StructDecl):
         context.env.add("self", {
             "type": statement.name,
