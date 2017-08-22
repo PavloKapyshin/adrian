@@ -1,8 +1,7 @@
-import sys
-from itertools import chain
+import itertools
 
 from . import layers, astlib, errors, defs, env
-from .context import context
+from .context import context, add_to_env, add_scope, del_scope
 from .patterns import A
 
 
@@ -24,12 +23,16 @@ class ARC(layers.Layer):
 
     def free(self, name, val):
         if val["type"] in A(astlib.CType):
-            return astlib.CFuncCall("free", [astlib.Name(name, is_tmp=val["is_tmp"])])
+            return astlib.CFuncCall(
+                "free", [astlib.Name(
+                    name, is_tmp=val["is_tmp"])])
         if val["type"] in A(astlib.Name):
-            return astlib.MethodCall(
-                base=astlib.Name(name, is_tmp=val["is_tmp"]),
-                method=astlib.Name(defs.DEINIT_METHOD_NAME),
-                args=[])
+            return astlib.StructFuncCall(
+                val["type"],
+                defs.DEINIT_METHOD_NAME,
+                args=[astlib.Name(name, is_tmp=val["is_tmp"])])
+        errors.not_implemented(
+            context.exit_on_error, "can't free")
 
     def arc(self):
         space = self.to_free.space()
@@ -37,68 +40,82 @@ class ARC(layers.Layer):
         for key, val in sorted(space[scope].copy().items()):
             yield self.free(key, val)
 
-    def b(self, body):
+    def body(self, body):
         reg = ARC(to_free=self.to_free).get_registry()
-        return list(chain.from_iterable(
-            map(lambda stmt: list(layers.transform_node(stmt, registry=reg)),
+        return list(itertools.chain.from_iterable(
+            map(lambda stmt: list(
+                    layers.transform_node(stmt, registry=reg)),
                 body)))
 
-    @layers.register(astlib.Decl)
-    def decl(self, decl):
-        self.to_free.add(str(decl.name), {
-            "type": decl.type_,
-            "is_tmp": decl.name.is_tmp
+    @layers.register(astlib.VarDecl)
+    def var_decl(self, declaration):
+        add_to_env(declaration)
+        self.to_free.add(str(declaration.name), {
+            "type": declaration.type_,
+            "is_tmp": declaration.name.is_tmp
         })
-        yield decl
+        yield declaration
+
+    @layers.register(astlib.LetDecl)
+    def let_decl(self, declaration):
+        add_to_env(declaration)
+        self.to_free.add(str(declaration.name), {
+            "type": declaration.type_,
+            "is_tmp": declaration.name.is_tmp
+        })
+        yield declaration
 
     @layers.register(astlib.Assignment)
-    def assignment(self, assment):
-        if is_ctype(assment.expr):
+    def assignment(self, stmt):
+        if is_ctype(stmt.expr):
             # dont free
-            yield assment
+            yield stmt
 
     @layers.register(astlib.Return)
-    def return_(self, return_):
-        if return_.expr in A(astlib.Name):
-            self.to_free.del_(str(return_.expr))
+    def return_(self, stmt):
+        if stmt.expr in A(astlib.Name):
+            # TODO: when multiply returns in one function
+            # we need to free this variable in another return.
+            self.to_free.del_(str(stmt.expr))
         yield from self.arc()
-        yield return_
+        yield stmt
 
-    @layers.register(astlib.Func)
-    def func(self, func):
+    @layers.register(astlib.FuncDecl)
+    def func(self, declaration):
         self.to_free.add_scope()
-        context.env.add(str(func.name), {
-            "type": func.rettype
-        })
-        body = self.b(func.body)
+        add_to_env(declaration)
+        add_scope()
+        body = self.body(declaration.body)
         if not return_in_func(body):
             body.extend(self.arc())
-        yield astlib.Func(
-            func.name, func.args, func.rettype, body)
+        yield astlib.FuncDecl(
+            declaration.name, declaration.args,
+            declaration.rettype, body)
+        del_scope()
         self.to_free.del_scope()
 
-    @layers.register(astlib.Method)
-    def method(self, method):
+    @layers.register(astlib.StructFuncDecl)
+    def struct_func(self, declaration):
         self.to_free.add_scope()
-        context.env.add(str(method.name), {
-            "type": method.rettype
-        })
-        body = self.b(method.body)
+        add_to_env(declaration)
+        add_scope()
+        body = self.body(declaration.body)
         if not return_in_func(body):
             body.extend(self.arc())
-        yield astlib.Method(
-            method.name, method.args, method.rettype, body)
+        yield astlib.StructFuncDecl(
+            declaration.struct, declaration.func,
+            declaration.args, declaration.rettype, body)
+        del_scope()
         self.to_free.del_scope()
 
-    @layers.register(astlib.Struct)
-    def struct(self, struct):
+    @layers.register(astlib.StructDecl)
+    def struct(self, declaration):
         self.to_free.add_scope()
-        context.env.add(str(struct.name), {
-            "type": struct.name
-        })
-        yield astlib.Struct(
-            struct.name, struct.parameters, struct.protocols,
-            self.b(struct.body))
+        add_to_env(declaration)
+        add_scope()
+        yield astlib.StructDecl(
+            declaration.name, self.body(declaration.body))
+        del_scope()
         self.to_free.del_scope()
 
     @layers.register(astlib.AST)

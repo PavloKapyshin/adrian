@@ -1,3 +1,5 @@
+import sys
+
 from . import defs, layers, astlib, errors
 from .context import context
 from .patterns import A
@@ -64,8 +66,7 @@ def e(expr):
     if expr in A(astlib.CINT_TYPES):
         return cgen.Val(
             literal=expr.literal,
-            type_=getattr(
-                cgen.CTypes, TO_CTYPE[str(expr.to_type())]))
+            type_=getattr(cgen.CTypes, TO_CTYPE[str(expr.to_type())]))
 
     if expr in A(astlib.Deref):
         return cgen.DeRef(e(expr.expr))
@@ -84,9 +85,8 @@ def e(expr):
             return t_without_ptr(expr.type_)
         return cgen.StructType(t_without_ptr(expr.type_))
 
-    if expr in A(astlib.StructMember):
-        return cgen.StructElem(
-            cgen.CTypes.ptr(e(expr.struct)), e(expr.member))
+    if expr in A(astlib.StructElem):
+        return cgen.StructElem(cgen.CTypes.ptr(e(expr.name)), e(expr.elem))
 
     if expr in A(astlib.Expr):
         return cgen.Expr(
@@ -100,8 +100,7 @@ def e(expr):
 def decl_args(args):
     result = []
     for arg in args:
-        result.append(
-            cgen.Decl(str(arg.name), type_=t(arg.type_)))
+        result.append(cgen.Decl(str(arg.name), type_=t(arg.type_)))
     return result
 
 
@@ -114,21 +113,13 @@ class ToCGen(layers.Layer):
     def b(self, body):
         reg = ToCGen().get_registry()
         return list(map(
-            lambda stmt: list(
-                layers.transform_node(stmt, registry=reg))[0],
+            lambda stmt: list(layers.transform_node(stmt, registry=reg))[0],
             body))
 
-    @layers.register(astlib.VarDecl)
+    @layers.register(astlib.Decl)
     def decl(self, decl):
         yield cgen.Decl(
-            name=str(decl.name), type_=t(decl.type_),
-            expr=e(decl.expr))
-
-    @layers.register(astlib.LetDecl)
-    def let_decl(self, decl):
-        yield cgen.Decl(
-            name=str(decl.name), type_=t(decl.type_),
-            expr=e(decl.expr))
+            name=str(decl.name), type_=t(decl.type_), expr=e(decl.expr))
 
     @layers.register(astlib.CFuncCall)
     def cfunc_call(self, call):
@@ -141,26 +132,30 @@ class ToCGen(layers.Layer):
     @layers.register(astlib.Assignment)
     def assignment(self, assignment):
         yield cgen.Assignment(
-            name=e(assignment.variable),
+            name=e(assignment.var),
             expr=e(assignment.expr))
 
     @layers.register(astlib.Return)
     def return_(self, return_):
         yield cgen.Return(e(return_.expr))
 
-    @layers.register(astlib.FuncDecl)
+    @layers.register(astlib.Func)
     def func(self, func):
         yield cgen.Func(
             str(func.name), t(func.rettype),
             decl_args(func.args), self.b(func.body))
 
-    @layers.register(astlib.StructDecl)
+    @layers.register(astlib.Protocol)
+    def protocol(self, protocol):
+        yield from []
+
+    @layers.register(astlib.Struct)
     def struct(self, struct):
         yield cgen.Struct(
             name=str(struct.name),
             body=self.b(struct.body))
 
-    @layers.register(astlib.FieldDecl)
+    @layers.register(astlib.Field)
     def field(self, field):
         yield cgen.Decl(
             name=str(field.name),

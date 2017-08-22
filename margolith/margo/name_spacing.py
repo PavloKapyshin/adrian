@@ -3,17 +3,33 @@ from .patterns import A
 from .context import context
 
 
-def n(name, struct=None):
-    for_processing = name
+def n(name):
+    # adr_u_LOL
     is_tmp = False
+    for_processing = name
     if name in A(astlib.Name):
         for_processing = str(name)
         is_tmp = name.is_tmp
-    if not struct is None:
-        for_processing = "_".join([struct, for_processing])
+
     result = defs.ADR_PREFIX
     if not is_tmp:
         result += "_".join(["", defs.USER_PREFIX])
+
+    if context.file_hash != "":
+        result += "_".join(["", context.file_hash])
+    result += "_".join(["", for_processing])
+    return astlib.Name(result)
+
+
+def struct_func_name(struct, name):
+    for_processing = name
+    struct_str = struct
+    if name in A(astlib.Name):
+        for_processing = str(name)
+    if struct in A(astlib.Name):
+        struct_str = str(struct)
+    for_processing = "_".join([struct_str, for_processing])
+    result = "_".join([defs.ADR_PREFIX, defs.USER_PREFIX])
     if context.file_hash != "":
         result += "_".join(["", context.file_hash])
     result += "_".join(["", for_processing])
@@ -38,6 +54,7 @@ def decl_args(args):
         result.append(astlib.Arg(n(arg.name), t(arg.type_)))
     return result
 
+
 def call_args(args):
     return list(map(e, args))
 
@@ -61,14 +78,24 @@ def e(expr):
         return astlib.FuncCall(
             n(expr.name), call_args(expr.args))
 
+    if expr in A(astlib.StructFuncCall):
+        return astlib.FuncCall(
+            struct_func_name(expr.struct, expr.func_name),
+            call_args(expr.args))
+
+    if expr in A(astlib.StructCall):
+        return astlib.FuncCall(
+            struct_func_name(expr.name, defs.INIT_METHOD_NAME),
+            call_args(expr.args))
+
     if expr in A(astlib.StructScalar):
         return astlib.StructScalar(t(expr.type_))
 
     if expr in A(astlib.Deref):
         return astlib.Deref(e(expr.expr))
 
-    if expr in A(astlib.StructElem):
-        return astlib.StructElem(e(expr.name), e(expr.elem))
+    if expr in A(astlib.StructMember):
+        return astlib.StructMember(e(expr.struct), e(expr.member))
 
     errors.not_implemented(
         context.exit_on_error,
@@ -77,30 +104,43 @@ def e(expr):
 
 class NameSpacing(layers.Layer):
 
-    def __init__(self, struct=None):
-        self.struct = struct
-
-    def b(self, body):
-        reg = NameSpacing(struct=self.struct).get_registry()
+    def body(self, body):
+        reg = NameSpacing().get_registry()
         return list(map(
-            lambda stmt: list(layers.transform_node(stmt, registry=reg))[0],
+            lambda stmt: list(
+                layers.transform_node(stmt, registry=reg))[0],
             body))
 
-    @layers.register(astlib.Decl)
-    def decl(self, decl):
-        yield astlib.Decl(
-            n(decl.name), t(decl.type_), e(decl.expr))
+    @layers.register(astlib.VarDecl)
+    def var_decl(self, declaration):
+        yield astlib.VarDecl(
+            n(declaration.name),
+            t(declaration.type_),
+            e(declaration.expr))
+
+    @layers.register(astlib.LetDecl)
+    def let_decl(self, declaration):
+        yield astlib.LetDecl(
+            n(declaration.name),
+            t(declaration.type_),
+            e(declaration.expr))
 
     @layers.register(astlib.Assignment)
-    def assignment(self, assment):
+    def assignment(self, stmt):
         yield astlib.Assignment(
-            e(assment.var), assment.op,
-            e(assment.expr))
+            e(stmt.variable), stmt.op,
+            e(stmt.expr))
 
     @layers.register(astlib.CFuncCall)
     def cfunc_call(self, call):
         yield astlib.CFuncCall(
             call.name, call_args(call.args))
+
+    @layers.register(astlib.StructFuncCall)
+    def struct_func_call(self, call):
+        yield astlib.FuncCall(
+            struct_func_name(call.struct, call.func_name),
+            call_args(call.args))
 
     @layers.register(astlib.FuncCall)
     def func_call(self, call):
@@ -111,26 +151,25 @@ class NameSpacing(layers.Layer):
     def return_(self, return_):
         yield astlib.Return(e(return_.expr))
 
-    @layers.register(astlib.Func)
+    @layers.register(astlib.FuncDecl)
     def func(self, func):
-        yield astlib.Func(
+        yield astlib.FuncDecl(
             n(func.name), decl_args(func.args),
-            t(func.rettype), self.b(func.body))
+            t(func.rettype), self.body(func.body))
 
-    @layers.register(astlib.Method)
-    def method(self, method):
-        yield astlib.Method(
-            n(method.name, struct=self.struct), decl_args(method.args),
-            t(method.rettype), self.b(method.body))
+    @layers.register(astlib.StructFuncDecl)
+    def struct_func(self, stmt):
+        yield astlib.FuncDecl(
+            struct_func_name(stmt.struct, stmt.func),
+            decl_args(stmt.args),
+            t(stmt.rettype), self.body(stmt.body))
 
-    @layers.register(astlib.Struct)
+    @layers.register(astlib.StructDecl)
     def struct(self, struct):
-        self.struct = str(struct.name)
-        yield astlib.Struct(
-            n(struct.name), struct.parameters, struct.protocols,
-            self.b(struct.body))
+        yield astlib.StructDecl(
+            n(struct.name), self.body(struct.body))
 
-    @layers.register(astlib.Field)
+    @layers.register(astlib.FieldDecl)
     def field(self, field):
-        yield astlib.Field(
+        yield astlib.FieldDecl(
             n(field.name), t(field.type_))
