@@ -37,25 +37,18 @@ def e_func_call(func_call):
 
 
 def e_struct_member(struct_member):
-    if struct_member in A(astlib.FuncCall):
-        return list(e_func_call(struct_member))[0]
-
-    if struct_member in A(astlib.Name):
-        return struct_member
-
     if struct_member in A(astlib.StructMember):
         if struct_member.member in A(astlib.FuncCall):
             func_call = struct_member.member
-            analyzed_member = e_struct_member(struct_member.struct)
+            analyzed_member = e(struct_member.struct)
             return astlib.StructFuncCall(
-                struct=inference.infer(
-                    analyzed_member),
-                method_name=func_call.name,
+                struct=inference.infer(analyzed_member),
+                func_name=func_call.name,
                 args=[analyzed_member] + call_args(func_call.args))
 
         if struct_member.member in A(astlib.Name):
             return astlib.StructMember(
-                struct=e_struct_member(struct_member.struct),
+                struct=e(struct_member.struct),
                 member=struct_member.member)
 
     errors.not_implemented(

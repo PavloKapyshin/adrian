@@ -19,7 +19,7 @@ def infer(expr):
 
     if expr in A(astlib.StructFuncCall):
         methods = get(expr.struct)["methods"]
-        method = methods[str(expr.method_name)]
+        method = methods[str(expr.func_name)]
         return method["type"]
 
     if expr in A(astlib.StructMember):

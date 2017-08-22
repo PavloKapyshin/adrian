@@ -107,11 +107,11 @@ class CFuncCall(_Callable):
 
 class StructFuncCall(Node):
 
-    def __init__(self, struct, method_name, args):
+    def __init__(self, struct, func_name, args):
         self.struct = struct
-        self.method_name = method_name
+        self.func_name = func_name
         self.args = args
-        self._keys = ("struct", "method_name", "args")
+        self._keys = ("struct", "func_name", "args")
 
 
 class Arg(Node):
