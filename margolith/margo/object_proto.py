@@ -98,7 +98,7 @@ def complete_init_method(method, struct):
         fields[str(decl.name)] = decl.type_
     for stmt in method.body:
         if stmt in A(astlib.Assignment):
-            type_ = fields[str(stmt.variable.elem)]
+            type_ = fields[str(stmt.variable.member)]
             new_method_body.append(
                 astlib.AssignmentAndAlloc(
                     stmt.variable, type_, stmt.expr))
@@ -168,13 +168,14 @@ class ObjectProto(layers.Layer):
         new_methods = []
         for method in methods:
             if str(method.name) in dict_for_haves:
-                dict_for_haves[str(method.name)][0] = True
+                was = dict_for_haves[str(method.name)]
+                dict_for_haves[str(method.name)] = (True, was[1], was[2])
                 complete_func = dict_for_haves[str(method.name)][2]
-                new_methods.append(complete_func(method))
+                new_methods.append(complete_func(method, declaration))
             else:
                 new_methods.append(self.method(method, declaration))
         additional_methods = []
-        for method_name, (exists, default_func, _) in dict_for_haves.items():
+        for method_name, (exists, default_func, _) in sorted(dict_for_haves.items()):
             if not exists:
                 additional_methods.append(
                     default_func(declaration))

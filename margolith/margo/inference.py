@@ -7,8 +7,11 @@ def infer(expr):
     if expr in A(astlib.CTYPES):
         return expr.to_type()
 
-    if expr in A(astlib.Name, astlib.FuncCall):
+    if expr in A(astlib.Name):
         return get(expr)["type"]
+
+    if expr in A(astlib.FuncCall):
+        return get(expr.name)["type"]
 
     if expr in A(astlib.Expr):
         # +, *, -, / returns value of the same type.

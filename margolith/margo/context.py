@@ -66,14 +66,19 @@ def add_to_env(statement):
             "type": statement.rettype,
             "node_type": NodeType.fun
         })
-        args = statement.args
-        if args in A(astlib.Args):
-            args = args.as_list()
-        for arg in args:
-            context.env.add(str(arg.name), {
-                "type": arg.type_,
-                "node_type": NodeType.var
-            })
+        if statement.args in A(astlib.Args, astlib.Empty):
+            args = statement.args.as_list()
+            for name, type_ in args:
+                context.env.add(str(name), {
+                    "type": type_,
+                    "node_type": NodeType.var
+                })
+        else:
+            for arg in statement.args:
+                context.env.add(str(arg.name), {
+                    "type": arg.type_,
+                    "node_type": NodeType.var
+                })
 
     if statement in A(astlib.StructFuncDecl):
         entity = get(statement.struct)
@@ -83,11 +88,19 @@ def add_to_env(statement):
             "type": statement.rettype
         }
         entity["methods"] = methods
-        for arg in statement.args:
-            context.env.add(str(arg.name), {
-                "type": arg.type_,
-                "node_type": NodeType.var
-            })
+        if statement.args in A(astlib.Args, astlib.Empty):
+            args = statement.args.as_list()
+            for name, type_ in args:
+                context.env.add(str(name), {
+                    "type": type_,
+                    "node_type": NodeType.var
+                })
+        else:
+            for arg in statement.args:
+                context.env.add(str(arg.name), {
+                    "type": arg.type_,
+                    "node_type": NodeType.var
+                })
         context.env.add(str(statement.struct), entity)
 
     if statement in A(astlib.StructDecl):

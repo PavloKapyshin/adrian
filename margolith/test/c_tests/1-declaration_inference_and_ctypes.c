@@ -5,8 +5,6 @@ int_fast8_t* adr_u_m1 = malloc(sizeof(int_fast8_t));
 *adr_u_m1 = 10;
 int_fast8_t* adr_u_mTypeInference = malloc(sizeof(int_fast8_t));
 *adr_u_mTypeInference = 10;
-int_fast16_t* adr_u_mValuePropagating = malloc(sizeof(int_fast16_t));
-*adr_u_mValuePropagating = 193;
 int_fast8_t* adr_u_m3 = malloc(sizeof(int_fast8_t));
 *adr_u_m3 = 0;
 uint_fast8_t* adr_u_m4 = malloc(sizeof(uint_fast8_t));
@@ -36,6 +34,5 @@ free(adr_u_m8);
 free(adr_u_m9);
 free(adr_u_mName);
 free(adr_u_mTypeInference);
-free(adr_u_mValuePropagating);
 return 0;
 }

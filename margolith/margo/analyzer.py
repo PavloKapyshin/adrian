@@ -26,9 +26,9 @@ def e_func_call(func_call):
     if func_call.name in A(astlib.ModuleMember):
         if func_call.name.module != defs.CMODULE_NAME:
             unsupported_module()
-        args = func_call.args.as_list()
+        args = func_call.args
         yield getattr(
-            astlib, "C" + call.name.member)(*args)
+            astlib, "C" + str(func_call.name.member))(args.value.literal)
     elif is_type(func_call.name):
         yield astlib.StructCall(
             func_call.name, call_args(func_call.args))

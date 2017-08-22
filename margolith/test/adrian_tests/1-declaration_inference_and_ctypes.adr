@@ -4,8 +4,6 @@ var m1: c#IntFast8 = c#IntFast8(10)
 -- Testing type inference.
 var mTypeInference = c#IntFast8(10)
 
-var mValuePropagating = c#IntFast16(200 + 3 - 5 * 2)
-
 
 -- Testing c int types
 var m3: c#IntFast8 = c#IntFast8(0)

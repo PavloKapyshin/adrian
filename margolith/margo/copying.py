@@ -1,9 +1,15 @@
 import itertools
 
-from . import layers, astlib, errors, inference
+from . import layers, astlib, errors, defs, inference
 from .context import (
     context, get, add_to_env, add_scope, del_scope)
 from .patterns import A
+
+
+def is_ctype(type_):
+    if type_ in A(astlib.CType):
+        return True
+    return False
 
 
 def get_assignment(name, val):
@@ -23,11 +29,14 @@ def get_val(value):
 
 def heapify(expr, name):
     type_ = inference.infer(expr)
-    allocation = astlib.CFuncCall(
-        "malloc", [astlib.CFuncCall(
-            "sizeof", [astlib.StructScalar(type_)])])
-    assignment = get_assignment(name, get_val(expr))
-    return allocation, [assignment]
+    if is_ctype(type_):
+        allocation = astlib.CFuncCall(
+            "malloc", [astlib.CFuncCall(
+                "sizeof", [astlib.StructScalar(type_)])])
+        assignment = get_assignment(name, get_val(expr))
+        return allocation, [assignment]
+    return astlib.StructFuncCall(
+        type_, defs.COPY_METHOD_NAME, args=[expr]), []
 
 
 def e(expr, name):

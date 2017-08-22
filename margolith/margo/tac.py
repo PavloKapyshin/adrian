@@ -40,7 +40,8 @@ def inner_expr(expr):
 
     if expr in A(astlib.StructMember):
         tmp, decls = inner_expr(expr.struct)
-        return astlib.StructMember(tmp, expr.member), decls
+        main_tmp, main_decls = new_tmp(astlib.StructMember(tmp, expr.member))
+        return main_tmp, decls + main_decls
 
     if expr in A(astlib.Name):
         return expr, []
@@ -122,7 +123,6 @@ class TAC(layers.Layer):
 
     @layers.register(astlib.Return)
     def return_(self, return_):
-        # TODO: maybe e insted of inner_expr will be better?
         new_expr, tmp_decls = inner_expr(return_.expr)
         yield from tmp_decls
         yield astlib.Return(new_expr)
@@ -131,7 +131,7 @@ class TAC(layers.Layer):
     def func_decl(self, declaration):
         add_to_env(declaration)
         add_scope()
-        yield astlib.Func(
+        yield astlib.FuncDecl(
             declaration.name, declaration.args,
             declaration.rettype, self.body(declaration.body))
         del_scope()

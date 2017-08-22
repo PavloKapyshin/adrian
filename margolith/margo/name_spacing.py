@@ -65,7 +65,7 @@ def e(expr):
 
     if expr in A(astlib.Expr):
         return astlib.Expr(
-            expr.op, e(expr.lexpr), e(expr.rexpr))
+            expr.op, e(expr.left_expr), e(expr.right_expr))
 
     if expr in A(astlib.CINT_TYPES):
         return expr

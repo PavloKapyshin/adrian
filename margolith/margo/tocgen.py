@@ -90,7 +90,7 @@ def e(expr):
 
     if expr in A(astlib.Expr):
         return cgen.Expr(
-            TO_COP[expr.op], e(expr.lexpr), e(expr.rexpr))
+            TO_COP[expr.op], e(expr.left_expr), e(expr.right_expr))
 
     errors.not_implemented(
         context.exit_on_error,
