@@ -191,6 +191,10 @@ class Body(LinkedListNode):
     pass
 
 
+class CallArgs(LinkedListNode):
+    pass
+
+
 class Args(LinkedListNode):
 
     def __init__(self, name, type_, rest=None):
@@ -198,10 +202,16 @@ class Args(LinkedListNode):
         self._keys = ("value", "rest")
 
 
-class CallArgs(LinkedListNode):
-    pass
+class NewExpr(Node):
+
+    def __init__(self, op, left_expr, right_expr):
+        self.op = op
+        self.left_expr = left_expr
+        self.right_expr = right_expr
+        self._keys = ("op", "left_expr", "right_expr")
 
 
+# TODO: replace with NewExpr.
 class Expr(Node):
 
     def __init__(self, op, lexpr, rexpr):
@@ -226,32 +236,40 @@ class Decl(_VarOrLetDecl):
     var myVar: Integer = 1 + 20
         ^^^^^            ^^^^^^
         name              expr
-
     """
 
 
 class LetDecl(_VarOrLetDecl):
-    """         type_
-               vvvvvvv
-    let myVar: Integer = 1 + 20
-        ^^^^^            ^^^^^^
-        name              expr
-
+    """              type_
+                    vvvvvvv
+    let myConstant: Integer = 1 + 20
+        ^^^^^^^^^^            ^^^^^^
+           name                expr
     """
 
 
+# TODO: replace with something else.
 class AssignmentAndAlloc(_VarOrLetDecl):
     pass
 
 
-class Assignment(Node):
-    """   op
-          v
-    myVar = 1 + 20
-    ^^^^^   ^^^^^^
-     var     expr
-
+class NewAssignment(Node):
+    """        op
+               v
+    myVariable = 1 + 20
+    ^^^^^^^^^^   ^^^^^^
+     variable     expr
     """
+
+    def __init__(self, variable, op, expr):
+        self.variable = variable
+        self.op = op
+        self.expr = expr
+        self._keys = ("variable", "op", "expr")
+
+
+# TODO: replace with NewAssignment.
+class Assignment(Node):
 
     def __init__(self, var, op, expr):
         self.var = var
@@ -367,42 +385,34 @@ class CLiteral(Literal):
 
 
 class CIntFast8(CLiteral):
-    """CIntFast8."""
     _type = "IntFast8"
 
 
 class CIntFast16(CLiteral):
-    """CIntFast16."""
     _type = "IntFast16"
 
 
 class CIntFast32(CLiteral):
-    """CIntFast32."""
     _type = "IntFast32"
 
 
 class CIntFast64(CLiteral):
-    """CIntFast64."""
     _type = "IntFast64"
 
 
 class CUIntFast8(CLiteral):
-    """CUIntFast8."""
     _type = "UIntFast8"
 
 
 class CUIntFast16(CLiteral):
-    """CUIntFast16."""
     _type = "UIntFast16"
 
 
 class CUIntFast32(CLiteral):
-    """CUIntFast32."""
     _type = "UIntFast32"
 
 
 class CUIntFast64(CLiteral):
-    """CUIntFast64."""
     _type = "UIntFast64"
 
 
@@ -415,7 +425,6 @@ class CCast(Node):
 
 
 class CVoid(BaseNode):
-    """CVoid."""
 
     def __str__(self):
         return "Void"
@@ -435,10 +444,6 @@ class Deref(Node):
     def __init__(self, expr):
         self.expr = expr
         self._keys = ("expr", )
-
-
-class Pointer(_TypeModifier):
-    pass
 
 
 class StructScalar(_TypeModifier):
