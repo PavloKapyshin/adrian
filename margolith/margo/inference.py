@@ -31,6 +31,9 @@ def infer(expr):
         field = fields[str(expr.member)]
         return field["type"]
 
+    if expr in A(astlib.Deref):
+        return infer(expr.expr)
+
     errors.not_implemented(
         context.exit_on_error,
         "can't infer type from expression {}".format(expr))

@@ -96,7 +96,7 @@ class Copying(layers.Layer):
                 astlib.AssignmentAndAlloc(
                     stmt.variable, expr_type, stmt.expr))
         else:
-            yield get_assment(stmt.variable, stmt.expr)
+            yield get_assignment(stmt.variable, stmt.expr)
 
     @layers.register(astlib.Return)
     def return_(self, return_):

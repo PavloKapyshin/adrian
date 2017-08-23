@@ -1,12 +1,12 @@
 import itertools
 
-from . import layers, astlib, errors, defs, env
+from . import layers, astlib, errors, defs, env, inference
 from .context import context, add_to_env, add_scope, del_scope
 from .patterns import A
 
 
-def is_ctype(expr):
-    return True
+def is_ctype(type_):
+    return type_ in A(astlib.CType)
 
 
 def return_in_func(body):
@@ -18,21 +18,24 @@ def return_in_func(body):
 
 class ARC(layers.Layer):
 
-    def __init__(self, to_free=None):
+    def __init__(self, to_free=None, expressions=None):
         self.to_free = to_free or env.Env()
+        self.expressions = expressions or env.Env()
 
-    def free(self, name, val):
-        if val["type"] in A(astlib.CType):
+    def raw_free(self, arg, type_):
+        if type_ in A(astlib.CType):
             return astlib.CFuncCall(
-                "free", [astlib.Name(
-                    name, is_tmp=val["is_tmp"])])
-        if val["type"] in A(astlib.Name):
+                "free", [arg])
+        if type_ in A(astlib.Name):
             return astlib.StructFuncCall(
-                val["type"],
-                defs.DEINIT_METHOD_NAME,
-                args=[astlib.Name(name, is_tmp=val["is_tmp"])])
+                type_, defs.DEINIT_METHOD_NAME, args=[arg])
         errors.not_implemented(
             context.exit_on_error, "can't free")
+
+    def free(self, name, val):
+        return self.raw_free(
+            astlib.Name(name, is_tmp=val["is_tmp"]),
+            val["type"])
 
     def arc(self):
         space = self.to_free.space()
@@ -41,7 +44,7 @@ class ARC(layers.Layer):
             yield self.free(key, val)
 
     def body(self, body):
-        reg = ARC(to_free=self.to_free).get_registry()
+        reg = ARC(to_free=self.to_free, expressions=self.expressions).get_registry()
         return list(itertools.chain.from_iterable(
             map(lambda stmt: list(
                     layers.transform_node(stmt, registry=reg)),
@@ -54,6 +57,10 @@ class ARC(layers.Layer):
             "type": declaration.type_,
             "is_tmp": declaration.name.is_tmp
         })
+        expr = declaration.expr
+        if expr in A(astlib.CFuncCall):
+            expr = None
+        self.expressions.add(str(declaration.name), expr)
         yield declaration
 
     @layers.register(astlib.LetDecl)
@@ -63,13 +70,30 @@ class ARC(layers.Layer):
             "type": declaration.type_,
             "is_tmp": declaration.name.is_tmp
         })
+        expr = declaration.expr
+        if expr in A(astlib.CFuncCall):
+            expr = None
+        self.expressions.add(str(declaration.name), expr)
         yield declaration
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
-        if is_ctype(stmt.expr):
-            # dont free
+        expr = stmt.expr
+        if expr in A(astlib.CFuncCall):
+            expr = None
+        if expr in A(astlib.Deref):
+            expr = expr.expr
+        if expr is None:
+            type_ = astlib.CType("dummy")
+        else:
+            type_ = inference.infer(expr)
+        if is_ctype(type_):
             yield stmt
+        else:
+            if self.expressions.get(str(stmt.variable)) is not None:
+                yield self.raw_free(stmt.variable, type_)
+            yield stmt
+        self.expressions.add(str(stmt.variable), expr)
 
     @layers.register(astlib.Return)
     def return_(self, stmt):

@@ -1,0 +1,8 @@
+struct Test {
+    field: c#IntFast8
+}
+
+
+var t = Test(c#IntFast8(10))
+t.field = c#IntFast8(40)
+t = Test(c#IntFast8(0))
