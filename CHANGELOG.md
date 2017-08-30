@@ -3,11 +3,12 @@
 ## 0.1.1
 * added constant declaration with `let` keyword
 * added ability to nest method calls, function calls and field getting
-* fix memory leak: when assigning new value to non-ctype variable, previous value was not freed
-* fix bug with REPL: when input was an empty line REPL used previous input again
+* fixed memory leak: when assigning new value to non-ctype variable, previous value was not freed
+* fixed bug with REPL: when input was an empty line REPL used previous input again
 * added namespacing at C level, so now (for example) Adrian-level malloc function
   will not clash with C-level malloc function
 * added `c#IntFast64` and `c#UIntFast64` types
+* added `:genc`, `:undo` and `:clear` commands to the REPL
 
 
 ## 0.1
