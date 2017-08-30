@@ -56,7 +56,8 @@ def _escape_tok_regex(regex, escape=set("#.{}()*+")):
 for tok_regex, const_name in sorted(
         _TOKENS.items(), key=lambda t: len(t[0])):
     # E.g. t_EQEQ = r"=="
-    globals()["t_" + const_name] = "".join(_escape_tok_regex(tok_regex))
+    globals()["t_" + const_name] = "".join(
+        _escape_tok_regex(tok_regex))
 
 
 def t_INTEGER(token):
@@ -88,7 +89,8 @@ t_ignore = " \t"
 def t_error(token):
     """Error handling rule."""
     errors.illegal_char(
-        token.lexer.lineno, context.exit_on_error, char=token.value[0])
+        token.lexer.lineno, context.exit_on_error,
+        char=token.value[0])
 
 
 # Parser defs.
@@ -97,6 +99,7 @@ precedence = (
     ("left", "EQEQ", "NEQ"),
     ("left", "PLUS", "MINUS"),
     ("left", "TIMES", "DIVIDE"),
+    ("left", "PERIOD"),
 )
 
 
@@ -107,8 +110,8 @@ def sexpr(expr):
 
 
 def p_ast_1(content):
-    """ast : stmt ast"""
-    content[0] = [content[1]] + content[2]
+    """ast : ast stmt"""
+    content[0] = content[1] + [content[2]]
 
 
 def p_ast_2(content):
@@ -118,59 +121,70 @@ def p_ast_2(content):
 
 def p_stmt(content):
     """
-    stmt : decl
-         | func_decl
-         | call
+    stmt : let_decl
+         | var_decl
+         | fun_decl
          | struct_decl
-         | protocol_decl
          | assignment
+         | factor
     """
     content[0] = content[1]
 
+def p_let_decl_1(content):
+    """let_decl : LET NAME COLON type EQ bool_expr"""
+    content[0] = [
+        parser_astlib.LET_DECL, [parser_astlib.NAME, content[2]], content[4],
+        content[6]]
 
-def p_call_name(content):
+
+def p_let_decl_2(content):
+    """let_decl : LET NAME EQ bool_expr"""
+    content[0] = [
+        parser_astlib.LET_DECL, [parser_astlib.NAME, content[2]], [parser_astlib.EMPTY],
+        content[4]]
+
+
+def p_var_decl_1(content):
+    """var_decl : VAR NAME COLON type EQ bool_expr"""
+    content[0] = [
+        parser_astlib.VAR_DECL, [parser_astlib.NAME, content[2]], content[4],
+        content[6]]
+
+
+def p_var_decl_2(content):
+    """var_decl : VAR NAME COLON type"""
+    content[0] = [
+        parser_astlib.VAR_DECL, [parser_astlib.NAME, content[2]], content[4],
+        [parser_astlib.EMPTY]]
+
+
+def p_var_decl_3(content):
+    """var_decl : VAR NAME EQ bool_expr"""
+    content[0] = [
+        parser_astlib.VAR_DECL, [parser_astlib.NAME, content[2]], [parser_astlib.EMPTY],
+        content[4]]
+
+
+def p_fun_decl(content):
     """
-    call_name : name_from_module
-              | name_from_struct
+    fun_decl : FUN NAME LPAREN decl_args RPAREN COLON type LBRACE fun_body RBRACE
     """
-    content[0] = content[1]
+    content[0] = [
+        parser_astlib.FUN_DECL, [parser_astlib.NAME, content[2]], content[4],
+        content[7], content[9]]
 
 
-def p_call(content):
-    """call : call_name LPAREN call_args RPAREN"""
-    if content[1][0] == parser_astlib.STRUCT_ELEM:
-        content[0] = [parser_astlib.METHOD_CALL, content[1][1], content[1][2], content[3]]
-    else:
-        content[0] = [parser_astlib.FUNC_CALL, content[1], content[3]]
-
-
-def p_func_decl_1(content):
+def p_struct_decl(content):
     """
-    func_decl : FUN NAME LPAREN args RPAREN COLON type LBRACE func_body RBRACE
+    struct_decl : STRUCT NAME LBRACE struct_body RBRACE
     """
-    #                                              name                         args       rettype       body
-    #                                      vvvvvvvvvvvvvvvvvvv               vvvvvvvvvv  vvvvvvvvvv  vvvvvvvvvv
-    content[0] = [parser_astlib.FUNC_DECL, [parser_astlib.NAME, content[2]], content[4], content[7], content[9]]
+    content[0] = [parser_astlib.STRUCT_DECL, [parser_astlib.NAME, content[2]], content[4]]
 
 
-def p_func_body_1(content):
-    """func_body : func_body_stmt func_body"""
-    content[0] = [parser_astlib.BODY, content[1], content[2]]
-
-
-def p_func_body_2(content):
-    """func_body : empty"""
-    content[0] = [parser_astlib.EMPTY]
-
-
-def p_func_body_stmt(content):
-    """
-    func_body_stmt : decl
-                   | assignment
-                   | return_stmt
-                   | call
-    """
-    content[0] = content[1]
+def p_field_decl(content):
+    """field_decl : NAME COLON type"""
+    content[0] = [
+        parser_astlib.FIELD_DECL, [parser_astlib.NAME, content[1]], content[3]]
 
 
 def p_return_stmt(content):
@@ -178,76 +192,40 @@ def p_return_stmt(content):
     content[0] = [parser_astlib.RETURN, content[2]]
 
 
-def p_args_1(content):
-    """args : NAME COLON type"""
-    #                                    name        type
-    #                                 vvvvvvvvvv  vvvvvvvvvv
-    content[0] = [parser_astlib.ARGS, content[1], content[3], [parser_astlib.EMPTY]]
+def p_assignment(content):
+    """
+    assignment : factor EQ bool_expr
+    """
+    content[0] = [
+        parser_astlib.ASSIGNMENT, content[1], content[2], content[3]]
 
 
-def p_args_2(content):
-    """args : NAME COLON type COMMA args"""
-    #                                    name        type        rest
-    #                                 vvvvvvvvvv  vvvvvvvvvv  vvvvvvvvvv
-    content[0] = [parser_astlib.ARGS, content[1], content[3], content[5]]
+def p_fun_body_1(content):
+    """fun_body : fun_body_stmt fun_body"""
+    content[0] = [
+        parser_astlib.BODY, content[1], content[2]]
 
 
-def p_args_3(content):
-    """args : empty"""
+def p_fun_body_2(content):
+    """fun_body : empty"""
     content[0] = [parser_astlib.EMPTY]
 
 
-def p_protocol_decl_1(content):
-    """protocol_decl : PROTOCOL NAME param_types LBRACE struct_body RBRACE"""
-    content[0] = [parser_astlib.PROTOCOL_DECL, [parser_astlib.NAME, content[2]], content[3], content[5]]
-
-def p_protocol_decl_2(content):
-    """protocol_decl : PROTOCOL NAME param_types"""
-    content[0] = [parser_astlib.PROTOCOL_DECL, [parser_astlib.NAME, content[2]], content[3], [parser_astlib.EMPTY]]
-
-
-def p_struct_decl_1(content):
-    """struct_decl : STRUCT NAME param_types LBRACE struct_body RBRACE"""
-    content[0] = [parser_astlib.STRUCT_DECL, [parser_astlib.NAME, content[2]], content[3], [parser_astlib.EMPTY], content[5]]
-
-
-def p_struct_decl_2(content):
-    """struct_decl : STRUCT NAME param_types IS interfaces LBRACE struct_body RBRACE"""
-    content[0] = [parser_astlib.STRUCT_DECL, [parser_astlib.NAME, content[2]], content[3], content[5], content[7]]
-
-
-def p_names_1(content):
-    """names : NAME COMMA names"""
-    content[0] = [parser_astlib.NAMES, [parser_astlib.NAME, content[1]], content[3]]
-
-
-def p_names_2(content):
-    """names : NAME"""
-    content[0] = [parser_astlib.NAMES, [parser_astlib.NAME, content[1]], [parser_astlib.EMPTY]]
-
-
-def p_param_types_1(content):
-    """param_types : LPAREN names RPAREN"""
-    content[0] = content[2]
-
-
-def p_param_types_2(content):
-    """param_types : empty"""
-    content[0] = [parser_astlib.EMPTY]
-
-
-def p_interfaces_1(content):
-    """interfaces : LPAREN names RPAREN"""
-    content[0] = content[2]
-
-def p_interfaces_2(content):
-    """interfaces : names"""
+def p_fun_body_stmt(content):
+    """
+    fun_body_stmt : var_decl
+                  | let_decl
+                  | assignment
+                  | return_stmt
+                  | factor
+    """
     content[0] = content[1]
 
 
 def p_struct_body_1(content):
     """struct_body : struct_body_stmt struct_body"""
-    content[0] = [parser_astlib.BODY, content[1], content[2]]
+    content[0] = [
+        parser_astlib.BODY, content[1], content[2]]
 
 
 def p_struct_body_2(content):
@@ -255,93 +233,69 @@ def p_struct_body_2(content):
     content[0] = [parser_astlib.EMPTY]
 
 
-def p_struct_body_stmt(content):
-    """
-    struct_body_stmt : field_decl
-                     | func_decl
-    """
-    stmt = content[1]
-    if stmt[0] == parser_astlib.FUNC_DECL:
-        stmt = [parser_astlib.METHOD_DECL, stmt[1], stmt[2], stmt[3], stmt[4]]
-    content[0] = stmt
-
-
-def p_field_decl(content):
-    """field_decl : NAME COLON type"""
-    content[0] = [parser_astlib.FIELD_DECL, [parser_astlib.NAME, content[1]], content[3]]
-
-
-def p_decl_1(content):
-    """decl : VAR NAME COLON type EQ bool_expr"""
-    content[0] = [parser_astlib.DECL, content[2], content[4], content[6]]
-
-
-def p_decl_2(content):
-    """decl : VAR NAME COLON type"""
-    content[0] = [parser_astlib.DECL, content[2], content[4], [parser_astlib.EMPTY]]
-
-
-def p_decl_3(content):
-    """decl : VAR NAME EQ bool_expr"""
-    content[0] = [parser_astlib.DECL, content[2], [parser_astlib.EMPTY], content[4]]
-
-
-def p_assignment(content):
-    """assignment : name_from_struct EQ bool_expr"""
-    content[0] = [parser_astlib.ASSIGNMENT, content[1], content[2], content[3]]
-
-
-def p_call_args_1(content):
-    """call_args : bool_expr COMMA call_args"""
-    content[0] = [parser_astlib.CALL_ARGS, content[1], content[3]]
-
-
-def p_call_args_2(content):
-    """call_args : bool_expr"""
-    content[0] = [parser_astlib.CALL_ARGS, content[1], [parser_astlib.EMPTY]]
-
-
-def p_call_args_3(content):
-    """call_args : empty"""
-    content[0] = [parser_astlib.EMPTY]
-
-
-def p_types_1(content):
-    """types : type COMMA types"""
-    content[0] = [parser_astlib.TYPES, content[1], content[3]]
-
-
-def p_types_2(content):
-    """types : type"""
-    content[0] = [parser_astlib.TYPES, content[1], [parser_astlib.EMPTY]]
-
-
-def p_type_1(content):
-    """type : name_from_module"""
+def p_struct_body_stmt_1(content):
+    """struct_body_stmt : field_decl"""
     content[0] = content[1]
 
 
-def p_type_2(content):
-    """type : type LPAREN types RPAREN"""
-    content[0] = [parser_astlib.PARAMED_TYPE, content[1], content[3]]
+def p_struct_body_stmt_2(content):
+    """struct_body_stmt : fun_decl"""
+    content[0] = [
+        parser_astlib.METHOD_DECL, content[1][1],
+        content[1][2], content[1][3], content[1][4]]
 
 
-def p_name_from_struct_1(content):
-    """name_from_struct : NAME PERIOD name_from_struct"""
-    content[0] = [parser_astlib.STRUCT_ELEM, [parser_astlib.NAME, content[1]], content[3]]
-
-def p_name_from_struct_2(content):
-    """name_from_struct : NAME"""
-    content[0] = [parser_astlib.NAME, content[1]]
+def p_decl_args_1(content):
+    """decl_args : NAME COLON type COMMA decl_args"""
+    content[0] = [
+        parser_astlib.ARGS, [parser_astlib.NAME, content[1]], content[3],
+        content[5]]
 
 
-def p_name_from_module_1(content):
-    """name_from_module : NAME HASH NAME"""
-    content[0] = [parser_astlib.MODULE_MEMBER, content[1], [parser_astlib.NAME, content[3]]]
+def p_decl_args_2(content):
+    """decl_args : NAME COLON type"""
+    content[0] = [
+        parser_astlib.ARGS, [parser_astlib.NAME, content[1]], content[3],
+        [parser_astlib.EMPTY]]
 
 
-def p_name_from_module_2(content):
-    """name_from_module : NAME"""
+def p_decl_args_3(content):
+    """decl_args : empty"""
+    content[0] = [parser_astlib.EMPTY]
+
+
+def p_type(content):
+    """type : module_member"""
+    content[0] = content[1]
+
+
+def p_arg_list_1(content):
+    """arg_list : bool_expr COMMA arg_list"""
+    content[0] = [
+        parser_astlib.ARG_LIST, content[1], content[3]]
+
+
+def p_arg_list_2(content):
+    """arg_list : bool_expr"""
+    content[0] = [
+        parser_astlib.ARG_LIST, content[1], [parser_astlib.EMPTY]]
+
+
+def p_arg_list_3(content):
+    """arg_list : empty"""
+    content[0] = [parser_astlib.EMPTY]
+
+
+def p_module_member_1(content):
+    """module_member : NAME HASH NAME"""
+    content[0] = [
+        parser_astlib.MODULE_MEMBER,
+        [parser_astlib.NAME, content[1]],
+        [parser_astlib.NAME, content[3]]]
+
+
+def p_module_member_2(content):
+    """module_member : NAME"""
     content[0] = [parser_astlib.NAME, content[1]]
 
 
@@ -382,21 +336,26 @@ def p_expr_2(content):
     content[0] = content[1]
 
 
-def p_factor(content):
-    """factor : atom_expr"""
-    content[0] = content[1]
+def p_factor_1(content):
+    """factor : atom LPAREN arg_list RPAREN"""
+    content[0] = [parser_astlib.CALL, content[1], content[3]]
 
 
-def p_atom_expr(content):
-    """atom_expr : atom"""
+def p_factor_2(content):
+    """factor : factor PERIOD factor"""
+    content[0] = [
+        parser_astlib.STRUCT_MEMBER, content[1], content[3]]
+
+
+def p_factor_3(content):
+    """factor : atom"""
     content[0] = content[1]
 
 
 def p_atom_1(content):
     """
     atom : INTEGER
-         | call_name
-         | call
+         | module_member
     """
     content[0] = content[1]
 
@@ -406,14 +365,10 @@ def p_atom_2(content):
     content[0] = content[2]
 
 
-def p_atom_3(content):
-    """atom : REF bool_expr"""
-    content[0] = [parser_astlib.REF, content[2]]
-
-
 def p_empty(content):
     """empty :"""
     pass
+
 
 def p_error(content):
     """Error handling function."""

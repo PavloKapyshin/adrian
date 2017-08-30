@@ -8,25 +8,32 @@ def infer(expr):
         return expr.to_type()
 
     if expr in A(astlib.Name):
-        entity = get(expr)
-        if entity:
-            return entity["type"]
-        else:
-            errors.non_existing_name(
-                context.exit_on_error, name=str(expr))
-
-    if expr in A(astlib.Expr):
-        # +, -, * and / returns the value of the same type.
-        return infer(expr.lexpr)
+        return get(expr)["type"]
 
     if expr in A(astlib.FuncCall):
-        entity = get(expr.name)
-        if entity:
-            return entity["type"]
-        else:
-            errors.non_existing_name(
-                context.exit_on_error, name=str(expr.name))
+        return get(expr.name)["type"]
+
+    if expr in A(astlib.Expr):
+        # +, *, -, / returns value of the same type.
+        return infer(expr.right_expr)
+
+    if expr in A(astlib.StructCall):
+        return expr.name
+
+    if expr in A(astlib.StructFuncCall):
+        methods = get(expr.struct)["methods"]
+        method = methods[str(expr.func_name)]
+        return method["type"]
+
+    if expr in A(astlib.StructMember):
+        type_of_struct = infer(expr.struct)
+        fields = get(type_of_struct)["fields"]
+        field = fields[str(expr.member)]
+        return field["type"]
+
+    if expr in A(astlib.Deref):
+        return infer(expr.expr)
 
     errors.not_implemented(
         context.exit_on_error,
-        "can't infer type (expr {})".format(expr))
+        "can't infer type from expression {}".format(expr))

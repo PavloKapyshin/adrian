@@ -3,9 +3,8 @@ import copy
 from adrian import cgen as adr_cgen
 
 from . import parser, foreign_parser, analyzer
-from . import name_existence_checking, types_phase
-from . import tac, copying, arc, name_spacing
-from . import tocgen, main_func
+from . import object_proto, tac, copying, arc
+from . import name_spacing, tocgen, main_func
 from . import env, context, layers
 
 
@@ -14,8 +13,7 @@ REPL_FILE_HASH = "mangled"
 LAYERS = (
     (parser.Parser, "parse"),
     (analyzer.Analyzer, "transform_ast"),
-    (name_existence_checking.NameExistence, "transform_ast"),
-    (types_phase.TypeInference, "transform_ast"),
+    (object_proto.ObjectProto, "transform_ast"),
     (tac.TAC, "transform_ast"),
     (copying.Copying, "transform_ast"),
     (arc.ARC, "expand_ast"),

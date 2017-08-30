@@ -1,0 +1,18 @@
+struct Another {
+    anotherField: c#IntFast8
+
+    fun anotherMethod(): c#IntFast8 {
+        return self.anotherField
+    }
+}
+
+
+struct Some {
+    field: Another
+
+    fun method(): Another {
+        return self.field
+    }
+}
+
+var aField = Some(Another(c#IntFast8(10))).method().anotherField

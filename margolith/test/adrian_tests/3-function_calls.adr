@@ -1,5 +1,5 @@
 fun zero(): c#IntFast8 {
-    return c#IntFast8(1 - 1)
+    return c#IntFast8(0)
 }
 
 
@@ -10,6 +10,12 @@ fun addOne(src: c#IntFast8): c#IntFast8 {
 
 fun add(lvalue: c#IntFast8, rvalue: c#IntFast8): c#IntFast8 {
     return lvalue + rvalue
+}
+
+
+fun addSome(lvalue: c#IntFast8, rvalue: c#IntFast8): c#IntFast8 {
+    var result = lvalue + rvalue
+    return result
 }
 
 
@@ -25,3 +31,4 @@ var twoVar = addOne(addOne(zero()))
 
 var fiveVar = add(c#IntFast8(3), c#IntFast8(2))
 var sixVar = increment(fiveVar, oneVar)
+var sevenVar = addSome(fiveVar, twoVar)

@@ -1,98 +1,131 @@
-from itertools import chain
+import itertools
 
-from . import layers, astlib, errors, inference
-from .context import context, get
+from . import layers, astlib, errors, defs, inference
+from .context import (
+    context, get, add_to_env, add_scope, del_scope)
 from .patterns import A
 
 
-def get_assment(name, val):
+def is_ctype(type_):
+    if type_ in A(astlib.CType):
+        return True
+    return False
+
+
+def get_assignment(name, val):
     return astlib.Assignment(
         astlib.Deref(name), "=", val)
 
 
 def get_val(value):
-    if value in A(astlib.Name):
+    if value in A(astlib.Name, astlib.StructMember):
         return astlib.Deref(value)
     if value in A(astlib.Expr):
         return astlib.Expr(
-            value.op, get_val(value.lexpr), get_val(value.rexpr))
+            value.op, get_val(value.left_expr),
+            get_val(value.right_expr))
     return value
 
 
 def heapify(expr, name):
     type_ = inference.infer(expr)
-    allocation = astlib.CFuncCall(
-        "malloc", [astlib.CFuncCall(
-            "sizeof", [astlib.StructScalar(type_)])])
-    assignment = get_assment(name, get_val(expr))
-    return allocation, [assignment]
+    if is_ctype(type_):
+        allocation = astlib.CFuncCall(
+            "malloc", [astlib.CFuncCall(
+                "sizeof", [astlib.StructScalar(type_)])])
+        assignment = get_assignment(name, get_val(expr))
+        return allocation, [assignment]
+    return astlib.StructFuncCall(
+        type_, defs.COPY_METHOD_NAME, args=[expr]), []
+
 
 def e(expr, name):
-    if expr in A(astlib.CTYPES):
+    if expr in A(
+            astlib.CTYPES + (
+            astlib.Expr, astlib.StructMember)):
         return heapify(expr, name)
 
     if expr in A(astlib.Name):
-        if get(expr)["type"] in A(astlib.CType):
+        result = get(expr)
+        if result["type"] in A(astlib.CType):
             return heapify(expr, name)
-        return expr, []
 
-    if expr in A(astlib.FuncCall):
-        return astlib.FuncCall(expr.name, expr.args), []
-
-    if expr in A(astlib.Expr):
-        return heapify(expr, name)
-
-    errors.not_implemented(
-        context.exit_on_error,
-        "copying:e (expr {})".format(expr))
+    return expr, []
 
 
 class Copying(layers.Layer):
 
-    def b(self, body):
+    def body(self, body):
         reg = Copying().get_registry()
-        return list(chain.from_iterable(
-            map(lambda stmt: list(layers.transform_node(stmt, registry=reg)),
+        return list(itertools.chain.from_iterable(
+            map(lambda stmt: list(
+                    layers.transform_node(stmt, registry=reg)),
                 body)))
 
-    @layers.register(astlib.Decl)
-    def decl(self, decl):
-        context.env.add(str(decl.name), {
-            "type": decl.type_
-        })
-        new_expr, assignments = e(decl.expr, decl.name)
-        yield astlib.Decl(decl.name, decl.type_, new_expr)
+    @layers.register(astlib.VarDecl)
+    def var_decl(self, declaration):
+        new_expr, assignments = e(
+            declaration.expr, declaration.name)
+        add_to_env(declaration)
+        yield astlib.VarDecl(
+            declaration.name, declaration.type_,
+            new_expr)
+        yield from assignments
+
+    @layers.register(astlib.LetDecl)
+    def let_decl(self, declaration):
+        new_expr, assignments = e(
+            declaration.expr, declaration.name)
+        add_to_env(declaration)
+        yield astlib.LetDecl(
+            declaration.name, declaration.type_,
+            new_expr)
+        yield from assignments
+
+    @layers.register(astlib.AssignmentAndAlloc)
+    def assignment_and_alloc(self, stmt):
+        new_expr, assignments = e(stmt.expr, stmt.name)
+        yield astlib.Assignment(stmt.name, "=", new_expr)
         yield from assignments
 
     @layers.register(astlib.Assignment)
-    def assignment(self, assment):
-        yield get_assment(assment.var, assment.expr)
+    def assignment(self, stmt):
+        expr_type = inference.infer(stmt.expr)
+        if expr_type in A(astlib.Name):
+            yield from self.assignment_and_alloc(
+                astlib.AssignmentAndAlloc(
+                    stmt.variable, expr_type, stmt.expr))
+        else:
+            yield get_assignment(stmt.variable, stmt.expr)
 
     @layers.register(astlib.Return)
     def return_(self, return_):
         # We don't use e function, for now.
         yield return_
 
-    @layers.register(astlib.Func)
-    def func(self, func):
-        context.env.add(str(func.name), {
-            "type": func.rettype
-        })
-        for arg in func.args:
-            context.env.add(str(arg.name), {
-                "type": arg.type_
-            })
+    @layers.register(astlib.FuncDecl)
+    def func(self, declaration):
+        add_to_env(declaration)
+        add_scope()
+        yield astlib.FuncDecl(
+            declaration.name, declaration.args,
+            declaration.rettype, self.body(declaration.body))
+        del_scope()
 
-        yield astlib.Func(
-            func.name, func.args, func.rettype,
-            self.b(func.body))
+    @layers.register(astlib.StructFuncDecl)
+    def struct_func_decl(self, declaration):
+        add_to_env(declaration)
+        add_scope()
+        yield astlib.StructFuncDecl(
+            declaration.struct, declaration.func,
+            declaration.args, declaration.rettype,
+            self.body(declaration.body))
+        del_scope()
 
-    @layers.register(astlib.Struct)
-    def struct(self, struct):
-        context.env.add(str(struct.name), {
-            "type": struct.name
-        })
-
-        yield astlib.Struct(
-            struct.name, struct.parameters, struct.protocols,
-            self.b(struct.body))
+    @layers.register(astlib.StructDecl)
+    def struct(self, declaration):
+        add_to_env(declaration)
+        add_scope()
+        yield astlib.StructDecl(
+            declaration.name, self.body(declaration.body))
+        del_scope()

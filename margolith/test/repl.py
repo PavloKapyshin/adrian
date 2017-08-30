@@ -50,6 +50,9 @@ class REPL(cmd.Cmd):
         else:
             self.input_.append(inp)
 
+    def emptyline(self):
+        pass
+
     do_quit = do_exit
     do_q = do_exit
     do_e = do_exit
