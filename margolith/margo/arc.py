@@ -1,7 +1,7 @@
 import itertools
 
 from . import layers, astlib, errors, defs, env, inference
-from .context import context, add_to_env, add_scope, del_scope
+from .context import context, add_to_env, add_scope, del_scope, get
 from .patterns import A
 
 
@@ -18,9 +18,20 @@ def return_in_func(body):
 
 class ARC(layers.Layer):
 
-    def __init__(self, to_free=None, expressions=None):
+    def __init__(self, to_free=None, initialization_list=None):
         self.to_free = to_free or env.Env()
-        self.expressions = expressions or env.Env()
+        self.initialization_list = initialization_list or env.Env()
+
+    def initialized(self, variable):
+        return self.initialization_list.get(str(variable))
+
+    def add_struct_fields_to_initialized(self, variable, expr):
+        struct_entry = get(str(inference.infer(expr)))
+        fields = struct_entry["fields"]
+        for field_name, _ in fields.items():
+            # TODO: fix this shit.
+            self.initialization_list.add(
+                "StructMember(struct='" + str(variable) + "', member='" + field_name + "')", True)
 
     def raw_free(self, arg, type_):
         if type_ in A(astlib.CType):
@@ -43,8 +54,13 @@ class ARC(layers.Layer):
         for key, val in sorted(space[scope].copy().items()):
             yield self.free(key, val)
 
+    def make_expr_for_initializion_list(self, expr):
+        if expr in A(astlib.CFuncCall):
+            return False
+        return True
+
     def body(self, body):
-        reg = ARC(to_free=self.to_free, expressions=self.expressions).get_registry()
+        reg = ARC(to_free=self.to_free, initialization_list=self.initialization_list).get_registry()
         return list(itertools.chain.from_iterable(
             map(lambda stmt: list(
                     layers.transform_node(stmt, registry=reg)),
@@ -57,10 +73,11 @@ class ARC(layers.Layer):
             "type": declaration.type_,
             "is_tmp": declaration.name.is_tmp
         })
-        expr = declaration.expr
-        if expr in A(astlib.CFuncCall):
-            expr = None
-        self.expressions.add(str(declaration.name), expr)
+        self.initialization_list.add(
+            str(declaration.name),
+            self.make_expr_for_initializion_list(declaration.expr))
+        if declaration.expr not in A(astlib.CFuncCall) and not is_ctype(inference.infer(declaration.expr)):
+            self.add_struct_fields_to_initialized(declaration.name, declaration.expr)
         yield declaration
 
     @layers.register(astlib.LetDecl)
@@ -70,30 +87,22 @@ class ARC(layers.Layer):
             "type": declaration.type_,
             "is_tmp": declaration.name.is_tmp
         })
-        expr = declaration.expr
-        if expr in A(astlib.CFuncCall):
-            expr = None
-        self.expressions.add(str(declaration.name), expr)
+        self.initialization_list.add(
+            str(declaration.name),
+            self.make_expr_for_initializion_list(declaration.expr))
+        if declaration.expr not in A(astlib.CFuncCall) and not is_ctype(inference.infer(declaration.expr)):
+            self.add_struct_fields_to_initialized(declaration.name, declaration.expr)
         yield declaration
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
-        expr = stmt.expr
-        if expr in A(astlib.CFuncCall):
-            expr = None
-        if expr in A(astlib.Deref):
-            expr = expr.expr
-        if expr is None:
-            type_ = astlib.CType("dummy")
-        else:
-            type_ = inference.infer(expr)
-        if is_ctype(type_):
-            yield stmt
-        else:
-            if self.expressions.get(str(stmt.variable)) is not None:
-                yield self.raw_free(stmt.variable, type_)
-            yield stmt
-        self.expressions.add(str(stmt.variable), expr)
+        type_of_variable = inference.infer(stmt.variable)
+        if not is_ctype(type_of_variable) and self.initialized(stmt.variable):
+            yield self.raw_free(stmt.variable, type_of_variable)
+        yield stmt
+        self.initialization_list.add(
+            str(stmt.variable),
+            self.make_expr_for_initializion_list(stmt.expr))
 
     @layers.register(astlib.Return)
     def return_(self, stmt):

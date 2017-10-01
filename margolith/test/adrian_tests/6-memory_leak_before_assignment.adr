@@ -6,3 +6,20 @@ struct Test {
 var t = Test(c#IntFast8(10))
 t.field = c#IntFast8(40)
 t = Test(c#IntFast8(0))
+
+
+
+
+
+
+struct Another {
+    field: c#IntFast8
+}
+
+struct Lol {
+    data: Another
+}
+
+
+var test = Lol(Another(c#IntFast8(1)))
+test.data = Another(c#IntFast8(0))
