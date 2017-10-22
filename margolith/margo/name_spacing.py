@@ -167,7 +167,8 @@ class NameSpacing(layers.Layer):
     @layers.register(astlib.StructDecl)
     def struct(self, struct):
         yield astlib.StructDecl(
-            n(struct.name), self.body(struct.body))
+            n(struct.name), struct.var_types,
+            self.body(struct.body))
 
     @layers.register(astlib.FieldDecl)
     def field(self, field):

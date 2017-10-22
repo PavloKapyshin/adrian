@@ -176,5 +176,6 @@ class Analyzer(layers.Layer):
         add_to_env(declaration)
         add_scope()
         body = self.body(declaration.body)
-        yield astlib.StructDecl(declaration.name, body)
+        yield astlib.StructDecl(
+            declaration.name, declaration.var_types, body)
         del_scope()

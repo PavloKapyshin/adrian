@@ -174,11 +174,38 @@ def p_fun_decl(content):
         content[7], content[9]]
 
 
-def p_struct_decl(content):
+def p_struct_decl_1(content):
     """
     struct_decl : STRUCT NAME LBRACE struct_body RBRACE
     """
-    content[0] = [parser_astlib.STRUCT_DECL, [parser_astlib.NAME, content[2]], content[4]]
+    content[0] = [
+        parser_astlib.STRUCT_DECL,
+        [parser_astlib.NAME, content[2]],
+        [parser_astlib.EMPTY], content[4]]
+
+
+def p_struct_decl_2(content):
+    """
+    struct_decl : STRUCT NAME LPAREN var_types RPAREN LBRACE struct_body RBRACE
+    """
+    content[0] = [
+        parser_astlib.STRUCT_DECL,
+        [parser_astlib.NAME, content[2]],
+        content[4], content[7]]
+
+
+def p_var_types_1(content):
+    """var_types : NAME"""
+    content[0] = [parser_astlib.VAR_TYPES, [parser_astlib.NAME, content[1]], [parser_astlib.EMPTY]]
+
+
+def p_var_types_2(content):
+    """var_types : empty"""
+    content[0] = [parser_astlib.EMPTY]
+
+def p_var_types_3(content):
+    """var_types : NAME COMMA var_types"""
+    content[0] = [parser_astlib.VAR_TYPES, [parser_astlib.NAME, content[1]], content[3]]
 
 
 def p_field_decl(content):

@@ -160,6 +160,10 @@ class LinkedListNode(LinkedList, Node):
         self._keys = ("value", "rest")
 
 
+class VarTypes(LinkedListNode):
+    pass
+
+
 class Body(LinkedListNode):
     pass
 
@@ -287,18 +291,19 @@ class ProtocolDecl(Node):
 
 
 class StructDecl(Node):
-    """     name
-           vvvvvv
-    struct MyType {
+    """     name  var_types
+           vvvvvv vvvvvvvvv
+    struct MyType(valueType) {
         length: Integer         < body
         data: valueType         < body
     }
     """
 
-    def __init__(self, name, body):
+    def __init__(self, name, var_types, body):
         self.name = name
+        self.var_types = var_types
         self.body = body
-        self._keys = ("name", "body")
+        self._keys = ("name", "var_types", "body")
 
 
 class FieldDecl(Node):

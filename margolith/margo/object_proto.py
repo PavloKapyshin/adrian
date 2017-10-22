@@ -181,6 +181,7 @@ class ObjectProto(layers.Layer):
                     default_func(declaration))
         yield astlib.StructDecl(
             declaration.name,
+            declaration.var_types,
             fields)
 
         for method in additional_methods + new_methods:

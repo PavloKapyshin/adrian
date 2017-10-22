@@ -127,5 +127,6 @@ class Copying(layers.Layer):
         add_to_env(declaration)
         add_scope()
         yield astlib.StructDecl(
-            declaration.name, self.body(declaration.body))
+            declaration.name, declaration.var_types,
+            self.body(declaration.body))
         del_scope()

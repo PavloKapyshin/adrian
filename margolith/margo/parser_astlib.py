@@ -12,8 +12,9 @@ NAME = "Name"
 SEXPR = "Expr"
 
 BODY = "Body"
-ARG_LIST = "CallArgs"
 ARGS = "Args"
+VAR_TYPES = "VarTypes"
+ARG_LIST = "CallArgs"
 
 INTEGER = "IntLiteral"
 
