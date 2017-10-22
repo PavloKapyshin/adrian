@@ -67,6 +67,10 @@ def decl_args(args):
         for name, type_ in args.as_list()]
 
 
+def var_types(types):
+    return types.as_list()
+
+
 def t(type_):
     if type_ in A(astlib.ModuleMember):
         if type_.module == defs.CMODULE_NAME:
@@ -177,5 +181,5 @@ class Analyzer(layers.Layer):
         add_scope()
         body = self.body(declaration.body)
         yield astlib.StructDecl(
-            declaration.name, declaration.var_types, body)
+            declaration.name, var_types(declaration.var_types), body)
         del_scope()

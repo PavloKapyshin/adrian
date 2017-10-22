@@ -3,7 +3,7 @@ import copy
 from adrian import cgen as adr_cgen
 
 from . import parser, foreign_parser, analyzer
-from . import object_proto, tac, copying, arc
+from . import object_proto, inlining, tac, copying, arc
 from . import name_spacing, tocgen, main_func
 from . import env, context, layers
 
@@ -14,6 +14,7 @@ LAYERS = (
     (parser.Parser, "parse"),
     (analyzer.Analyzer, "transform_ast"),
     (object_proto.ObjectProto, "transform_ast"),
+    (inlining.Inlining, "transform_ast"),
     (tac.TAC, "transform_ast"),
     (copying.Copying, "transform_ast"),
     (arc.ARC, "expand_ast"),
