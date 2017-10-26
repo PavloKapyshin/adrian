@@ -177,6 +177,9 @@ class Analyzer(layers.Layer):
 
     @layers.register(astlib.StructDecl)
     def struct_decl(self, declaration):
+        if declaration.body in A(astlib.Empty):
+            errors.not_implemented(
+                context.exit_on_error, "empty structs are not supported")
         add_to_env(declaration)
         add_scope()
         body = self.body(declaration.body)

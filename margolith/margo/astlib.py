@@ -400,6 +400,14 @@ class CVoid(BaseNode):
     __repr__ = __str__
 
 
+class CObject(BaseNode):
+
+    def __str__(self):
+        return "void*"
+
+    __repr__ = __str__
+
+
 class _TypeModifier(Node):
 
     def __init__(self, type_):

@@ -42,6 +42,9 @@ def t(type_):
             return cgen.CTypes.void
         return cgen.CTypes.ptr(getattr(cgen.CTypes, TO_CTYPE[str(type_)]))
 
+    if type_ in A(astlib.CObject):
+        return cgen.CTypes.ptr(cgen.CTypes.void)
+
     if type_ in A(astlib.Name):
         return cgen.CTypes.ptr(cgen.StructType(str(type_)))
     errors.not_implemented(

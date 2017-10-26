@@ -37,7 +37,7 @@ def struct_func_name(struct, name):
 
 
 def t(type_):
-    if type_ in A(astlib.CType):
+    if type_ in A(astlib.CType, astlib.CObject):
         return type_
 
     if type_ in A(astlib.Name):
