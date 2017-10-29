@@ -85,7 +85,8 @@ def add_to_env(statement):
         methods = entity["methods"]
         methods[str(statement.func)] = {
             "node_type": NodeType.fun,
-            "type": statement.rettype
+            "type": statement.rettype,
+            "args": statement.args,
         }
         entity["methods"] = methods
         if statement.args in A(astlib.Args, astlib.Empty):
@@ -121,6 +122,7 @@ def add_to_env(statement):
         for method_decl in method_decls:
             methods[str(method_decl.name)] = {
                 "type": method_decl.rettype,
+                "args": method_decl.args,
                 "node_type": NodeType.fun
             }
 
@@ -128,6 +130,7 @@ def add_to_env(statement):
             "type": statement.name,
             "fields": fields,
             "methods": methods,
+            "var_types": statement.var_types,
             "node_type": NodeType.struct
         })
 

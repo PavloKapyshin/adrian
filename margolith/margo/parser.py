@@ -291,9 +291,27 @@ def p_decl_args_3(content):
     content[0] = [parser_astlib.EMPTY]
 
 
-def p_type(content):
+def p_type_1(content):
     """type : module_member"""
     content[0] = content[1]
+
+
+def p_type_2(content):
+    """type : module_member LPAREN types RPAREN"""
+    content[0] = [parser_astlib.PARAMETERIZED_TYPE, content[1], content[3]]
+
+
+def p_types_1(content):
+    """types : type COMMA types"""
+    content[0] = [parser_astlib.TYPES, content[1], content[3]]
+
+def p_types_2(content):
+    """types : type"""
+    content[0] = [parser_astlib.TYPES, content[1], [parser_astlib.EMPTY]]
+
+def p_types_3(content):
+    """types : empty"""
+    content[0] = [parser_astlib.EMPTY]
 
 
 def p_arg_list_1(content):

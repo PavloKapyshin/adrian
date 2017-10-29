@@ -6,6 +6,12 @@ from .patterns import A
 SELF = astlib.Name("self")
 
 
+def to_real_type(struct_decl):
+    if struct_decl.var_types == []:
+        return struct_decl.name
+    return astlib.ParameterizedType(struct_decl.name, struct_decl.var_types)
+
+
 def field_of_maker(struct_name):
     def wrapper(field_name):
         return astlib.StructMember(struct_name, field_name)
@@ -47,7 +53,7 @@ def default_deinit_method(struct):
     body.append(free(SELF))
     return astlib.MethodDecl(
         astlib.Name(defs.DEINIT_METHOD_NAME),
-        [astlib.Arg(astlib.Name("self"), struct.name)],
+        [astlib.Arg(astlib.Name("self"), to_real_type(struct))],
         rettype=astlib.CType("Void"), body=body)
 
 
@@ -55,7 +61,7 @@ def default_copy_method(struct):
     new_var_name = astlib.Name("new")
     field_of_new = field_of_maker(new_var_name)
     declaration_of_new = astlib.VarDecl(
-        new_var_name, struct.name, malloc(struct.name))
+        new_var_name, to_real_type(struct), malloc(struct.name))
     field_inits = []
     for field_decl in only_field_decls(struct.body):
         if field_decl.type_ in A(astlib.Name):
@@ -73,8 +79,8 @@ def default_copy_method(struct):
     body = [declaration_of_new] + field_inits + [return_new]
     return astlib.MethodDecl(
         astlib.Name(defs.COPY_METHOD_NAME),
-        [astlib.Arg(astlib.Name("self"), struct.name)],
-        struct.name, body=body)
+        [astlib.Arg(astlib.Name("self"), to_real_type(struct))],
+        to_real_type(struct), body=body)
 
 
 def complete_copy_method(method, struct):
@@ -89,7 +95,7 @@ def complete_deinit_method(method, struct):
 
 def complete_init_method(method, struct):
     declaration_of_self = astlib.VarDecl(
-        SELF, struct.name, malloc(struct.name))
+        SELF, to_real_type(struct), malloc(struct.name))
     return_self = astlib.Return(SELF)
     new_method_body = []
     fields_ = only_field_decls(struct.body)
@@ -105,7 +111,7 @@ def complete_init_method(method, struct):
         else:
             new_method_body.append(stmt)
     body = [declaration_of_self] + new_method_body + [return_self]
-    rettype = struct.name
+    rettype = to_real_type(struct)
     return astlib.MethodDecl(
         astlib.Name(defs.INIT_METHOD_NAME), method.args,
         rettype, body)
@@ -113,7 +119,7 @@ def complete_init_method(method, struct):
 
 def default_init_method(struct):
     declaration_of_self = astlib.VarDecl(
-        SELF, struct.name, malloc(struct.name))
+        SELF, to_real_type(struct), malloc(struct.name))
     return_self = astlib.Return(SELF)
     field_inits, args = [], []
     for field_decl in only_field_decls(struct.body):
@@ -131,7 +137,7 @@ def default_init_method(struct):
                 field_of_self(field_decl.name), field_decl.type_,
                 field_init_expr))
     body = [declaration_of_self] + field_inits + [return_self]
-    rettype = struct.name
+    rettype = to_real_type(struct)
     return astlib.MethodDecl(
         astlib.Name(defs.INIT_METHOD_NAME), args,
         rettype, body)
@@ -149,7 +155,7 @@ class ObjectProto(layers.Layer):
         return astlib.MethodDecl(
             method.name,
             [astlib.Arg(
-                astlib.Name("self"), struct.name)] + method.args,
+                astlib.Name("self"), to_real_type(struct))] + method.args,
             method.rettype, method.body)
 
     @layers.register(astlib.StructDecl)

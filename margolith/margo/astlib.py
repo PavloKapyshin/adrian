@@ -70,6 +70,14 @@ class StructMember(Node):
         self._keys = ("struct", "member")
 
 
+class ParameterizedType(Node):
+
+    def __init__(self, type_, parameters):
+        self.type_ = type_
+        self.parameters = parameters
+        self._keys = ("type_", "parameters")
+
+
 class _Callable(Node):
 
     def __init__(self, name, args):
@@ -161,6 +169,10 @@ class LinkedListNode(LinkedList, Node):
 
 
 class VarTypes(LinkedListNode):
+    pass
+
+
+class Types(LinkedListNode):
     pass
 
 

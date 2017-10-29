@@ -4,8 +4,6 @@ Translates linked lists to python's lists.
 Infer types.
 """
 
-import sys
-
 from . import layers, astlib, errors, defs, inference
 from .context import (
     context, add_to_env, add_scope, del_scope,
@@ -71,6 +69,10 @@ def var_types(types):
     return types.as_list()
 
 
+def type_parameters(types):
+    return [t(type_) for type_ in types.as_list()]
+
+
 def t(type_):
     if type_ in A(astlib.ModuleMember):
         if type_.module == defs.CMODULE_NAME:
@@ -80,6 +82,10 @@ def t(type_):
     if type_ in A(astlib.Name):
         if type_ == "Void":
             return astlib.CType("Void")
+
+    if type_ in A(astlib.ParameterizedType):
+        return astlib.ParameterizedType(
+            type_.type_, type_parameters(type_.parameters))
 
     return type_
 
