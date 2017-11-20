@@ -86,6 +86,7 @@ def add_to_env(statement):
         methods[str(statement.func)] = {
             "node_type": NodeType.fun,
             "type": statement.rettype,
+            "body": statement.body,
             "args": statement.args,
         }
         entity["methods"] = methods
@@ -123,6 +124,7 @@ def add_to_env(statement):
             methods[str(method_decl.name)] = {
                 "type": method_decl.rettype,
                 "args": method_decl.args,
+                "body": method_decl.body,
                 "node_type": NodeType.fun
             }
 

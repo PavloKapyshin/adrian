@@ -6,20 +6,93 @@ from .patterns import A
 from .env import Env
 
 
-class Fixer:
-    def fix(self, body):
-        pass
+class Fixer(layers.Layer):
+    def fix(self, body, expr):
+        return body, expr
 
 
-class Applier:
+class Applier(layers.Layer):
+
+    def __init__(self, type_dict, arg_dict):
+        self.type_dict = type_dict
+        self.arg_dict = arg_dict
+
     def apply(self, func, type_dict, arg_dict):
-        pass
+        reg = Applier(type_dict, arg_dict).get_registry()
+        body = list(map(
+            lambda stmt: list(layers.transform_node(stmt, registry=reg))[0],
+            func))
+        # We hope that only the last statement can be `return`.
+        new_expr = None
+        if body[-1] in A(astlib.Return):
+            new_expr = body[-1].expr
+            body = body[:-1]
+        return Fixer().fix(body, new_expr)
+
+    def t(self, type_):
+        if type_ in A(astlib.Name):
+            return self.type_dict.get(str(type_), type_)
+
+        if type_ in A(astlib.ParameterizedType):
+            type_type = self.t(type_.type_)
+            parameters = []
+            for t in type_.parameters:
+                parameters.append(self.t(t))
+            return astlib.ParameterizedType(type_type, parameters)
+
+        return type_
+
+    def e(self, expr):
+        if expr in A(astlib.CFuncCall):
+            return expr
+
+        if expr in A(astlib.StructFuncCall):
+            struct = self.t(expr.struct)
+            args = []
+            for arg in expr.args:
+                args.append(self.e(arg))
+            return astlib.StructFuncCall(struct, expr.func_name, args)
+
+        if expr in A(astlib.Name):
+            return self.arg_dict.get(str(expr), expr)
+
+        if expr in A(astlib.StructMember):
+            struct = self.arg_dict.get(str(expr.struct), expr.struct)
+            member = expr.member
+            if member in A(astlib.StructMember):
+                member = self.e(member)
+            return astlib.StructMember(struct, member)
+
+        return expr
+
+    @layers.register(astlib.VarDecl)
+    def var_decl(self, declaration):
+        type_ = self.t(declaration.type_)
+        expr = self.e(declaration.expr)
+        yield astlib.VarDecl(declaration.name, type_, expr)
+
+    @layers.register(astlib.AssignmentAndAlloc)
+    def ass_and_alloc(self, statement):
+        name = self.e(statement.name)
+        type_ = self.t(statement.type_)
+        expr = self.e(statement.expr)
+        yield astlib.AssignmentAndAlloc(name, type_, expr)
+
+    @layers.register(astlib.Return)
+    def return_(self, statement):
+        yield astlib.Return(self.e(statement.expr))
 
 
 class Inlining(layers.Layer):
 
     def __init__(self, inlined_structs=None):
         self.inlined_structs = inlined_structs or Env()
+
+    def get_declaration(self, expr):
+        if expr in A(astlib.StructCall):
+            entity = get(expr.name)
+            return entity["methods"]["__init__"]["body"]
+        errors.not_implemented(context.exit_on_error, "...")
 
     def check(self, declaration):
         if declaration in A(astlib.StructDecl):
@@ -57,8 +130,8 @@ class Inlining(layers.Layer):
                 init_method = entry["methods"]["__init__"]
                 for arg_name, arg_value in zip([arg.name for arg in init_method["args"]], expr.args):
                     arg_dict[str(arg_name)] = arg_value
-                print("GOT (type dict): ", type_dict, file=sys.stderr)
-                print("GOT (arg dict): ", arg_dict, file=sys.stderr)
+
+                return Applier(type_dict, arg_dict).apply(self.get_declaration(expr), type_dict, arg_dict)
             else:
                 errors.not_implemented(
                     context.exit_on_error,
