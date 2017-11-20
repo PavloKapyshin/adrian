@@ -47,6 +47,9 @@ def t(type_):
 
     if type_ in A(astlib.Name):
         return cgen.CTypes.ptr(cgen.StructType(str(type_)))
+
+    if type_ in A(astlib.ParameterizedType):
+        return t(type_.type_)
     errors.not_implemented(
         context.exit_on_error,
         "tocgen: t (type_ {})".format(type_))

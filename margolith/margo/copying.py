@@ -47,8 +47,8 @@ def e(expr, name):
 
     if expr in A(astlib.Name):
         result = get(expr)
-        if result["type"] in A(astlib.CType):
-            return heapify(expr, name)
+        #if result["type"] in A(astlib.CType):
+        return heapify(expr, name)
 
     return expr, []
 

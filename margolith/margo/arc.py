@@ -26,7 +26,7 @@ class ARC(layers.Layer):
         return self.initialization_list.get(str(variable))
 
     def add_struct_fields_to_initialized(self, variable, expr):
-        struct_entry = get(str(inference.infer(expr)))
+        struct_entry = get(inference.infer(expr))
         fields = struct_entry["fields"]
         for field_name, _ in fields.items():
             # TODO: fix this shit.
@@ -40,6 +40,8 @@ class ARC(layers.Layer):
         if type_ in A(astlib.Name):
             return astlib.StructFuncCall(
                 type_, defs.DEINIT_METHOD_NAME, args=[arg])
+        if type_ in A(astlib.ParameterizedType):
+            return self.raw_free(arg, type_.type_)
         errors.not_implemented(
             context.exit_on_error, "can't free")
 

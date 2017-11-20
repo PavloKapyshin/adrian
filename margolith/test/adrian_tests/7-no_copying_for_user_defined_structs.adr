@@ -1,0 +1,7 @@
+struct T {
+    data: c#IntFast8
+}
+
+
+var a = T(c#IntFast8(0))
+var b = a

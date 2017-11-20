@@ -140,6 +140,8 @@ def add_to_env(statement):
 def raw_get(name):
     if name in A(astlib.Name):
         return context.env.get(str(name))
+    if name in A(astlib.ParameterizedType):
+        return context.env.get(str(name.type_))
     return context.env.get(name)
 
 

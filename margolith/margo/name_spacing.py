@@ -43,6 +43,10 @@ def t(type_):
     if type_ in A(astlib.Name):
         return n(type_)
 
+    if type_ in A(astlib.ParameterizedType):
+        return astlib.ParameterizedType(
+            t(type_.type_), [t(p) for p in type_.parameters])
+
     errors.not_implemented(
         context.exit_on_error,
         "namespacing: type (type {})".format(type_))
