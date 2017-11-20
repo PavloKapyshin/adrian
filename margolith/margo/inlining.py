@@ -1,6 +1,6 @@
 import sys
 
-from . import layers, astlib, errors
+from . import layers, astlib, errors, defs
 from .context import context, get, add_to_env
 from .patterns import A
 from .env import Env
@@ -8,7 +8,36 @@ from .env import Env
 
 class Fixer(layers.Layer):
     def fix(self, body, expr):
-        return body, expr
+        reg = Fixer().get_registry()
+        body = list(map(
+            lambda stmt: list(layers.transform_node(stmt, registry=reg))[0],
+            body))
+        return body, self.e(expr)
+
+    def fix_struct_func_call(self, call):
+        if call.func_name == defs.INIT_METHOD_NAME:
+            return call.args[0]
+        if call.func_name == defs.COPY_METHOD_NAME:
+            return call.args[0]
+        if call.func_name == defs.DEINIT_METHOD_NAME:
+            return astlib.CFuncCall("free", args=[call.args[0]])
+        return call
+
+    def e(self, expr):
+        if expr in A(astlib.StructFuncCall):
+            if expr.struct in A(astlib.CType):
+                return self.fix_struct_func_call(expr)
+        return expr
+
+    @layers.register(astlib.VarDecl)
+    def var_decl(self, declaration):
+        yield astlib.VarDecl(
+            declaration.name, declaration.type_, self.e(declaration.expr))
+
+    @layers.register(astlib.AssignmentAndAlloc)
+    def ass_and_alloc(self, statement):
+        yield astlib.AssignmentAndAlloc(
+            statement.name, statement.type_, self.e(statement.expr))
 
 
 class Applier(layers.Layer):
