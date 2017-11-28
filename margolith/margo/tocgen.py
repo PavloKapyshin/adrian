@@ -76,6 +76,9 @@ def e(expr):
     if expr in A(astlib.Deref):
         return cgen.DeRef(e(expr.expr))
 
+    if expr in A(astlib.CCast):
+        return cgen.Cast(e(expr.expr), t(expr.to))
+
     if expr in A(astlib.Name):
         return cgen.Var(str(expr))
 

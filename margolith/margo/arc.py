@@ -100,7 +100,7 @@ class ARC(layers.Layer):
     @layers.register(astlib.Return)
     def return_(self, stmt):
         if stmt.expr in A(astlib.Name):
-            # TODO: when multiply returns in one function
+            # TODO: when multiply returns in one function appear
             # we need to free this variable in another return.
             self.to_free.del_(str(stmt.expr))
         yield from self.arc()

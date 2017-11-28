@@ -101,6 +101,9 @@ def e(expr):
     if expr in A(astlib.StructMember):
         return astlib.StructMember(e(expr.struct), e(expr.member))
 
+    if expr in A(astlib.CCast):
+        return astlib.CCast(e(expr.expr), t(expr.to))
+
     errors.not_implemented(
         context.exit_on_error,
         "namespacing: expr (expr {})".format(expr))
