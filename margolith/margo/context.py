@@ -103,7 +103,11 @@ def add_to_env(statement):
                     "type": arg.type_,
                     "node_type": NodeType.var
                 })
-        context.env.add(str(statement.struct), entity)
+
+        struct = statement.struct
+        if struct in A(astlib.ParameterizedType):
+            struct = struct.type_
+        context.env.add(str(struct), entity)
 
     if statement in A(astlib.StructDecl):
         context.env.add("self", {

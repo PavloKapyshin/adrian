@@ -108,12 +108,18 @@ def e(expr):
 
 class NameSpacing(layers.Layer):
 
+    def __init__(self, inlined_structs=None):
+        self.inlined_structs = inlined_structs or []
+
     def body(self, body):
-        reg = NameSpacing().get_registry()
+        reg = NameSpacing(inlined_structs=self.inlined_structs).get_registry()
         return list(map(
             lambda stmt: list(
                 layers.transform_node(stmt, registry=reg))[0],
             body))
+
+    def inlined(self, struct_func_decl):
+        return str(struct_func_decl.struct) in self.inlined_structs
 
     @layers.register(astlib.VarDecl)
     def var_decl(self, declaration):
@@ -163,13 +169,18 @@ class NameSpacing(layers.Layer):
 
     @layers.register(astlib.StructFuncDecl)
     def struct_func(self, stmt):
-        yield astlib.FuncDecl(
-            struct_func_name(stmt.struct, stmt.func),
-            decl_args(stmt.args),
-            t(stmt.rettype), self.body(stmt.body))
+        if self.inlined(stmt):
+            yield from []
+        else:
+            yield astlib.FuncDecl(
+                struct_func_name(stmt.struct, stmt.func),
+                decl_args(stmt.args),
+                t(stmt.rettype), self.body(stmt.body))
 
     @layers.register(astlib.StructDecl)
     def struct(self, struct):
+        if struct.var_types != []:
+            self.inlined_structs.append(str(struct.name))
         yield astlib.StructDecl(
             n(struct.name), struct.var_types,
             self.body(struct.body))

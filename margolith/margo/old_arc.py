@@ -24,9 +24,17 @@ class ARC(layers.Layer):
         self.initialization_list = initialization_list or env.Env()
 
     def initialized(self, variable):
-        if variable in A(astlib.StructMember):
-            return self.initialization_list.get(str(variable.struct))
         return self.initialization_list.get(str(variable))
+
+    def add_struct_fields_to_initialized(self, variable, expr):
+        print("HERE", file=sys.stderr)
+        struct_entry = get(inference.infer(expr))
+        print("A", file=sys.stderr)
+        fields = struct_entry["fields"]
+        for field_name, _ in fields.items():
+            # TODO: fix this shit.
+            self.initialization_list.add(
+                "StructMember(struct='" + str(variable) + "', member='" + field_name + "')", True)
 
     def raw_free(self, arg, type_):
         if type_ in A(astlib.CType):
@@ -73,6 +81,10 @@ class ARC(layers.Layer):
         self.initialization_list.add(
             str(declaration.name),
             self.make_expr_for_initializion_list(declaration.expr))
+        print("( declaration:", declaration, file=sys.stderr)
+        if declaration.expr not in A(astlib.CFuncCall) and not is_ctype(declaration.type_):
+            self.add_struct_fields_to_initialized(declaration.name, declaration.expr)
+        print(")", file=sys.stderr)
         yield declaration
 
     @layers.register(astlib.LetDecl)
@@ -85,6 +97,8 @@ class ARC(layers.Layer):
         self.initialization_list.add(
             str(declaration.name),
             self.make_expr_for_initializion_list(declaration.expr))
+        if declaration.expr not in A(astlib.CFuncCall) and not is_ctype(declaration.type_):
+            self.add_struct_fields_to_initialized(declaration.name, declaration.expr)
         yield declaration
 
     @layers.register(astlib.Assignment)

@@ -1,43 +1,64 @@
 import sys
+import itertools
 
-from . import layers, astlib, errors, defs
+from . import layers, astlib, errors, defs, heapify
 from .context import context, get, add_to_env
 from .patterns import A
 from .env import Env
 
 
 class Fixer(layers.Layer):
-    def fix(self, body, expr):
+    def fix(self, body):
         reg = Fixer().get_registry()
-        body = list(map(
-            lambda stmt: list(layers.transform_node(stmt, registry=reg))[0],
-            body))
-        return body, self.e(expr)
-
-    def fix_struct_func_call(self, call):
-        if call.func_name == defs.INIT_METHOD_NAME:
-            return call.args[0]
-        if call.func_name == defs.COPY_METHOD_NAME:
-            return call.args[0]
-        if call.func_name == defs.DEINIT_METHOD_NAME:
-            return astlib.CFuncCall("free", args=[call.args[0]])
-        return call
-
-    def e(self, expr):
-        if expr in A(astlib.StructFuncCall):
-            if expr.struct in A(astlib.CType):
-                return self.fix_struct_func_call(expr)
-        return expr
+        body = list(itertools.chain.from_iterable(
+            map(lambda stmt: list(
+                    layers.transform_node(stmt, registry=reg)),
+                body)))
+        return body
 
     @layers.register(astlib.VarDecl)
     def var_decl(self, declaration):
+        new_expr, assignments = self.e(declaration.expr, declaration.name)
+        add_to_env(declaration)
         yield astlib.VarDecl(
-            declaration.name, declaration.type_, self.e(declaration.expr))
+            declaration.name, declaration.type_, new_expr)
+        yield from assignments
 
-    @layers.register(astlib.AssignmentAndAlloc)
-    def ass_and_alloc(self, statement):
-        yield astlib.AssignmentAndAlloc(
-            statement.name, statement.type_, self.e(statement.expr))
+    @layers.register(astlib.Assignment)
+    def assignment(self, stmt):
+        new_expr, assignments = self.e(stmt.expr, stmt.variable)
+        yield astlib.Assignment(
+            stmt.variable, stmt.op, new_expr)
+        yield from assignments
+
+    def e(self, expr, name):
+        if expr in A(astlib.StructFuncCall):
+            if expr.struct in A(astlib.CType):
+                return self.fix_struct_func_call(expr, name)
+        return expr, []
+
+    def fix_struct_func_call(self, call, name):
+        if call.func_name == defs.INIT_METHOD_NAME:
+            return heapify.heapify(call.args[0], name)
+        if call.func_name == defs.COPY_METHOD_NAME:
+            return heapify.heapify(call.args[0], name)
+        return call, []
+
+#     def fix_struct_func_call(self, call, name):
+#         if call.func_name == defs.INIT_METHOD_NAME:
+#             #return call.args[0]
+#             return heapify.heapify(call.args[0], name)
+#         if call.func_name == defs.COPY_METHOD_NAME:
+#             #return call.args[0]
+#             return heapify.heapify(call.args[0], name)
+#         if call.func_name == defs.DEINIT_METHOD_NAME:
+#             return astlib.CFuncCall("free", args=[call.args[0]]), []
+#         return call, []
+
+#     # @layers.register(astlib.AssignmentAndAlloc)
+#     # def ass_and_alloc(self, statement):
+#     #     yield astlib.AssignmentAndAlloc(
+#     #         statement.name, statement.type_, self.e(statement.expr))
 
 
 class Applier(layers.Layer):
@@ -56,7 +77,9 @@ class Applier(layers.Layer):
         if body[-1] in A(astlib.Return):
             new_expr = body[-1].expr
             body = body[:-1]
-        return Fixer().fix(body, new_expr)
+        #return Fixer().fix(body, new_expr)
+        return Fixer().fix(body), new_expr
+        #return body, new_expr
 
     def t(self, type_):
         if type_ in A(astlib.Name):
@@ -98,6 +121,7 @@ class Applier(layers.Layer):
     def var_decl(self, declaration):
         type_ = self.t(declaration.type_)
         expr = self.e(declaration.expr)
+        add_to_env(declaration)
         yield astlib.VarDecl(declaration.name, type_, expr)
 
     @layers.register(astlib.AssignmentAndAlloc)
@@ -106,6 +130,12 @@ class Applier(layers.Layer):
         type_ = self.t(statement.type_)
         expr = self.e(statement.expr)
         yield astlib.AssignmentAndAlloc(name, type_, expr)
+
+    @layers.register(astlib.Assignment)
+    def assignment(self, statement):
+        variable = self.e(statement.variable)
+        expr = self.e(statement.expr)
+        yield astlib.Assignment(variable, statement.op, expr)
 
     @layers.register(astlib.Return)
     def return_(self, statement):
@@ -121,6 +151,10 @@ class Inlining(layers.Layer):
         if expr in A(astlib.StructCall):
             entity = get(expr.name)
             return entity["methods"]["__init__"]["body"]
+
+        if expr in A(astlib.StructFuncCall):
+            entity = get(expr.struct)
+            return entity["methods"][expr.func_name]["body"]
         errors.not_implemented(context.exit_on_error, "...")
 
     def check(self, declaration):
@@ -145,6 +179,11 @@ class Inlining(layers.Layer):
     def need_to_inline(self, expr):
         if expr in A(astlib.StructCall):
             return self.inlined_structs.exists(str(expr.name))
+        if expr in A(astlib.StructFuncCall):
+            type_ = expr.struct
+            if type_ in A(astlib.ParameterizedType):
+                type_ = type_.type_
+            return self.inlined_structs.exists(str(type_))
         return False
 
     def inline(self, type_, expr):
@@ -166,10 +205,29 @@ class Inlining(layers.Layer):
                     context.exit_on_error,
                     "no need to inline, but it is queried")
 
+        if expr in A(astlib.StructFuncCall):
+            if type_ in A(astlib.ParameterizedType):
+                type_dict = {}
+                entry = get(type_.type_)
+                for parameter_name, parameter_value in zip(entry["var_types"], type_.parameters):
+                    type_dict[str(parameter_name)] = parameter_value
+
+                arg_dict = {}
+                method = entry["methods"][expr.func_name]
+                for arg_name, arg_value in zip([arg.name for arg in method["args"]], expr.args):
+                    arg_dict[str(arg_name)] = arg_value
+
+                return Applier(type_dict, arg_dict).apply(self.get_declaration(expr), type_dict, arg_dict)
+            else:
+                errors.not_implemented(
+                    context.exit_on_error,
+                    "no need to inline, but it is queried")
+
         return [], expr
 
     @layers.register(astlib.VarDecl)
     def var_decl(self, declaration):
+        add_to_env(declaration)
         if self.need_to_inline(declaration.expr):
             inlined_body, expr = self.inline(declaration.type_, declaration.expr)
             yield from inlined_body
