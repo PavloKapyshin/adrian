@@ -70,6 +70,14 @@ class StructMember(Node):
         self._keys = ("struct", "member")
 
 
+class ParameterizedType(Node):
+
+    def __init__(self, type_, parameters):
+        self.type_ = type_
+        self.parameters = parameters
+        self._keys = ("type_", "parameters")
+
+
 class _Callable(Node):
 
     def __init__(self, name, args):
@@ -158,6 +166,14 @@ class LinkedListNode(LinkedList, Node):
     def __init__(self, value, rest=None):
         super().__init__(value, rest)
         self._keys = ("value", "rest")
+
+
+class VarTypes(LinkedListNode):
+    pass
+
+
+class Types(LinkedListNode):
+    pass
 
 
 class Body(LinkedListNode):
@@ -287,18 +303,19 @@ class ProtocolDecl(Node):
 
 
 class StructDecl(Node):
-    """     name
-           vvvvvv
-    struct MyType {
+    """     name  var_types
+           vvvvvv vvvvvvvvv
+    struct MyType(valueType) {
         length: Integer         < body
         data: valueType         < body
     }
     """
 
-    def __init__(self, name, body):
+    def __init__(self, name, var_types, body):
         self.name = name
+        self.var_types = var_types
         self.body = body
-        self._keys = ("name", "body")
+        self._keys = ("name", "var_types", "body")
 
 
 class FieldDecl(Node):
@@ -391,6 +408,14 @@ class CVoid(BaseNode):
 
     def __str__(self):
         return "Void"
+
+    __repr__ = __str__
+
+
+class CObject(BaseNode):
+
+    def __str__(self):
+        return "void*"
 
     __repr__ = __str__
 

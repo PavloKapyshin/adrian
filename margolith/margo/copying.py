@@ -1,54 +1,21 @@
 import itertools
 
-from . import layers, astlib, errors, defs, inference
+from . import layers, astlib, errors, defs, inference, heapify
 from .context import (
     context, get, add_to_env, add_scope, del_scope)
 from .patterns import A
-
-
-def is_ctype(type_):
-    if type_ in A(astlib.CType):
-        return True
-    return False
-
-
-def get_assignment(name, val):
-    return astlib.Assignment(
-        astlib.Deref(name), "=", val)
-
-
-def get_val(value):
-    if value in A(astlib.Name, astlib.StructMember):
-        return astlib.Deref(value)
-    if value in A(astlib.Expr):
-        return astlib.Expr(
-            value.op, get_val(value.left_expr),
-            get_val(value.right_expr))
-    return value
-
-
-def heapify(expr, name):
-    type_ = inference.infer(expr)
-    if is_ctype(type_):
-        allocation = astlib.CFuncCall(
-            "malloc", [astlib.CFuncCall(
-                "sizeof", [astlib.StructScalar(type_)])])
-        assignment = get_assignment(name, get_val(expr))
-        return allocation, [assignment]
-    return astlib.StructFuncCall(
-        type_, defs.COPY_METHOD_NAME, args=[expr]), []
 
 
 def e(expr, name):
     if expr in A(
             astlib.CTYPES + (
             astlib.Expr, astlib.StructMember)):
-        return heapify(expr, name)
+        return heapify.heapify(expr, name)
 
     if expr in A(astlib.Name):
-        result = get(expr)
-        if result["type"] in A(astlib.CType):
-            return heapify(expr, name)
+        #result = get(expr)
+        #if result["type"] in A(astlib.CType):
+        return heapify.heapify(expr, name)
 
     return expr, []
 
@@ -96,7 +63,7 @@ class Copying(layers.Layer):
                 astlib.AssignmentAndAlloc(
                     stmt.variable, expr_type, stmt.expr))
         else:
-            yield get_assignment(stmt.variable, stmt.expr)
+            yield heapify.get_assignment(stmt.variable, stmt.expr)
 
     @layers.register(astlib.Return)
     def return_(self, return_):
@@ -127,5 +94,6 @@ class Copying(layers.Layer):
         add_to_env(declaration)
         add_scope()
         yield astlib.StructDecl(
-            declaration.name, self.body(declaration.body))
+            declaration.name, declaration.var_types,
+            self.body(declaration.body))
         del_scope()

@@ -42,8 +42,14 @@ def t(type_):
             return cgen.CTypes.void
         return cgen.CTypes.ptr(getattr(cgen.CTypes, TO_CTYPE[str(type_)]))
 
+    if type_ in A(astlib.CObject):
+        return cgen.CTypes.ptr(cgen.CTypes.void)
+
     if type_ in A(astlib.Name):
         return cgen.CTypes.ptr(cgen.StructType(str(type_)))
+
+    if type_ in A(astlib.ParameterizedType):
+        return t(type_.type_)
     errors.not_implemented(
         context.exit_on_error,
         "tocgen: t (type_ {})".format(type_))
@@ -69,6 +75,9 @@ def e(expr):
 
     if expr in A(astlib.Deref):
         return cgen.DeRef(e(expr.expr))
+
+    if expr in A(astlib.CCast):
+        return cgen.Cast(e(expr.expr), t(expr.to))
 
     if expr in A(astlib.Name):
         return cgen.Var(str(expr))

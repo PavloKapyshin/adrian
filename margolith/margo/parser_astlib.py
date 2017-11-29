@@ -12,13 +12,16 @@ NAME = "Name"
 SEXPR = "Expr"
 
 BODY = "Body"
-ARG_LIST = "CallArgs"
 ARGS = "Args"
+TYPES = "Types"
+VAR_TYPES = "VarTypes"
+ARG_LIST = "CallArgs"
 
 INTEGER = "IntLiteral"
 
 MODULE_MEMBER = "ModuleMember"
 STRUCT_MEMBER = "StructMember"
+PARAMETERIZED_TYPE = "ParameterizedType"
 CALL = "FuncCall"
 
 EMPTY = "Empty"

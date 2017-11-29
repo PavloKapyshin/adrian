@@ -37,11 +37,15 @@ def struct_func_name(struct, name):
 
 
 def t(type_):
-    if type_ in A(astlib.CType):
+    if type_ in A(astlib.CType, astlib.CObject):
         return type_
 
     if type_ in A(astlib.Name):
         return n(type_)
+
+    if type_ in A(astlib.ParameterizedType):
+        return astlib.ParameterizedType(
+            t(type_.type_), [t(p) for p in type_.parameters])
 
     errors.not_implemented(
         context.exit_on_error,
@@ -97,6 +101,9 @@ def e(expr):
     if expr in A(astlib.StructMember):
         return astlib.StructMember(e(expr.struct), e(expr.member))
 
+    if expr in A(astlib.CCast):
+        return astlib.CCast(e(expr.expr), t(expr.to))
+
     errors.not_implemented(
         context.exit_on_error,
         "namespacing: expr (expr {})".format(expr))
@@ -104,12 +111,18 @@ def e(expr):
 
 class NameSpacing(layers.Layer):
 
+    def __init__(self, inlined_structs=None):
+        self.inlined_structs = inlined_structs or []
+
     def body(self, body):
-        reg = NameSpacing().get_registry()
+        reg = NameSpacing(inlined_structs=self.inlined_structs).get_registry()
         return list(map(
             lambda stmt: list(
                 layers.transform_node(stmt, registry=reg))[0],
             body))
+
+    def inlined(self, struct_func_decl):
+        return str(struct_func_decl.struct) in self.inlined_structs
 
     @layers.register(astlib.VarDecl)
     def var_decl(self, declaration):
@@ -159,15 +172,21 @@ class NameSpacing(layers.Layer):
 
     @layers.register(astlib.StructFuncDecl)
     def struct_func(self, stmt):
-        yield astlib.FuncDecl(
-            struct_func_name(stmt.struct, stmt.func),
-            decl_args(stmt.args),
-            t(stmt.rettype), self.body(stmt.body))
+        if self.inlined(stmt):
+            yield from []
+        else:
+            yield astlib.FuncDecl(
+                struct_func_name(stmt.struct, stmt.func),
+                decl_args(stmt.args),
+                t(stmt.rettype), self.body(stmt.body))
 
     @layers.register(astlib.StructDecl)
     def struct(self, struct):
+        if struct.var_types != []:
+            self.inlined_structs.append(str(struct.name))
         yield astlib.StructDecl(
-            n(struct.name), self.body(struct.body))
+            n(struct.name), struct.var_types,
+            self.body(struct.body))
 
     @layers.register(astlib.FieldDecl)
     def field(self, field):

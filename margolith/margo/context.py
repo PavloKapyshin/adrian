@@ -85,7 +85,9 @@ def add_to_env(statement):
         methods = entity["methods"]
         methods[str(statement.func)] = {
             "node_type": NodeType.fun,
-            "type": statement.rettype
+            "type": statement.rettype,
+            "body": statement.body,
+            "args": statement.args,
         }
         entity["methods"] = methods
         if statement.args in A(astlib.Args, astlib.Empty):
@@ -101,7 +103,11 @@ def add_to_env(statement):
                     "type": arg.type_,
                     "node_type": NodeType.var
                 })
-        context.env.add(str(statement.struct), entity)
+
+        struct = statement.struct
+        if struct in A(astlib.ParameterizedType):
+            struct = struct.type_
+        context.env.add(str(struct), entity)
 
     if statement in A(astlib.StructDecl):
         context.env.add("self", {
@@ -121,6 +127,8 @@ def add_to_env(statement):
         for method_decl in method_decls:
             methods[str(method_decl.name)] = {
                 "type": method_decl.rettype,
+                "args": method_decl.args,
+                "body": method_decl.body,
                 "node_type": NodeType.fun
             }
 
@@ -128,6 +136,7 @@ def add_to_env(statement):
             "type": statement.name,
             "fields": fields,
             "methods": methods,
+            "var_types": statement.var_types,
             "node_type": NodeType.struct
         })
 
@@ -135,6 +144,8 @@ def add_to_env(statement):
 def raw_get(name):
     if name in A(astlib.Name):
         return context.env.get(str(name))
+    if name in A(astlib.ParameterizedType):
+        return context.env.get(str(name.type_))
     return context.env.get(name)
 
 
