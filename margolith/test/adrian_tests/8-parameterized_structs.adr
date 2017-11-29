@@ -1,0 +1,15 @@
+struct Generic(a) {
+    data: a
+}
+
+var a: Generic(c#IntFast8) = Generic(c#IntFast8(0))
+var b: Generic(c#IntFast8) = a
+
+
+
+struct T(a) {
+    genericData: a
+    length: c#UIntFast64
+}
+
+var c: T(c#IntFast8) = T(c#IntFast8(12), c#UIntFast64(1))

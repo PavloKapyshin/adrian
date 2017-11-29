@@ -9,8 +9,8 @@ def is_ctype(type_):
 
 
 def get_assignment(name, val):
-    return astlib.Assignment(
-        astlib.Deref(name), "=", val)
+    variable = astlib.Deref(name)
+    return astlib.Assignment(variable, "=", val)
 
 
 def get_val(value):
