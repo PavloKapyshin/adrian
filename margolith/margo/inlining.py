@@ -251,8 +251,9 @@ class Applier(layers.Layer):
 
 class Inlining(layers.Layer):
 
-    def __init__(self, inlined_structs=None):
+    def __init__(self, inlined_structs=None, type_dicts=None):
         self.inlined_structs = inlined_structs or Env()
+        self.type_dicts = type_dicts or {}
 
     def get_declaration(self, expr):
         if expr in A(astlib.StructCall):
@@ -293,7 +294,7 @@ class Inlining(layers.Layer):
             return self.inlined_structs.exists(str(type_))
         return False
 
-    def inline(self, type_, expr):
+    def inline(self, type_, expr, name=None):
         if expr in A(astlib.StructCall):
             if type_ in A(astlib.ParameterizedType):
                 type_dict = {}
@@ -306,6 +307,8 @@ class Inlining(layers.Layer):
                 for arg_name, arg_value in zip([arg.name for arg in init_method["args"]], expr.args):
                     arg_dict[str(arg_name)] = arg_value
 
+                if name:
+                    self.type_dicts[str(name)] = type_dict
                 return Applier(type_dict, arg_dict).apply(self.get_declaration(expr), type_dict, arg_dict)
             else:
                 errors.not_implemented(
@@ -324,6 +327,8 @@ class Inlining(layers.Layer):
                 for arg_name, arg_value in zip([arg.name for arg in method["args"]], expr.args):
                     arg_dict[str(arg_name)] = arg_value
 
+                if name:
+                    self.type_dicts[str(name)] = type_dict
                 return Applier(type_dict, arg_dict).apply(self.get_declaration(expr), type_dict, arg_dict)
             else:
                 errors.not_implemented(
@@ -347,7 +352,7 @@ class Inlining(layers.Layer):
         add_to_env(declaration)
         if self.need_to_inline(declaration.expr):
             add_to_env(declaration)
-            inlined_body, expr = self.inline(declaration.type_, declaration.expr)
+            inlined_body, expr = self.inline(declaration.type_, declaration.expr, name=declaration.name)
             yield from inlined_body
             if declaration in A(astlib.VarDecl):
                 yield astlib.VarDecl(declaration.name, declaration.type_, expr)
@@ -355,6 +360,31 @@ class Inlining(layers.Layer):
                 yield astlib.LetDecl(declaration.name, declaration.type_, expr)
         else:
             yield declaration
+
+    def cast(self, assignment):
+        variable = assignment.variable.expr
+        # variable in A(astlib.Deref) == True
+        return astlib.Deref(astlib.CCast(variable, to=inference.infer(assignment.expr)))
+
+    def really_need_to_cast(self, name):
+        if name in A(astlib.Name):
+            return str(name) in self.type_dicts
+        if name in A(astlib.StructMember):
+            return self.really_need_to_cast(name.struct)
+        return False
+
+    def need_to_cast(self, name):
+        if name in A(astlib.Deref):
+            return self.really_need_to_cast(name.expr)
+        return False
+
+    @layers.register(astlib.Assignment)
+    def assignment(self, stmt):
+        if self.need_to_cast(stmt.variable):
+            yield astlib.Assignment(
+                self.cast(stmt), stmt.op, stmt.expr)
+        else:
+            yield stmt
 
     @layers.register(astlib.StructDecl)
     def struct_decl(self, declaration):
