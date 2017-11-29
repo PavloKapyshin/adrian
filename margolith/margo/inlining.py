@@ -183,6 +183,9 @@ class Applier(layers.Layer):
         if expr in A(astlib.Name):
             return self.arg_dict.get(str(expr), expr)
 
+        if expr in A(astlib.Deref):
+            return astlib.Deref(self.e(expr.expr))
+
         if expr in A(astlib.StructMember):
             struct = self.arg_dict.get(str(expr.struct), expr.struct)
             member = expr.member
