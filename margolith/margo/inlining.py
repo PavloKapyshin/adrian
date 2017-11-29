@@ -139,12 +139,13 @@ class Fixer(layers.Layer):
 
 class Applier(layers.Layer):
 
-    def __init__(self, type_dict, arg_dict):
+    def __init__(self, type_dict, arg_dict, name_dict=None):
         self.type_dict = type_dict
         self.arg_dict = arg_dict
+        self.name_dict = name_dict or {}
 
     def apply(self, func, type_dict, arg_dict):
-        reg = Applier(type_dict, arg_dict).get_registry()
+        reg = Applier(type_dict, arg_dict, name_dict=self.name_dict).get_registry()
         body = list(map(
             lambda stmt: list(layers.transform_node(stmt, registry=reg))[0],
             func))
@@ -171,6 +172,21 @@ class Applier(layers.Layer):
     def call_args(self, args):
         return [self.e(arg) for arg in args]
 
+    def new_tmp(self):
+        tmp_name = astlib.Name(
+            "".join([defs.T_STRING, str(context.tmp_count)]),
+            is_tmp=True)
+        context.tmp_count += 1
+        return tmp_name
+
+    def n(self, name):
+        res = self.new_tmp()
+        n = name
+        if n in A(astlib.Name):
+            n = str(n)
+        self.name_dict[n] = res
+        return res
+
     def e(self, expr):
         if expr in A(astlib.CFuncCall):
             return expr
@@ -181,13 +197,15 @@ class Applier(layers.Layer):
                 self.call_args(expr.args))
 
         if expr in A(astlib.Name):
-            return self.arg_dict.get(str(expr), expr)
+            name = self.arg_dict.get(str(expr), expr)
+            return self.name_dict.get(str(name), name)
 
         if expr in A(astlib.Deref):
             return astlib.Deref(self.e(expr.expr))
 
         if expr in A(astlib.StructMember):
-            struct = self.arg_dict.get(str(expr.struct), expr.struct)
+            name = self.arg_dict.get(str(expr.struct), expr.struct)
+            struct = self.name_dict.get(str(name), name)
             member = expr.member
             if member in A(astlib.StructMember):
                 member = self.e(member)
@@ -199,7 +217,8 @@ class Applier(layers.Layer):
     def var_decl(self, declaration):
         type_ = self.t(declaration.type_)
         expr = self.e(declaration.expr)
-        result = astlib.VarDecl(declaration.name, type_, expr)
+        name = self.n(declaration.name)
+        result = astlib.VarDecl(name, type_, expr)
         add_to_env(result)
         yield result
 

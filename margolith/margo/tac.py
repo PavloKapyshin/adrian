@@ -1,17 +1,13 @@
 import itertools
 
-from . import astlib, layers, inference, errors
+from . import astlib, layers, inference, defs, errors
 from .context import context, add_to_env, add_scope, del_scope
 from .patterns import A
 
 
-# Temporary variable prefix.
-T_STRING = "t"
-
-
 def new_tmp(expr):
     tmp_name = astlib.Name(
-        "".join([T_STRING, str(context.tmp_count)]),
+        "".join([defs.T_STRING, str(context.tmp_count)]),
         is_tmp=True)
     type_ = inference.infer(expr)
     context.tmp_count += 1

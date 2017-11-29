@@ -25,6 +25,8 @@ DEINIT_METHOD_NAME = "__deinit__"
 ADR_PREFIX = "adr"
 USER_PREFIX = "u"
 
+T_STRING = "t"
+
 
 
 # c module definitions.
