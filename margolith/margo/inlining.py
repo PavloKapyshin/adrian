@@ -1,7 +1,7 @@
 import sys
 import itertools
 
-from . import layers, astlib, errors, defs, heapify, inference
+from . import layers, astlib, errors, defs, inference
 from .context import context, get, add_to_env
 from .patterns import A
 from .env import Env
@@ -77,8 +77,8 @@ class Fixer(layers.Layer):
 
     @layers.register(astlib.VarDecl)
     def var_decl(self, declaration):
-        new_expr, assignments = self.e(declaration.expr, declaration.name)
         add_to_env(declaration)
+        new_expr, assignments = self.e(declaration.expr, declaration.name)
         yield astlib.VarDecl(
             declaration.name, declaration.type_, new_expr)
         yield from assignments
@@ -103,14 +103,37 @@ class Fixer(layers.Layer):
     def e(self, expr, name):
         if expr in A(astlib.StructFuncCall):
             if expr.struct in A(astlib.CType):
-                return self.fix_struct_func_call(expr, name)
+                return self.fix_struct_func_call(name, expr.struct, expr)
         return expr, []
 
-    def fix_struct_func_call(self, call, name):
+    def get_val(self, value):
+        if value in A(astlib.Name, astlib.StructMember):
+            return astlib.Deref(value)
+        if value in A(astlib.Expr):
+            return astlib.Expr(
+                value.op, self.get_val(value.left_expr),
+                self.get_val(value.right_expr))
+        return value
+
+    def get_assignment(self, name, val):
+        return astlib.Assignment(
+            astlib.Deref(name), "=", val)
+
+    def heapify(self, name, type_, expr):
+        if type_ in A(astlib.CType):
+            allocation = astlib.CFuncCall(
+                "malloc", [astlib.CFuncCall(
+                    "sizeof", [astlib.StructScalar(type_)])])
+            assignment = self.get_assignment(name, self.get_val(expr))
+            return allocation, [assignment]
+        return astlib.StructFuncCall(
+            type_, defs.COPY_METHOD_NAME, args=[expr]), []
+
+    def fix_struct_func_call(self, name, type_, call):
         if call.func_name == defs.INIT_METHOD_NAME:
-            return heapify.heapify(call.args[0], name)
+            return self.heapify(name, type_, call.args[0])
         if call.func_name == defs.COPY_METHOD_NAME:
-            return heapify.heapify(call.args[0], name)
+            return self.heapify(name, type_, call.args[0])
         return call, []
 
 
