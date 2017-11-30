@@ -7,7 +7,7 @@ RESERVED_WORDS = {
     keyword: keyword.upper()
     for keyword in (
         "var", "let", "fun", "return",
-        #"protocol", "ref", "is",
+        #"protocol", "is",
         "struct"
     )
 }
@@ -26,6 +26,7 @@ ADR_PREFIX = "adr"
 USER_PREFIX = "u"
 
 T_STRING = "t"
+REF = "ref"
 
 
 

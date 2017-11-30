@@ -203,6 +203,9 @@ class Applier(layers.Layer):
         if expr in A(astlib.Deref):
             return astlib.Deref(self.e(expr.expr))
 
+        if expr in A(astlib.Ref):
+            return astlib.Ref(self.e(expr.expr))
+
         if expr in A(astlib.StructMember):
             name = self.arg_dict.get(str(expr.struct), expr.struct)
             struct = self.name_dict.get(str(name), name)
@@ -251,8 +254,9 @@ class Applier(layers.Layer):
 
 class Inlining(layers.Layer):
 
-    def __init__(self, inlined_structs=None):
+    def __init__(self, inlined_structs=None, type_dicts=None):
         self.inlined_structs = inlined_structs or Env()
+        self.type_dicts = type_dicts or {}
 
     def get_declaration(self, expr):
         if expr in A(astlib.StructCall):
@@ -293,44 +297,40 @@ class Inlining(layers.Layer):
             return self.inlined_structs.exists(str(type_))
         return False
 
-    def inline(self, type_, expr):
-        if expr in A(astlib.StructCall):
-            if type_ in A(astlib.ParameterizedType):
-                type_dict = {}
-                entry = get(type_.type_)
-                for parameter_name, parameter_value in zip(entry["var_types"], type_.parameters):
-                    type_dict[str(parameter_name)] = parameter_value
+    def raw_inline(self, type_dict, arg_dict, body):
+        return Applier(type_dict, arg_dict).apply(body, type_dict, arg_dict)
 
-                arg_dict = {}
-                init_method = entry["methods"]["__init__"]
-                for arg_name, arg_value in zip([arg.name for arg in init_method["args"]], expr.args):
-                    arg_dict[str(arg_name)] = arg_value
+    def make_type_dict(self, value_types, decl_types):
+        type_dict = {}
+        for parameter_name, parameter_value in zip(decl_types, value_types):
+            type_dict[str(parameter_name)] = parameter_value
+        return type_dict
 
-                return Applier(type_dict, arg_dict).apply(self.get_declaration(expr), type_dict, arg_dict)
-            else:
-                errors.not_implemented(
-                    context.exit_on_error,
-                    "no need to inline, but it is queried")
+    def make_arg_dict(self, call_args, decl_args):
+        arg_dict = {}
+        for arg_name, arg_value in zip(decl_args, call_args):
+            arg_dict[str(arg_name)] = arg_value
+        return arg_dict
 
-        if expr in A(astlib.StructFuncCall):
-            if type_ in A(astlib.ParameterizedType):
-                type_dict = {}
-                entry = get(type_.type_)
-                for parameter_name, parameter_value in zip(entry["var_types"], type_.parameters):
-                    type_dict[str(parameter_name)] = parameter_value
-
-                arg_dict = {}
+    def inline(self, type_, expr, name=None):
+        if type_ in A(astlib.ParameterizedType):
+            entry = get(type_.type_)
+            if expr in A(astlib.StructCall):
+                method = entry["methods"]["__init__"]
+            elif expr in A(astlib.StructFuncCall):
                 method = entry["methods"][expr.func_name]
-                for arg_name, arg_value in zip([arg.name for arg in method["args"]], expr.args):
-                    arg_dict[str(arg_name)] = arg_value
-
-                return Applier(type_dict, arg_dict).apply(self.get_declaration(expr), type_dict, arg_dict)
-            else:
-                errors.not_implemented(
-                    context.exit_on_error,
-                    "no need to inline, but it is queried")
-
-        return [], expr
+            type_dict = self.make_type_dict(type_.parameters, entry["var_types"])
+            arg_dict = self.make_arg_dict(expr.args, [arg.name for arg in method["args"]])
+            if name:
+                self.type_dicts[str(name)] = {
+                    "main_type": type_.type_,
+                    "type_dict": type_dict
+                }
+            return self.raw_inline(type_dict, arg_dict, self.get_declaration(expr))
+        else:
+            errors.not_implemented(
+                context.exit_on_error,
+                "no need to inline, but it is queried")
 
     @layers.register(astlib.StructFuncCall)
     def struct_func_call(self, call):
@@ -346,8 +346,7 @@ class Inlining(layers.Layer):
     def var_decl(self, declaration):
         add_to_env(declaration)
         if self.need_to_inline(declaration.expr):
-            add_to_env(declaration)
-            inlined_body, expr = self.inline(declaration.type_, declaration.expr)
+            inlined_body, expr = self.inline(declaration.type_, declaration.expr, name=declaration.name)
             yield from inlined_body
             if declaration in A(astlib.VarDecl):
                 yield astlib.VarDecl(declaration.name, declaration.type_, expr)
@@ -355,6 +354,54 @@ class Inlining(layers.Layer):
                 yield astlib.LetDecl(declaration.name, declaration.type_, expr)
         else:
             yield declaration
+
+    def get_type_dict(self, name):
+        if name in A(astlib.Name):
+            return self.type_dicts[str(name)]
+        if name in A(astlib.StructMember):
+            return self.get_type_dict(name.struct)
+        if name in A(astlib.Deref):
+            return self.get_type_dict(name.expr)
+
+    def cast(self, assignment):
+        variable = assignment.variable.expr
+        # variable in A(astlib.Deref) == True
+        return astlib.Deref(astlib.CCast(variable, to=inference.infer(assignment.expr)))
+
+    def really_need_to_cast(self, name):
+        if name in A(astlib.Name):
+            return str(name) in self.type_dicts
+        if name in A(astlib.StructMember):
+            return self.really_need_to_cast(name.struct)
+        return False
+
+    def need_to_cast(self, name):
+        if name in A(astlib.Deref):
+            return self.really_need_to_cast(name.expr)
+        return False
+
+    @layers.register(astlib.Assignment)
+    def assignment(self, stmt):
+        if self.need_to_cast(stmt.variable):
+            yield astlib.Assignment(
+                self.cast(stmt), stmt.op, stmt.expr)
+        elif self.need_to_inline(stmt.expr):
+            res = self.get_type_dict(stmt.variable)
+            type_dict = res["type_dict"]
+            entry = get(res["main_type"])
+            if stmt.expr in A(astlib.StructCall):
+                method = entry["methods"]["__init__"]
+            elif stmt.expr in A(astlib.StructFuncCall):
+                method = entry["methods"][stmt.expr.func_name]
+            arg_dict = self.make_arg_dict(
+                stmt.expr.args, [arg.name for arg in method["args"]])
+            inlined_body, expr = self.raw_inline(
+                type_dict, arg_dict, self.get_declaration(stmt.expr))
+            yield from inlined_body
+            yield astlib.Assignment(
+                stmt.variable, stmt.op, expr)
+        else:
+            yield stmt
 
     @layers.register(astlib.StructDecl)
     def struct_decl(self, declaration):

@@ -1,0 +1,10 @@
+var a = c#IntFast8(0)
+var b = ref(a)
+
+
+struct T {
+    field: c#UIntFast64
+}
+
+var c = T(c#UIntFast64(123))
+var d = ref(c.field)

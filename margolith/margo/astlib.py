@@ -349,10 +349,6 @@ class Literal(Node):
         self._keys = ("literal", )
 
 
-class Ref(Literal):
-    """ref."""
-
-
 class IntLiteral(Literal):
     """Just a number like 42"""
 
@@ -428,6 +424,13 @@ class _TypeModifier(Node):
 
 
 class Deref(Node):
+
+    def __init__(self, expr):
+        self.expr = expr
+        self._keys = ("expr", )
+
+
+class Ref(Node):
 
     def __init__(self, expr):
         self.expr = expr

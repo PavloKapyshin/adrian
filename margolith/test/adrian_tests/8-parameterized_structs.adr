@@ -5,6 +5,11 @@ struct Generic(a) {
 var a: Generic(c#IntFast8) = Generic(c#IntFast8(0))
 var b: Generic(c#IntFast8) = a
 
+var d: Generic(c#IntFast16) = Generic(c#IntFast16(4))
+d.data = c#IntFast16(2)
+
+var e: Generic(c#IntFast32) = Generic(c#IntFast32(1))
+e = Generic(c#IntFast32(6))
 
 
 struct T(a) {
