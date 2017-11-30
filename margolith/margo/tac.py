@@ -39,7 +39,7 @@ def inner_expr(expr):
         main_tmp, main_decls = new_tmp(astlib.StructMember(tmp, expr.member))
         return main_tmp, decls + main_decls
 
-    if expr in A(astlib.Name):
+    if expr in A(astlib.Name, astlib.Ref):
         return expr, []
 
     return new_tmp(expr)

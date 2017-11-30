@@ -27,6 +27,12 @@ def e_func_call(func_call):
         args = func_call.args
         yield getattr(
             astlib, "C" + str(func_call.name.member))(args.value.literal)
+    elif str(func_call.name) == defs.REF:
+        args = call_args(func_call.args)
+        if len(args) != 1:
+            errors.wrong_number_of_args(
+                context.exit_on_error, expected=1, got=len(args))
+        yield astlib.Ref(args[0])
     elif is_type(func_call.name):
         yield astlib.StructCall(
             func_call.name, call_args(func_call.args))

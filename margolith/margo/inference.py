@@ -31,7 +31,7 @@ def infer(expr):
         field = fields[str(expr.member)]
         return field["type"]
 
-    if expr in A(astlib.Deref):
+    if expr in A(astlib.Deref, astlib.Ref):
         return infer(expr.expr)
 
     errors.not_implemented(

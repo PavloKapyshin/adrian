@@ -98,6 +98,9 @@ def e(expr):
     if expr in A(astlib.Deref):
         return astlib.Deref(e(expr.expr))
 
+    if expr in A(astlib.Ref):
+        return astlib.Ref(e(expr.expr))
+
     if expr in A(astlib.StructMember):
         return astlib.StructMember(e(expr.struct), e(expr.member))
 

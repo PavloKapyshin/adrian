@@ -49,7 +49,8 @@ class ARC(layers.Layer):
         space = self.to_free.space()
         scope = self.to_free.scope
         for key, val in sorted(space[scope].copy().items()):
-            yield self.free(key, val)
+            if not val["ref"]:
+                yield self.free(key, val)
 
     def make_expr_for_initializion_list(self, expr):
         if expr in A(astlib.CFuncCall):
@@ -68,7 +69,8 @@ class ARC(layers.Layer):
         add_to_env(declaration)
         self.to_free.add(str(declaration.name), {
             "type": declaration.type_,
-            "is_tmp": declaration.name.is_tmp
+            "is_tmp": declaration.name.is_tmp,
+            "ref": declaration.expr in A(astlib.Ref),
         })
         self.initialization_list.add(
             str(declaration.name),
@@ -80,7 +82,8 @@ class ARC(layers.Layer):
         add_to_env(declaration)
         self.to_free.add(str(declaration.name), {
             "type": declaration.type_,
-            "is_tmp": declaration.name.is_tmp
+            "is_tmp": declaration.name.is_tmp,
+            "ref": declaration.expr in A(astlib.Ref),
         })
         self.initialization_list.add(
             str(declaration.name),
