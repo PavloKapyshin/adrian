@@ -116,25 +116,15 @@ class Analyzer(layers.Layer):
             body.as_list()))
 
     @layers.register(astlib.VarDecl)
-    def var_decl(self, declaration):
-        expr = e(declaration.expr)
-        if declaration.type_ in A(astlib.Empty):
-            declaration.type_ = inference.infer(expr)
-        # Add to env after translation of the expression because
-        # self-linking is an error.
-        add_to_env(declaration)
-        yield astlib.VarDecl(
-            declaration.name, t(declaration.type_), expr)
-
     @layers.register(astlib.LetDecl)
-    def let_decl(self, declaration):
+    def decl(self, declaration):
         expr = e(declaration.expr)
         if declaration.type_ in A(astlib.Empty):
             declaration.type_ = inference.infer(expr)
         # Add to env after translation of the expression because
         # self-linking is an error.
         add_to_env(declaration)
-        yield astlib.LetDecl(
+        yield type(declaration)(
             declaration.name, t(declaration.type_), expr)
 
     @layers.register(astlib.Assignment)
