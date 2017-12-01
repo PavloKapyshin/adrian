@@ -1,5 +1,6 @@
 """
 Translates some FuncCalls to StructCall and StructFuncCall objects.
+Translates linked lists to python's lists.
 Infer types.
 """
 
@@ -53,7 +54,7 @@ class Analyzer(layers.Layer):
             yield getattr(
                 astlib, "C" + str(stmt.name.member))(stmt.args.value.literal)
         elif str(stmt.name) == defs.REF:
-            yield astlib.Ref(self.call_args(stmt.args)[0])
+            yield astlib.Ref(self.call_args(name.args)[0])
         elif is_user_type(stmt.name):
             yield astlib.StructCall(
                 stmt.name, self.call_args(stmt.args))
@@ -110,7 +111,7 @@ class Analyzer(layers.Layer):
     @layers.register(astlib.LetDecl)
     def decl(self, stmt):
         expr = self.e(stmt.expr)
-        type_ = self.t(self.infer_type(stmt.type_, expr))
+        type_ = self.t(self.infer_type(stmt.type_, stmt.expr))
         result = type(stmt)(stmt.name, type_, expr)
         add_to_env(result)
         yield result

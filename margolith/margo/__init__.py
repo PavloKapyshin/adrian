@@ -12,15 +12,15 @@ REPL_FILE_HASH = "mangled"
 
 LAYERS = (
     (parser.Parser, "parse"),
-    (analyzer.Analyzer, "transform_ast"),
-    (object_proto.ObjectProto, "transform_ast"),
-    (tac.TAC, "transform_ast"),
-    (copying.Copying, "transform_ast"),
-    (arc.ARC, "expand_ast"),
-    (inlining.Inlining, "transform_ast"),
-    (name_spacing.NameSpacing, "transform_ast"),
-    (tocgen.ToCGen, "transform_ast"),
-    (main_func.MainFunc, "expand_ast")
+    # (object_proto.ObjectProto, "transform_ast"),
+    # (analyzer.Analyzer, "transform_ast"),
+    # (tac.TAC, "transform_ast"),
+    # (copying.Copying, "transform_ast"),
+    # (arc.ARC, "expand_ast"),
+    # (inlining.Inlining, "transform_ast"),
+    # (name_spacing.NameSpacing, "transform_ast"),
+    # (tocgen.ToCGen, "transform_ast"),
+    # (main_func.MainFunc, "expand_ast")
 )
 
 
@@ -37,10 +37,10 @@ def compile_repl(inp, *, contexts):
                 current_ast = foreign_parser.main(
                     layer.parse(inp))
             tmp_count = context.context.tmp_count
-    generator = adr_cgen.Generator()
-    generator.add_ast(current_ast)
-    return "\n".join(generator.generate())
-    # return current_ast
+    # generator = adr_cgen.Generator()
+    # generator.add_ast(current_ast)
+    # return "\n".join(generator.generate())
+    return current_ast
 
 
 def compile_from_string(inp, file_hash):
