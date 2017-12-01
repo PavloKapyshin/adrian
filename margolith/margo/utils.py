@@ -4,8 +4,7 @@ from .patterns import A
 
 
 def _unknown_stmt_in_struct_body():
-    errors.not_implemented(
-        context.exit_on_error, "unknown statement in struct body")
+    errors.not_implemented("unknown statement in struct body")
 
 
 def split_struct_body(body):

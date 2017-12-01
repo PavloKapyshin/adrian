@@ -88,9 +88,7 @@ t_ignore = " \t"
 
 def t_error(token):
     """Error handling rule."""
-    errors.illegal_char(
-        token.lexer.lineno, context.exit_on_error,
-        char=token.value[0])
+    errors.illegal_char(token.value[0])
 
 
 # Parser defs.
@@ -420,7 +418,7 @@ def p_error(content):
     line = 0
     if content is not None:
         line = content.lineno
-    errors.syntax_error(context.exit_on_error, line)
+    errors.syntax_error(line)
 
 
 class Parser:

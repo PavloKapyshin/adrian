@@ -83,12 +83,10 @@ class ObjectProto(layers.Layer):
             self.to_real_type(decl), [new_decl] + field_inits + [return_])
 
     def complete_copy_method(self, method, decl):
-        errors.not_implemented(
-            context.exit_on_error, "custom copy method is not supported")
+        errors.not_implemented("custom copy method is not supported")
 
     def complete_deinit_method(self, method, decl):
-        errors.not_implemented(
-            context.exit_on_error, "custom deinit method is not supported")
+        errors.not_implemented("custom deinit method is not supported")
 
     def _common_init(self, decl, args, body):
         self_decl = astlib.VarDecl(

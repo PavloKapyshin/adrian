@@ -11,8 +11,7 @@ from .patterns import A
 
 
 def unsupported_module():
-    errors.not_implemented(
-        context.exit_on_error, "only c module is supported")
+    errors.not_implemented("only c module is supported")
 
 
 def is_user_type(name):
@@ -22,36 +21,30 @@ def is_user_type(name):
 class Analyzer(layers.Layer):
 
     def check_body(self, body, string):
-        if body in A(astlib.Empty):
+        if body == []:
             errors.not_implemented(
-                context.exit_on_error,
                 "empty {} are not supported".format(string))
 
     def infer_type(self, type_, expr):
-        if type_ in A(astlib.Empty):
+        if type_ in A(astlib.Unknown):
             return inference.infer(expr)
         return type_
 
     def call_args(self, args):
-        return list(map(self.e, args.as_list()))
+        return list(map(self.e, args))
 
     def decl_args(self, args):
-        return [
-            astlib.Arg(name, self.t(type_))
-            for name, type_ in args.as_list()]
-
-    def var_types(self, types):
-        return types.as_list()
+        return [astlib.Arg(arg.name, self.t(arg.type_)) for arg in args]
 
     def type_parameters(self, types):
-        return [self.t(type_) for type_ in types.as_list()]
+        return list(map(self.t, types))
 
     def e_func_call(self, stmt):
         if stmt.name in A(astlib.ModuleMember):
             if stmt.name.module != defs.CMODULE_NAME:
                 unsupported_module()
             yield getattr(
-                astlib, "C" + str(stmt.name.member))(stmt.args.value.literal)
+                astlib, "C" + str(stmt.name.member))(stmt.args[0].literal)
         elif str(stmt.name) == defs.REF:
             yield astlib.Ref(self.call_args(stmt.args)[0])
         elif is_user_type(stmt.name):
@@ -103,8 +96,7 @@ class Analyzer(layers.Layer):
         reg = Analyzer().get_registry()
         return list(map(
             lambda stmt: list(
-                layers.transform_node(stmt, registry=reg))[0],
-            body.as_list()))
+                layers.transform_node(stmt, registry=reg))[0], body))
 
     @layers.register(astlib.VarDecl)
     @layers.register(astlib.LetDecl)
@@ -135,13 +127,14 @@ class Analyzer(layers.Layer):
             self.t(stmt.rettype), body)
         del_scope()
 
-    @layers.register(astlib.MethodDecl)
+    @layers.register(astlib.StructFuncDecl)
     def method_decl(self, stmt):
         self.check_body(stmt.body, "methods")
+        add_to_env(stmt)
         add_scope()
         body = self.body(stmt.body)
-        yield astlib.MethodDecl(
-            stmt.name, self.decl_args(stmt.args),
+        yield astlib.StructFuncDecl(
+            stmt.struct, stmt.func, self.decl_args(stmt.args),
             self.t(stmt.rettype), body)
         del_scope()
 
@@ -165,5 +158,5 @@ class Analyzer(layers.Layer):
         add_scope()
         body = self.body(stmt.body)
         yield astlib.StructDecl(
-            stmt.name, self.var_types(stmt.var_types), body)
+            stmt.name, stmt.var_types, body)
         del_scope()

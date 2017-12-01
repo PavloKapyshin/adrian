@@ -17,9 +17,10 @@ def infer(expr):
         return infer(expr.right_expr)
     if expr in A(astlib.StructCall):
         struct_entry = get(expr.name)
-        print("GOT", struct_entry, file=sys.stderr)
         init_method = struct_entry["methods"][defs.INIT_METHOD_NAME]
-        return init_method["type"]
+        type_ = init_method["type"]
+        if not (type_ in A(astlib.ParameterizedType)):
+            return type_
     if expr in A(astlib.StructFuncCall):
         methods = get(expr.struct)["methods"]
         method = methods[str(expr.func_name)]
@@ -32,5 +33,4 @@ def infer(expr):
     if expr in A(astlib.Deref, astlib.Ref):
         return infer(expr.expr)
     errors.not_implemented(
-        context.exit_on_error,
         "can't infer type from expression {}".format(expr))
