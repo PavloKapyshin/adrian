@@ -1,11 +1,18 @@
 """Translates parser AST to object-oriented AST."""
 
+import sys
+
 from . import astlib, parser_astlib
 from .patterns import A
 
 
 def decl_args(args):
-    return [astlib.Arg(name, type_) for name, type_ in args]
+    if args == []:
+        return []
+    elif len(args) == 1:
+        return [astlib.Arg(args[0][0], args[0][1])]
+    else:
+        return [astlib.Arg(args[0][0], args[0][1])] + args[1:]
 
 
 def is_linked_list(node):

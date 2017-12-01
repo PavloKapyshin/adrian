@@ -47,15 +47,18 @@ class TypeCaster(layers.Layer):
                         expr=expr.expr, to=self.t(type_)))
         return expr
 
-    @layers.register(astlib.VarDecl)
-    @layers.register(astlib.LetDecl)
-    def decl(self, decl):
+    def _decl(self, decl):
         add_to_env(decl)
         expr = self.e(decl.expr)
-        if decl in A(astlib.VarDecl):
-            yield astlib.VarDecl(decl.name, decl.type_, expr)
-        else:
-            yield astlib.LetDecl(decl.name, decl.type_, expr)
+        yield type(decl)(decl.name, decl.type_, expr)
+
+    @layers.register(astlib.VarDecl)
+    def decl(self, stmt):
+        yield from self._decl(stmt)
+
+    @layers.register(astlib.LetDecl)
+    def ldecl(self, stmt):
+        yield from self._decl(stmt)
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
@@ -75,13 +78,20 @@ class Fixer(layers.Layer):
                 body)))
         return TypeCaster(self.type_dict).cast(body)
 
-    @layers.register(astlib.VarDecl)
-    def var_decl(self, declaration):
+    def _decl(self, declaration):
         add_to_env(declaration)
         new_expr, assignments = self.e(declaration.expr, declaration.name)
-        yield astlib.VarDecl(
+        yield type(declaration)(
             declaration.name, declaration.type_, new_expr)
         yield from assignments
+
+    @layers.register(astlib.VarDecl)
+    def decl(self, stmt):
+        yield from self._decl(stmt)
+
+    @layers.register(astlib.LetDecl)
+    def ldecl(self, stmt):
+        yield from self._decl(stmt)
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
@@ -216,14 +226,21 @@ class Applier(layers.Layer):
 
         return expr
 
-    @layers.register(astlib.VarDecl)
-    def var_decl(self, declaration):
+    def _decl(self, declaration):
         type_ = self.t(declaration.type_)
         expr = self.e(declaration.expr)
         name = self.n(declaration.name)
-        result = astlib.VarDecl(name, type_, expr)
+        result = type(declaration)(name, type_, expr)
         add_to_env(result)
         yield result
+
+    @layers.register(astlib.VarDecl)
+    def decl(self, stmt):
+        yield from self._decl(stmt)
+
+    @layers.register(astlib.LetDecl)
+    def ldecl(self, stmt):
+        yield from self._decl(stmt)
 
     @layers.register(astlib.AssignmentAndAlloc)
     def ass_and_alloc(self, statement):
@@ -341,19 +358,22 @@ class Inlining(layers.Layer):
         else:
             yield call
 
-    @layers.register(astlib.VarDecl)
-    @layers.register(astlib.LetDecl)
-    def var_decl(self, declaration):
+    def _decl(self, declaration):
         add_to_env(declaration)
         if self.need_to_inline(declaration.expr):
             inlined_body, expr = self.inline(declaration.type_, declaration.expr, name=declaration.name)
             yield from inlined_body
-            if declaration in A(astlib.VarDecl):
-                yield astlib.VarDecl(declaration.name, declaration.type_, expr)
-            else:
-                yield astlib.LetDecl(declaration.name, declaration.type_, expr)
+            yield type(declaration)(declaration.name, declaration.type_, expr)
         else:
             yield declaration
+
+    @layers.register(astlib.VarDecl)
+    def decl(self, stmt):
+        yield from self._decl(stmt)
+
+    @layers.register(astlib.LetDecl)
+    def ldecl(self, stmt):
+        yield from self._decl(stmt)
 
     def get_type_dict(self, name):
         if name in A(astlib.Name):

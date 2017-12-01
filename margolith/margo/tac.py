@@ -62,6 +62,10 @@ class TAC(layers.Layer):
             args, decls = self.call_args(expr.args)
             return astlib.StructFuncCall(
                 expr.struct, expr.func_name, args), decls
+        if expr in A(astlib.StructMember):
+            if not expr.struct in A(astlib.Name):
+                expr_, decls = self.inner_expr(expr.struct)
+                return astlib.StructMember(expr_, expr.member), decls
         return expr, []
 
     def body(self, body):
@@ -102,7 +106,7 @@ class TAC(layers.Layer):
 
     @layers.register(astlib.Return)
     def return_(self, stmt):
-        expr, decls = self.e(stmt.expr)
+        expr, decls = self.inner_expr(stmt.expr)
         yield from decls
         yield astlib.Return(expr)
 
