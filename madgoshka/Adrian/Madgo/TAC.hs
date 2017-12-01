@@ -3,7 +3,7 @@
 -- to three address code.
 --
 -- Why:
--- Because every variable must be freed. When we create an variable like
+-- Because every variable must be freed. When we create a variable like
 -- this: `var lol: c#IntFast32 = c#IntFast32(0) + c#IntFast32(1)`
 -- we have no variables that point to `c#IntFast32(0)` and `c#IntFast32(1)`.
 -- Also these transformations will help us to improve output code.
