@@ -16,6 +16,7 @@ ARGS = "Args"
 TYPES = "Types"
 VAR_TYPES = "VarTypes"
 ARG_LIST = "CallArgs"
+EMPTY = "Empty"
 
 INTEGER = "IntLiteral"
 
@@ -24,4 +25,4 @@ STRUCT_MEMBER = "StructMember"
 PARAMETERIZED_TYPE = "ParameterizedType"
 CALL = "FuncCall"
 
-EMPTY = "Empty"
+UNKNOWN = "Unknown"

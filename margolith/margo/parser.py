@@ -140,7 +140,7 @@ def p_let_decl_1(content):
 def p_let_decl_2(content):
     """let_decl : LET NAME EQ bool_expr"""
     content[0] = [
-        parser_astlib.LET_DECL, [parser_astlib.NAME, content[2]], [parser_astlib.EMPTY],
+        parser_astlib.LET_DECL, [parser_astlib.NAME, content[2]], [parser_astlib.UNKNOWN],
         content[4]]
 
 
@@ -155,13 +155,13 @@ def p_var_decl_2(content):
     """var_decl : VAR NAME COLON type"""
     content[0] = [
         parser_astlib.VAR_DECL, [parser_astlib.NAME, content[2]], content[4],
-        [parser_astlib.EMPTY]]
+        [parser_astlib.UNKNOWN]]
 
 
 def p_var_decl_3(content):
     """var_decl : VAR NAME EQ bool_expr"""
     content[0] = [
-        parser_astlib.VAR_DECL, [parser_astlib.NAME, content[2]], [parser_astlib.EMPTY],
+        parser_astlib.VAR_DECL, [parser_astlib.NAME, content[2]], [parser_astlib.UNKNOWN],
         content[4]]
 
 

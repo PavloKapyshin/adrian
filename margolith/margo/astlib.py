@@ -144,6 +144,14 @@ class Empty(BaseNode):
     __repr__ = __str__
 
 
+class Unknown(BaseNode):
+
+    def __str__(self):
+        return "UNKNOWN"
+
+    __repr__ = __str__
+
+
 class LinkedList:
 
     def __init__(self, value, rest=None):
