@@ -72,13 +72,19 @@ class TAC(layers.Layer):
                     layers.transform_node(stmt, registry=reg)),
                 body)))
 
-    @layers.register(astlib.VarDecl)
-    @layers.register(astlib.LetDecl)
-    def decl(self, decl):
+    def _decl(self, decl):
         expr, tmp_decls = self.e(decl.expr)
         add_to_env(decl)
         yield from tmp_decls
         yield type(decl)(decl.name, decl.type_, expr)
+
+    @layers.register(astlib.VarDecl)
+    def decl(self, decl):
+        yield from self._decl(decl)
+
+    @layers.register(astlib.LetDecl)
+    def ldecl(self, decl):
+        yield from self._decl(decl)
 
     @layers.register(astlib.AssignmentAndAlloc)
     def assignment_and_alloc(self, stmt):
@@ -113,7 +119,7 @@ class TAC(layers.Layer):
         add_to_env(stmt)
         add_scope()
         yield astlib.StructFuncDecl(
-            stmt.struct, stmt.name, stmt.args,
+            stmt.struct, stmt.func, stmt.args,
             stmt.rettype, self.body(stmt.body))
         del_scope()
 

@@ -98,19 +98,30 @@ class Analyzer(layers.Layer):
             lambda stmt: list(
                 layers.transform_node(stmt, registry=reg))[0], body))
 
-    @layers.register(astlib.VarDecl)
-    @layers.register(astlib.LetDecl)
-    def decl(self, stmt):
+    def _decl(self, stmt):
         expr = self.e(stmt.expr)
         type_ = self.t(self.infer_type(stmt.type_, expr))
         result = type(stmt)(stmt.name, type_, expr)
         add_to_env(result)
         yield result
 
+    @layers.register(astlib.VarDecl)
+    def decl(self, stmt):
+        yield from self._decl(stmt)
+
+    @layers.register(astlib.LetDecl)
+    def ldecl(self, stmt):
+        yield from self._decl(stmt)
+
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
         yield astlib.Assignment(
             self.e(stmt.variable), stmt.op, self.e(stmt.expr))
+
+    @layers.register(astlib.AssignmentAndAlloc)
+    def assignment_and_alloc(self, stmt):
+        yield astlib.AssignmentAndAlloc(
+            self.e(stmt.name), self.t(stmt.type_), self.e(stmt.expr))
 
     @layers.register(astlib.Return)
     def return_(self, stmt):
