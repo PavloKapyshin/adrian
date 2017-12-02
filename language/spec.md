@@ -1,13 +1,21 @@
+# Reserved names
+These names are reserved:
+```
+var
+let
+fun
+struct
+return
+```
+
 # Naming rules
 
 Names must be named according to this rules.
-
-Private names must start with an underscore `_`.
+Private names start with an underscore `_`.
 
 ## Variables
 
 Regular expression for matching variable names: `[a-z_][a-zA-Z0-9]*`.
-Variable name cannot be a reserved name.
 
 Variables are named using camel case.
 
