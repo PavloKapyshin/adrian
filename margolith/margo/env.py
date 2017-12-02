@@ -4,6 +4,15 @@ class Env:
         self._scope = 0
         self._space = {self._scope: {}}
 
+    def __setitem__(self, key, val):
+        self.add(key, val)
+
+    def __getitem__(self, key):
+        return self.get(key)
+
+    def __contains__(self, key):
+        return self.exists(key)
+
     def add(self, name, entry):
         self._space[self._scope][name] = entry
 
@@ -42,6 +51,10 @@ class Env:
 
     def space(self):
         return self._space
+
+    @property
+    def current_space(self):
+        return self._space[self._scope]
 
     @property
     def scope(self):

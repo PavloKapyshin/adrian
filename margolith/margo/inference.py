@@ -32,5 +32,9 @@ def infer(expr):
         return field["type"]
     if expr in A(astlib.Deref, astlib.Ref):
         return infer(expr.expr)
+    if expr in A(astlib.CFuncCall):
+        if expr.name == "malloc":
+            sizeof = expr.args[0]
+            return sizeof.args[0].type_
     errors.not_implemented(
         "can't infer type from expression {}".format(expr))

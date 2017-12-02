@@ -25,7 +25,7 @@ class ARC(layers.Layer):
 
     def initialized(self, variable):
         if variable in A(astlib.StructMember):
-            return self.initialization_list.get(str(variable.struct))
+            return self.initialization_list.get(str(variable.struct)) or self.initialization_list.get(str(variable))
         return self.initialization_list.get(str(variable))
 
     def raw_free(self, arg, type_):
