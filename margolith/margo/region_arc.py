@@ -104,20 +104,6 @@ class ARC(layers.Layer):
         self.add_variable(stmt.name, self.region_from_expr(stmt.expr))
         yield stmt
 
-    @layers.register(astlib.Return)
-    def return_(self, stmt):
-        pass
-
-    @layers.register(astlib.StructDecl)
-    def struct_decl(self, stmt):
-        add_to_env(stmt)
-        add_scope()
-        context.memory_regions.add_scope()
-        yield astlib.StructDecl(
-            stmt.name, stmt.var_types, self.body(stmt.body))
-        context.memory_regions.del_scope()
-        del_scope()
-
     @layers.register(astlib.AST)
     def main(self, ast_, registry):
         yield from layers.transform_ast(ast_, registry=registry)
