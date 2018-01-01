@@ -43,6 +43,8 @@ class Analyzer(layers.Layer):
         if stmt.name in A(astlib.ModuleMember):
             if stmt.name.module != defs.CMODULE_NAME:
                 unsupported_module()
+            # HERE
+            context.context.clibs.append(find_module(defs.CMODULE_NAME))
             yield getattr(
                 astlib, "C" + str(stmt.name.member))(stmt.args[0].literal)
         elif str(stmt.name) == defs.REF:

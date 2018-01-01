@@ -15,16 +15,25 @@ def main():
     margo = importlib.import_module("margo")
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("in_file")  # TODO: use argparse.FileType
+    parser.add_argument(
+        "in_file", type=argparse.FileType("r", encoding="utf-8"))
     parser.add_argument(
         "-o", "--out", default="-",
         type=argparse.FileType("w", encoding="utf-8"))
+    parser.add_argument(
+        "--modules", type=argparse.FileType("r", encoding="utf-8"))
     args = parser.parse_args()
 
+    if args.modules:
+        with open(args.modules.name, "r") as f:
+            content = f.read()
+        libs = []
+        for line in content.splitlines():
+            libs.append(os.path.abspath(line))
+        margo.context.context.libs = libs
+
     print(
-        margo.compile_from_file(args.in_file, ""),
-        file=args.out,
-        end="")
+        margo.compile_from_file(args.in_file.name, ""), file=args.out)
 
 
 if __name__ == "__main__":

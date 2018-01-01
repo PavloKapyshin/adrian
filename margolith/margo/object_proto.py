@@ -53,11 +53,8 @@ class ObjectProto(layers.Layer):
     def default_deinit_method(self, decl):
         body = []
         for field_decl in self.field_decls(decl.body):
-            if field_decl.type_ in A(astlib.Name):
-                body.append(
-                    deinit(field_decl.type_, self_field(field_decl.name)))
-            else:
-                body.append(free(self_field(field_decl.name)))
+            body.append(
+                deinit(field_decl.type_, self_field(field_decl.name)))
         body.append(free(SELF))
         return astlib.MethodDecl(
             astlib.Name(defs.DEINIT_METHOD_NAME), [],
@@ -69,15 +66,10 @@ class ObjectProto(layers.Layer):
         return_ = astlib.Return(NEW)
         field_inits = []
         for field_decl in self.field_decls(decl.body):
-            if field_decl.type_ in A(astlib.Name):
-                field_init_expr = copy(
-                    field_decl.type_, self_field(field_decl.name))
-            else:
-                field_init_expr = self_field(field_decl.name)
             field_inits.append(
                 astlib.AssignmentAndAlloc(
                     new_field(field_decl.name), field_decl.type_,
-                    field_init_expr))
+                    copy(field_decl.type_, self_field(field_decl.name))))
         return astlib.MethodDecl(
             astlib.Name(defs.COPY_METHOD_NAME), [],
             self.to_real_type(decl), [new_decl] + field_inits + [return_])
@@ -120,14 +112,10 @@ class ObjectProto(layers.Layer):
         for field_decl in self.field_decls(decl.body):
             args.append(
                 astlib.Arg(field_decl.name, field_decl.type_))
-            if field_decl.type_ in A(astlib.Name):
-                field_init_expr = copy(field_decl.type_, field_decl.name)
-            else:
-                field_init_expr = field_decl.name
             field_inits.append(
                 astlib.AssignmentAndAlloc(
                     self_field(field_decl.name), field_decl.type_,
-                    field_init_expr))
+                    copy(field_decl.type_, field_decl.name)))
         return self._common_init(decl, args, field_inits)
 
     def methods_to_struct_funcs(self, methods, struct):
