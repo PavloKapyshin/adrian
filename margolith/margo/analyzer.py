@@ -3,6 +3,8 @@ Translates some FuncCalls to StructCall and StructFuncCall objects.
 Infer types.
 """
 
+import os
+
 from . import layers, astlib, errors, defs, inference
 from .context import (
     context, add_to_env, add_scope, del_scope,
@@ -16,6 +18,14 @@ def unsupported_module():
 
 def is_user_type(name):
     return get_node_type(name) == NodeType.struct
+
+
+def find_cmodule(module_name):
+    for directory in context.libs:
+        for file in os.listdir(directory):
+            if os.path.isfile(os.path.join(directory, file)) and file == module_name + ".c":
+                return os.path.join(directory, file)
+    errors.cant_find_module(module_name)
 
 
 class Analyzer(layers.Layer):
@@ -43,10 +53,11 @@ class Analyzer(layers.Layer):
         if stmt.name in A(astlib.ModuleMember):
             if stmt.name.module != defs.CMODULE_NAME:
                 unsupported_module()
-            # HERE
-            context.context.clibs.append(find_module(defs.CMODULE_NAME))
-            yield getattr(
-                astlib, "C" + str(stmt.name.member))(stmt.args[0].literal)
+            context.clibs.append(find_cmodule("adrian_" + defs.CMODULE_NAME))
+            yield astlib.StructCall(
+                stmt.name, [astlib.IntLiteral(stmt.args[0].literal)])
+            # yield getattr(
+            #     astlib, "C" + str(stmt.name.member))(stmt.args[0].literal)
         elif str(stmt.name) == defs.REF:
             yield astlib.Ref(self.call_args(stmt.args)[0])
         elif is_user_type(stmt.name):
@@ -84,11 +95,11 @@ class Analyzer(layers.Layer):
     def t(self, type_):
         if type_ in A(astlib.ModuleMember):
             if type_.module == defs.CMODULE_NAME:
-                return astlib.CType(str(type_.member))
+                return type_
             unsupported_module()
         if type_ in A(astlib.Name):
             if type_ == "Void":
-                return astlib.CType("Void")
+                return astlib.CVoid()
         if type_ in A(astlib.ParameterizedType):
             return astlib.ParameterizedType(
                 type_.type_, self.type_parameters(type_.parameters))

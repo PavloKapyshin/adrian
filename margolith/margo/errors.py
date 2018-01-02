@@ -12,6 +12,7 @@ _ILLEGAL_CHAR = "illegal character '{char}'"
 _NON_EXISTING_NAME = "non existing name '{name}'"
 _CANT_REASSIGN = "can't reassign '{name}'"
 _CANT_FIND_NAME_IN_MODULE = "can't find name '{name}' in module '{module_name}'"
+_CANT_FIND_MODULE = "can't find module '{module_name}'"
 
 _TYPES_ARE_NOT_EQUAL = "type '{type1}' and type '{type2}' are not equal"
 
@@ -32,6 +33,10 @@ def syntax_error(line):
 
 def illegal_char(char):
     _error(_ILLEGAL_CHAR, char=char)
+
+
+def cant_find_module(module_name):
+    _error(_CANT_FIND_MODULE, module_name=module_name)
 
 
 def non_existing_name(name):

@@ -16,6 +16,8 @@ def infer(expr):
         # +, *, -, / returns value of the same type.
         return infer(expr.right_expr)
     if expr in A(astlib.StructCall):
+        if expr.name in A(astlib.ModuleMember):
+            return expr.name
         struct_entry = get(expr.name)
         init_method = struct_entry["methods"][defs.INIT_METHOD_NAME]
         type_ = init_method["type"]

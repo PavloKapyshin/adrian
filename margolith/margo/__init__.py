@@ -43,12 +43,13 @@ def compile_repl(inp, *, contexts):
     return current_ast
 
 
-def compile_from_string(inp, file_hash):
+def compile_from_string(inp, file_hash, libs=None):
     contexts = {
         layer: {
             "env": env.Env(),
             "exit_on_error": True,
             "file_hash": file_hash,
+            "module_paths": [os.path.join(os.path.getcwd(), "library/")],
             "tmp_count": 0}
         for layer, _ in LAYERS
     }
@@ -77,6 +78,6 @@ def _read_file(file_name, encoding):
     return contents
 
 
-def compile_from_file(in_file, file_hash):
+def compile_from_file(in_file, file_hash, libs=None):
     return compile_from_string(
-        _read_file(in_file, "utf-8"), file_hash=file_hash)
+        _read_file(in_file, "utf-8"), file_hash=file_hash, libs=libs)

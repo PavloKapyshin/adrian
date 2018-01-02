@@ -3,6 +3,7 @@ import traceback
 import ast
 import cmd
 import sys
+import os
 
 import margo
 
@@ -16,6 +17,7 @@ class REPL(cmd.Cmd):
             "env": margo.env.Env(),
             "exit_on_error": False,
             "file_hash": margo.REPL_FILE_HASH,
+            "module_paths": [os.path.join(os.getcwd(), "library/")],
             "tmp_count": 0}
         for layer, _ in margo.LAYERS
     }
