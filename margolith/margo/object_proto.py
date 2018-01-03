@@ -58,7 +58,7 @@ class ObjectProto(layers.Layer):
         body.append(free(SELF))
         return astlib.MethodDecl(
             astlib.Name(defs.DEINIT_METHOD_NAME), [],
-            astlib.CType("Void"), body)
+            astlib.CVoid(), body)
 
     def default_copy_method(self, decl):
         new_decl = astlib.VarDecl(
@@ -67,8 +67,8 @@ class ObjectProto(layers.Layer):
         field_inits = []
         for field_decl in self.field_decls(decl.body):
             field_inits.append(
-                astlib.AssignmentAndAlloc(
-                    new_field(field_decl.name), field_decl.type_,
+                astlib.Assignment(
+                    new_field(field_decl.name), "=",
                     copy(field_decl.type_, self_field(field_decl.name))))
         return astlib.MethodDecl(
             astlib.Name(defs.COPY_METHOD_NAME), [],
@@ -101,8 +101,8 @@ class ObjectProto(layers.Layer):
                     stmt.variable.member in A(astlib.Name)):
                 type_ = fields[str(stmt.variable.member)]
                 body.append(
-                    astlib.AssignmentAndAlloc(
-                        stmt.variable, type_, stmt.expr))
+                    astlib.Assignment(
+                        stmt.variable, "=", copy(type_, stmt.expr)))
             else:
                 body.append(stmt)
         return self._common_init(decl, method.args, body)
@@ -113,8 +113,8 @@ class ObjectProto(layers.Layer):
             args.append(
                 astlib.Arg(field_decl.name, field_decl.type_))
             field_inits.append(
-                astlib.AssignmentAndAlloc(
-                    self_field(field_decl.name), field_decl.type_,
+                astlib.Assignment(
+                    self_field(field_decl.name), "=",
                     copy(field_decl.type_, field_decl.name)))
         return self._common_init(decl, args, field_inits)
 

@@ -40,12 +40,12 @@ class TAC(layers.Layer):
             expr_, decls_ = self.e(expr)
             tmp, decls = self.new_tmp(expr_)
             return tmp, decls_ + decls
-        if expr in A(astlib.Name, astlib.Ref):
+        if expr in A(astlib.Name, astlib.Ref, astlib.IntLiteral):
             return expr, []
         return self.new_tmp(expr)
 
     def _e(self, expr):
-        if expr in A(astlib.CTYPES):
+        if expr not in A(astlib.Expr, astlib.IntLiteral):
             return self.new_tmp(expr)
         return self.e(expr)
 
@@ -90,12 +90,12 @@ class TAC(layers.Layer):
     def ldecl(self, decl):
         yield from self._decl(decl)
 
-    @layers.register(astlib.AssignmentAndAlloc)
-    def assignment_and_alloc(self, stmt):
-        expr, decls = self.e(stmt.expr)
-        yield from decls
-        yield astlib.AssignmentAndAlloc(
-            stmt.name, stmt.type_, expr)
+    # @layers.register(astlib.AssignmentAndAlloc)
+    # def assignment_and_alloc(self, stmt):
+    #     expr, decls = self.e(stmt.expr)
+    #     yield from decls
+    #     yield astlib.AssignmentAndAlloc(
+    #         stmt.name, stmt.type_, expr)
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):

@@ -17,6 +17,7 @@ def new_context(*, env, exit_on_error, file_hash, tmp_count, module_paths):
     context.file_hash = file_hash
     context.tmp_count = tmp_count
     context.module_paths = module_paths
+    context.clibs = []
     yield
 
 

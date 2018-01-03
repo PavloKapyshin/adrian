@@ -21,7 +21,7 @@ def is_user_type(name):
 
 
 def find_cmodule(module_name):
-    for directory in context.libs:
+    for directory in context.module_paths:
         for file in os.listdir(directory):
             if os.path.isfile(os.path.join(directory, file)) and file == module_name + ".c":
                 return os.path.join(directory, file)
@@ -131,10 +131,10 @@ class Analyzer(layers.Layer):
         yield astlib.Assignment(
             self.e(stmt.variable), stmt.op, self.e(stmt.expr))
 
-    @layers.register(astlib.AssignmentAndAlloc)
-    def assignment_and_alloc(self, stmt):
-        yield astlib.AssignmentAndAlloc(
-            self.e(stmt.name), self.t(stmt.type_), self.e(stmt.expr))
+    # @layers.register(astlib.AssignmentAndAlloc)
+    # def assignment_and_alloc(self, stmt):
+    #     yield astlib.AssignmentAndAlloc(
+    #         self.e(stmt.name), self.t(stmt.type_), self.e(stmt.expr))
 
     @layers.register(astlib.Return)
     def return_(self, stmt):
