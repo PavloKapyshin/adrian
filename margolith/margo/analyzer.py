@@ -12,6 +12,14 @@ from .context import (
 from .patterns import A
 
 
+OP_TO_FUNCNAME = {
+    "+": "__add__",
+    "-": "__sub__",
+    "*": "__mul__",
+    "/": "__div__",
+}
+
+
 def unsupported_module():
     errors.not_implemented("only c module is supported")
 
@@ -86,10 +94,10 @@ class Analyzer(layers.Layer):
         if expr in A(astlib.StructMember):
             return self.e_struct_member(expr)
         if expr in A(astlib.Expr):
-            return astlib.Expr(
-                expr.op,
-                self.e(expr.left_expr),
-                self.e(expr.right_expr))
+            translated_left = self.e(expr.left_expr)
+            return astlib.StructFuncCall(
+                inference.infer(translated_left), OP_TO_FUNCNAME[expr.op],
+                args=[translated_left, self.e(expr.right_expr)])
         return expr
 
     def t(self, type_):

@@ -24,6 +24,8 @@ def infer(expr):
         if not (type_ in A(astlib.ParameterizedType)):
             return type_
     if expr in A(astlib.StructFuncCall):
+        if expr.struct in A(astlib.ModuleMember):
+            return expr.struct
         methods = get(expr.struct)["methods"]
         method = methods[str(expr.func_name)]
         return method["type"]
