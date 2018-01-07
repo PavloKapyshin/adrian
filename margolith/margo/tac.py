@@ -36,7 +36,7 @@ class TAC(layers.Layer):
     def inner_expr(self, expr):
         if expr in A(
                 astlib.FuncCall, astlib.StructCall,
-                astlib.StructFuncCall, astlib.Expr):
+                astlib.StructFuncCall):
             expr_, decls_ = self.e(expr)
             tmp, decls = self.new_tmp(expr_)
             return tmp, decls_ + decls
@@ -45,16 +45,11 @@ class TAC(layers.Layer):
         return self.new_tmp(expr)
 
     def _e(self, expr):
-        if expr not in A(astlib.Expr, astlib.IntLiteral):
+        if expr not in A(astlib.IntLiteral):
             return self.new_tmp(expr)
         return self.e(expr)
 
     def e(self, expr):
-        if expr in A(astlib.Expr):
-            left_expr, left_decls = self._e(expr.left_expr)
-            right_expr, right_decls = self._e(expr.right_expr)
-            return astlib.Expr(
-                expr.op, left_expr, right_expr), left_decls + right_decls
         if expr in A(astlib.FuncCall, astlib.StructCall):
             args, decls = self.call_args(expr.args)
             return type(expr)(expr.name, args), decls
