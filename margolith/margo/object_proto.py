@@ -69,7 +69,8 @@ class ObjectProto(layers.Layer):
             field_inits.append(
                 astlib.Assignment(
                     new_field(field_decl.name), "=",
-                    copy(field_decl.type_, self_field(field_decl.name))))
+                    #copy(field_decl.type_, self_field(field_decl.name))))
+                    self_field(field_decl.name)))
         return astlib.MethodDecl(
             astlib.Name(defs.COPY_METHOD_NAME), [],
             self.to_real_type(decl), [new_decl] + field_inits + [return_])
@@ -102,7 +103,9 @@ class ObjectProto(layers.Layer):
                 type_ = fields[str(stmt.variable.member)]
                 body.append(
                     astlib.Assignment(
-                        stmt.variable, "=", copy(type_, stmt.expr)))
+                        stmt.variable, "=",
+                        #copy(type_, stmt.expr)))
+                        stmt.expr))
             else:
                 body.append(stmt)
         return self._common_init(decl, method.args, body)
@@ -115,7 +118,8 @@ class ObjectProto(layers.Layer):
             field_inits.append(
                 astlib.Assignment(
                     self_field(field_decl.name), "=",
-                    copy(field_decl.type_, field_decl.name)))
+                    #copy(field_decl.type_, field_decl.name)))
+                    field_decl.name))
         return self._common_init(decl, args, field_inits)
 
     def methods_to_struct_funcs(self, methods, struct):
