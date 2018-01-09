@@ -1,11 +1,10 @@
 import enum
 import itertools
 
-from . import astlib, layers, errors, inference, defs
-from .context import context, add_to_env, add_scope, del_scope, get
+from . import astlib, layers, errors, inference
+from .context import context, add_to_env, add_scope, del_scope
 from .patterns import A
 from .env import Env
-
 
 REGION_ID_START = 1
 context.region_id = REGION_ID_START
@@ -31,29 +30,28 @@ def is_malloc(expr):
     return expr in A(astlib.CFuncCall) and expr.name == "malloc"
 
 
-def deinit(expr):
-    return astlib.StructFuncCall(
-        inference.infer(expr), defs.DEINIT_METHOD_NAME, [expr])
+def free(name):
+    return astlib.CFuncCall("free", [name])
 
 
 class ARC(layers.Layer):
 
-    def var_to_region(self, name):
+    def variable_to_region(self, name):
         for id in range(REGION_ID_START, context.region_id):
             current_region = context.memory_regions[id]
             if name in current_region["pointers"]:
                 return current_region["region"]
         errors.not_implemented("variable doesn't point to any region")
 
-    def region_to_vars(self, region):
+    def region_to_variables(self, region):
         return context.memory_regions[region.id]["pointers"]
 
-    def add_var(self, name, region):
+    def add_variable(self, name, region):
         if region.id in context.memory_regions:
             old_info = context.memory_regions[region.id]
             pointers = old_info["pointers"]
             if name in pointers:
-                errors.not_implemented("this region is already added")
+                errors.not_implemented("this regions is already added")
             pointers.append(name)
             context.memory_regions[region.id] = {
                 "region": region,
@@ -65,24 +63,22 @@ class ARC(layers.Layer):
                 "pointers": [name]
             }
 
-    def any_var_pointing_to_region(self, region):
-        pointers = sorted(self.region_to_vars(region))
+    def any_variable_pointing_to_region(self, region):
+        pointers = sorted(self.region_to_variables(region))
         if pointers == []:
             errors.not_implemented("region is anonymous")
         return pointers[0]
 
     def free_region(self, region):
-        stmt = deinit(self.any_var_pointing_to_region(region))
-        region.status = RegionStatus.freed
-        # maybe rewritting of status will help.
-        return stmt
-
-    def raw_free_region(self, region):
-        return deinit(self.any_var_pointing_to_region(region))
+        type_ = region.content_type
+        if type_ in A(astlib.CType):
+            stmt = free(self.any_variable_pointing_to_region(region))
+            region.status = RegionStatus.freed
+            return stmt
+        errors.not_implemented("try another day")
 
     def free_scope(self):
-        for region_id, info in sorted(
-                context.memory_regions.current_space.items()):
+        for region_id, info in sorted(context.memory_regions.current_space.items()):
             region = info["region"]
             if region.status != RegionStatus.freed:
                 yield self.free_region(region)
@@ -92,11 +88,7 @@ class ARC(layers.Layer):
             return Region(inference.infer(expr))
         if expr in A(astlib.Ref):
             if expr.expr in A(astlib.Name):
-                return self.var_to_region(expr.expr)
-        if expr in A(astlib.StructCall, astlib.StructFuncCall, astlib.FuncCall):
-            rettype = inference.infer(expr)
-            if not rettype in A(astlib.CVoid):
-                return Region(rettype)
+                return self.variable_to_region(expr.expr)
         errors.not_implemented("can't infer region.")
 
     def body(self, body):
@@ -107,21 +99,9 @@ class ARC(layers.Layer):
                 body)))
 
     @layers.register(astlib.VarDecl)
-    def decl(self, stmt):
+    def var_decl(self, stmt):
         add_to_env(stmt)
-        self.add_var(stmt.name, self.region_from_expr(stmt.expr))
-        yield stmt
-
-    @layers.register(astlib.Assignment)
-    def assignment(self, stmt):
-        if stmt.variable in A(astlib.StructMember):
-            struct = stmt.variable
-            while struct in A(astlib.StructMember):
-                struct = struct.struct
-            expr = get(struct)["expr"]
-            if not is_malloc(expr):
-                yield self.raw_free_region(stmt.variable)
-        self.add_var(stmt.variable, self.region_from_expr(stmt.expr))
+        self.add_variable(stmt.name, self.region_from_expr(stmt.expr))
         yield stmt
 
     @layers.register(astlib.AST)

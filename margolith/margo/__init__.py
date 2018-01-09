@@ -16,7 +16,7 @@ LAYERS = (
     (analyzer.Analyzer, "transform_ast"),
     (tac.TAC, "transform_ast"),
     (copying.Copying, "transform_ast"),
-    # (arc.ARC, "expand_ast"),
+    (arc.ARC, "expand_ast"),
     # # (inlining.Inlining, "transform_ast"),
     # (name_spacing.NameSpacing, "transform_ast"),
     # (tocgen.ToCGen, "transform_ast"),

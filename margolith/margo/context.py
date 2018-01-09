@@ -61,6 +61,7 @@ def add_to_env(statement):
             node_type = NodeType.let
         context.env.add(str(statement.name), {
             "type": statement.type_,
+            "expr": statement.expr,
             "node_type": node_type
         })
 
