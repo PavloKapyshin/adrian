@@ -1,3 +1,5 @@
+import functools
+
 from . import layers, astlib, errors, defs
 from .patterns import A
 from .context import context
@@ -22,22 +24,30 @@ def n(name):
 
 
 def struct_func_name(struct, name):
-    for_processing = name
-    struct_str = struct
-    if name in A(astlib.Name):
-        for_processing = str(name)
-    if struct in A(astlib.Name):
-        struct_str = str(struct)
-    for_processing = "_".join([struct_str, for_processing])
-    result = "_".join([defs.ADR_PREFIX, defs.USER_PREFIX])
+    # adr_u_fileHAsh_Struct_name
+    if struct in A(astlib.ModuleMember):
+        return astlib.ModuleMember(struct.module, "_".join([str(struct.member), str(name)]))
+    prefix = "_".join([defs.ADR_PREFIX, defs.USER_PREFIX])
     if context.file_hash != "":
-        result += "_".join(["", context.file_hash])
-    result += "_".join(["", for_processing])
+        prefix += "_".join(["", context.file_hash])
+
+    struct_str = struct
+    if struct_str in A(astlib.Name):
+        struct_str = str(struct_str)
+
+    name_str = name
+    if name_str in A(astlib.Name):
+        name_str = str(name_str)
+
+    result = "_".join([prefix, struct_str, name_str])
     return astlib.Name(result)
 
 
 def t(type_):
-    if type_ in A(astlib.CType, astlib.CObject):
+    if type_ in A(astlib.CVoid):
+        return type_
+
+    if type_ in A(astlib.ModuleMember):
         return type_
 
     if type_ in A(astlib.Name):
@@ -66,13 +76,6 @@ def call_args(args):
 def e(expr):
     if expr in A(astlib.Name):
         return n(expr)
-
-    if expr in A(astlib.Expr):
-        return astlib.Expr(
-            expr.op, e(expr.left_expr), e(expr.right_expr))
-
-    if expr in A(astlib.CINT_TYPES):
-        return expr
 
     if expr in A(astlib.CFuncCall):
         return astlib.CFuncCall(
@@ -107,9 +110,10 @@ def e(expr):
     if expr in A(astlib.CCast):
         return astlib.CCast(e(expr.expr), t(expr.to))
 
-    errors.not_implemented(
-        context.exit_on_error,
-        "namespacing: expr (expr {})".format(expr))
+    if expr in A(astlib.IntLiteral):
+        return expr
+
+    errors.not_implemented("namespacing: expr (expr {})".format(expr))
 
 
 class NameSpacing(layers.Layer):

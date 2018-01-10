@@ -35,37 +35,37 @@ typedef struct {
 
 
 
-extern IntFast8*    IntFast8__init__(int_fast8_t literal);
-extern void         IntFast8__deinit__(IntFast8* self);
-extern IntFast8*    IntFast8__copy__(IntFast8* self);
+extern IntFast8*    IntFast8___init__(int_fast8_t literal);
+extern void         IntFast8___deinit__(IntFast8* self);
+extern IntFast8*    IntFast8___copy__(IntFast8* self);
 
-extern IntFast16*   IntFast16__init__(int_fast16_t literal);
-extern void         IntFast16__deinit__(IntFast16* self);
-extern IntFast16*   IntFast16__copy__(IntFast16* self);
+extern IntFast16*   IntFast16___init__(int_fast16_t literal);
+extern void         IntFast16___deinit__(IntFast16* self);
+extern IntFast16*   IntFast16___copy__(IntFast16* self);
 
-extern IntFast32*   IntFast32__init__(int_fast32_t literal);
-extern void         IntFast32__deinit__(IntFast32* self);
-extern IntFast32*   IntFast32__copy__(IntFast32* self);
+extern IntFast32*   IntFast32___init__(int_fast32_t literal);
+extern void         IntFast32___deinit__(IntFast32* self);
+extern IntFast32*   IntFast32___copy__(IntFast32* self);
 
-extern IntFast64*   IntFast64__init__(int_fast64_t literal);
-extern void         IntFast64__deinit__(IntFast64* self);
-extern IntFast64*   IntFast64__copy__(IntFast64* self);
+extern IntFast64*   IntFast64___init__(int_fast64_t literal);
+extern void         IntFast64___deinit__(IntFast64* self);
+extern IntFast64*   IntFast64___copy__(IntFast64* self);
 
 
-extern UIntFast8*   UIntFast8__init__(uint_fast8_t literal);
-extern void         UIntFast8__deinit__(UIntFast8* self);
-extern UIntFast8*   UIntFast8__copy__(UIntFast8* self);
+extern UIntFast8*   UIntFast8___init__(uint_fast8_t literal);
+extern void         UIntFast8___deinit__(UIntFast8* self);
+extern UIntFast8*   UIntFast8___copy__(UIntFast8* self);
 
-extern UIntFast16*  UIntFast16__init__(uint_fast16_t literal);
-extern void         UIntFast16__deinit__(UIntFast16* self);
-extern UIntFast16*  UIntFast16__copy__(UIntFast16* self);
+extern UIntFast16*  UIntFast16___init__(uint_fast16_t literal);
+extern void         UIntFast16___deinit__(UIntFast16* self);
+extern UIntFast16*  UIntFast16___copy__(UIntFast16* self);
 
-extern UIntFast32*  UIntFast32__init__(uint_fast32_t literal);
-extern void         UIntFast32__deinit__(UIntFast32* self);
-extern UIntFast32*  UIntFast32__copy__(UIntFast32* self);
+extern UIntFast32*  UIntFast32___init__(uint_fast32_t literal);
+extern void         UIntFast32___deinit__(UIntFast32* self);
+extern UIntFast32*  UIntFast32___copy__(UIntFast32* self);
 
-extern UIntFast64*  UIntFast64__init__(uint_fast64_t literal);
-extern void         UIntFast64__deinit__(UIntFast64* self);
-extern UIntFast64*  UIntFast64__copy__(UIntFast64* self);
+extern UIntFast64*  UIntFast64___init__(uint_fast64_t literal);
+extern void         UIntFast64___deinit__(UIntFast64* self);
+extern UIntFast64*  UIntFast64___copy__(UIntFast64* self);
 
 #endif

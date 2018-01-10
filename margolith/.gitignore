@@ -2,9 +2,8 @@ __pycache__/
 *.py[co]
 *.o
 
+/_test
 /example
-/t
-/t.c
 /example.adr
 /example_modules
 /example.c
