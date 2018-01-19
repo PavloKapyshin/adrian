@@ -52,7 +52,8 @@ def make_c_code_valgrind_test(data):
                 common_kwargs = {"cwd": tmp_dir}
 
                 binary_cmd = data["tmpls"]["binary"].format(
-                    dest=shlex.quote(tmp_binary), src=shlex.quote(c_path))
+                    dest=shlex.quote(tmp_binary), src=shlex.quote(c_path),
+                    checker_run_dir=shlex.quote(data["checker_run_dir"]))
                 proc = subprocess.run(
                     binary_cmd, **GLOBAL_COMMON_KWARGS, **common_kwargs)
                 self.assertEqual(
@@ -170,6 +171,8 @@ def get_cases():
     parser = make_parser()
     args = parser.parse_args()
 
+    checker_run_dir = os.getcwd()
+
     test_data = get_test_data(
         lang_source_dir=os.path.abspath(args.lang_source_dir),
         c_source_dir=os.path.abspath(args.c_source_dir))
@@ -191,7 +194,7 @@ def get_cases():
         attrs = {
             TEST_DATA_MEMBER_NAME: {
                 "specific": test_data[number], "tmpls": tmpls,
-                "compiler": compiler}}
+                "compiler": compiler, "checker_run_dir": checker_run_dir}}
         yield CaseMeta(
             "Test{:d}".format(number), (unittest.TestCase, ), attrs)
 

@@ -1,38 +1,27 @@
 #include <stdint.h>
-#include <stdlib.h>
+#include "adrian_c.h"
 int main(void) {
-int_fast8_t* adr_u_m1 = malloc(sizeof(int_fast8_t));
-*adr_u_m1 = 10;
-int_fast8_t* adr_u_mTypeInference = malloc(sizeof(int_fast8_t));
-*adr_u_mTypeInference = 10;
-int_fast8_t* adr_u_m3 = malloc(sizeof(int_fast8_t));
-*adr_u_m3 = 0;
-uint_fast8_t* adr_u_m4 = malloc(sizeof(uint_fast8_t));
-*adr_u_m4 = 0;
-int_fast16_t* adr_u_m5 = malloc(sizeof(int_fast16_t));
-*adr_u_m5 = 0;
-uint_fast16_t* adr_u_m6 = malloc(sizeof(uint_fast16_t));
-*adr_u_m6 = 0;
-int_fast32_t* adr_u_m7 = malloc(sizeof(int_fast32_t));
-*adr_u_m7 = 0;
-uint_fast32_t* adr_u_m8 = malloc(sizeof(uint_fast32_t));
-*adr_u_m8 = 0;
-int_fast64_t* adr_u_m9 = malloc(sizeof(int_fast64_t));
-*adr_u_m9 = 0;
-uint_fast64_t* adr_u_m10 = malloc(sizeof(uint_fast64_t));
-*adr_u_m10 = 0;
-int_fast8_t* adr_u_mName = malloc(sizeof(int_fast8_t));
-*adr_u_mName = *adr_u_m3;
-free(adr_u_m1);
-free(adr_u_m10);
-free(adr_u_m3);
-free(adr_u_m4);
-free(adr_u_m5);
-free(adr_u_m6);
-free(adr_u_m7);
-free(adr_u_m8);
-free(adr_u_m9);
-free(adr_u_mName);
-free(adr_u_mTypeInference);
+struct IntFast8* adr_u_m1 = IntFast8___init__(10);
+struct IntFast8* adr_u_mTypeInference = IntFast8___init__(10);
+struct IntFast8* adr_u_m3 = IntFast8___init__(0);
+struct UIntFast8* adr_u_m4 = UIntFast8___init__(0);
+struct IntFast16* adr_u_m5 = IntFast16___init__(0);
+struct UIntFast16* adr_u_m6 = UIntFast16___init__(0);
+struct IntFast32* adr_u_m7 = IntFast32___init__(0);
+struct UIntFast32* adr_u_m8 = UIntFast32___init__(0);
+struct IntFast64* adr_u_m9 = IntFast64___init__(0);
+struct UIntFast64* adr_u_m10 = UIntFast64___init__(0);
+struct IntFast8* adr_u_mName = IntFast8___copy__(adr_u_m3);
+IntFast8___deinit__(adr_u_m1);
+IntFast8___deinit__(adr_u_mTypeInference);
+IntFast8___deinit__(adr_u_m3);
+UIntFast8___deinit__(adr_u_m4);
+IntFast16___deinit__(adr_u_m5);
+UIntFast16___deinit__(adr_u_m6);
+IntFast32___deinit__(adr_u_m7);
+UIntFast32___deinit__(adr_u_m8);
+IntFast64___deinit__(adr_u_m9);
+UIntFast64___deinit__(adr_u_m10);
+IntFast8___deinit__(adr_u_mName);
 return 0;
 }

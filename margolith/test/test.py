@@ -37,7 +37,7 @@ class TestAll(unittest.TestCase):
                 print("Doesn't exist: {}".format(str(path_to_c_output)))
             else:
                 got = margo.compile_from_file(
-                    str(path_to_adrian_input), file_hash="")
+                    str(path_to_adrian_input), file_hash="", libs=["../library/"])
                 expected = read_file(str(path_to_c_output))
                 with self.subTest(test=str(test)):
                     self.assertEqual(got, expected)
