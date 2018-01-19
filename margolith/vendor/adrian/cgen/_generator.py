@@ -59,7 +59,7 @@ class Generated:
             yield line
 
     def _merge_includes(self, includes):
-        for include in sorted(includes):
+        for include in includes:
             if include not in self.includes:
                 self.includes.append(include)
 
@@ -98,6 +98,7 @@ class NodeGenerator(_layers.Layer):
                 objects.CTypes.uint_fast8, objects.CTypes.uint_fast16,
                 objects.CTypes.uint_fast32, objects.CTypes.uint_fast64)))):
             self.add_include(includes.stdint)
+            self.add_include_string("#include \"adrian_c.h\"")
             return _CTYPE_TO_STRING[type(type_)]
         elif isinstance(
                 type_,
@@ -235,6 +236,7 @@ class NodeGenerator(_layers.Layer):
                 objects.CTypes.uint_fast8, objects.CTypes.uint_fast16,
                 objects.CTypes.uint_fast32, objects.CTypes.uint_fast64)))):
             self.add_include(includes.stdint)
+            self.add_include_string("#include \"adrian_c.h\"")
             return value.literal
         elif isinstance(value.type_, (objects._Int, objects._Size)):
             return str(value.literal)

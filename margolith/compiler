@@ -33,7 +33,7 @@ def main():
             libs.append(os.path.abspath(line))
 
     print(
-        margo.compile_from_file(args.in_file.name, "", libs=libs), file=args.out)
+        margo.compile_from_file(args.in_file.name, "", libs=libs, out_file=args.out), file=args.out)
 
 
 if __name__ == "__main__":

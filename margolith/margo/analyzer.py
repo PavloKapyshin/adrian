@@ -36,6 +36,14 @@ def find_cmodule(module_name):
     errors.cant_find_module(module_name)
 
 
+def find_cheader(module_name):
+    for directory in context.module_paths:
+        for file in os.listdir(directory):
+            if os.path.isfile(os.path.join(directory, file)) and file == module_name + ".h":
+                return os.path.join(directory, file)
+    errors.cant_find_module(module_name)
+
+
 class Analyzer(layers.Layer):
 
     def check_body(self, body, string):
@@ -61,11 +69,10 @@ class Analyzer(layers.Layer):
         if stmt.name in A(astlib.ModuleMember):
             if stmt.name.module != defs.CMODULE_NAME:
                 unsupported_module()
-            context.clibs.append(find_cmodule("adrian_" + defs.CMODULE_NAME))
+            context.clibs_inc.append(find_cmodule("adrian_" + defs.CMODULE_NAME))
+            context.clibs_cinc.append(find_cheader("adrian_" + defs.CMODULE_NAME))
             yield astlib.StructCall(
                 stmt.name, [astlib.IntLiteral(stmt.args[0].literal)])
-            # yield getattr(
-            #     astlib, "C" + str(stmt.name.member))(stmt.args[0].literal)
         elif str(stmt.name) == defs.REF:
             yield astlib.Ref(self.call_args(stmt.args)[0])
         elif is_user_type(stmt.name):

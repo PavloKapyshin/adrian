@@ -4,23 +4,16 @@ from .patterns import A
 from adrian import cgen
 
 
-TO_CTYPE = {
-    "IntFast8": "int_fast8",
-    "IntFast16": "int_fast16",
-    "IntFast32": "int_fast32",
-    "IntFast64": "int_fast64",
-    "UIntFast8": "uint_fast8",
-    "UIntFast16": "uint_fast16",
-    "UIntFast32": "uint_fast32",
-    "UIntFast64": "uint_fast64",
-}
-
-TO_COP = {
-    "+": cgen.COps.plus,
-    "-": cgen.COps.minus,
-    "*": cgen.COps.star,
-    "/": cgen.COps.slash,
-}
+# TO_CTYPE = {
+#     "IntFast8": "int_fast8",
+#     "IntFast16": "int_fast16",
+#     "IntFast32": "int_fast32",
+#     "IntFast64": "int_fast64",
+#     "UIntFast8": "uint_fast8",
+#     "UIntFast16": "uint_fast16",
+#     "UIntFast32": "uint_fast32",
+#     "UIntFast64": "uint_fast64",
+# }
 
 
 def cfunc_call(call):
@@ -32,18 +25,19 @@ def cfunc_call(call):
 
 
 def func_call(call):
+    name = call.name
+    if name in A(astlib.ModuleMember):
+        name = name.member
     yield cgen.FuncCall(
-        str(call.name), *call_args(call.args))
+        str(name), *call_args(call.args))
 
 
 def t(type_):
-    if type_ in A(astlib.CType):
-        if str(type_) == "Void":
-            return cgen.CTypes.void
-        return cgen.CTypes.ptr(getattr(cgen.CTypes, TO_CTYPE[str(type_)]))
+    if type_ in A(astlib.CVoid):
+        return cgen.CTypes.void
 
-    if type_ in A(astlib.CObject):
-        return cgen.CTypes.ptr(cgen.CTypes.void)
+    if type_ in A(astlib.ModuleMember):
+        return t(type_.member)
 
     if type_ in A(astlib.Name):
         return cgen.CTypes.ptr(cgen.StructType(str(type_)))
@@ -56,9 +50,8 @@ def t(type_):
 
 
 def t_without_ptr(type_):
-    if type_ in A(astlib.CType):
-        return getattr(cgen.CTypes, TO_CTYPE[str(type_)])
-
+    # if type_ in A(astlib.CType):
+    #     return getattr(cgen.CTypes, TO_CTYPE[str(type_)])
     if type_ in A(astlib.Name):
         return str(type_)
     errors.not_implemented(
@@ -67,12 +60,6 @@ def t_without_ptr(type_):
 
 
 def e(expr):
-    if expr in A(astlib.CINT_TYPES):
-        return cgen.Val(
-            literal=expr.literal,
-            type_=getattr(
-                cgen.CTypes, TO_CTYPE[str(expr.to_type())]))
-
     if expr in A(astlib.Deref):
         return cgen.DeRef(e(expr.expr))
 
@@ -100,9 +87,11 @@ def e(expr):
         return cgen.StructElem(
             cgen.CTypes.ptr(e(expr.struct)), e(expr.member))
 
-    if expr in A(astlib.Expr):
-        return cgen.Expr(
-            TO_COP[expr.op], e(expr.left_expr), e(expr.right_expr))
+    if expr in A(astlib.IntLiteral):
+        return cgen.Val(
+            literal=expr.literal,
+            # Any type, :D
+            type_=cgen.CTypes.int_fast64)
 
     errors.not_implemented(
         context.exit_on_error,
