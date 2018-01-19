@@ -4,18 +4,6 @@ from .patterns import A
 from adrian import cgen
 
 
-# TO_CTYPE = {
-#     "IntFast8": "int_fast8",
-#     "IntFast16": "int_fast16",
-#     "IntFast32": "int_fast32",
-#     "IntFast64": "int_fast64",
-#     "UIntFast8": "uint_fast8",
-#     "UIntFast16": "uint_fast16",
-#     "UIntFast32": "uint_fast32",
-#     "UIntFast64": "uint_fast64",
-# }
-
-
 def cfunc_call(call):
     if call.name == defs.SIZEOF_FUNC_NAME:
         yield cgen.SizeOf(*call_args(call.args))
@@ -166,3 +154,13 @@ class ToCGen(layers.Layer):
         yield cgen.Decl(
             name=str(field.name),
             type_=t(field.type_))
+
+    @layers.register(astlib.AST)
+    def main(self, ast_, registry):
+        l = list(layers.transform_ast(ast_, registry=registry))
+        for cheader in context.clibs_cinc:
+            if cheader["type"] == "adr":
+                yield cgen.Include(cheader["src"])
+            else:
+                yield cgen.CInclude(cheader["src"])
+        yield from l

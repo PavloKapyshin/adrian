@@ -65,12 +65,38 @@ class Analyzer(layers.Layer):
     def type_parameters(self, types):
         return list(map(self.t, types))
 
+    def add_found_module(self, name):
+        module_found = find_cmodule(name)
+        if module_found not in context.clibs_inc:
+            context.clibs_inc.append(module_found)
+
+    def add_found_header(self, name):
+        if not self.hexists(name + ".h"):
+            context.clibs_cinc.append({
+                "src": name + ".h",
+                "type": "adr"
+            })
+
+    def hexists(self, name):
+        for entry in context.clibs_cinc:
+            if entry["src"] == name:
+                return True
+        return False
+
+    def add_cinc(self, name):
+        if not self.hexists(name):
+            context.clibs_cinc.append({
+                "src": name,
+                "type": "c"
+            })
+
     def e_func_call(self, stmt):
         if stmt.name in A(astlib.ModuleMember):
             if stmt.name.module != defs.CMODULE_NAME:
                 unsupported_module()
-            context.clibs_inc.append(find_cmodule("adrian_" + defs.CMODULE_NAME))
-            context.clibs_cinc.append(find_cheader("adrian_" + defs.CMODULE_NAME))
+            self.add_found_module("adrian_" + defs.CMODULE_NAME)
+            self.add_cinc("stdint.h")
+            self.add_found_header("adrian_" + defs.CMODULE_NAME)
             yield astlib.StructCall(
                 stmt.name, [astlib.IntLiteral(stmt.args[0].literal)])
         elif str(stmt.name) == defs.REF:
@@ -110,6 +136,9 @@ class Analyzer(layers.Layer):
     def t(self, type_):
         if type_ in A(astlib.ModuleMember):
             if type_.module == defs.CMODULE_NAME:
+                self.add_found_module("adrian_" + defs.CMODULE_NAME)
+                self.add_cinc("stdint.h")
+                self.add_found_header("adrian_" + defs.CMODULE_NAME)
                 return type_
             unsupported_module()
         if type_ in A(astlib.Name):

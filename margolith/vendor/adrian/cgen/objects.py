@@ -551,14 +551,27 @@ class Return(_Object):
 class Include(_Object):
     """Representation of C include directive."""
 
-    _keys = ("module_name", )
+    _keys = ("module", )
 
-    def __init__(self, module_name):
-        self._module_name = module_name
+    def __init__(self, module):
+        self._module = module
 
     @property
-    def module_name(self):
-        return self._module_name
+    def module(self):
+        return self._module
+
+
+class CInclude(_Object):
+    """Representation of C include directive."""
+
+    _keys = ("module", )
+
+    def __init__(self, module):
+        self._module = module
+
+    @property
+    def module(self):
+        return self._module
 
 
 class DeRef(_Object):

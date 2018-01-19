@@ -88,7 +88,7 @@ class NodeGenerator(_layers.Layer):
 
     def add_include(self, include):
         self.add_include_string(
-            "#include <{}>".format(include.module_name))
+            "#include <{}>".format(include.module))
 
     def type_(self, type_):
         # TODO: support other types.
@@ -97,8 +97,6 @@ class NodeGenerator(_layers.Layer):
                 objects.CTypes.int_fast32, objects.CTypes.int_fast64,
                 objects.CTypes.uint_fast8, objects.CTypes.uint_fast16,
                 objects.CTypes.uint_fast32, objects.CTypes.uint_fast64)))):
-            self.add_include(includes.stdint)
-            self.add_include_string("#include \"adrian_c.h\"")
             return _CTYPE_TO_STRING[type(type_)]
         elif isinstance(
                 type_,
@@ -156,6 +154,14 @@ class NodeGenerator(_layers.Layer):
 
     def sub_cast(self, cast):
         return "({})({})".format(self.type_(cast.to), self.expr(cast.expr))
+
+    @_layers.register(objects.Include)
+    def incl(self, include):
+        return '#include "{}"'.format(include.module)
+
+    @_layers.register(objects.CInclude)
+    def cincl(self, include):
+        return '#include <{}>'.format(include.module)
 
     @_layers.register(objects.Cast)
     def cast(self, cast):
@@ -235,8 +241,6 @@ class NodeGenerator(_layers.Layer):
                 objects.CTypes.int_fast32, objects.CTypes.int_fast64,
                 objects.CTypes.uint_fast8, objects.CTypes.uint_fast16,
                 objects.CTypes.uint_fast32, objects.CTypes.uint_fast64)))):
-            self.add_include(includes.stdint)
-            self.add_include_string("#include \"adrian_c.h\"")
             return value.literal
         elif isinstance(value.type_, (objects._Int, objects._Size)):
             return str(value.literal)

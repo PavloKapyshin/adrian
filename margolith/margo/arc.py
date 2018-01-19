@@ -80,6 +80,9 @@ class ARC(layers.Layer):
     def raw_free_region(self, region):
         return deinit(self.any_var_pointing_to_region(region))
 
+    def raw_free_var(self, var):
+        return deinit(var)
+
     def free_scope(self):
         for region_id, info in sorted(
                 context.memory_regions.current_space.items()):
@@ -97,7 +100,7 @@ class ARC(layers.Layer):
             rettype = inference.infer(expr)
             if not rettype in A(astlib.CVoid):
                 return Region(rettype)
-        errors.not_implemented("can't infer region.")
+        errors.not_implemented("can't infer region")
 
     def body(self, body):
         reg = ARC().get_registry()
@@ -120,15 +123,20 @@ class ARC(layers.Layer):
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
+        to_free = None
         if stmt.variable in A(astlib.StructMember):
             struct = stmt.variable
             while struct in A(astlib.StructMember):
                 struct = struct.struct
             expr = get(struct)["expr"]
             if not is_malloc(expr):
-                yield self.raw_free_region(stmt.variable)
+                to_free = stmt.variable
+        else:
+            to_free = stmt.variable
         if stmt.expr in A(astlib.Name):
             self.add_var(stmt.variable, self.region_from_expr(stmt.expr))
+        if to_free:
+            yield self.raw_free_var(to_free)
         yield stmt
 
     @layers.register(astlib.Return)
@@ -146,7 +154,7 @@ class ARC(layers.Layer):
         context.memory_regions.add_scope()
         body = self.body(stmt.body)
         if not body[-1] in A(astlib.Return):
-            body = body[:-1] + list(self.free_scope()) + body[-1:]
+            body = body + list(self.free_scope())
         yield astlib.FuncDecl(
             stmt.name, stmt.args, stmt.rettype, body)
         context.memory_regions.del_scope()
