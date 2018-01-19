@@ -30,7 +30,7 @@ def main():
             content = f.read()
         libs = []
         for line in content.splitlines():
-            libs.append(os.path.abspath(line))
+            libs.append(line)
 
     print(
         margo.compile_from_file(args.in_file.name, "", libs=libs, out_file=args.out), file=args.out)

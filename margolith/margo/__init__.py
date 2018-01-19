@@ -50,7 +50,7 @@ def compile_from_string(inp, file_hash, libs=None, out_file="OUT_FILE", cc="clan
             "env": env.Env(),
             "exit_on_error": True,
             "file_hash": file_hash,
-            "module_paths": ["library/"],
+            "module_paths": libs or [],
             "tmp_count": 0}
         for layer, _ in LAYERS
     }
