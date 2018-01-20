@@ -41,7 +41,7 @@ class ARC(layers.Layer):
     def var_to_region(self, name):
         for id in range(REGION_ID_START, context.region_id):
             current_region = context.memory_regions[id]
-            if name in current_region["pointers"]:
+            if (not current_region is None) and (name in current_region["pointers"]):
                 return current_region["region"]
         errors.not_implemented("variable doesn't point to any region")
 
@@ -66,7 +66,7 @@ class ARC(layers.Layer):
             }
 
     def any_var_pointing_to_region(self, region):
-        pointers = sorted(self.region_to_vars(region))
+        pointers = self.region_to_vars(region)
         if pointers == []:
             errors.not_implemented("region is anonymous")
         return pointers[0]
@@ -96,6 +96,10 @@ class ARC(layers.Layer):
         if expr in A(astlib.Ref):
             if expr.expr in A(astlib.Name):
                 return self.var_to_region(expr.expr)
+            expr_ = expr.expr
+            while expr_ in A(astlib.StructMember):
+                expr_ = expr_.struct
+            return self.var_to_region(expr_)
         if expr in A(astlib.StructCall, astlib.StructFuncCall, astlib.FuncCall):
             rettype = inference.infer(expr)
             if not rettype in A(astlib.CVoid):
