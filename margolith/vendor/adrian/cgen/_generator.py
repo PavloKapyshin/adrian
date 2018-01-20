@@ -276,6 +276,21 @@ class NodeGenerator(_layers.Layer):
         expr = self.expr(assmt.expr)
         return "{} = {};".format(name, expr)
 
+    @_layers.register(objects.While)
+    def while_(self, stmt):
+        generated_body = Generated()
+        for stmt_ in stmt.body:
+            generated_body.merge(self.generate(stmt_))
+
+        for include in generated_body.includes:
+            self.add_include_string(include)
+
+        return "\n".join([
+            " ".join(["while ({})".format(self.expr(stmt.cond)), "{"]),
+            "\n".join(generated_body.rest_code),
+            "}"
+        ])
+
     @_layers.register(objects.Struct)
     def struct_decl(self, struct):
         # Generating body.

@@ -42,6 +42,13 @@ class Copying(layers.Layer):
     def assignment(self, stmt):
         yield astlib.Assignment(stmt.variable, stmt.op, self.e(stmt.expr))
 
+    @layers.register(astlib.While)
+    def while_(self, stmt):
+        add_scope()
+        yield astlib.While(
+            stmt.expr, self.body(stmt.body))
+        del_scope()
+
     @layers.register(astlib.Return)
     def return_(self, stmt):
         yield stmt

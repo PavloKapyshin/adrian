@@ -11,7 +11,7 @@ class MainFunc(layers.Layer):
         main_func_body = []
         for node in ast_:
             if isinstance(node, (
-                    cgen.Decl, cgen.FuncCall, cgen.Assignment)):
+                    cgen.Decl, cgen.FuncCall, cgen.Assignment, cgen.While)):
                 main_func_body.append(node)
             else:
                 yield node

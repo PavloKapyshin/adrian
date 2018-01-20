@@ -85,12 +85,14 @@ class TAC(layers.Layer):
     def ldecl(self, decl):
         yield from self._decl(decl)
 
-    # @layers.register(astlib.AssignmentAndAlloc)
-    # def assignment_and_alloc(self, stmt):
-    #     expr, decls = self.e(stmt.expr)
-    #     yield from decls
-    #     yield astlib.AssignmentAndAlloc(
-    #         stmt.name, stmt.type_, expr)
+    @layers.register(astlib.While)
+    def while_(self, stmt):
+        expr, decls = self.inner_expr(stmt.expr)
+        add_scope()
+        yield from decls
+        yield astlib.While(
+            expr, self.body(stmt.body))
+        del_scope()
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
@@ -101,7 +103,8 @@ class TAC(layers.Layer):
 
     @layers.register(astlib.Return)
     def return_(self, stmt):
-        expr, decls = self.inner_expr(stmt.expr)
+        #expr, decls = self.inner_expr(stmt.expr)
+        expr, decls = self.e(stmt.expr)
         yield from decls
         yield astlib.Return(expr)
 

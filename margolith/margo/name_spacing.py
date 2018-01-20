@@ -171,6 +171,11 @@ class NameSpacing(layers.Layer):
     def return_(self, return_):
         yield astlib.Return(e(return_.expr))
 
+    @layers.register(astlib.While)
+    def while_(self, stmt):
+        yield astlib.While(
+            e(stmt.expr), self.body(stmt.body))
+
     @layers.register(astlib.FuncDecl)
     def func(self, func):
         yield astlib.FuncDecl(

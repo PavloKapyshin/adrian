@@ -175,10 +175,12 @@ class Analyzer(layers.Layer):
         yield astlib.Assignment(
             self.e(stmt.variable), stmt.op, self.e(stmt.expr))
 
-    # @layers.register(astlib.AssignmentAndAlloc)
-    # def assignment_and_alloc(self, stmt):
-    #     yield astlib.AssignmentAndAlloc(
-    #         self.e(stmt.name), self.t(stmt.type_), self.e(stmt.expr))
+    @layers.register(astlib.While)
+    def while_(self, stmt):
+        add_scope()
+        yield astlib.While(
+            self.e(stmt.expr), self.body(stmt.body))
+        del_scope()
 
     @layers.register(astlib.Return)
     def return_(self, stmt):

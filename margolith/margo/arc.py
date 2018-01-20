@@ -151,6 +151,15 @@ class ARC(layers.Layer):
                     yield free
         yield stmt
 
+    @layers.register(astlib.While)
+    def while_(self, stmt):
+        add_scope()
+        context.memory_regions.add_scope()
+        body = self.body(stmt.body) + list(self.free_scope())
+        yield astlib.While(stmt.expr, body)
+        context.memory_regions.del_scope()
+        del_scope()
+
     @layers.register(astlib.FuncDecl)
     def func_decl(self, stmt):
         add_to_env(stmt)
