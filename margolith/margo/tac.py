@@ -103,8 +103,7 @@ class TAC(layers.Layer):
 
     @layers.register(astlib.Return)
     def return_(self, stmt):
-        #expr, decls = self.inner_expr(stmt.expr)
-        expr, decls = self.e(stmt.expr)
+        expr, decls = self.inner_expr(stmt.expr)
         yield from decls
         yield astlib.Return(expr)
 

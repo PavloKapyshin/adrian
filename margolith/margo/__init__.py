@@ -27,16 +27,22 @@ LAYERS = (
 
 def compile_repl(inp, *, contexts):
     tmp_count = 0
+    clibs_inc = []
+    clibs_cinc = []
     for layer_cls, method_name in LAYERS:
         with context.new_context(**copy.deepcopy(contexts[layer_cls])):
             layer = layer_cls()
             context.context.tmp_count = tmp_count
+            context.context.clibs_inc = clibs_inc
+            context.context.clibs_cinc = clibs_cinc
             if method_name == "parse":
                 current_ast = foreign_parser.main(
                     layer.parse(inp))
             else:
                 current_ast = list(getattr(layers, method_name)(
                     current_ast, registry=layer.get_registry()))
+            clibs_inc = context.context.clibs_inc
+            clibs_cinc = context.context.clibs_cinc
             tmp_count = context.context.tmp_count
     generator = adr_cgen.Generator()
     generator.add_ast(current_ast)
