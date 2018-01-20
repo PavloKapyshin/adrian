@@ -124,6 +124,7 @@ def p_stmt(content):
          | fun_decl
          | struct_decl
          | assignment
+         | while_stmt
          | factor
     """
     content[0] = content[1]
@@ -217,6 +218,35 @@ def p_return_stmt(content):
     content[0] = [parser_astlib.RETURN, content[2]]
 
 
+def p_while_stmt(content):
+    """while_stmt : WHILE bool_expr LBRACE while_body RBRACE"""
+    content[0] = [parser_astlib.WHILE, content[2], content[4]]
+
+
+def p_while_body_1(content):
+    """while_body : while_body_stmt while_body"""
+    content[0] = [parser_astlib.BODY, content[1], content[2]]
+
+
+def p_while_body_2(content):
+    """while_body : while_body_stmt"""
+    content[0] = [parser_astlib.BODY, content[1], [parser_astlib.EMPTY]]
+
+
+def p_while_body_3(content):
+    """while_body : empty"""
+    content[0] = [parser_astlib.EMPTY]
+
+
+def p_while_body_stmt(content):
+    """
+    while_body_stmt : assignment
+                    | while_stmt
+                    | factor
+    """
+    content[0] = content[1]
+
+
 def p_assignment(content):
     """
     assignment : factor EQ bool_expr
@@ -243,6 +273,7 @@ def p_fun_body_stmt(content):
                   | assignment
                   | return_stmt
                   | factor
+                  | while_stmt
     """
     content[0] = content[1]
 

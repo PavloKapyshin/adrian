@@ -350,6 +350,20 @@ class Return(Node):
         self._keys = ("expr", )
 
 
+class While(Node):
+    """   expr
+          vvvvv
+    while 1 + 2 {
+        ...       < body
+    }
+    """
+
+    def __init__(self, expr, body):
+        self.expr = expr
+        self.body = body
+        self._keys = ("expr", "body")
+
+
 class Literal(Node):
 
     def __init__(self, literal):

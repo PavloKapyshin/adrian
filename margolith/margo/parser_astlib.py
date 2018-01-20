@@ -7,6 +7,7 @@ PROTOCOL_DECL = "ProtocolDecl"
 FIELD_DECL = "FieldDecl"
 ASSIGNMENT = "Assignment"
 RETURN = "Return"
+WHILE = "While"
 
 NAME = "Name"
 SEXPR = "Expr"

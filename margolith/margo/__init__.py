@@ -14,14 +14,14 @@ REPL_FILE_HASH = "mangled"
 LAYERS = (
     (parser.Parser, "parse"),
     (object_proto.ObjectProto, "transform_ast"),
-    (analyzer.Analyzer, "transform_ast"),
-    (tac.TAC, "transform_ast"),
-    (copying.Copying, "transform_ast"),
-    (arc.ARC, "expand_ast"),
-    # inlining should be here
-    (name_spacing.NameSpacing, "transform_ast"),
-    (tocgen.ToCGen, "expand_ast"),
-    (main_func.MainFunc, "expand_ast")
+    # (analyzer.Analyzer, "transform_ast"),
+    # (tac.TAC, "transform_ast"),
+    # (copying.Copying, "transform_ast"),
+    # (arc.ARC, "expand_ast"),
+    # # inlining should be here
+    # (name_spacing.NameSpacing, "transform_ast"),
+    # (tocgen.ToCGen, "expand_ast"),
+    # (main_func.MainFunc, "expand_ast")
 )
 
 
@@ -38,10 +38,10 @@ def compile_repl(inp, *, contexts):
                 current_ast = list(getattr(layers, method_name)(
                     current_ast, registry=layer.get_registry()))
             tmp_count = context.context.tmp_count
-    generator = adr_cgen.Generator()
-    generator.add_ast(current_ast)
-    return "\n".join(generator.generate())
-    #return current_ast
+    # generator = adr_cgen.Generator()
+    # generator.add_ast(current_ast)
+    # return "\n".join(generator.generate())
+    return current_ast
 
 
 def compile_from_string(inp, file_hash, libs=None, out_file="OUT_FILE", cc="clang"):

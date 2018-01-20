@@ -8,7 +8,7 @@ RESERVED_WORDS = {
     for keyword in (
         "var", "let", "fun", "return",
         #"protocol", "is",
-        "struct"
+        "struct", "while"
     )
 }
 
