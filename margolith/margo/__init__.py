@@ -18,7 +18,7 @@ LAYERS = (
     (tac.TAC, "transform_ast"),
     (copying.Copying, "transform_ast"),
     (arc.ARC, "expand_ast"),
-    # # inlining should be here
+    # inlining should be here
     (name_spacing.NameSpacing, "transform_ast"),
     (tocgen.ToCGen, "expand_ast"),
     (main_func.MainFunc, "expand_ast")

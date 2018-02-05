@@ -27,6 +27,7 @@ class NodeType(enum.Enum):
     let = 2
     fun = 3
     struct = 4
+    adt = 5
 
 
 def split_body(body):
@@ -143,6 +144,16 @@ def add_to_env(statement):
             "methods": methods,
             "var_types": statement.var_types,
             "node_type": NodeType.struct
+        })
+    if statement in A(astlib.ADTDecl):
+        fields = {}
+        for stmt in statement.body:
+            fields[stmt.type_] = stmt.name
+
+        context.env.add(str(statement.name), {
+            "type": statement.name,
+            "fields": fields,
+            "node_type": NodeType.adt
         })
 
 

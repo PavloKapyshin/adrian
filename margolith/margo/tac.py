@@ -131,3 +131,10 @@ class TAC(layers.Layer):
         yield astlib.StructDecl(
             stmt.name, stmt.var_types, self.body(stmt.body))
         del_scope()
+
+    @layers.register(astlib.ADTDecl)
+    def adt_decl(self, stmt):
+        add_to_env(stmt)
+        add_scope()
+        yield stmt
+        del_scope()

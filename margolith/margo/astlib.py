@@ -17,6 +17,18 @@ class Node(BaseNode):
         return "{}({})".format(
             self.__class__.__name__, fields)
 
+    def __eq__(self, other):
+        if type(self) != type(other):
+            raise TypeError(
+                "comparison cannot be applied to {} and {}.".format(
+                type(self), type(other)))
+        return all([
+            getattr(self, field_name) == getattr(other, field_name)
+            for field_name in self._keys])
+
+    def __hash__(self):
+        return hash(tuple(getattr(self, field_name) for field_name in self._keys))
+
     __repr__ = __str__
 
 
@@ -41,6 +53,9 @@ class _Name(collections.UserString):
         raise TypeError(
             "comparison cannot be applied to {} and {}.".format(
                 type(self), type(other)))
+
+    def __hash__(self):
+        return hash(self.data)
 
 
 class Name(_Name):
@@ -324,6 +339,21 @@ class StructDecl(Node):
         self.var_types = var_types
         self.body = body
         self._keys = ("name", "var_types", "body")
+
+
+class ADTDecl(Node):
+    """  name
+        vvvvvv
+    adt MyType {
+        Integer         < body
+        Another         < body
+    }
+    """
+
+    def __init__(self, name, body):
+        self.name = name
+        self.body = body
+        self._keys = ("name", "body")
 
 
 class FieldDecl(Node):

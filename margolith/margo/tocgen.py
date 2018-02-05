@@ -153,6 +153,12 @@ class ToCGen(layers.Layer):
             name=str(struct.name),
             body=self.b(struct.body))
 
+    @layers.register(astlib.ADTDecl)
+    def adt(self, stmt):
+        yield cgen.Union(
+            name=str(stmt.name),
+            body=self.b(stmt.body))
+
     @layers.register(astlib.FieldDecl)
     def field(self, field):
         yield cgen.Decl(

@@ -200,6 +200,11 @@ class NameSpacing(layers.Layer):
             n(struct.name), struct.var_types,
             self.body(struct.body))
 
+    @layers.register(astlib.ADTDecl)
+    def adt(self, stmt):
+        yield astlib.ADTDecl(
+            n(stmt.name), self.body(stmt.body))
+
     @layers.register(astlib.FieldDecl)
     def field(self, field):
         yield astlib.FieldDecl(

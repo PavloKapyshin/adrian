@@ -309,6 +309,22 @@ class NodeGenerator(_layers.Layer):
             "".join([body, ";"])
         ])
 
+    @_layers.register(objects.Union)
+    def union_decl(self, union):
+        generated_body = Generated()
+        for stmt in union.body:
+            generated_body.merge(self.generate(stmt))
+
+        for include in generated_body.includes:
+            self.add_include_string(Include)
+
+        body = "{\n" + "\n".join(generated_body.rest_code) + "\n}"
+        return " ".join([
+            "union",
+            union.name,
+            "".join([body, ";"])
+        ])
+
     @_layers.register(objects.Func)
     def func_decl(self, func):
         # Generating body.

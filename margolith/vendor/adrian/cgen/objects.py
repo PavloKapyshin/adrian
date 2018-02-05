@@ -417,6 +417,24 @@ class Struct(_Object):
         return self._body
 
 
+class Union(_Object):
+    """union."""
+
+    _keys = ("name", "body")
+
+    def __init__(self, name, body):
+        self._name = name
+        self._body = body
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def body(self):
+        return self._body
+
+
 class StructElem(_Object):
     """Representation of getting element of struct."""
 

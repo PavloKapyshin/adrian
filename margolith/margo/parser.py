@@ -125,6 +125,7 @@ def p_stmt(content):
          | struct_decl
          | assignment
          | while_stmt
+         | adt_decl
          | factor
     """
     content[0] = content[1]
@@ -191,6 +192,35 @@ def p_struct_decl_2(content):
         parser_astlib.STRUCT_DECL,
         [parser_astlib.NAME, content[2]],
         content[4], content[7]]
+
+def p_adt_decl(content):
+    """
+    adt_decl : ADT NAME LBRACE adt_body RBRACE
+    """
+    content[0] = [
+        parser_astlib.ADT_DECL,
+        [parser_astlib.NAME, content[2]],
+        content[4]]
+
+
+def p_adt_body_1(content):
+    """
+    adt_body : type adt_body
+    """
+    content[0] = [parser_astlib.BODY, content[1], content[2]]
+
+def p_adt_body_2(content):
+    """
+    adt_body : type
+    """
+    content[0] = [parser_astlib.BODY, content[1], [parser_astlib.EMPTY]]
+
+
+def p_adt_body_3(content):
+    """
+    adt_body : empty
+    """
+    content[0] = [parser_astlib.EMPTY]
 
 
 def p_var_types_1(content):

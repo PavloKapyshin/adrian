@@ -180,6 +180,13 @@ class ARC(layers.Layer):
         yield stmt
         del_scope()
 
+    @layers.register(astlib.ADTDecl)
+    def adt_decl(self, stmt):
+        add_to_env(stmt)
+        add_scope()
+        yield stmt
+        del_scope()
+
     @layers.register(astlib.StructFuncDecl)
     def struct_func_decl(self, stmt):
         add_to_env(stmt)

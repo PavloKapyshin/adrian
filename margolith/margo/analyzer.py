@@ -149,6 +149,17 @@ class Analyzer(layers.Layer):
                 type_.type_, self.type_parameters(type_.parameters))
         return type_
 
+    def adt_body(self, body):
+        result = []
+        t = "type_"
+        i = 0
+        for stmt in body:
+            result.append(
+                astlib.FieldDecl(
+                    name="".join([t, str(i)]), type_=self.t(stmt)))
+            i += 1
+        return result
+
     def body(self, body):
         reg = Analyzer().get_registry()
         return list(map(
@@ -229,4 +240,14 @@ class Analyzer(layers.Layer):
         body = self.body(stmt.body)
         yield astlib.StructDecl(
             stmt.name, stmt.var_types, body)
+        del_scope()
+
+    @layers.register(astlib.ADTDecl)
+    def adt_decl(self, stmt):
+        self.check_body(stmt.body, "adts")
+        body = self.adt_body(stmt.body)
+        new_stmt = astlib.ADTDecl(stmt.name, body)
+        add_to_env(new_stmt)
+        add_scope()
+        yield new_stmt
         del_scope()
