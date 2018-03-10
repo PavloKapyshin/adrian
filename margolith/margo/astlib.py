@@ -85,6 +85,14 @@ class StructMember(Node):
         self._keys = ("struct", "member")
 
 
+class AdtMember(Node):
+
+    def __init__(self, adt, member):
+        self.adt = adt
+        self.member = member
+        self._keys = ("adt", "member")
+
+
 class ParameterizedType(Node):
 
     def __init__(self, type_, parameters):
@@ -145,6 +153,14 @@ class Arg(Node):
         self._keys = ("name", "type_")
 
 
+class LeaveEmpty(BaseNode):
+
+    def __str__(self):
+        return "LEAVE_EMPTY"
+
+    __repr__ = __str__
+
+
 class Empty(BaseNode):
 
     def __str__(self):
@@ -163,6 +179,9 @@ class Unknown(BaseNode):
 
     def __str__(self):
         return "UNKNOWN"
+
+    def __bool__(self):
+        return False
 
     __repr__ = __str__
 
