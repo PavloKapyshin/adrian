@@ -1,1 +1,0 @@
-./test/check-lang-to-c.py ./compiler test/adrian_tests/ test/c_tests/ --source="{compiler} --modules example_modules -o {dest} {src}" --binary="clang -o {dest} -I{checker_run_dir}/library {checker_run_dir}/library/adrian_c.c {src}"
