@@ -108,6 +108,12 @@ class NodeGenerator(_layers.Layer):
                 fmt_string = "struct {}".format(
                     self.type_(type_.name))
             return fmt_string
+        elif isinstance(type_, objects.UnionType):
+            fmt_string = "union {}".format(type_.name)
+            if not isinstance(type_.name, str):
+                fmt_string = "union {}".format(
+                    self.type_(type_.name))
+            return fmt_string
         elif isinstance(type_, objects._Ptr):
             # Recursively call self.type_ with ptr's "inner" type.
             return "{}*".format(self.type_(type_.type_))

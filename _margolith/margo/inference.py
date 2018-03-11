@@ -34,6 +34,8 @@ def infer(expr):
         fields = get(type_of_struct)["fields"]
         field = fields[str(expr.member)]
         return field["type"]
+    if expr in A(astlib.AdtMember):
+        return get(get(expr.adt)["type"])["f_to_t"][expr.member]
     if expr in A(astlib.Deref, astlib.Ref):
         return infer(expr.expr)
     if expr in A(astlib.CFuncCall):

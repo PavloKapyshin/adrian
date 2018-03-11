@@ -146,13 +146,16 @@ def add_to_env(statement):
             "node_type": NodeType.struct
         })
     if statement in A(astlib.ADTDecl):
-        fields = {}
+        fields_t_to_f = {}
+        fields_f_to_t = {}
         for stmt in statement.body:
-            fields[stmt.type_] = stmt.name
+            fields_t_to_f[stmt.type_] = stmt.name
+            fields_f_to_t[stmt.name] = stmt.type_
 
         context.env.add(str(statement.name), {
             "type": statement.name,
-            "fields": fields,
+            "fields": fields_t_to_f,
+            "f_to_t": fields_f_to_t,
             "node_type": NodeType.adt
         })
 

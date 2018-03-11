@@ -223,6 +223,19 @@ class StructType(_Object):
         return self._name
 
 
+class UnionType(_Object):
+    """Union type"""
+
+    _keys = ("name", )
+
+    def __init__(self, name):
+        self._name = name
+
+    @property
+    def name(self):
+        return self._name
+
+
 class SizeOf(_Object):
     """sizeof operator."""
 

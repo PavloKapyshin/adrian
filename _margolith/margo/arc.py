@@ -38,6 +38,25 @@ def deinit(expr):
 
 class ARC(layers.Layer):
 
+    def __init__(self, adt_state=None):
+        self.adt_state = adt_state or Env()
+
+    def adt_add_to_env(self, var):
+        if var not in A(astlib.AdtMember):
+            return
+        entry = self.adt_state.get(var.adt)
+        self.adt_state.add(var.adt, {
+            "current": var.member,
+            "current_type": get(
+                inference.infer(var.adt))["f_to_t"][var.member]
+        })
+
+    def adt_init_state(self, name, type_):
+        self.adt_state.add(name, {
+            "current": None,
+            "current_type": None,
+        })
+
     def var_to_region(self, name):
         for id in range(REGION_ID_START, context.region_id):
             current_region = context.memory_regions[id]
@@ -49,6 +68,8 @@ class ARC(layers.Layer):
         return context.memory_regions[region.id]["pointers"]
 
     def add_var(self, name, region):
+        if region is None:
+            return
         if region.id in context.memory_regions:
             old_info = context.memory_regions[region.id]
             pointers = old_info["pointers"]
@@ -93,6 +114,10 @@ class ARC(layers.Layer):
     def region_from_expr(self, expr):
         if is_malloc(expr):
             return Region(inference.infer(expr))
+        if expr in A(astlib.LeaveEmpty):
+            return None
+        if expr in A(astlib.AdtMember):
+            return get(get(expr.adt)["type"])["f_to_t"][expr.member]
         if expr in A(astlib.Ref):
             if expr.expr in A(astlib.Name):
                 return self.var_to_region(expr.expr)
@@ -116,12 +141,14 @@ class ARC(layers.Layer):
     @layers.register(astlib.LetDecl)
     def let_decl(self, stmt):
         add_to_env(stmt)
+        self.adt_init_state(stmt.name, stmt.type_)
         self.add_var(stmt.name, self.region_from_expr(stmt.expr))
         yield stmt
 
     @layers.register(astlib.VarDecl)
     def decl(self, stmt):
         add_to_env(stmt)
+        self.adt_init_state(stmt.name, stmt.type_)
         self.add_var(stmt.name, self.region_from_expr(stmt.expr))
         yield stmt
 
@@ -135,12 +162,23 @@ class ARC(layers.Layer):
             expr = get(struct)["expr"]
             if not is_malloc(expr):
                 to_free = stmt.variable
+        elif stmt.variable in A(astlib.AdtMember):
+            self.add_var(stmt.variable, self.region_from_expr(stmt.expr))
+            adt = stmt.variable
+            expr = get(adt.adt)["expr"]
+            curr = self.adt_state.get(adt.adt)["current"]
+            if curr is not None:
+                to_free = None
+                yield self.free_region(
+                    self.var_to_region(
+                        astlib.AdtMember(adt.adt, curr)))
         else:
             to_free = stmt.variable
         if stmt.expr in A(astlib.Name):
             self.add_var(stmt.variable, self.region_from_expr(stmt.expr))
         if to_free:
             yield self.raw_free_var(to_free)
+        self.adt_add_to_env(stmt.variable)
         yield stmt
 
     @layers.register(astlib.Return)

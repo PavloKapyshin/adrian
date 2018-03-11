@@ -27,10 +27,13 @@ def check_adt_type(adt_type, expr):
 
 def provide_type(type_, expr):
     if type_:
+        if type_ in A(astlib.ModuleMember):
+            return type_
         if is_adt(type_):
             check_adt_type(type_, expr)
         return type_
-    return inference.infer(expr)
+    t = inference.infer(expr)
+    return t
 
 def add_found_module(name):
     module_found = find_c_module(name)
@@ -148,7 +151,9 @@ class Analyzer(layers.Layer):
                 layers.transform_node(stmt, registry=reg))[0], body))
 
     def split_adt_usage(self, name, type_, expr):
-        yield astlib.VarDecl(name, type_, astlib.LeaveEmpty())
+        init = astlib.VarDecl(name, type_, astlib.LeaveEmpty())
+        add_to_env(init)
+        yield init
         yield astlib.Assignment(
             adt_f_by_t(name, type_, inference.infer(expr)), "=", expr)
 
@@ -159,7 +164,7 @@ class Analyzer(layers.Layer):
             result = self.split_adt_usage(stmt.name, type_, expr)
         else:
             result = [type(stmt)(stmt.name, type_, expr)]
-        add_to_env(result)
+            add_to_env(result[0])
         yield from result
 
     @layers.register(astlib.VarDecl)
@@ -172,8 +177,17 @@ class Analyzer(layers.Layer):
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
-        yield astlib.Assignment(
-            self.e(stmt.variable), stmt.op, self.e(stmt.expr))
+        type_ = inference.infer(stmt.variable)
+        if is_adt(type_):
+            e = self.e(stmt.expr)
+            yield astlib.Assignment(
+                adt_f_by_t(
+                    self.e(stmt.variable), type_,
+                    inference.infer(e)),
+                "=", e)
+        else:
+            yield astlib.Assignment(
+                self.e(stmt.variable), stmt.op, self.e(stmt.expr))
 
     @layers.register(astlib.While)
     def while_(self, stmt):

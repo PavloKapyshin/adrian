@@ -1,7 +1,8 @@
 from . import defs, layers, astlib, errors
-from .context import context
+from .context import context, add_to_env, add_scope, del_scope
 from .patterns import A
 from adrian import cgen
+from .utils import is_adt
 
 
 def cfunc_call(call):
@@ -28,6 +29,11 @@ def t(type_):
         return t(type_.member)
 
     if type_ in A(astlib.Name):
+        if type_ in ("IntFast8", "IntFast16", "IntFast32", "IntFast64",
+                "UIntFast8", "UIntFast16", "UIntFast32", "UIntFast64"):
+            return cgen.CTypes.ptr(cgen.StructType(str(type_)))
+        if is_adt(type_):
+            return cgen.UnionType(str(type_))
         return cgen.CTypes.ptr(cgen.StructType(str(type_)))
 
     if type_ in A(astlib.ParameterizedType):
@@ -38,8 +44,6 @@ def t(type_):
 
 
 def t_without_ptr(type_):
-    # if type_ in A(astlib.CType):
-    #     return getattr(cgen.CTypes, TO_CTYPE[str(type_)])
     if type_ in A(astlib.Name):
         return str(type_)
     errors.not_implemented(
@@ -50,6 +54,12 @@ def t_without_ptr(type_):
 def e(expr):
     if expr in A(astlib.Deref):
         return cgen.DeRef(e(expr.expr))
+
+    if expr in A(astlib.LeaveEmpty):
+        return None
+
+    if expr in A(astlib.AdtMember):
+        return cgen.StructElem(e(expr.adt), e(expr.member))
 
     if expr in A(astlib.Ref):
         return e(expr.expr)
@@ -109,12 +119,14 @@ class ToCGen(layers.Layer):
 
     @layers.register(astlib.VarDecl)
     def decl(self, decl):
+        add_to_env(decl)
         yield cgen.Decl(
             name=str(decl.name), type_=t(decl.type_),
             expr=e(decl.expr))
 
     @layers.register(astlib.LetDecl)
     def let_decl(self, decl):
+        add_to_env(decl)
         yield cgen.Decl(
             name=str(decl.name), type_=t(decl.type_),
             expr=e(decl.expr))
@@ -143,21 +155,30 @@ class ToCGen(layers.Layer):
 
     @layers.register(astlib.FuncDecl)
     def func(self, func):
+        add_to_env(func)
+        add_scope()
         yield cgen.Func(
             str(func.name), t(func.rettype),
             decl_args(func.args), self.b(func.body))
+        del_scope()
 
     @layers.register(astlib.StructDecl)
     def struct(self, struct):
+        add_to_env(struct)
+        add_scope()
         yield cgen.Struct(
             name=str(struct.name),
             body=self.b(struct.body))
+        del_scope()
 
     @layers.register(astlib.ADTDecl)
     def adt(self, stmt):
+        add_to_env(stmt)
+        add_scope()
         yield cgen.Union(
             name=str(stmt.name),
             body=self.b(stmt.body))
+        del_scope()
 
     @layers.register(astlib.FieldDecl)
     def field(self, field):

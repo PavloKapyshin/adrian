@@ -74,8 +74,11 @@ def call_args(args):
 
 
 def e(expr):
-    if expr in A(astlib.Name):
+    if expr in A(astlib.Name, str):
         return n(expr)
+
+    if expr in A(astlib.LeaveEmpty):
+        return expr
 
     if expr in A(astlib.CFuncCall):
         return astlib.CFuncCall(
@@ -107,13 +110,16 @@ def e(expr):
     if expr in A(astlib.StructMember):
         return astlib.StructMember(e(expr.struct), e(expr.member))
 
+    if expr in A(astlib.AdtMember):
+        return astlib.AdtMember(e(expr.adt), e(expr.member))
+
     if expr in A(astlib.CCast):
         return astlib.CCast(e(expr.expr), t(expr.to))
 
     if expr in A(astlib.IntLiteral):
         return expr
 
-    errors.not_implemented("namespacing: expr (expr {})".format(expr))
+    errors.not_implemented("namespacing: expr (expr {})".format(type(expr)))
 
 
 class NameSpacing(layers.Layer):
