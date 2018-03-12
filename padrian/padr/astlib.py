@@ -11,7 +11,7 @@ class NodeT(enum.Enum):
     protocol = 6
 
 
-class ContainerT(enum.Enum):
+class DataT(enum.Enum):
     module = 1
     struct = 2
     adt = 3
@@ -132,11 +132,11 @@ class DataDecl(Node):
 
 class DataMember(Node):
 
-    def __init__(self, containertype, parent, member):
-        self.containertype = containertype
+    def __init__(self, datatype, parent, member):
+        self.datatype = datatype
         self.parent = parent
         self.member = member
-        self._keys = ("containertype", "parent", "member")
+        self._keys = ("datatype", "parent", "member")
 
 
 class Callable(Node):

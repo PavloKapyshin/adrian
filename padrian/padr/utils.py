@@ -22,3 +22,18 @@ is_let = _is_node_type(astlib.NodeT.let)
 is_fun = _is_node_type(astlib.NodeT.fun)
 is_protocol = _is_node_type(astlib.NodeT.protocol)
 is_adt = _is_node_type(astlib.NodeT.adt)
+
+
+def split_body(body):
+    fields, methods = [], []
+    for stmt in body:
+        if (stmt in A(astlib.Decl) and
+                stmt.decltype == astlib.DeclT.field):
+            fields.append(stmt)
+        else:
+            methods.append(stmt)
+    return fields, methods
+
+
+def only_fields(body):
+    return split_body(body)[0]

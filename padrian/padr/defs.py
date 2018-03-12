@@ -28,11 +28,14 @@ COMMON_REGEX = "".join([
     ")"])
 
 
+INIT_METHOD = "__init__"
+DEINIT_METHOD = "__deinit__"
+COPY_METHOD = "__copy__"
 CMODULE = "c"
-
+T_STRING = "t"
 
 _c_module_member = partial(
-    astlib.DataMember, astlib.ContainerT.module, astlib.Name(CMODULE))
+    astlib.DataMember, astlib.DataT.module, astlib.Name(CMODULE))
 ENV = env.Env()
 ENV[_c_module_member(astlib.Name("IntFast8"))] = {
     "node_type": astlib.NodeT.struct

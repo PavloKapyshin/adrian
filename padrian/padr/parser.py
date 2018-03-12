@@ -99,7 +99,7 @@ precedence = (
 
 def sexpr(expr):
     if len(expr) == 3 + 1:
-        return [parser_astlib.SEXPR, expr[2], expr[1], expr[3]]
+        return [parser_astlib.SEXPR, expr[1], expr[2], expr[3]]
     return [expr[1]]
 
 
@@ -189,7 +189,7 @@ def p_field_decl(content):
     content[0] = [
         parser_astlib.DECL, astlib.DeclT.field,
         [parser_astlib.NAME, content[1]],
-        content[3]]
+        content[3], [parser_astlib.EMPTY]]
 
 
 def p_return_stmt(content):
@@ -299,7 +299,7 @@ def p_arg_list_3(content):
 def p_module_member_1(content):
     """module_member : NAME HASH NAME"""
     content[0] = [
-        parser_astlib.DATA_MEMBER, astlib.ContainerT.module,
+        parser_astlib.DATA_MEMBER, astlib.DataT.module,
         [parser_astlib.NAME, content[1]],
         [parser_astlib.NAME, content[3]]]
 
@@ -357,7 +357,7 @@ def p_factor_1(content):
 def p_factor_2(content):
     """factor : factor DOT factor"""
     content[0] = [
-        parser_astlib.DATA_MEMBER, astlib.ContainerT.struct,
+        parser_astlib.DATA_MEMBER, astlib.DataT.struct,
         content[1], content[3]]
 
 

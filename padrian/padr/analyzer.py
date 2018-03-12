@@ -1,4 +1,4 @@
-from .context import context
+from .context import context, add_decl
 from . import layers, astlib, errors, defs, inference
 from .utils import A, is_struct
 
@@ -14,15 +14,13 @@ class Analyzer(layers.Layer):
 
     def t(self, type_):
         if type_ in A(astlib.DataMember):
-            if type_.containertype == astlib.ContainerT.module:
+            if type_.datatype == astlib.DataT.module:
                 if not str(type_.parent) == defs.CMODULE:
                     errors.not_now(errors.MODULE)
                 return type_
         return type_
 
     def e_callable(self, expr):
-        # if (expr.callabletype == astlib.CallableT.fun and
-        #         is_struct(expr.name)):
         if is_struct(expr.name):
             return astlib.Callable(
                 astlib.CallableT.struct, expr.parent,
@@ -42,14 +40,14 @@ class Analyzer(layers.Layer):
                 [parent] + self.args(func_call.args))
         if expr.member in A(astlib.Name):
             return astlib.DataMember(
-                expr.containertype, self.e(expr.parent),
+                expr.datatype, self.e(expr.parent),
                 expr.member)
 
     def e(self, expr):
         if expr in A(astlib.Callable):
             return self.e_callable(expr)
         if expr in A(astlib.DataMember):
-            if expr.containertype == astlib.ContainerT.struct:
+            if expr.datatype == astlib.DataT.struct:
                 return self.e_struct_member(expr)
         if expr in A(astlib.Expr):
             return astlib.Expr(
@@ -57,6 +55,13 @@ class Analyzer(layers.Layer):
                 expr.op,
                 self.e(expr.right))
         return expr
+
+    def b(self, body):
+        reg = Analyzer().get_registry()
+        return list(map(
+            lambda stmt: list(
+                layers.transform_node(stmt, registry=reg))[0],
+            body.as_list()))
 
     @layers.register(astlib.Decl)
     def decl(self, stmt):
@@ -66,11 +71,21 @@ class Analyzer(layers.Layer):
             type_ = inference.infer_type(expr)
         else:
             type_ = self.t(type_)
+        result = astlib.Decl(stmt.decltype, stmt.name, type_, expr)
+        add_decl(result)
+        yield result
+
+    @layers.register(astlib.DataDecl)
+    def data_decl(self, stmt):
+        node_type = astlib.NodeT.struct
+        if stmt.decltype == astlib.DeclT.adt:
+            node_type = astlib.NodeT.adt
+        elif stmt.decltype == astlib.DeclT.protocol:
+            node_type = astlib.NodeT.protocol
         context.env[stmt.name] = {
-            "type": type_,
-            "node_type": (
-                astlib.NodeT.var
-                if stmt.decltype == astlib.DeclT.var
-                else astlib.NodeT.let)
+            "node_type": node_type
         }
-        yield astlib.Decl(stmt.decltype, stmt.name, type_, expr)
+        +context.env
+        yield astlib.DataDecl(
+            stmt.decltype, stmt.name, self.b(stmt.body))
+        -context.env
