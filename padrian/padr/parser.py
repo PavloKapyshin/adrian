@@ -4,7 +4,6 @@ import sys
 from ply import lex, yacc
 
 from . import parser_astlib, astlib, defs, errors
-from .context import context
 
 
 _RESERVED_WORDS = defs.RESERVED_WORDS
@@ -86,8 +85,7 @@ t_ignore = " \t"
 def t_error(token):
     """Error handling rule."""
     errors.illegal_char(
-        token.lexer.lineno, context.exit_on_error,
-        char=token.value[0])
+        token.lexer.lineno, char=token.value[0])
 
 
 precedence = (
@@ -391,7 +389,7 @@ def p_error(content):
     line = 0
     if content is not None:
         line = content.lineno
-    errors.syntax_error(context.exit_on_error, line)
+    errors.syntax_error(line)
 
 
 class Parser:

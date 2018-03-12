@@ -2,6 +2,15 @@ import collections
 import enum
 
 
+class NodeT(enum.Enum):
+    var = 1
+    let = 2
+    fun = 3
+    struct = 4
+    adt = 5
+    protocol = 6
+
+
 class ContainerT(enum.Enum):
     module = 1
     struct = 2
@@ -22,15 +31,7 @@ class LLT(enum.Enum):
 
 
 class LiteralT(enum.Enum):
-    int_fast8_t = 1
-    int_fast16_t = 2
-    int_fast32_t = 3
-    int_fast64_t = 4
-    uint_fast8_t = 5
-    uint_fast16_t = 6
-    uint_fast32_t = 7
-    uint_fast64_t = 8
-    integer = 9
+    integer = 1
 
 
 class DeclT(enum.Enum):
@@ -61,9 +62,7 @@ class Node(BaseNode):
             self.__class__.__name__, fields)
 
     def __hash__(self):
-        return hash(
-            [self.__class__.__name] +
-            [getattr(self, key) for key in self._keys])
+        return hash(str(self))
 
     __repr__ = __str__
 
@@ -162,6 +161,9 @@ class Empty(BaseNode):
 
     def __str__(self):
         return "EMPTY"
+
+    def __bool__(self):
+        return False
 
     def as_list(self):
         return []
@@ -273,15 +275,3 @@ class StructScalar(Node):
     def __init__(self, type_):
         self.type_ = type_
         self._keys = ("type_", )
-
-CINT_TYPES = (
-    LiteralT.int_fast8_t,
-    LiteralT.int_fast16_t,
-    LiteralT.int_fast32_t,
-    LiteralT.int_fast64_t,
-    LiteralT.uint_fast8_t,
-    LiteralT.uint_fast16_t,
-    LiteralT.uint_fast32_t,
-    LiteralT.uint_fast64_t
-)
-CTYPES = CINT_TYPES

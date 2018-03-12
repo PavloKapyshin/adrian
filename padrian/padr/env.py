@@ -13,15 +13,17 @@ class Env:
         self.space[self.scope] = {}
 
     def __setitem__(self, key, value):
+        key = str(key)
         self.space[self.scope][key] = value
 
     def __contains__(self, key):
-        return self[key]
+        return self[key] is not None
 
     def __getitem__(self, key):
+        key = str(key)
         scope = self.scope
         while scope >= 0:
             if key in self.space[scope]:
-                return self.space[scope][name]
+                return self.space[scope][key]
             scope -= 1
         return None
