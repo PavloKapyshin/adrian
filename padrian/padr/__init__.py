@@ -1,19 +1,22 @@
 import copy
 
-from . import parser, foreign_parser, analyzer, object_protocol, tac
-from . import context, defs, layers
+from . import (
+    parser, foreign_parser, analyzer,
+    object_protocol, tac, copying,
+    context, defs, layers, arc,
+    )
 
 LAYERS = (
     (parser.Parser, "parse"),
-    (analyzer.Analyzer, "transform_ast"),
-    (object_protocol.ObjectProtocol, "transform_ast"),
-    (tac.TAC, "transform_ast"),
-    # copying
-    # arc, expand_ast
-    # inlining
-    # name_spacing
-    # tocgen
-    # main_func, expand_ast
+    # (analyzer.Analyzer, "transform_ast"),
+    # (object_protocol.ObjectProtocol, "transform_ast"),
+    # (tac.TAC, "transform_ast"),
+    # (copying.Copying, "transform_ast"),
+    # (arc.ARC, "expand_ast"),
+    # # inlining
+    # # name_spacing
+    # # tocgen
+    # # main_func, expand_ast
 )
 
 

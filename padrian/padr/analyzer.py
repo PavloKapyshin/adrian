@@ -1,4 +1,4 @@
-from .context import context, add_decl
+from .context import context, add_decl, add_data_decl
 from . import layers, astlib, errors, defs, inference
 from .utils import A, is_struct
 
@@ -65,26 +65,22 @@ class Analyzer(layers.Layer):
 
     @layers.register(astlib.Decl)
     def decl(self, stmt):
-        type_ = stmt.type_
-        expr = self.e(stmt.expr)
-        if not type_:
-            type_ = inference.infer_type(expr)
+        if stmt.decltype == astlib.DeclT.field:
+            yield stmt
         else:
-            type_ = self.t(type_)
-        result = astlib.Decl(stmt.decltype, stmt.name, type_, expr)
-        add_decl(result)
-        yield result
+            type_ = stmt.type_
+            expr = self.e(stmt.expr)
+            if not type_:
+                type_ = inference.infer_type(expr)
+            else:
+                type_ = self.t(type_)
+            result = astlib.Decl(stmt.decltype, stmt.name, type_, expr)
+            add_decl(result)
+            yield result
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
-        node_type = astlib.NodeT.struct
-        if stmt.decltype == astlib.DeclT.adt:
-            node_type = astlib.NodeT.adt
-        elif stmt.decltype == astlib.DeclT.protocol:
-            node_type = astlib.NodeT.protocol
-        context.env[stmt.name] = {
-            "node_type": node_type
-        }
+        add_data_decl(stmt)
         +context.env
         yield astlib.DataDecl(
             stmt.decltype, stmt.name, self.b(stmt.body))

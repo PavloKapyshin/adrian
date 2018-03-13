@@ -20,3 +20,14 @@ def add_decl(stmt):
             if stmt.decltype == astlib.DeclT.var
             else astlib.NodeT.let)
     }
+
+
+def add_data_decl(stmt):
+    node_type = astlib.NodeT.struct
+    if stmt.decltype == astlib.DeclT.adt:
+        node_type = astlib.NodeT.adt
+    elif stmt.decltype == astlib.DeclT.protocol:
+        node_type = astlib.NodeT.protocol
+    context.env[stmt.name] = {
+        "node_type": node_type
+    }

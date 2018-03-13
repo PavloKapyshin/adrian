@@ -27,3 +27,9 @@ class Env:
                 return self.space[scope][key]
             scope -= 1
         return None
+
+    def __delitem__(self, key):
+        del self.space[self.scope][key]
+
+    def cspace(self):
+        return self.space[self.scope].items()

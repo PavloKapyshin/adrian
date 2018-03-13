@@ -1,7 +1,7 @@
 import itertools
 
 from . import astlib, layers, defs, inference
-from .context import context, add_decl
+from .context import context, add_decl, add_data_decl
 from .utils import A
 
 
@@ -84,7 +84,19 @@ class TAC(layers.Layer):
 
     @layers.register(astlib.Decl)
     def decl(self, stmt):
-        expr, tmps = self.e(stmt.expr)
-        add_decl(stmt)
-        yield from tmps
-        yield astlib.Decl(stmt.decltype, stmt.name, stmt.type_, expr)
+        if stmt.decltype == astlib.DeclT.field:
+            yield stmt
+        else:
+            expr, tmps = self.e(stmt.expr)
+            result = astlib.Decl(stmt.decltype, stmt.name, stmt.type_, expr)
+            add_decl(result)
+            yield from tmps
+            yield result
+
+    @layers.register(astlib.DataDecl)
+    def data_decl(self, stmt):
+        add_data_decl(stmt)
+        +context.env
+        yield astlib.DataDecl(
+            stmt.decltype, stmt.name, self.b(stmt.body))
+        -context.env
