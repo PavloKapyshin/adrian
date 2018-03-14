@@ -9,6 +9,7 @@ SEXPR = "Expr"
 
 
 LLNODE = "LinkedListNode"
+PARAMED_TYPE = "ParamedType"
 ARGS = "Args"
 
 LITERAL = "Literal"

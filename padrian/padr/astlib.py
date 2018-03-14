@@ -123,11 +123,12 @@ class CallableDecl(Node):
 
 class DataDecl(Node):
 
-    def __init__(self, decltype, name, body):
+    def __init__(self, decltype, name, params, body):
         self.decltype = decltype
         self.name = name
+        self.params = params
         self.body = body
-        self._keys = ("decltype", "name", "body")
+        self._keys = ("decltype", "name", "params", "body")
 
 
 class DataMember(Node):
@@ -270,6 +271,14 @@ class Void(CompilerT):
 
 class Object(CompilerT):
     string = "Object"
+
+class ParamedType(Node):
+
+    def __init__(self, type_, params):
+        self.type_ = type_
+        self.params = params
+        self._keys = ("type_", "params")
+
 
 class Ref(Node):
 

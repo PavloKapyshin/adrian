@@ -121,6 +121,8 @@ def p_stmt(content):
          | struct_decl
          | assignment
          | factor
+         | adt_decl
+         | protocol_decl
     """
     content[0] = content[1]
 
@@ -175,13 +177,66 @@ def p_fun_decl(content):
         content[4], content[7], content[9]]
 
 
-def p_struct_decl(content):
+def p_struct_decl_1(content):
     """
     struct_decl : STRUCT NAME LBRACE struct_body RBRACE
     """
     content[0] = [
         parser_astlib.DATA_DECL, astlib.DeclT.struct,
-        [parser_astlib.NAME, content[2]], content[4]]
+        [parser_astlib.NAME, content[2]], [parser_astlib.EMPTY], content[4]]
+
+
+def p_struct_decl_2(content):
+    """
+    struct_decl : STRUCT NAME LPAREN params RPAREN LBRACE struct_body RBRACE
+    """
+    content[0] = [
+        parser_astlib.DATA_DECL, astlib.DeclT.struct,
+        [parser_astlib.NAME, content[2]], content[4], content[7]]
+
+
+def p_adt_decl_1(content):
+    """
+    adt_decl : ADT NAME LBRACE adt_body RBRACE
+    """
+    content[0] = [
+        parser_astlib.DATA_DECL, astlib.DeclT.adt,
+        [parser_astlib.NAME, content[2]], [parser_astlib.EMPTY], content[4]]
+
+
+def p_adt_decl_2(content):
+    """
+    adt_decl : ADT NAME LPAREN params RPAREN LBRACE adt_body RBRACE
+    """
+    content[0] = [
+        parser_astlib.DATA_DECL, astlib.DeclT.adt,
+        [parser_astlib.NAME, content[2]], content[4], content[7]]
+
+
+def p_protocol_decl(content):
+    """
+    protocol_decl : PROTOCOL NAME LBRACE protocol_body RBRACE
+    """
+    content[0] = [
+        parser_astlib.DATA_DECL, astlib.DeclT.protocol,
+        [parser_astlib.NAME, content[2]], [parser_astlib.EMPTY], content[4]]
+
+
+def p_params_1(content):
+    """params : NAME COMMA params"""
+    content[0] = [
+        parser_astlib.LLNODE,
+        [parser_astlib.NAME, content[1]], content[3]]
+
+def p_params_2(content):
+    """params : NAME"""
+    content[0] = [
+        parser_astlib.LLNODE,
+        [parser_astlib.NAME, content[1]], [parser_astlib.EMPTY]]
+
+def p_params_3(content):
+    """params : empty"""
+    content[0] = [parser_astlib.EMPTY]
 
 
 def p_field_decl(content):
@@ -240,6 +295,63 @@ def p_struct_body_2(content):
     content[0] = [parser_astlib.EMPTY]
 
 
+def p_adt_body_1(content):
+    """adt_body : adt_body_stmt COMMA adt_body"""
+    content[0] = [
+        parser_astlib.LLNODE, astlib.LLT.body,
+        content[1], content[3]]
+
+
+def p_adt_body_2(content):
+    """adt_body : adt_body_stmt"""
+    content[0] = [
+        parser_astlib.LLNODE, astlib.LLT.body,
+        content[1], [parser_astlib.EMPTY]]
+
+
+def p_adt_body_3(content):
+    """adt_body : empty"""
+    content[0] = [parser_astlib.EMPTY]
+
+
+def p_protocol_body_1(content):
+    """protocol_body : protocol_body_stmt protocol_body"""
+    content[0] = [
+        parser_astlib.LLNODE, astlib.LLT.body,
+        content[1], content[2]]
+
+
+def p_protocol_body_2(content):
+    """protocol_body : empty"""
+    content[0] = [parser_astlib.EMPTY]
+
+
+def p_adt_body_stmt(content):
+    """adt_body_stmt : type"""
+    content[0] = content[1]
+
+
+def p_protocol_body_stmt_1(content):
+    """protocol_body_stmt : field_decl"""
+    content[0] = content[1]
+
+
+def p_protocol_body_stmt_2(content):
+    """protocol_body_stmt : fun_decl"""
+    content[0] = [
+        parser_astlib.CALLABLE_DECL, astlib.DeclT.method,
+        [parser_astlib.EMPTY], content[1][1],
+        content[1][2], content[1][3], content[1][4]]
+
+
+def p_protocol_body_stmt_3(content):
+    """protocol_body_stmt : FUN NAME LPAREN decl_args RPAREN COLON type"""
+    content[0] = [
+        parser_astlib.CALLABLE_DECL, astlib.DeclT.method,
+        [parser_astlib.EMPTY], [parser_astlib.NAME, content[2]],
+        content[4], content[7], [parser_astlib.EMPTY]]
+
+
 def p_struct_body_stmt_1(content):
     """struct_body_stmt : field_decl"""
     content[0] = content[1]
@@ -272,9 +384,29 @@ def p_decl_args_3(content):
     content[0] = [parser_astlib.EMPTY]
 
 
-def p_type(content):
+def p_type_1(content):
     """type : module_member"""
     content[0] = content[1]
+
+
+def p_type_2(content):
+    """type : module_member LPAREN types RPAREN"""
+    content[0] = [parser_astlib.PARAMED_TYPE, content[1], content[3]]
+
+
+def p_types_1(content):
+    """types : type"""
+    content[0] = [parser_astlib.LLNODE, content[1], [parser_astlib.EMPTY]]
+
+
+def p_types_2(content):
+    """types : type COMMA types"""
+    content[0] = [parser_astlib.LLNODE, content[1], content[3]]
+
+
+def p_types_3(content):
+    """types : empty"""
+    content[0] = [parser_astlib.EMPTY]
 
 
 def p_arg_list_1(content):

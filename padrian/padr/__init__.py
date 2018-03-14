@@ -8,7 +8,7 @@ from . import (
 
 LAYERS = (
     (parser.Parser, "parse"),
-    (analyzer.Analyzer, "transform_ast"),
+    # (analyzer.Analyzer, "transform_ast"),
     # (object_protocol.ObjectProtocol, "transform_ast"),
     # (tac.TAC, "transform_ast"),
     # (copying.Copying, "transform_ast"),

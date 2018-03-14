@@ -8,8 +8,8 @@ RESERVED_WORDS = {
     keyword: keyword.upper()
     for keyword in (
         "var", "let", "struct",
-        "return",
-        "fun", #"adt", "protocol"
+        "return", "fun", "adt",
+        "protocol",
     )
 }
 
