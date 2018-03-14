@@ -69,7 +69,12 @@ class Analyzer(layers.Layer):
             yield stmt
         else:
             type_ = stmt.type_
-            expr = self.e(stmt.expr)
+            expr = stmt.expr
+            if not expr:
+                type_ = self.t(type_)
+                expr = inference.infer_expr(type_)
+            else:
+                expr = self.e(expr)
             if not type_:
                 type_ = inference.infer_type(expr)
             else:

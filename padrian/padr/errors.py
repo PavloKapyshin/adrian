@@ -10,7 +10,7 @@ _NOT_NOW = "try that out in later versions, key = {key}"
 
 MODULE = "unsupported_module"
 CUSTOM_OBJMETHOD = "custom_object_method"
-INFERENCE = "type_inference"
+INFERENCE = "inference"
 
 class CompileTimeError(Exception):
 

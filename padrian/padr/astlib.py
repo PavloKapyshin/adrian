@@ -239,6 +239,13 @@ class Literal(Node):
         self._keys = ("literaltype", "literal")
 
 
+class LiteralType(Node):
+
+    def __init__(self, type_):
+        self.type_ = type_
+        self._keys = ("type_",)
+
+
 class Cast(Node):
 
     def __init__(self, to, expr):
