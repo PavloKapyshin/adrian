@@ -1,6 +1,6 @@
 from .context import context, add_decl, add_data_decl
 from . import layers, astlib, errors, defs, inference
-from .utils import A, is_struct
+from .utils import A, is_type
 
 
 class Analyzer(layers.Layer):
@@ -21,7 +21,7 @@ class Analyzer(layers.Layer):
         return type_
 
     def e_callable(self, expr):
-        if is_struct(expr.name):
+        if is_type(expr.name):
             return astlib.Callable(
                 astlib.CallableT.struct, expr.parent,
                 expr.name, self.args(expr.args))
@@ -63,6 +63,15 @@ class Analyzer(layers.Layer):
                 layers.transform_node(stmt, registry=reg))[0],
             body.as_list()))
 
+    def params(self, params):
+        result = []
+        for param in params.as_list():
+            context.env[param] = {
+                "node_type": astlib.NodeT.type_
+            }
+            result.append(param)
+        return result
+
     @layers.register(astlib.Decl)
     def decl(self, stmt):
         if stmt.decltype == astlib.DeclT.field:
@@ -87,6 +96,7 @@ class Analyzer(layers.Layer):
     def data_decl(self, stmt):
         add_data_decl(stmt)
         +context.env
+        params = self.params(stmt.params)
         yield astlib.DataDecl(
-            stmt.decltype, stmt.name, self.b(stmt.body))
+            stmt.decltype, stmt.name, params, self.b(stmt.body))
         -context.env

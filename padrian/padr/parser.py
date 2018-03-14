@@ -226,12 +226,14 @@ def p_params_1(content):
     """params : NAME COMMA params"""
     content[0] = [
         parser_astlib.LLNODE,
+        astlib.LLT.params,
         [parser_astlib.NAME, content[1]], content[3]]
 
 def p_params_2(content):
     """params : NAME"""
     content[0] = [
         parser_astlib.LLNODE,
+        astlib.LLT.params,
         [parser_astlib.NAME, content[1]], [parser_astlib.EMPTY]]
 
 def p_params_3(content):

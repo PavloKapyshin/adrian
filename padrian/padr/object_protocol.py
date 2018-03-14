@@ -7,6 +7,8 @@ SELF = astlib.Name("self")
 
 
 def totype(struct_decl):
+    if len(struct_decl.params) != 0:
+        return astlib.ParamedType(struct_decl.name, struct_decl.params)
     return struct_decl.name
 
 
@@ -26,15 +28,15 @@ def copy(type_, name):
 
 def malloc(name):
     return astlib.Callable(
-        astlib.CallableT.cfunc, astlib.Empty, astlib.Name("malloc"),
+        astlib.CallableT.cfunc, astlib.Empty(), astlib.Name("malloc"),
         [astlib.Callable(
-            astlib.CallableT.cfunc, astlib.Empty, astlib.Name("sizeof"),
+            astlib.CallableT.cfunc, astlib.Empty(), astlib.Name("sizeof"),
             [astlib.StructScalar(name)])])
 
 
 def free(name):
     return astlib.Callable(
-        astlib.CallableT.cfunc, astlib.Empty,
+        astlib.CallableT.cfunc, astlib.Empty(),
         astlib.Name("free"), [name])
 
 
@@ -67,7 +69,7 @@ class ObjectProtocol(layers.Layer):
             field_decl.type_, self_field(field_decl.name))
             for field_decl in only_fields(stmt.body)] + [free(SELF)]
         return astlib.CallableDecl(
-            astlib.DeclT.method, astlib.Empty,
+            astlib.DeclT.method, astlib.Empty(),
             astlib.Name(defs.DEINIT_METHOD),
             [astlib.Arg(SELF, totype(stmt))],
             astlib.Name("Void"), body)
@@ -86,7 +88,7 @@ class ObjectProtocol(layers.Layer):
         return_new = astlib.Return(new)
         body = [new_decl] + field_inits + [return_new]
         return astlib.CallableDecl(
-            astlib.DeclT.method, astlib.Empty,
+            astlib.DeclT.method, astlib.Empty(),
             astlib.Name(defs.COPY_METHOD),
             [astlib.Arg(SELF, totype(stmt))],
             totype(stmt), body)
@@ -105,13 +107,13 @@ class ObjectProtocol(layers.Layer):
         body = [self_decl] + field_inits + [return_self]
         rettype = totype(stmt)
         return astlib.CallableDecl(
-            astlib.DeclT.method, astlib.Empty,
+            astlib.DeclT.method, astlib.Empty(),
             astlib.Name(defs.INIT_METHOD),
             args, rettype, body)
 
     def method(self, method, struct):
         return astlib.CallableDecl(
-            astlib.DeclT.method, astlib.Empty, method.name,
+            astlib.DeclT.method, astlib.Empty(), method.name,
             [astlib.Arg(SELF, totype(struct))] + method.args,
             method.rettype, method.body)
 
@@ -143,7 +145,7 @@ class ObjectProtocol(layers.Layer):
                 if not exists:
                     additional_methods.append(f(stmt))
             yield astlib.DataDecl(
-                stmt.decltype, stmt.name, fields)
+                stmt.decltype, stmt.name, stmt.params, fields)
             for method in additional_methods + new_methods:
                 yield mtostructf(method, stmt)
         else:

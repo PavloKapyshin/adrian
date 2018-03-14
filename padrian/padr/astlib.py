@@ -9,6 +9,7 @@ class NodeT(enum.Enum):
     struct = 4
     adt = 5
     protocol = 6
+    type_ = 7
 
 
 class DataT(enum.Enum):
@@ -28,6 +29,7 @@ class LLT(enum.Enum):
     body = 1
     call_args = 2
     args = 3
+    params = 4
 
 
 class LiteralT(enum.Enum):

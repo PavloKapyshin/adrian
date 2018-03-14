@@ -118,4 +118,4 @@ n: T
 `n` is a name, `T` is a type.
 
 ### Method declaration
-Same as function, but `stms` can include using of `self`.
+Same as function, but `stms` may include use of `self`.
