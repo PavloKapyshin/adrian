@@ -2,14 +2,14 @@ import copy
 
 from . import (
     parser, foreign_parser, analyzer,
-    object_protocol, tac, copying,
-    context, defs, layers, arc,
-    )
+    object_protocol, #tac, copying,
+    context, defs, layers, # arc,
+    debug_formatter)
 
 LAYERS = (
     (parser.Parser, "parse"),
-    (analyzer.Analyzer, "transform_ast"),
     (object_protocol.ObjectProtocol, "transform_ast"),
+    (analyzer.Analyzer, "transform_ast"),
     # (tac.TAC, "transform_ast"),
     # (copying.Copying, "transform_ast"),
     # (arc.ARC, "expand_ast"),

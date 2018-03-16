@@ -1,7 +1,6 @@
 import collections
 import enum
 
-
 class NodeT(enum.Enum):
     var = 1
     let = 2
@@ -9,7 +8,7 @@ class NodeT(enum.Enum):
     struct = 4
     adt = 5
     protocol = 6
-    type_ = 7
+    commont = 7
 
 
 class DataT(enum.Enum):
@@ -183,11 +182,10 @@ class LinkedList:
     def as_list(self):
         def _gen():
             current = self
-            yield current.value
-            while not isinstance(current.rest, Empty):
-                current = current.rest
-                yield current.value
-
+            rest = current.rest
+            if isinstance(rest, Empty):
+                rest = rest.as_list()
+            yield [current.value] + rest
         return list(_gen())
 
 
@@ -204,7 +202,7 @@ class Args(LinkedListNode):
         super().__init__(LLT.args, (name, type_), rest)
 
 
-class Expr(Node):
+class ComplexExpr(Node):
 
     def __init__(self, left, op, right):
         self.left = left
@@ -212,19 +210,12 @@ class Expr(Node):
         self.right = right
         self._keys = ("left", "op", "right")
 
-class Assignment(Node):
-    """        op
-               v
-    myVariable = 1 + 20
-    ^^^^^^^^^^   ^^^^^^
-       left       right
-    """
 
-    def __init__(self, left, op, right):
-        self.left = left
-        self.op = op
-        self.right = right
-        self._keys = ("left", "op", "right")
+class Expr(ComplexExpr):
+    pass
+
+class Assignment(ComplexExpr):
+    pass
 
 
 class Return(Node):
@@ -260,7 +251,7 @@ class Cast(Node):
 class CompilerT(BaseNode):
 
     def __str__(self):
-        return cls.string
+        return self.string
 
     def __hash__(self):
         return hash(self.__str__())

@@ -69,6 +69,13 @@ class TAC(layers.Layer):
             return self.inner_expr(expr)
         return expr, []
 
+    def params(self, params):
+        for param in params:
+            context.env[param] = {
+                "node_type": astlib.NodeT.type_
+            }
+        return params
+
     def args(self, args):
         if len(args) == 0:
             return []
@@ -97,6 +104,7 @@ class TAC(layers.Layer):
     def data_decl(self, stmt):
         add_data_decl(stmt)
         +context.env
+        params = self.params(stmt.params)
         yield astlib.DataDecl(
-            stmt.decltype, stmt.name, self.b(stmt.body))
+            stmt.decltype, stmt.name, params, self.b(stmt.body))
         -context.env

@@ -8,6 +8,17 @@ def get_init_args(type_):
     return [infer_expr(t) for _, t, in entry["methods"]["__init__"]["args"]]
 
 
+def infer_args(params, args_decl, args):
+    i = 0
+    result = []
+    for _, type_ in args_decl:
+        arg = args[i]
+        if type_ in params:
+            result.append(infer_type(arg))
+        i += 1
+    return result
+
+
 def infer_expr(type_):
     if type_ in A(astlib.LiteralType):
         if type_.type_ == astlib.LiteralT.integer:
@@ -23,7 +34,14 @@ def infer_expr(type_):
 def infer_type(expr):
     if expr in A(astlib.Callable):
         if expr.callabletype == astlib.CallableT.struct:
-            return expr.name
+            entry = context.env[expr.name]
+            params = entry["params"]
+            if len(params) == 0:
+                return expr.name
+            return astlib.ParamedType(
+                expr.name, infer_args(
+                    params, entry["methods"]["__init__"]["args"],
+                    expr.args))
     if expr in A(astlib.Name):
         return context.env[expr]["type"]
     if expr in A(astlib.Expr):

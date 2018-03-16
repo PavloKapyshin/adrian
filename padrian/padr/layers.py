@@ -1,11 +1,13 @@
 """Helper for creating new layers."""
 
+import itertools
 import types
 import functools
 
 from paka import funcreg
 
 from . import astlib
+from .utils import A
 
 
 NODE_CLASSES = (astlib.BaseNode, astlib.Name)
@@ -17,7 +19,9 @@ _INTERNAL_REGISTRY_ATTR_NAME = "_registry"
 
 def register(*node_classes):
     def _wrapper(func):
-        setattr(func, _PREREGISTERED_NODE_CLASSES_ATTR_NAME, node_classes)
+        setattr(
+            func, _PREREGISTERED_NODE_CLASSES_ATTR_NAME,
+            node_classes)
         return func
     return _wrapper
 
@@ -31,7 +35,8 @@ class LayerMeta(type):
             for value in attrs.values():
                 if isinstance(value, types.FunctionType):
                     for node_class in getattr(
-                            value, _PREREGISTERED_NODE_CLASSES_ATTR_NAME, ()):
+                            value,
+                            _PREREGISTERED_NODE_CLASSES_ATTR_NAME, ()):
                         registry.register(value, node_class)
             attrs[_INTERNAL_REGISTRY_ATTR_NAME] = registry
         return type.__new__(cls, name, bases, attrs)
@@ -65,3 +70,14 @@ def transform_ast(ast_, *, registry):
 
 def expand_ast(ast_, *, registry):
     yield from registry.get(astlib.AST)(ast_, registry)
+
+
+def _b(layer, **kwords):
+    def wrapper(body):
+        # if body in A(astlib.LinkedListNode, astlib.Empty):
+        #     body = body.as_list()
+        reg = layer(**kwords).get_registry()
+        return list(itertools.chain.from_iterable(
+            map(lambda stmt: list(
+                    transform_node(stmt, registry=reg)), body)))
+    return wrapper

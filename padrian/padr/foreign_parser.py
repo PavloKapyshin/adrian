@@ -1,6 +1,7 @@
 """Translates parser's AST to object-oriented AST."""
 
 from . import astlib
+from .utils import A
 
 
 def translate(node):
@@ -10,7 +11,11 @@ def translate(node):
             args.extend(translate(subnode))
         else:
             args.append(subnode)
-    yield getattr(astlib, node[0])(*args)
+    result = getattr(astlib, node[0])(*args)
+    if result in A(astlib.LinkedListNode, astlib.Args):
+        yield from result.as_list()
+    else:
+        yield result
 
 
 def main(ast_):

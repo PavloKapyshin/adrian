@@ -19,6 +19,18 @@ class REPL(cmd.Cmd):
         except Exception as e:
             traceback.print_exc(chain=False)
 
+    def do_debug(self, inp):
+        try:
+            reg = padr.debug_formatter.DebugFormatter().get_registry()
+            compiled = padr.compile_("\n".join(self.input_))
+            result = list(padr.layers.transform_ast(
+                compiled, registry=reg))
+            print("\n".join(result))
+        except padr.errors.CompileTimeError as e:
+            print(e.message, file=sys.stderr)
+        except Exception as e:
+            traceback.print_exc(chain=False)
+
     def command(self, command):
         if command == "genc":
             self.do_eval(self.input_)
@@ -26,6 +38,8 @@ class REPL(cmd.Cmd):
             self.input_ = []
         if command == "undo":
             self.input_ = self.input_[:-1]
+        if command == "debug":
+            self.do_debug(self.input_)
 
     def do_exit(self, arg):
         sys.exit(0)

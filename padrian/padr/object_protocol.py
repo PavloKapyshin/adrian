@@ -82,7 +82,7 @@ class ObjectProtocol(layers.Layer):
         field_inits = []
         for field_decl in only_fields(stmt.body):
             field_inits.append(astlib.Assignment(
-                field_of_new(field_decl.name), field_decl.type_,
+                field_of_new(field_decl.name), "=",
                 copy(field_decl.type_,
                     self_field(field_decl.name))))
         return_new = astlib.Return(new)
@@ -145,8 +145,9 @@ class ObjectProtocol(layers.Layer):
                 if not exists:
                     additional_methods.append(f(stmt))
             yield astlib.DataDecl(
-                stmt.decltype, stmt.name, stmt.params, fields)
-            for method in additional_methods + new_methods:
-                yield mtostructf(method, stmt)
+                stmt.decltype, stmt.name,
+                stmt.params, fields + [
+                    mtostructf(method, stmt)
+                    for method in additional_methods + new_methods])
         else:
             yield stmt

@@ -1,102 +1,202 @@
-from .context import context, add_decl, add_data_decl
-from . import layers, astlib, errors, defs, inference
-from .utils import A, is_type
+import itertools
+
+from .context import context
+from . import astlib, layers, errors, defs, inference, utils
+from .utils import A
 
 
 class Analyzer(layers.Layer):
 
-    def args(self, args):
-        if args in A(astlib.Empty):
-            return []
-        if args in A(astlib.Args):
-            pass
-        return [self.e(arg) for arg in args.as_list()]
+    def __init__(self):
+        self.b = layers._b(Analyzer)
 
-    def t(self, type_):
-        if type_ in A(astlib.DataMember):
-            if type_.datatype == astlib.DataT.module:
-                if not str(type_.parent) == defs.CMODULE:
-                    errors.not_now(errors.MODULE)
-                return type_
-        return type_
+    # Misc.
+    def construct_type(self, tname):
+        params = context.env[tname]["params"]
+        if len(params) == 0:
+            return tname
+        return astlib.ParamedType(tname, params)
 
-    def e_callable(self, expr):
-        if is_type(expr.name):
-            return astlib.Callable(
-                astlib.CallableT.struct, expr.parent,
-                expr.name, self.args(expr.args))
+    def t_e(self, type_, expr):
+        if not type_:
+            expr = self.e(expr)
+            return inference.infer_type(expr), expr
+        elif not expr:
+            type_ = self.t(type_)
+            return type_, inference.infer_expr(type_)
+        return self.t(type_), self.e(expr)
+
+    # Even inner ast nodes translation.
+    def e_callable(self, callable_):
+        callabletype = callable_.callabletype
+        if (callabletype != astlib.CallableT.cfunc and
+                utils.is_type(callable_.name)):
+            callabletype = astlib.CallableT.struct
         return astlib.Callable(
-            expr.callabletype, expr.parent,
-            expr.name, self.args(expr.args))
+            callabletype, callable_.parent,
+            callable_.name, self.a(callable_.args))
 
     def e_struct_member(self, expr):
         if expr.member in A(astlib.Callable):
-            func_call = expr.member
+            call = expr.member
             parent = self.e(expr.parent)
             return astlib.Callable(
                 astlib.CallableT.struct_func,
                 inference.infer_type(parent),
-                func_call.name,
-                [parent] + self.args(func_call.args))
-        if expr.member in A(astlib.Name):
-            return astlib.DataMember(
-                expr.datatype, self.e(expr.parent),
-                expr.member)
+                call.name, [parent] + self.a(call.args))
+        return astlib.DataMember(
+            expr.datatype, self.e(expr.parent),
+            expr.member)
 
+    # Inner ast nodes translation.
     def e(self, expr):
+        # TODO:
+        #   * add a lot of everything...
         if expr in A(astlib.Callable):
             return self.e_callable(expr)
         if expr in A(astlib.DataMember):
             if expr.datatype == astlib.DataT.struct:
                 return self.e_struct_member(expr)
         if expr in A(astlib.Expr):
-            return astlib.Expr(
-                self.e(expr.left),
-                expr.op,
-                self.e(expr.right))
+            # TODO:
+            #   * Expr should be translated to struct_func calls:
+            #       1 + 1 -> S.__add__(1, 1)
+            return expr
         return expr
 
-    def b(self, body):
-        reg = Analyzer().get_registry()
-        return list(map(
-            lambda stmt: list(
-                layers.transform_node(stmt, registry=reg))[0],
-            body.as_list()))
+    def t(self, type_):
+        if type_ in A(astlib.DataMember):
+            if type_.datatype == astlib.DataT.module:
+                if str(type_.parent) != defs.CMODULE:
+                    errors.not_now(errors.MODULE)
+                return type_
+        if type_ in A(astlib.ParamedType):
+            return astlib.ParamedType(
+                self.t(type_.type_),
+                [self.t(t) for t in type_.params])
+        return type_
 
-    def params(self, params):
-        result = []
-        for param in params.as_list():
-            context.env[param] = {
-                "node_type": astlib.NodeT.type_
+    def a(self, args):
+        if args in A(astlib.Empty):
+            return []
+        elif args[0] in A(astlib.Arg):
+            return [(arg.name, self.t(arg.type_)) for arg in args]
+        return [self.e(arg) for arg in args]
+
+    def p(self, params):
+        if params in A(astlib.Empty):
+            return []
+        return params
+
+    # Subcore funcs.
+    def field_decl(self, stmt):
+        # TODO?:
+        #   * add stmt.parent to stmt
+        type_ = self.t(stmt.type_)
+        context.env.update(context.parent, {
+            "fields": utils.add_dicts(
+                context.env[context.parent]["fields"], {
+                stmt.name: {
+                    "type_": type_
+                }
+            })
+        })
+        yield astlib.Decl(
+            stmt.decltype, stmt.name, type_, stmt.expr)
+
+    def var_let_decl(self, stmt):
+        type_, expr = self.t_e(stmt.type_, stmt.expr)
+        context.env[stmt.name] = {
+            "node_type": utils.declt_to_nodet(stmt.decltype),
+            "type_": type_
+        }
+        yield astlib.Decl(
+            stmt.decltype, stmt.name, type_, expr)
+
+    def struct_func_decl(self, stmt):
+        type_ = self.t(stmt.rettype)
+        args = self.a(stmt.args)
+        context.env.update(stmt.parent, {
+            "methods": utils.add_dicts(
+                context.env[stmt.parent]["methods"], {
+                stmt.name: {
+                    "type_": type_,
+                    "args": args
+                }
+            })
+        })
+        +context.env
+        for name, type_ in args:
+            context.env[name] = {
+                "node_type": astlib.NodeT.let,
+                "type_": type_
             }
-            result.append(param)
-        return result
+        yield astlib.CallableDecl(
+            stmt.decltype, stmt.parent, stmt.name,
+            args, type_, self.b(stmt.body))
+        -context.env
+
+    # Core funcs.
+    # @layers.register(astlib.Assignment)
+    # def assignment(self, stmt):
+    #     yield astlib.Assignment(
+    #         self.e(stmt.left), stmt.op, self.e(stmt.right))
+
+    # @layers.register(astlib.Return)
+    # def return_stmt(self, stmt):
+    #     yield astlib.Return(self.e(stmt.expr))
 
     @layers.register(astlib.Decl)
     def decl(self, stmt):
         if stmt.decltype == astlib.DeclT.field:
-            yield stmt
+            yield from self.field_decl(stmt)
         else:
-            type_ = stmt.type_
-            expr = stmt.expr
-            if not expr:
-                type_ = self.t(type_)
-                expr = inference.infer_expr(type_)
-            else:
-                expr = self.e(expr)
-            if not type_:
-                type_ = inference.infer_type(expr)
-            else:
-                type_ = self.t(type_)
-            result = astlib.Decl(stmt.decltype, stmt.name, type_, expr)
-            add_decl(result)
-            yield result
+            yield from self.var_let_decl(stmt)
+
+    @layers.register(astlib.CallableDecl)
+    def callable_decl(self, stmt):
+        if stmt.decltype == astlib.DeclT.method:
+            errors.not_now(errors.BAD)
+        elif stmt.decltype == astlib.DeclT.struct_func:
+            yield from self.struct_func_decl(stmt)
+        else:
+            args = self.a(stmt.args)
+            type_ = self.t(stmt.rettype)
+            context.env[stmt.name] = {
+                "node_type": utils.declt_to_nodet(stmt.decltype),
+                "type_": type_,
+                "args": args
+            }
+            +context.env
+            for name, type_ in args:
+                context.env[name] = {
+                    "node_type": astlib.NodeT.let,
+                    "type_": type_
+                }
+            yield astlib.CallableDecl(
+                stmt.decltype, stmt.parent, stmt.name,
+                args, type_, self.b(stmt.body))
+            -context.env
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
-        add_data_decl(stmt)
+        # TODO:
+        #   * add adt support
+        #   * add generic adt support
+        #   * add protocol support
+        params = self.p(stmt.params)
+        context.env[stmt.name] = {
+            "node_type": utils.declt_to_nodet(stmt.decltype),
+            "params": params,
+            "methods": {},
+            "fields": {}
+        }
         +context.env
-        params = self.params(stmt.params)
+        context.parent = stmt.name
+        for param in params:
+            context.env[param] = {
+                "node_type": astlib.NodeT.commont
+            }
         yield astlib.DataDecl(
             stmt.decltype, stmt.name, params, self.b(stmt.body))
         -context.env
