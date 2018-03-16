@@ -71,9 +71,12 @@ class Analyzer(layers.Layer):
                     errors.not_now(errors.MODULE)
                 return type_
         if type_ in A(astlib.ParamedType):
-            return astlib.ParamedType(
-                self.t(type_.type_),
-                [self.t(t) for t in type_.params])
+            params = type_.params
+            if params in A(astlib.Empty):
+                params = []
+            else:
+                params = [self.t(t) for t in params]
+            return astlib.ParamedType(self.t(type_.type_), params)
         return type_
 
     def a(self, args):

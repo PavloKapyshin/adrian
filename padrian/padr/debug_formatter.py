@@ -34,7 +34,7 @@ class DebugFormatter(layers.Layer):
             return "c#{}".format(self.n(name))
         elif callabletype == astlib.CallableT.struct_func:
             return "{}.{}".format(
-                self.n(parent), self.n(name))
+                self.t(parent), self.e(name))
         return self.e(name)
 
     def e_callable(self, expr):
@@ -57,18 +57,19 @@ class DebugFormatter(layers.Layer):
             return "!*{}".format(self.t(expr.type_))
         elif expr in A(astlib.Literal):
             return str(expr.literal)
-        else:
-            print("WHAT?", expr, type(expr))
+        elif expr in A(str):
+            return expr
 
     def t(self, type_):
         if type_ in A(astlib.Name):
             return self.n(type_)
-        if type_ in A(astlib.ParamedType):
+        elif type_ in A(astlib.ParamedType):
             return "{}({})".format(
                 self.n(type_.type_),
                 ", ".join([
                     self.t(param) for param in type_.params]))
-        return "{}#{}".format(self.n(type_.parent), self.t(type_.member))
+        elif type_ in A(astlib.DataMember):
+            return "{}#{}".format(self.n(type_.parent), self.t(type_.member))
 
     def a(self, args):
         if len(args) == 0:

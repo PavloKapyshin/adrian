@@ -13,7 +13,7 @@ def infer_args(params, args_decl, args):
     result = []
     for _, type_ in args_decl:
         arg = args[i]
-        if type_ in params:
+        if type_ in A(astlib.Name) and type_ in params:
             result.append(infer_type(arg))
         i += 1
     return result

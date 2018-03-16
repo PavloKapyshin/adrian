@@ -74,8 +74,6 @@ def expand_ast(ast_, *, registry):
 
 def _b(layer, **kwords):
     def wrapper(body):
-        # if body in A(astlib.LinkedListNode, astlib.Empty):
-        #     body = body.as_list()
         reg = layer(**kwords).get_registry()
         return list(itertools.chain.from_iterable(
             map(lambda stmt: list(
