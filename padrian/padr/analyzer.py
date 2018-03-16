@@ -26,11 +26,11 @@ class Analyzer(layers.Layer):
             return type_, inference.infer_expr(type_)
         return self.t(type_), self.e(expr)
 
-    # Even inner ast nodes translation.
     def e_callable(self, callable_):
         callabletype = callable_.callabletype
-        if (callabletype != astlib.CallableT.cfunc and
-                utils.is_type(callable_.name)):
+        if (callabletype not in (
+                    astlib.CallableT.cfunc, astlib.CallableT.struct_func)
+                and utils.is_type(callable_.name)):
             callabletype = astlib.CallableT.struct
         return astlib.Callable(
             callabletype, callable_.parent,
@@ -137,14 +137,25 @@ class Analyzer(layers.Layer):
         -context.env
 
     # Core funcs.
-    # @layers.register(astlib.Assignment)
-    # def assignment(self, stmt):
-    #     yield astlib.Assignment(
-    #         self.e(stmt.left), stmt.op, self.e(stmt.right))
+    @layers.register(astlib.Assignment)
+    def assignment(self, stmt):
+        yield astlib.Assignment(
+            self.e(stmt.left), stmt.op, self.e(stmt.right))
 
-    # @layers.register(astlib.Return)
-    # def return_stmt(self, stmt):
-    #     yield astlib.Return(self.e(stmt.expr))
+    @layers.register(astlib.Return)
+    def return_stmt(self, stmt):
+        yield astlib.Return(self.e(stmt.expr))
+
+    @layers.register(astlib.Callable)
+    def callable_stmt(self, stmt):
+        yield self.e_callable(stmt)
+
+    @layers.register(astlib.DataMember)
+    def data_member_stmt(self, stmt):
+        if stmt.datatype == astlib.DataT.struct:
+            yield self.e_struct_member(stmt)
+        else:
+            errors.not_now(errors.STRANGE_STMT)
 
     @layers.register(astlib.Decl)
     def decl(self, stmt):
