@@ -26,12 +26,19 @@ class Copying(layers.Layer):
     def e(self, expr):
         if expr in A(astlib.Name, astlib.DataMember):
             return copy(expr)
+        if expr in A(astlib.Callable):
+            return astlib.Callable(
+                expr.callabletype, expr.parent, expr.name,
+                self.a(expr.args))
+        return expr
+
+    def ae(self, expr):
         return expr
 
     def a(self, args):
         if len(args) == 0 or isinstance(args[0], tuple):
             return args
-        return [self.e(arg) for arg in args]
+        return [self.ae(arg) for arg in args]
 
     # Subcore funcs.
     def fun_decl(self, stmt):
@@ -67,7 +74,7 @@ class Copying(layers.Layer):
     # Core funcs.
     @layers.register(astlib.Return)
     def return_stmt(self, stmt):
-        expr = self.e(stmt.expr)
+        expr = self.ae(stmt.expr)
         yield astlib.Return(expr)
 
     @layers.register(astlib.Assignment)
