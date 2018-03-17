@@ -59,46 +59,46 @@ def _add_cnumeric_type(tname):
         },
         "methods": {
             "__init__": {
-                "rettype": _c_module_member(astlib.Name(tname)),
+                "type_": _c_module_member(astlib.Name(tname)),
                 "args": [
                     ("literal", astlib.LiteralType(astlib.LiteralT.integer))
                 ]
             },
             "__deinit__": {
-                "rettype": astlib.Void(),
+                "type_": astlib.Void(),
                 "args": [
                     ("self", _c_module_member(astlib.Name(tname)))
                 ]
             },
             "__copy__": {
-                "rettype": _c_module_member(astlib.Name(tname)),
+                "type_": _c_module_member(astlib.Name(tname)),
                 "args": [
                     ("self", _c_module_member(astlib.Name(tname)))
                 ]
             },
             "__add__": {
-                "rettype": _c_module_member(astlib.Name(tname)),
+                "type_": _c_module_member(astlib.Name(tname)),
                 "args": [
                     ("self", _c_module_member(astlib.Name(tname))),
                     ("other", _c_module_member(astlib.Name(tname)))
                 ]
             },
             "__sub__": {
-                "rettype": _c_module_member(astlib.Name(tname)),
+                "type_": _c_module_member(astlib.Name(tname)),
                 "args": [
                     ("self", _c_module_member(astlib.Name(tname))),
                     ("other", _c_module_member(astlib.Name(tname)))
                 ]
             },
             "__mul__": {
-                "rettype": _c_module_member(astlib.Name(tname)),
+                "type_": _c_module_member(astlib.Name(tname)),
                 "args": [
                     ("self", _c_module_member(astlib.Name(tname))),
                     ("other", _c_module_member(astlib.Name(tname)))
                 ]
             },
             "__div__": {
-                "rettype": _c_module_member(astlib.Name(tname)),
+                "type_": _c_module_member(astlib.Name(tname)),
                 "args": [
                     ("self", _c_module_member(astlib.Name(tname))),
                     ("other", _c_module_member(astlib.Name(tname)))

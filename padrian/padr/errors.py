@@ -13,6 +13,7 @@ TYPE_INFERENCE = "type_inference"
 EXPR_INFERENCE = "expr_inference"
 BAD = "bad things happened"
 STRANGE_STMT = "strange statement"
+LATER = "just wait.."
 
 
 class CompileTimeError(Exception):
