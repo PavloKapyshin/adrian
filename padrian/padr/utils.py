@@ -61,3 +61,10 @@ def add_dicts(dict1, dict2):
     for key, value in dict2.items():
         dict_[key] = value
     return dict_
+
+
+def any_common(l1, l2):
+    for elem in l1:
+        if elem in l2:
+            return True
+    return False

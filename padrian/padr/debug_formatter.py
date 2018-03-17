@@ -65,7 +65,7 @@ class DebugFormatter(layers.Layer):
             return self.n(type_)
         elif type_ in A(astlib.ParamedType):
             return "{}({})".format(
-                self.n(type_.type_),
+                self.t(type_.type_),
                 ", ".join([
                     self.t(param) for param in type_.params]))
         elif type_ in A(astlib.DataMember):
@@ -127,9 +127,23 @@ class DebugFormatter(layers.Layer):
             kwd = "protocol"
         if stmt.decltype == astlib.DeclT.adt:
             kwd = "adt"
-        yield from self.stmt_with_body(
-            " ".join([
+            decl_string = " ".join([
                 kwd,
                 "".join([self.n(stmt.name), "(", self.p(stmt.params), ")"]),
                 "{"
-            ]), stmt.body)
+            ])
+            self.up_ind()
+            body = [
+                " "*self.current_ind_level + self.t(t) + ","
+                for t in stmt.body]
+            self.down_ind()
+            yield "\n".join([decl_string] + body + [
+                " "*self.current_ind_level + "}"
+            ])
+        else:
+            yield from self.stmt_with_body(
+                " ".join([
+                    kwd,
+                    "".join([self.n(stmt.name), "(", self.p(stmt.params), ")"]),
+                    "{"
+                ]), stmt.body)

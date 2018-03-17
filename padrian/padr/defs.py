@@ -3,6 +3,9 @@ from functools import partial
 
 from . import env, astlib
 
+# Compiler defs.
+T_STRING = "t"
+ENV = env.Env()
 
 RESERVED_WORDS = {
     keyword: keyword.upper()
@@ -12,7 +15,6 @@ RESERVED_WORDS = {
         "protocol",
     )
 }
-
 
 NAME_REGEX = re.compile(r"[a-z][a-zA-Z0-9]*")
 FUNC_REGEX = NAME_REGEX
@@ -28,16 +30,24 @@ COMMON_REGEX = "".join([
     ")"])
 
 
+# Adrian lang defs
 INIT_METHOD = "__init__"
 DEINIT_METHOD = "__deinit__"
 COPY_METHOD = "__copy__"
+REF = "ref"
+
+OP_TO_METHOD = {
+    "+": "__add__",
+    "-": "__sub__",
+    "*": "__mul__",
+    "/": "__div__",
+}
+
+# Adrian's c module defs
 CMODULE = "c"
-T_STRING = "t"
 
 _c_module_member = partial(
     astlib.DataMember, astlib.DataT.module, astlib.Name(CMODULE))
-ENV = env.Env()
-
 
 def _add_cnumeric_type(tname):
     ENV[_c_module_member(astlib.Name(tname))] = {
@@ -63,6 +73,34 @@ def _add_cnumeric_type(tname):
                 "rettype": _c_module_member(astlib.Name(tname)),
                 "args": [
                     ("self", _c_module_member(astlib.Name(tname)))
+                ]
+            },
+            "__add__": {
+                "rettype": _c_module_member(astlib.Name(tname)),
+                "args": [
+                    ("self", _c_module_member(astlib.Name(tname))),
+                    ("other", _c_module_member(astlib.Name(tname)))
+                ]
+            },
+            "__sub__": {
+                "rettype": _c_module_member(astlib.Name(tname)),
+                "args": [
+                    ("self", _c_module_member(astlib.Name(tname))),
+                    ("other", _c_module_member(astlib.Name(tname)))
+                ]
+            },
+            "__mul__": {
+                "rettype": _c_module_member(astlib.Name(tname)),
+                "args": [
+                    ("self", _c_module_member(astlib.Name(tname))),
+                    ("other", _c_module_member(astlib.Name(tname)))
+                ]
+            },
+            "__div__": {
+                "rettype": _c_module_member(astlib.Name(tname)),
+                "args": [
+                    ("self", _c_module_member(astlib.Name(tname))),
+                    ("other", _c_module_member(astlib.Name(tname)))
                 ]
             }
         }

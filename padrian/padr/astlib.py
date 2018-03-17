@@ -42,9 +42,10 @@ class DeclT(enum.Enum):
     struct = 4
     struct_func = 5
     method = 6
-    protocol = 7
-    adt = 9
-    field = 10
+    field = 7
+    protocol = 8
+    protocol_func = 9
+    adt = 10
 
 
 AST = object()

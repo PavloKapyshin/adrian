@@ -7,8 +7,11 @@ SELF = astlib.Name("self")
 
 
 def totype(struct_decl):
-    if len(struct_decl.params) != 0:
-        return astlib.ParamedType(struct_decl.name, struct_decl.params)
+    params = struct_decl.params
+    if params in A(astlib.Empty):
+        return struct_decl.name
+    if len(params) != 0:
+        return astlib.ParamedType(struct_decl.name, params)
     return struct_decl.name
 
 
@@ -47,10 +50,27 @@ def deinit(struct, name):
 
 
 def mtostructf(method, struct):
+    args = method.args
+    if args in A(astlib.Empty):
+        args = []
+    body = method.body
+    if body in A(astlib.Empty):
+        body = []
     return astlib.CallableDecl(
         astlib.DeclT.struct_func, struct.name,
-        method.name, method.args, method.rettype,
-        method.body)
+        method.name, args, method.rettype, body)
+
+
+def ptoprotocolf(pfunc, protocol):
+    args = pfunc.args
+    if args in A(astlib.Empty):
+        args = []
+    body = pfunc.body
+    if body in A(astlib.Empty):
+        body = []
+    return astlib.CallableDecl(
+        astlib.DeclT.protocol_func, protocol.name,
+        pfunc.name, args, pfunc.rettype, body)
 
 
 class ObjectProtocol(layers.Layer):
@@ -112,10 +132,16 @@ class ObjectProtocol(layers.Layer):
             args, rettype, body)
 
     def method(self, method, struct):
+        args = method.args
+        if args in A(astlib.Empty):
+            args = []
+        body = method.body
+        if body in A(astlib.Empty):
+            body = []
         return astlib.CallableDecl(
             astlib.DeclT.method, astlib.Empty(), method.name,
-            [astlib.Arg(SELF, totype(struct))] + method.args,
-            method.rettype, method.body)
+            [astlib.Arg(SELF, totype(struct))] + args,
+            method.rettype, body)
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
@@ -149,5 +175,13 @@ class ObjectProtocol(layers.Layer):
                 stmt.params, fields + [
                     mtostructf(method, stmt)
                     for method in additional_methods + new_methods])
+        elif stmt.decltype == astlib.DeclT.protocol:
+            fields, pfuncs = split_body(stmt.body)
+            yield astlib.DataDecl(
+                stmt.decltype, stmt.name, stmt.params,
+                fields + [
+                    ptoprotocolf(pfunc, stmt) for pfunc in pfuncs])
         else:
-            yield stmt
+            yield astlib.DataDecl(
+                stmt.decltype, stmt.name, stmt.params,
+                (stmt.body.as_list() if stmt.body in A(astlib.Empty) else stmt.body))

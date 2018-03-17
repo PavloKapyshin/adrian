@@ -341,15 +341,15 @@ def p_protocol_body_stmt_1(content):
 def p_protocol_body_stmt_2(content):
     """protocol_body_stmt : fun_decl"""
     content[0] = [
-        parser_astlib.CALLABLE_DECL, astlib.DeclT.method,
-        [parser_astlib.EMPTY], content[1][1],
-        content[1][2], content[1][3], content[1][4]]
+        parser_astlib.CALLABLE_DECL, astlib.DeclT.protocol_func,
+        [parser_astlib.EMPTY], content[1][3],
+        content[1][4], content[1][5], content[1][6]]
 
 
 def p_protocol_body_stmt_3(content):
     """protocol_body_stmt : FUN NAME LPAREN decl_args RPAREN COLON type"""
     content[0] = [
-        parser_astlib.CALLABLE_DECL, astlib.DeclT.method,
+        parser_astlib.CALLABLE_DECL, astlib.DeclT.protocol_func,
         [parser_astlib.EMPTY], [parser_astlib.NAME, content[2]],
         content[4], content[7], [parser_astlib.EMPTY]]
 
@@ -363,8 +363,8 @@ def p_struct_body_stmt_2(content):
     """struct_body_stmt : fun_decl"""
     content[0] = [
         parser_astlib.CALLABLE_DECL, astlib.DeclT.method,
-        [parser_astlib.EMPTY], content[1][1],
-        content[1][2], content[1][3], content[1][4]]
+        [parser_astlib.EMPTY], content[1][3],
+        content[1][4], content[1][5], content[1][6]]
 
 
 def p_decl_args_1(content):
@@ -398,12 +398,16 @@ def p_type_2(content):
 
 def p_types_1(content):
     """types : type"""
-    content[0] = [parser_astlib.LLNODE, content[1], [parser_astlib.EMPTY]]
+    content[0] = [
+        parser_astlib.LLNODE, astlib.LLT.params,
+        content[1], [parser_astlib.EMPTY]]
 
 
 def p_types_2(content):
     """types : type COMMA types"""
-    content[0] = [parser_astlib.LLNODE, content[1], content[3]]
+    content[0] = [
+        parser_astlib.LLNODE, astlib.LLT.params,
+        content[1], content[3]]
 
 
 def p_types_3(content):

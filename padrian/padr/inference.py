@@ -1,49 +1,94 @@
 from .utils import A
 from .context import context
-from . import astlib, errors, defs
+from . import astlib, errors, utils, defs
 
 
-def get_init_args(type_):
-    entry = context.env[type_]
-    return [infer_expr(t) for _, t, in entry["methods"]["__init__"]["args"]]
+def _get_arg(expr, index):
+    if expr in A(astlib.Name):
+        context.env[expr]
 
 
-def infer_args(params, args_decl, args):
+def _infer_params_from_args(struct_params, decl_args, call_args):
+    # TODO: * add support of nested generic types
+    mapping = {}
     i = 0
-    result = []
-    for _, type_ in args_decl:
-        arg = args[i]
-        if type_ in A(astlib.Name) and type_ in params:
-            result.append(infer_type(arg))
+    for _, argument_type in decl_args:
+        if argument_type in struct_params:
+            if not argument_type in mapping:
+                mapping[argument_type] = infer_type(call_args[i])
         i += 1
+    result = [mapping[param] for param in struct_params]
     return result
+
+
+def _infer_init_args(type_):
+    info = context.env[type_]
+    return [
+        infer_expr(t) for _, t in info["methods"]["__init__"]["args"]]
+
+
+def _for_env(type_):
+    if type_ in A(astlib.ParamedType):
+        return type_.type_
+    return type_
+
+
+def _infer_expr_literal(type_):
+    if type_.type_ == astlib.LiteralT.integer:
+        return astlib.Literal(astlib.LiteralT.integer, "0")
+
+
+def _infer_expr_datamember(type_):
+    if type_.datatype == astlib.DataT.module:
+        return astlib.Callable(
+            astlib.CallableT.struct, astlib.Empty(),
+            type_, _infer_init_args(type_))
 
 
 def infer_expr(type_):
     if type_ in A(astlib.LiteralType):
-        if type_.type_ == astlib.LiteralT.integer:
-            return astlib.Literal(astlib.LiteralT.integer, "0")
-    if type_ in A(astlib.DataMember):
-        if type_.datatype == astlib.DataT.module:
-            return astlib.Callable(
-                astlib.CallableT.struct, astlib.Empty(),
-                type_, get_init_args(type_))
-    errors.not_now(errors.INFERENCE)
+        return _infer_expr_literal(type_)
+    elif type_ in A(astlib.DataMember):
+        return _infer_expr_datamember(type_)
+    errors.not_now(errors.EXPR_INFERENCE)
+
+
+def _infer_type_struct_func(expr):
+    info = context.env[_for_env(expr.parent)]
+    struct_params = info["params"]
+    method = info["methods"][expr.name]
+    if len(struct_params) == 0:
+        return method["type_"]
+    return astlib.ParamedType(
+        expr.parent, _infer_params_from_args(
+            struct_params, method["args"], expr.args))
+
+
+def _infer_type_callable(expr):
+    if expr.callabletype == astlib.CallableT.struct:
+        return _infer_type_struct_func(
+            astlib.Callable(
+                astlib.CallableT.struct_func, expr.name,
+                defs.INIT_METHOD, expr.args))
+    elif expr.callabletype == astlib.CallableT.fun:
+        return context.env[expr.name]["type_"]
+    elif expr.callabletype == astlib.CallableT.struct_func:
+        return _infer_type_struct_func(expr)
+
+
+def _infer_type_datamember(expr):
+    info = context.env[_for_env(infer_type(expr.parent))]
+    return info["fields"][expr.member]["type_"]
 
 
 def infer_type(expr):
+    # TODO:
+    #   * add more
     if expr in A(astlib.Callable):
-        if expr.callabletype == astlib.CallableT.struct:
-            entry = context.env[expr.name]
-            params = entry["params"]
-            if len(params) == 0:
-                return expr.name
-            return astlib.ParamedType(
-                expr.name, infer_args(
-                    params, entry["methods"]["__init__"]["args"],
-                    expr.args))
-    if expr in A(astlib.Name):
-        return context.env[expr]["type"]
-    if expr in A(astlib.Expr):
-        return infer_type(expr.left)
-    errors.not_now(errors.INFERENCE)
+        return _infer_type_callable(expr)
+    elif expr in A(astlib.Name):
+        return context.env[expr]["type_"]
+    elif expr in A(astlib.DataMember):
+        if expr.datatype == astlib.DataT.struct:
+            return _infer_type_datamember(expr)
+    errors.not_now(errors.TYPE_INFERENCE)
