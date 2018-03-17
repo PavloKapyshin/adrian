@@ -2,12 +2,10 @@ import sys
 
 from .context import context
 
-
 _SYNTAX_ERROR = "syntax error on line {line}"
 _ILLEGAL_CHAR = "illegal character '{char}'"
 _NOT_NOW = "try that out in later versions, key = {key}"
 _WRONG_N_ARGS = "wrong number of arguments, got {got}, expected {expected}"
-
 
 MODULE = "unsupported_module"
 CUSTOM_OBJMETHOD = "custom_object_method"
@@ -15,6 +13,7 @@ TYPE_INFERENCE = "type_inference"
 EXPR_INFERENCE = "expr_inference"
 BAD = "bad things happened"
 STRANGE_STMT = "strange statement"
+
 
 class CompileTimeError(Exception):
 

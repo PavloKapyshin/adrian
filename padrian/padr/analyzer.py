@@ -1,5 +1,3 @@
-import itertools
-
 from .context import context
 from . import astlib, layers, errors, defs, inference, utils
 from .utils import A
@@ -60,8 +58,6 @@ class Analyzer(layers.Layer):
 
     # Inner ast nodes translation.
     def e(self, expr):
-        # TODO:
-        #   * add a lot of everything...
         if expr in A(astlib.Callable):
             return self.e_callable(expr)
         if expr in A(astlib.DataMember):

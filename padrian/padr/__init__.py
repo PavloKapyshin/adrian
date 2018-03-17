@@ -21,8 +21,13 @@ LAYERS = (
 
 
 def compile_(inp):
+    context_kargs = {
+        "env": defs.ENV,
+        "exit_on_error": False,
+        "module_paths": defs.DEFAULT_MODULE_PATHS,
+    }
     for layer_cls, method_name in LAYERS:
-        with context.new_context(env=defs.ENV, exit_on_error=False):
+        with context.new_context(**context_kargs):
             layer = layer_cls()
             if method_name == "parse":
                 current_ast = foreign_parser.main(

@@ -1,6 +1,6 @@
 from .utils import A
 from .context import context
-from . import astlib, errors, utils, defs
+from . import astlib, errors, defs
 
 
 def _get_arg(expr, index):

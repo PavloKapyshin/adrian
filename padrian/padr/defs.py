@@ -4,8 +4,8 @@ from functools import partial
 from . import env, astlib
 
 # Compiler defs.
-T_STRING = "t"
 ENV = env.Env()
+DEFAULT_MODULE_PATHS = []
 
 RESERVED_WORDS = {
     keyword: keyword.upper()
@@ -35,6 +35,7 @@ INIT_METHOD = "__init__"
 DEINIT_METHOD = "__deinit__"
 COPY_METHOD = "__copy__"
 REF = "ref"
+T_STRING = "t"
 
 OP_TO_METHOD = {
     "+": "__add__",
@@ -105,7 +106,6 @@ def _add_cnumeric_type(tname):
             }
         }
     }
-
 
 _add_cnumeric_type("IntFast8")
 _add_cnumeric_type("IntFast16")
