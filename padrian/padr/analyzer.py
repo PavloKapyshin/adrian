@@ -75,6 +75,9 @@ class Analyzer(layers.Layer):
     def t(self, type_):
         # TODO:
         #   * add support of user modules
+        if type_ in A(astlib.Name):
+            if type_ == "Void":
+                return astlib.Void()
         if type_ in A(astlib.DataMember):
             if type_.datatype == astlib.DataT.module:
                 if type_.parent != defs.CMODULE:

@@ -3,7 +3,7 @@ import copy
 from . import (
     parser, foreign_parser, analyzer,
     object_protocol, tac, copying,
-    context, defs, layers, # arc,
+    context, defs, layers, arc,
     debug_formatter)
 
 LAYERS = (
@@ -12,11 +12,11 @@ LAYERS = (
     (analyzer.Analyzer, "transform_ast"),
     (tac.TAC, "transform_ast"),
     (copying.Copying, "transform_ast"),
-    # (arc.ARC, "expand_ast"),
-    # # inlining
-    # # name_spacing
-    # # tocgen
-    # # main_func, expand_ast
+    (arc.ARC, "expand_ast"),
+    # inlining
+    # name_spacing
+    # tocgen
+    # main_func, expand_ast
 )
 
 

@@ -70,6 +70,8 @@ class DebugFormatter(layers.Layer):
                     self.t(param) for param in type_.params]))
         elif type_ in A(astlib.DataMember):
             return "{}#{}".format(self.n(type_.parent), self.t(type_.member))
+        elif type_ in A(astlib.Void):
+            return str(type_)
 
     def a(self, args):
         if len(args) == 0:
