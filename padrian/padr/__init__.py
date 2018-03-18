@@ -36,10 +36,10 @@ def compile_(inp):
             else:
                 current_ast = list(getattr(layers, method_name)(
                     current_ast, registry=layer.get_registry()))
-    generator = cgen.Generator()
-    generator.add_ast(current_ast)
-    return "\n".join(generator.generate())
-    # return current_ast
+    # generator = cgen.Generator()
+    # generator.add_ast(current_ast)
+    # return "\n".join(generator.generate())
+    return current_ast
 
 
 def compile_from_string(inp, out_file, cc):

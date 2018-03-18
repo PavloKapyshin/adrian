@@ -1,1 +1,5 @@
-let a = c#IntFast8(0)
+struct JustAStruct {
+    data: c#IntFast8
+}
+
+let customizedName = JustAStruct(c#IntFast8(1))
