@@ -6,6 +6,7 @@ _SYNTAX_ERROR = "syntax error on line {line}"
 _ILLEGAL_CHAR = "illegal character '{char}'"
 _NOT_NOW = "try that out in later versions, key = {key}"
 _WRONG_N_ARGS = "wrong number of arguments, got {got}, expected {expected}"
+_CANNOT_FIND_FILE = "cannot find file {file}"
 
 MODULE = "unsupported_module"
 CUSTOM_OBJMETHOD = "custom_object_method"
@@ -33,6 +34,9 @@ def not_now(key):
 
 def wrong_n_args(got, expected):
     _error(_WRONG_N_ARGS, got=got, expected=expected)
+
+def cannot_find_file(file_name):
+    _error(_CANNOT_FIND_FILE, file=file_name)
 
 
 def _error(msg, **keywords):

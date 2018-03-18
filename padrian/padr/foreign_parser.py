@@ -1,7 +1,54 @@
 """Translates parser's AST to object-oriented AST."""
 
-from . import astlib
+import os
+from collections import OrderedDict
+
+from . import astlib, defs, errors
+from .context import context
 from .utils import A
+
+
+def find_file(file_name, module_paths):
+    for dir_ in module_paths:
+        for entity in os.listdir(dir_):
+            full_path = os.path.join(dir_, entity)
+            if (os.path.isfile(full_path) and
+                    entity == file_name):
+                return full_path
+    errors.cannot_find_file(file_name)
+
+
+def add_found_module(module_name, file_name=None, type_="adr"):
+    if file_name and type_ == "adr":
+        found_source = find_file(
+            ".".join([file_name, "c"]), context.module_paths)
+        found_header = find_file(
+            ".".join([file_name, "h"]), context.module_paths)
+        if module_name not in context.clibs_includes:
+            context.clibs_includes.update({
+                module_name: {
+                    "source": found_source,
+                    "header": file_name + ".h",
+                    "type_": "c"
+                }
+            })
+    else:
+        if module_name not in context.clibs_includes:
+            context.clibs_includes.update({
+                module_name: {
+                    "header": module_name + ".h",
+                    "type_": type_
+                }
+            })
+
+
+def add_to_clibs(module_elem):
+    if module_elem.parent not in context.clibs_includes:
+        if module_elem.parent == defs.CMODULE:
+            add_found_module("stdint", type_="c")
+            add_found_module(defs.CMODULE, file_name=defs.CMODULE_FILE)
+        else:
+            errors.not_now(errors.MODULE)
 
 
 def translate(node):
@@ -14,6 +61,10 @@ def translate(node):
     result = getattr(astlib, node[0])(*args)
     if result in A(astlib.LinkedListNode, astlib.Args):
         yield from result.as_list()
+    elif result in A(astlib.DataMember):
+        if result.datatype == astlib.DataT.module:
+            add_to_clibs(result)
+        yield result
     else:
         yield result
 

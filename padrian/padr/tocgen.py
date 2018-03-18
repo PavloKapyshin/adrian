@@ -1,4 +1,5 @@
 from . import astlib, layers, defs, errors, utils
+from .context import context
 from .utils import A
 
 from adrian import cgen
@@ -140,6 +141,11 @@ class ToCgen(layers.Layer):
     @layers.register(astlib.AST)
     def main(self, ast_, registry):
         ast_ = layers.transform_ast(ast_, registry=registry)
+        yield from [
+            (cgen.Include(info["header"])
+                if info["type_"] == "adr" else
+                    cgen.CInclude(info["header"]))
+            for _, info in context.clibs_includes.items()]
         main_func_body = []
         for node in ast_:
             if node in A(cgen.Decl, cgen.FuncCall, cgen.Assignment):

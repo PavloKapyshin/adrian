@@ -8,6 +8,9 @@ parsetab.py
 /library/adrian_c.c
 /library/adrian_c.h
 
+/example.out
+/example.c
+
 *.swp
 *~
 

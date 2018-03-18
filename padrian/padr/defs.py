@@ -8,7 +8,7 @@ from . import env, astlib
 
 # Compiler defs.
 ENV = env.Env()
-DEFAULT_MODULE_PATHS = []
+DEFAULT_MODULE_PATHS = ["library/"]
 
 RESERVED_WORDS = {
     keyword: keyword.upper()
@@ -49,6 +49,7 @@ OP_TO_METHOD = {
 
 # Adrian's c module defs
 CMODULE = "c"
+CMODULE_FILE = "adrian_c"
 FREE_FUNC = "free"
 MALLOC_FUNC = "malloc"
 SIZEOF = "sizeof"
