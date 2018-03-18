@@ -1,7 +1,10 @@
 import re
 from functools import partial
 
+from adrian.cgen import libc
+
 from . import env, astlib
+
 
 # Compiler defs.
 ENV = env.Env()
@@ -46,20 +49,29 @@ OP_TO_METHOD = {
 
 # Adrian's c module defs
 CMODULE = "c"
+FREE_FUNC = "free"
+MALLOC_FUNC = "malloc"
+SIZEOF = "sizeof"
+CFUNCS = (
+    FREE_FUNC,
+    MALLOC_FUNC,
+)
+
+MALLOC_FUNC_DESCR = libc.malloc
+FREE_FUNC_DESCR = libc.free
 
 _c_module_member = partial(
     astlib.DataMember, astlib.DataT.module, astlib.Name(CMODULE))
 
 def _add_cnumeric_type(tname):
-    ENV[_c_module_member(astlib.Name(tname))] = {
+    member = _c_module_member(astlib.Name(tname))
+    ENV[member] = {
         "node_type": astlib.NodeT.struct,
         "params": [],
-        "fields": {
-            "literal": astlib.LiteralType(astlib.LiteralT.integer)
-        },
+        "fields": {},
         "methods": {
             "__init__": {
-                "type_": _c_module_member(astlib.Name(tname)),
+                "type_": member,
                 "args": [
                     ("literal", astlib.LiteralType(astlib.LiteralT.integer))
                 ]
@@ -67,41 +79,37 @@ def _add_cnumeric_type(tname):
             "__deinit__": {
                 "type_": astlib.Void(),
                 "args": [
-                    ("self", _c_module_member(astlib.Name(tname)))
+                    ("self", member)
                 ]
             },
             "__copy__": {
-                "type_": _c_module_member(astlib.Name(tname)),
+                "type_": member,
                 "args": [
-                    ("self", _c_module_member(astlib.Name(tname)))
+                    ("self", member)
                 ]
             },
             "__add__": {
-                "type_": _c_module_member(astlib.Name(tname)),
+                "type_": member,
                 "args": [
-                    ("self", _c_module_member(astlib.Name(tname))),
-                    ("other", _c_module_member(astlib.Name(tname)))
+                    ("self", member), ("other", member)
                 ]
             },
             "__sub__": {
-                "type_": _c_module_member(astlib.Name(tname)),
+                "type_": member,
                 "args": [
-                    ("self", _c_module_member(astlib.Name(tname))),
-                    ("other", _c_module_member(astlib.Name(tname)))
+                    ("self", member), ("other", member)
                 ]
             },
             "__mul__": {
-                "type_": _c_module_member(astlib.Name(tname)),
+                "type_": member,
                 "args": [
-                    ("self", _c_module_member(astlib.Name(tname))),
-                    ("other", _c_module_member(astlib.Name(tname)))
+                    ("self", member), ("other", member)
                 ]
             },
             "__div__": {
-                "type_": _c_module_member(astlib.Name(tname)),
+                "type_": member,
                 "args": [
-                    ("self", _c_module_member(astlib.Name(tname))),
-                    ("other", _c_module_member(astlib.Name(tname)))
+                    ("self", member), ("other", member)
                 ]
             }
         }

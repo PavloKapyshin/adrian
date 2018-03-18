@@ -9,6 +9,11 @@ class Analyzer(layers.Layer):
         self.b = layers._b(Analyzer)
 
     # Misc.
+    def real_type(self, type_, parent):
+        # TODO:
+        #   * check: type_ is parameter -> replace by mapping[type_]
+        return type_
+
     def get_mapping(self, type_):
         if type_ in A(astlib.ParamedType):
             mapping = {}
@@ -50,7 +55,8 @@ class Analyzer(layers.Layer):
             parent = self.e(expr.parent)
             return astlib.Callable(
                 astlib.CallableT.struct_func,
-                inference.infer_type(parent),
+                self.real_type(
+                    inference.infer_type(parent), parent),
                 call.name, [parent] + self.a(call.args))
         return astlib.DataMember(
             expr.datatype, self.e(expr.parent),

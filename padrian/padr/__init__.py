@@ -1,10 +1,13 @@
 import copy
 
+from adrian import cgen
+
 from . import (
     parser, foreign_parser, analyzer,
     object_protocol, tac, copying,
     context, defs, layers, arc,
-    debug_formatter)
+    debug_formatter, tocgen)
+
 
 LAYERS = (
     (parser.Parser, "parse"),
@@ -14,9 +17,7 @@ LAYERS = (
     (copying.Copying, "transform_ast"),
     (arc.ARC, "expand_ast"),
     # inlining
-    # name_spacing
-    # tocgen
-    # main_func, expand_ast
+    (tocgen.ToCgen, "expand_ast")
 )
 
 
@@ -35,4 +36,7 @@ def compile_(inp):
             else:
                 current_ast = list(getattr(layers, method_name)(
                     current_ast, registry=layer.get_registry()))
-    return current_ast
+    generator = cgen.Generator()
+    generator.add_ast(current_ast)
+    return "\n".join(generator.generate())
+    # return current_ast
