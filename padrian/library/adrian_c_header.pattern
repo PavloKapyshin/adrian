@@ -1,0 +1,12 @@
+struct {type} {{
+    {ctype} literal;
+}};
+
+
+extern struct {type}* {type}___init__({ctype} literal);
+extern void {type}___deinit__(struct {type}* self);
+extern struct {type}* {type}___copy__(struct {type}* self);
+extern struct {type}* {type}___add__(struct {type}* self, struct {type}* src);
+extern struct {type}* {type}___sub__(struct {type}* self, struct {type}* src);
+extern struct {type}* {type}___mul__(struct {type}* self, struct {type}* src);
+extern struct {type}* {type}___div__(struct {type}* self, struct {type}* src);
