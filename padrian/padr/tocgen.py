@@ -43,6 +43,15 @@ class ToCgen(layers.Layer):
                 *self.a(expr.args))
 
     # Inner translation.
+    def f(self, fields, params):
+        fs = []
+        for field in fields:
+            type_ = field.type_
+            if field.type_ in A(astlib.Name) and field.type_ in params:
+                type_ = cgen.CTypes.ptr(cgen.CTypes.void)
+            fs.append(cgen.Decl(field.name, type_=type_, expr=None))
+        return fs
+
     def t(self, type_):
         if type_ in A(astlib.Void):
             return cgen.CTypes.void
@@ -132,7 +141,12 @@ class ToCgen(layers.Layer):
     def data_decl(self, stmt):
         if stmt.decltype == astlib.DeclT.struct:
             fields, funcs = utils.split_body(stmt.body)
-            yield cgen.Struct(self.n(stmt.name), self.b(fields))
+            if stmt.params:
+                fields = self.f(fields, stmt.params)
+                funcs = []
+            else:
+                fields = self.b(fields)
+            yield cgen.Struct(self.n(stmt.name), fields)
             for func in funcs:
                 yield from self.callable_decl(func)
         else:

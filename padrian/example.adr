@@ -1,20 +1,7 @@
-struct Date {
-    day: c#UIntFast8
-    month: c#UIntFast8
-    year: c#UIntFast64
+struct T(a) {
+    field: a
 
-    fun firstDayOfMonth(month: c#UIntFast8): Void {
-        self.day = c#UIntFast8(1)
-        self.month = month
-    }
-
-    fun lastDayOfYear(year: c#UIntFast64): Void {
-        self.day = c#UIntFast8(31)
-        self.month = c#UIntFast8(12)
-        self.year = year
-    }
-
-    fun firstDayOfCurrentMonth(): Void {
-        self.firstDayOfMonth(self.month)
+    fun getField(arg: a): a {
+        return arg
     }
 }

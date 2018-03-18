@@ -27,8 +27,7 @@ class ARC(layers.Layer):
             context.env[name] = {
                 "node_type": astlib.NodeT.let,
                 "type_": type_,
-                "initialized": self.provide_initialized(
-                    name, type_, inference.infer_expr(type_))
+                "initialized": self.provide_initialized_from_type(name, type_)
             }
 
     def update_b(self):
@@ -58,6 +57,22 @@ class ARC(layers.Layer):
                         return False
                     info = info[memb]
                 return True
+
+    def provide_initialized_from_type(self, name, type_):
+        if type_ in A(astlib.Name, astlib.DataMember):
+            if (type_ in context.env and
+                    context.env[type_]["node_type"] in (
+                        astlib.NodeT.struct, astlib.NodeT.adt,
+                        astlib.NodeT.protocol)):
+                fields = context.env[type_]["fields"]
+                result = {}
+                for field, info in fields.items():
+                    res = self.provide_initialized_from_type(
+                        field, info["type_"])
+                    result[field] = res[field]
+                return {name: result}
+            else:
+                return {name: {}}
 
     def provide_initialized(self, name, type_, expr):
         if type_ in A(astlib.Void):
