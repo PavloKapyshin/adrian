@@ -50,6 +50,10 @@ def infer_expr(type_):
         return _infer_expr_literal(type_)
     elif type_ in A(astlib.DataMember):
         return _infer_expr_datamember(type_)
+    elif type_ in A(astlib.Name):
+        return astlib.Callable(
+            astlib.CallableT.struct, astlib.Empty(),
+            type_, _infer_init_args(type_))
     errors.not_now(errors.EXPR_INFERENCE)
 
 
@@ -91,4 +95,6 @@ def infer_type(expr):
     elif expr in A(astlib.DataMember):
         if expr.datatype == astlib.DataT.struct:
             return _infer_type_datamember(expr)
+    elif expr in A(astlib.Ref):
+        return infer_type(expr.expr)
     errors.not_now(errors.TYPE_INFERENCE)

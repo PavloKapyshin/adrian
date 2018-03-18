@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from . import layers, astlib, errors, defs
 from .context import context
 from .utils import A, split_body, only_fields
@@ -147,27 +149,27 @@ class ObjectProtocol(layers.Layer):
     def data_decl(self, stmt):
         if stmt.decltype == astlib.DeclT.struct:
             fields, methods = split_body(stmt.body)
-            have = {
+            have = OrderedDict(sorted({
                 key: (
-                    False,
+                    i, False,
                     getattr(self, "_".join(["complete", mname])),
                     getattr(self, "_".join(["default", mname])))
-                for key, mname in (
-                    (defs.INIT_METHOD, "init_method"),
-                    (defs.DEINIT_METHOD, "deinit_method"),
-                    (defs.COPY_METHOD, "copy_method"),
+                for i, key, mname in (
+                    (1, defs.INIT_METHOD, "init_method"),
+                    (2, defs.COPY_METHOD, "copy_method"),
+                    (3, defs.DEINIT_METHOD, "deinit_method"),
                 )
-            }
+            }.items(), key=lambda x: x[1]))
             new_methods = []
             for method in methods:
                 entry = have.get(str(method.name))
                 if entry:
-                    have[str(method.name)] = (True, entry[1], entry[2])
+                    have.update({str(method.name): (True, entry[1], entry[2])})
                     new_methods.append(entry[1](method, stmt))
                 else:
                     new_methods.append(self.method(method, stmt))
             additional_methods = []
-            for method_name, (exists, _, f) in sorted(have.items()):
+            for method_name, (_, exists, _, f) in have.items():
                 if not exists:
                     additional_methods.append(f(stmt))
             yield astlib.DataDecl(

@@ -15,14 +15,6 @@ def deinit(name, type_):
         defs.DEINIT_METHOD, [name])
 
 
-def add_decl_args(args):
-    for name, type_ in args:
-        context.env[name] = {
-            "node_type": astlib.NodeT.let,
-            "type_": type_
-        }
-
-
 class ARC(layers.Layer):
 
     def __init__(self, flist=None):
@@ -30,6 +22,15 @@ class ARC(layers.Layer):
         self.b = layers._b(ARC, flist=self.flist)
 
     # Misc.
+    def add_decl_args(self, args):
+        for name, type_ in args:
+            context.env[name] = {
+                "node_type": astlib.NodeT.let,
+                "type_": type_,
+                "initialized": self.provide_initialized(
+                    name, type_, inference.infer_expr(type_))
+            }
+
     def update_b(self):
         self.b = layers._b(ARC, flist=self.flist)
 
@@ -122,19 +123,19 @@ class ARC(layers.Layer):
             del self.flist[name]
 
     def free_scope(self):
-        for key, info in self.flist.cspace():
+        for key, info in sorted(self.flist.cspace()):
             yield self.free(key)
 
     # Subcore funcs.
     def fun_decl(self, stmt):
         context.env[stmt.name] = {
             "node_type": astlib.NodeT.fun,
-            "type_": stmt.type_,
+            "type_": stmt.rettype,
             "args": stmt.args
         }
         +context.env
         +self.flist
-        add_decl_args(stmt.args)
+        self.add_decl_args(stmt.args)
         self.update_b()
         body = self.b(stmt.body)
         if stmt.rettype in A(astlib.Void):
@@ -157,7 +158,7 @@ class ARC(layers.Layer):
         })
         +context.env
         +self.flist
-        add_decl_args(stmt.args)
+        self.add_decl_args(stmt.args)
         self.update_b()
         body = self.b(stmt.body)
         if stmt.rettype in A(astlib.Void):

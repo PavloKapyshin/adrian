@@ -35,16 +35,16 @@ class Analyzer(layers.Layer):
 
     def e_callable(self, callable_):
         callabletype = callable_.callabletype
-        if (callabletype not in (
-                    astlib.CallableT.cfunc, astlib.CallableT.struct_func)
-                and utils.is_type(callable_.name)):
-            callabletype = astlib.CallableT.struct
         if (callable_.name == defs.REF and
                 callabletype == astlib.CallableT.fun):
             args = self.a(callable_.args)[0]
             if len(args) != 1:
                 errors.wrong_n_args(len(args), expected=1)
             return astlib.Ref(args[0])
+        if (callabletype not in (
+                    astlib.CallableT.cfunc, astlib.CallableT.struct_func)
+                and utils.is_type(callable_.name)):
+            callabletype = astlib.CallableT.struct
         return astlib.Callable(
             callabletype, callable_.parent,
             callable_.name, self.a(callable_.args))
@@ -101,8 +101,17 @@ class Analyzer(layers.Layer):
     def a(self, args):
         if args in A(astlib.Empty) or len(args) == 0:
             return []
-        elif args[0] in A(astlib.Arg):
-            return [(arg.name, self.t(arg.type_)) for arg in args]
+        elif args[0] in A(astlib.Arg, tuple):
+            new_args = []
+            for arg in args:
+                if arg in A(astlib.Arg):
+                    name = arg.name
+                    type_ = arg.type_
+                else:
+                    name = arg[0]
+                    type_ = arg[1]
+                new_args.append((name, self.t(type_)))
+            return new_args
         return [self.e(arg) for arg in args]
 
     def p(self, params):
