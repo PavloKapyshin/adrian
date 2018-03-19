@@ -1,5 +1,13 @@
 struct T(a) {
     field: a
+
+    fun getVar(arg: a): a {
+        return arg
+    }
+
+    fun getField(): a {
+        return self.field
+    }
 }
 
-let a = T(c#IntFast8(1))
+let justAVar = T(c#IntFast8(1))
