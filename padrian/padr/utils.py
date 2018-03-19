@@ -25,6 +25,9 @@ is_adt = _is_node_type(astlib.NodeT.adt)
 is_type = _is_node_type(
     astlib.NodeT.struct, astlib.NodeT.commont,
     astlib.NodeT.adt, astlib.NodeT.protocol)
+is_real_type = _is_node_type(
+    astlib.NodeT.struct,
+    astlib.NodeT.adt, astlib.NodeT.protocol)
 
 def split_body(body):
     fields, methods = [], []

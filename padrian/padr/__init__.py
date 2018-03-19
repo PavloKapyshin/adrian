@@ -7,7 +7,7 @@ from . import (
     parser, foreign_parser, analyzer,
     object_protocol, tac, copying,
     context, defs, layers, arc,
-    debug_formatter, tocgen, ccopts)
+    debug_formatter, tocgen, ccopts, inlining)
 
 
 LAYERS = (
@@ -17,7 +17,7 @@ LAYERS = (
     (tac.TAC, "transform_ast"),
     (copying.Copying, "transform_ast"),
     (arc.ARC, "expand_ast"),
-    # (inlining.Inlining, "transform_ast"),
+    (inlining.Inlining, "transform_ast"),
     (tocgen.ToCgen, "expand_ast")
 )
 
@@ -30,7 +30,10 @@ def compile_(inp):
         "clibs_includes": None
     }
     clibs_includes = OrderedDict()
-    for layer_cls, method_name in LAYERS:
+    layers_ = LAYERS
+    if layers_[-1][0] is tocgen.ToCgen:
+        layers_ = layers_[:-1]
+    for layer_cls, method_name in layers_:
         with context.new_context(**context_kargs):
             layer = layer_cls()
             context.context.clibs_includes = clibs_includes

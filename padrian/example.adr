@@ -1,7 +1,5 @@
 struct T(a) {
     field: a
-
-    fun getField(arg: a): a {
-        return arg
-    }
 }
+
+let a = T(c#IntFast8(1))

@@ -100,6 +100,8 @@ class ToCgen(layers.Layer):
         if name in A(astlib.DataMember):
             if name.datatype == astlib.DataT.module:
                 return self.n(name.member)
+        if name in A(astlib.ParamedType):
+            return self.n(name.type_)
         return str(name)
 
     # Core.
