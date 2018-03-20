@@ -84,6 +84,18 @@ class Inlining(layers.Layer):
         self.type_mapping = type_mapping or {}
         self.arg_mapping = arg_mapping or {}
 
+    # Registration
+    def register_func_as_child(self, stmt):
+        context.env.update(stmt.parent, {
+            "methods": utils.add_dicts(context.env[stmt.parent], {
+                stmt.name : {
+                    "type_": stmt.rettype,
+                    "args": stmt.args,
+                    "body": stmt.body
+                }
+            })
+        })
+
     # Inlining
     def add_mappings(self, type_mapping, arg_mapping):
         self.b = layers._b(
@@ -231,20 +243,10 @@ class Inlining(layers.Layer):
     @layers.register(astlib.Decl)
     def decl(self, stmt):
         if stmt.decltype == astlib.DeclT.field:
-            context.env.update(context.parent, {
-                "fields": utils.add_dicts(
-                    context.env[context.parent]["fields"], {
-                    stmt.name : {
-                        "type_": stmt.type_
-                    }
-                })
-            })
+            utils.register_field(stmt.name, stmt.type_)
             yield stmt
         else:
-            context.env[stmt.name] = {
-                "node_type": utils.declt_to_nodet(stmt.decltype),
-                "type_": stmt.type_
-            }
+            utils.register_var_or_let(stmt.name, stmt.decltype, stmt.type_)
             expr, stmts = self.e(stmt.type_, stmt.expr)
             yield from stmts
             yield astlib.Decl(stmt.decltype, stmt.name, stmt.type_, expr)
@@ -252,27 +254,15 @@ class Inlining(layers.Layer):
     @layers.register(astlib.CallableDecl)
     def callable_decl(self, stmt):
         if stmt.decltype == astlib.DeclT.struct_func:
-            context.env.update(stmt.parent, {
-                "methods": utils.add_dicts(context.env[stmt.parent], {
-                    stmt.name : {
-                        "type_": stmt.rettype,
-                        "args": stmt.args,
-                        "body": stmt.body
-                    }
-                })
-            })
+            self.register_func_as_child(stmt)
         yield stmt
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
-        context.env[stmt.name] = {
-            "params": stmt.params,
-            "node_type": utils.declt_to_nodet(stmt.decltype),
-            "fields": {},
-            "methods": {}
-        }
+        utils.register_data_decl(stmt.name, stmt.decltype, stmt.params)
         +context.env
         context.parent = stmt.name
+        utils.register_params(stmt.params)
         yield astlib.DataDecl(
             stmt.decltype, stmt.name, stmt.params, self.b(stmt.body))
         -context.env

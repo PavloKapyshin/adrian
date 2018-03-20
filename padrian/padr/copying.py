@@ -9,14 +9,6 @@ def copy(expr):
         defs.COPY_METHOD, [expr])
 
 
-def add_decl_args(args):
-    for name, type_ in args:
-        context.env[name] = {
-            "node_type": astlib.NodeT.let,
-            "type_": type_
-        }
-
-
 class Copying(layers.Layer):
 
     def __init__(self):
@@ -42,30 +34,19 @@ class Copying(layers.Layer):
 
     # Subcore funcs.
     def fun_decl(self, stmt):
-        context.env[stmt.name] = {
-            "node_type": astlib.NodeT.fun,
-            "type_": stmt.rettype,
-            "args": stmt.args
-        }
+        utils.register_func(stmt.name, stmt.rettype, stmt.args)
         +context.env
-        add_decl_args(stmt.args)
+        utils.register_args(stmt.args)
         yield astlib.CallableDecl(
             stmt.decltype, stmt.parent, stmt.name,
             stmt.args, stmt.rettype, self.b(stmt.body))
         -context.env
 
     def struct_func_decl(self, stmt):
-        context.env.update(stmt.parent, {
-            "methods": utils.add_dicts(
-                context.env[stmt.parent]["methods"], {
-                stmt.name: {
-                    "type_": stmt.rettype,
-                    "args": stmt.args
-                }
-            })
-        })
+        utils.register_func_as_child(
+            stmt.parent, stmt.name, stmt.rettype, stmt.args)
         +context.env
-        add_decl_args(stmt.args)
+        utils.register_args(stmt.args)
         yield astlib.CallableDecl(
             stmt.decltype, stmt.parent, stmt.name,
             stmt.args, stmt.rettype, self.b(stmt.body))
@@ -85,29 +66,17 @@ class Copying(layers.Layer):
     @layers.register(astlib.Callable)
     def callable_stmt(self, stmt):
         args = self.a(stmt.args)
-        yield astlib.Callable(
-            stmt.callabletype, stmt.parent, stmt.name, args)
+        yield astlib.Callable(stmt.callabletype, stmt.parent, stmt.name, args)
 
     @layers.register(astlib.Decl)
     def decl(self, stmt):
         if stmt.decltype == astlib.DeclT.field:
-            context.env.update(context.parent, {
-                "fields": utils.add_dicts(
-                    context.env[context.parent]["fields"], {
-                    stmt.name: {
-                        "type_": stmt.type_
-                    }
-                })
-            })
+            utils.register_field(stmt.name, stmt.type_)
             yield stmt
         else:
             expr = self.e(stmt.expr)
-            context.env[stmt.name] = {
-                "node_type": utils.declt_to_nodet(stmt.decltype),
-                "type_": stmt.type_
-            }
-            yield astlib.Decl(
-                stmt.decltype, stmt.name, stmt.type_, expr)
+            utils.register_var_or_let(stmt.name, stmt.decltype, stmt.type_)
+            yield astlib.Decl(stmt.decltype, stmt.name, stmt.type_, expr)
 
     @layers.register(astlib.CallableDecl)
     def callable_decl(self, stmt):
@@ -118,18 +87,10 @@ class Copying(layers.Layer):
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
-        context.env[stmt.name] = {
-            "node_type": utils.declt_to_nodet(stmt.decltype),
-            "params": stmt.params,
-            "fields": {},
-            "methods": {},
-        }
+        utils.register_data_decl(stmt.name, stmt.decltype, stmt.params)
         +context.env
         context.parent = stmt.name
-        for param in stmt.params:
-            context.env[param] = {
-                "node_type": astlib.NodeT.commont
-            }
+        utils.register_params(stmt.params)
         yield astlib.DataDecl(
             stmt.decltype, stmt.name, stmt.params, self.b(stmt.body))
         -context.env

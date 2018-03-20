@@ -8,6 +8,14 @@ class Analyzer(layers.Layer):
     def __init__(self):
         self.b = layers._b(Analyzer)
 
+    # Registration
+    def register_var_or_let(self, name, decltype, type_):
+        context.env[name] = {
+            "node_type": utils.declt_to_nodet(decltype),
+            "type_": type_,
+            "mapping": self.get_mapping(type_)
+        }
+
     # Misc.
     def real_type(self, type_, parent):
         # TODO:
@@ -123,16 +131,8 @@ class Analyzer(layers.Layer):
     def field_decl(self, stmt):
         # Maybe adding of parent to stmt can simplify something.
         type_ = self.t(stmt.type_)
-        context.env.update(context.parent, {
-            "fields": utils.add_dicts(
-                context.env[context.parent]["fields"], {
-                stmt.name: {
-                    "type_": type_
-                }
-            })
-        })
-        yield astlib.Decl(
-            stmt.decltype, stmt.name, type_, stmt.expr)
+        utils.register_field(stmt.name, type_)
+        yield astlib.Decl(stmt.decltype, stmt.name, type_, stmt.expr)
 
     def var_let_decl(self, stmt):
         if not stmt.type_:
@@ -143,32 +143,15 @@ class Analyzer(layers.Layer):
             expr = inference.infer_expr(type_)
         else:
             type_, expr = self.t(stmt.type_), self.e(stmt.expr)
-        context.env[stmt.name] = {
-            "node_type": utils.declt_to_nodet(stmt.decltype),
-            "type_": type_,
-            "mapping": self.get_mapping(type_)
-        }
-        yield astlib.Decl(
-            stmt.decltype, stmt.name, type_, expr)
+        self.register_var_or_let(stmt.name, stmt.decltype, type_)
+        yield astlib.Decl(stmt.decltype, stmt.name, type_, expr)
 
     def struct_func_decl(self, stmt):
         type_ = self.t(stmt.rettype)
         args = self.a(stmt.args)
-        context.env.update(stmt.parent, {
-            "methods": utils.add_dicts(
-                context.env[stmt.parent]["methods"], {
-                stmt.name: {
-                    "type_": type_,
-                    "args": args
-                }
-            })
-        })
+        utils.register_func_as_child(stmt.parent, stmt.name, type_, args)
         +context.env
-        for name, t in args:
-            context.env[name] = {
-                "node_type": astlib.NodeT.let,
-                "type_": t
-            }
+        utils.register_args(args)
         yield astlib.CallableDecl(
             stmt.decltype, stmt.parent, stmt.name,
             args, type_, self.b(stmt.body))
@@ -177,21 +160,9 @@ class Analyzer(layers.Layer):
     def protocol_func_decl(self, stmt):
         args = self.a(stmt.args)
         type_ = self.t(stmt.rettype)
-        context.env.update(stmt.parent, {
-            "methods": utils.add_dicts(
-                context.env[stmt.parent]["methods"], {
-                stmt.name: {
-                    "type_": type_,
-                    "args": args
-                }
-            })
-        })
+        utils.register_func_as_child(stmt.parent, stmt.name, type_, args)
         +context.env
-        for name, t in args:
-            context.env[name] = {
-                "node_type": astlib.NodeT.let,
-                "type_": t
-            }
+        utils.register_args(args)
         yield astlib.CallableDecl(
             stmt.decltype, stmt.parent, stmt.name,
             args, type_, self.b(stmt.body))
@@ -200,17 +171,9 @@ class Analyzer(layers.Layer):
     def func_decl(self, stmt):
         type_ = self.t(stmt.rettype)
         args = self.a(stmt.args)
-        context.env[stmt.name] = {
-            "node_type": astlib.NodeT.fun,
-            "type_": type_,
-            "args": args
-        }
+        utils.register_func(stmt.name, type_, args)
         +context.env
-        for name, t in args:
-            context.env[name] = {
-                "node_type": astlib.NodeT.let,
-                "type_": t
-            }
+        utils.register_args(args)
         yield astlib.CallableDecl(
             stmt.decltype, stmt.parent, stmt.name,
             args, type_, self.b(stmt.body))
@@ -241,40 +204,33 @@ class Analyzer(layers.Layer):
     def decl(self, stmt):
         if stmt.decltype == astlib.DeclT.field:
             yield from self.field_decl(stmt)
-        else:
+        elif stmt.decltype in (astlib.DeclT.var, astlib.DeclT.let):
             yield from self.var_let_decl(stmt)
+        else:
+            errors.unknown_stmt()
 
     @layers.register(astlib.CallableDecl)
     def callable_decl(self, stmt):
-        if stmt.decltype == astlib.DeclT.method:
-            errors.not_now(errors.BAD)
-        elif stmt.decltype == astlib.DeclT.struct_func:
+        if stmt.decltype == astlib.DeclT.struct_func:
             yield from self.struct_func_decl(stmt)
         elif stmt.decltype == astlib.DeclT.fun:
             yield from self.func_decl(stmt)
         elif stmt.decltype == astlib.DeclT.protocol_func:
             yield from self.protocol_func_decl(stmt)
+        else:
+            errors.unknown_stmt()
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
         params = self.p(stmt.params)
-        context.env[stmt.name] = {
-            "node_type": utils.declt_to_nodet(stmt.decltype),
-            "params": params,
-            "methods": {},
-            "fields": {}
-        }
+        utils.register_data_decl(stmt.name, stmt.decltype, params)
         +context.env
         context.parent = stmt.name
-        for param in params:
-            context.env[param] = {
-                "node_type": astlib.NodeT.commont
-            }
+        utils.register_params(params)
         if stmt.decltype == astlib.DeclT.adt:
             body = [self.t(t) for t in stmt.body]
-            possible_types = body
             context.env.update(stmt.name, {
-                "possible_types": possible_types
+                "fields": body
             })
         else:
             body = self.b(stmt.body)

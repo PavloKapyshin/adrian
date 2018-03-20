@@ -71,3 +71,65 @@ def any_common(l1, l2):
         if elem in l2:
             return True
     return False
+
+
+def register_var_or_let(name, decltype, type_):
+    context.env[name] = {
+        "node_type": declt_to_nodet(decltype),
+        "type_": type_
+    }
+
+
+def register_field(name, type_):
+    context.env.update(context.parent, {
+        "fields": add_dicts(
+            context.env[context.parent]["fields"], {
+            name: {
+                "type_": type_
+            }
+        })
+    })
+
+
+def register_data_decl(name, decltype, params):
+    context.env[name] = {
+        "node_type": declt_to_nodet(decltype),
+        "params": params,
+        "methods": {},
+        "fields": {}
+    }
+
+
+def register_func(name, rettype, args):
+    context.env[name] = {
+        "node_type": astlib.NodeT.fun,
+        "type_": rettype,
+        "args": args
+    }
+
+
+def register_func_as_child(parent, name, rettype, args):
+    context.env.update(parent, {
+        "methods": add_dicts(
+            context.env[parent]["methods"], {
+            name: {
+                "type_": rettype,
+                "args": args
+            }
+        })
+    })
+
+
+def register_args(args):
+    for name, type_ in args:
+        context.env[name] = {
+            "node_type": astlib.NodeT.let,
+            "type_": type_
+        }
+
+
+def register_params(params):
+    for param in params:
+        context.env[param] = {
+            "node_type": astlib.NodeT.commont
+        }

@@ -3,21 +3,6 @@ from .context import context
 from .utils import A
 
 
-def add_decl(name, type_, nodet):
-    context.env[name] = {
-        "node_type": nodet,
-        "type_": type_
-    }
-
-
-def add_decl_args(args):
-    for name, type_ in args:
-        context.env[name] = {
-            "node_type": astlib.NodeT.let,
-            "type_": type_
-        }
-
-
 class TAC(layers.Layer):
 
     def __init__(self, tmp_count=0):
@@ -33,7 +18,7 @@ class TAC(layers.Layer):
         name = astlib.Name(
             "".join([defs.T_STRING, str(self.tmp_count)]))
         type_ = inference.infer_type(expr)
-        add_decl(name, type_, astlib.NodeT.let)
+        utils.register_var_or_let(name, astlib.DeclT.let, type_)
         self.inc_tmp_count()
         return name, [astlib.Decl(astlib.DeclT.let, name, type_, expr)]
 
@@ -87,30 +72,19 @@ class TAC(layers.Layer):
 
     # Subcore funcs.
     def fun_decl(self, stmt):
-        context.env[stmt.name] = {
-            "node_type": astlib.NodeT.fun,
-            "type_": stmt.rettype,
-            "args": stmt.args
-        }
+        utils.register_func(stmt.name, stmt.rettype, stmt.args)
         +context.env
-        add_decl_args(stmt.args)
+        utils.register_args(stmt.args)
         yield astlib.CallableDecl(
             stmt.decltype, stmt.parent, stmt.name,
             stmt.args, stmt.rettype, self.b(stmt.body))
         -context.env
 
     def struct_func_decl(self, stmt):
-        context.env.update(stmt.parent, {
-            "methods": utils.add_dicts(
-                context.env[stmt.parent]["methods"], {
-                stmt.name: {
-                    "type_": stmt.rettype,
-                    "args": stmt.args
-                }
-            })
-        })
+        utils.register_func_as_child(
+            stmt.parent, stmt.name, stmt.rettype, stmt.args)
         +context.env
-        add_decl_args(stmt.args)
+        utils.register_args(stmt.args)
         yield astlib.CallableDecl(
             stmt.decltype, stmt.parent, stmt.name,
             stmt.args, stmt.rettype, self.b(stmt.body))
@@ -133,29 +107,18 @@ class TAC(layers.Layer):
     def callable_stmt(self, stmt):
         args, decls = self.a(stmt.args)
         yield from decls
-        yield astlib.Callable(
-            stmt.callabletype, stmt.parent, stmt.name, args)
+        yield astlib.Callable(stmt.callabletype, stmt.parent, stmt.name, args)
 
     @layers.register(astlib.Decl)
     def decl(self, stmt):
         if stmt.decltype == astlib.DeclT.field:
-            context.env.update(context.parent, {
-                "fields": utils.add_dicts(
-                    context.env[context.parent]["fields"], {
-                    stmt.name: {
-                        "type_": stmt.type_
-                    }
-                })
-            })
+            utils.register_field(stmt.name, stmt.type_)
             yield stmt
         else:
             expr, decls = self.e(stmt.expr)
-            add_decl(
-                stmt.name, stmt.type_,
-                utils.declt_to_nodet(stmt.decltype))
+            utils.register_var_or_let(stmt.name, stmt.decltype, stmt.type_)
             yield from decls
-            yield astlib.Decl(
-                stmt.decltype, stmt.name, stmt.type_, expr)
+            yield astlib.Decl(stmt.decltype, stmt.name, stmt.type_, expr)
 
     @layers.register(astlib.CallableDecl)
     def callable_decl(self, stmt):
@@ -168,18 +131,10 @@ class TAC(layers.Layer):
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
-        context.env[stmt.name] = {
-            "node_type": utils.declt_to_nodet(stmt.decltype),
-            "params": stmt.params,
-            "fields": {},
-            "methods": {},
-        }
+        utils.register_data_decl(stmt.name, stmt.decltype, stmt.params)
         +context.env
         context.parent = stmt.name
-        for param in stmt.params:
-            context.env[param] = {
-                "node_type": astlib.NodeT.commont
-            }
+        utils.register_params(stmt.params)
         yield astlib.DataDecl(
             stmt.decltype, stmt.name, stmt.params, self.b(stmt.body))
         -context.env

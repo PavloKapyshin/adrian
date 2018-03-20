@@ -21,8 +21,16 @@ class ARC(layers.Layer):
         self.flist = flist or env.Env()
         self.b = layers._b(ARC, flist=self.flist)
 
-    # Misc.
-    def add_decl_args(self, args):
+    # Registration.
+    def register_var_or_let(self, decl):
+        context.env[decl.name] = {
+            "node_type": utils.declt_to_nodet(decl.decltype),
+            "type_": decl.type_,
+            "initialized": self.provide_initialized(
+                decl.name, decl.type_, decl.expr)
+        }
+
+    def register_args(self, args):
         for name, type_ in args:
             context.env[name] = {
                 "node_type": astlib.NodeT.let,
@@ -30,6 +38,7 @@ class ARC(layers.Layer):
                 "initialized": self.provide_initialized_from_type(name, type_)
             }
 
+    # Misc.
     def update_b(self):
         self.b = layers._b(ARC, flist=self.flist)
 
@@ -143,14 +152,10 @@ class ARC(layers.Layer):
 
     # Subcore funcs.
     def fun_decl(self, stmt):
-        context.env[stmt.name] = {
-            "node_type": astlib.NodeT.fun,
-            "type_": stmt.rettype,
-            "args": stmt.args
-        }
+        utils.register_func(stmt.name, stmt.rettype, stmt.args)
         +context.env
         +self.flist
-        self.add_decl_args(stmt.args)
+        self.register_args(stmt.args)
         self.update_b()
         body = self.b(stmt.body)
         if stmt.rettype in A(astlib.Void):
@@ -162,18 +167,11 @@ class ARC(layers.Layer):
         -self.flist
 
     def struct_func_decl(self, stmt):
-        context.env.update(stmt.parent, {
-            "methods": utils.add_dicts(
-                context.env[stmt.parent]["methods"], {
-                stmt.name: {
-                    "type_": stmt.rettype,
-                    "args": stmt.args
-                }
-            })
-        })
+        utils.register_func_as_child(
+            stmt.parent, stmt.name, stmt.rettype, stmt.args)
         +context.env
         +self.flist
-        self.add_decl_args(stmt.args)
+        self.register_args(stmt.args)
         self.update_b()
         body = self.b(stmt.body)
         if stmt.rettype in A(astlib.Void):
@@ -205,22 +203,10 @@ class ARC(layers.Layer):
     @layers.register(astlib.Decl)
     def decl(self, stmt):
         if stmt.decltype == astlib.DeclT.field:
-            context.env.update(context.parent, {
-                "fields": utils.add_dicts(
-                    context.env[context.parent]["fields"], {
-                    stmt.name: {
-                        "type_": stmt.type_
-                    }
-                })
-            })
+            utils.register_field(stmt.name, stmt.type_)
             yield stmt
         else:
-            context.env[stmt.name] = {
-                "node_type": utils.declt_to_nodet(stmt.decltype),
-                "type_": stmt.type_,
-                "initialized": self.provide_initialized(
-                    stmt.name, stmt.type_, stmt.expr)
-            }
+            self.register_var_or_let(stmt)
             self.addtoflist(stmt)
             yield stmt
 
@@ -233,19 +219,11 @@ class ARC(layers.Layer):
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
-        context.env[stmt.name] = {
-            "node_type": utils.declt_to_nodet(stmt.decltype),
-            "params": stmt.params,
-            "fields": {},
-            "methods": {}
-        }
+        utils.register_data_decl(stmt.name, stmt.decltype, stmt.params)
         +context.env
         +self.flist
         context.parent = stmt.name
-        for param in stmt.params:
-            context.env[param] = {
-                "node_type": astlib.NodeT.commont
-            }
+        utils.register_params(stmt.params)
         self.update_b()
         yield astlib.DataDecl(
             stmt.decltype, stmt.name, stmt.params, self.b(stmt.body))

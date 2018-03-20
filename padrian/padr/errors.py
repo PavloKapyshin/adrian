@@ -7,6 +7,7 @@ _ILLEGAL_CHAR = "illegal character '{char}'"
 _NOT_NOW = "try that out in later versions, key = {key}"
 _WRONG_N_ARGS = "wrong number of arguments, got {got}, expected {expected}"
 _CANNOT_FIND_FILE = "cannot find file {file}"
+_UNKNOWN_STMT = "unknown statement"
 
 MODULE = "unsupported_module"
 CUSTOM_OBJMETHOD = "custom_object_method"
@@ -37,6 +38,9 @@ def wrong_n_args(got, expected):
 
 def cannot_find_file(file_name):
     _error(_CANNOT_FIND_FILE, file=file_name)
+
+def unknown_stmt():
+    _error(_UNKNOWN_STMT)
 
 
 def _error(msg, **keywords):
