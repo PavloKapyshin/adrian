@@ -82,7 +82,11 @@ def _infer_type_callable(expr):
 
 def _infer_type_datamember(expr):
     info = context.env[_for_env(infer_type(expr.parent))]
-    return info["fields"][expr.member]["type_"]
+    result = info["fields"][expr.member]["type_"]
+    if "mapping" in context.env[expr.parent]:
+        if result in info["params"]:
+            return context.env[expr.parent]["mapping"][result]
+    return result
 
 
 def infer_type(expr):

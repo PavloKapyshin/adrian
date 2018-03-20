@@ -73,10 +73,25 @@ def any_common(l1, l2):
     return False
 
 
+def get_mapping(type_):
+    if type_ in A(astlib.ParamedType):
+        mapping = {}
+        struct_info = context.env[type_.type_]
+        params = struct_info["params"]
+        i = 0
+        for param in params:
+            if param not in mapping:
+                mapping[param] = type_.params[i]
+            i += 1
+        return mapping
+    return {}
+
+
 def register_var_or_let(name, decltype, type_):
     context.env[name] = {
         "node_type": declt_to_nodet(decltype),
-        "type_": type_
+        "type_": type_,
+        "mapping": get_mapping(type_)
     }
 
 

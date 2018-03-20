@@ -17,7 +17,7 @@ LAYERS = (
     (tac.TAC, "transform_ast"),
     (copying.Copying, "transform_ast"),
     (arc.ARC, "expand_ast"),
-    (inlining.Inlining, "transform_ast"),
+    #(inlining.Inlining, "transform_ast"),
     (tocgen.ToCgen, "expand_ast")
 )
 

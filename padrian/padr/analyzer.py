@@ -8,32 +8,11 @@ class Analyzer(layers.Layer):
     def __init__(self):
         self.b = layers._b(Analyzer)
 
-    # Registration
-    def register_var_or_let(self, name, decltype, type_):
-        context.env[name] = {
-            "node_type": utils.declt_to_nodet(decltype),
-            "type_": type_,
-            "mapping": self.get_mapping(type_)
-        }
-
     # Misc.
     def real_type(self, type_, parent):
         # TODO:
         #   * check: type_ is parameter -> replace by mapping[type_]
         return type_
-
-    def get_mapping(self, type_):
-        if type_ in A(astlib.ParamedType):
-            mapping = {}
-            struct_info = context.env[type_.type_]
-            params = struct_info["params"]
-            i = 0
-            for param in params:
-                if param not in mapping:
-                    mapping[param] = type_.params[i]
-                i += 1
-            return mapping
-        return {}
 
     def construct_type(self, tname):
         params = context.env[tname]["params"]
@@ -143,7 +122,7 @@ class Analyzer(layers.Layer):
             expr = inference.infer_expr(type_)
         else:
             type_, expr = self.t(stmt.type_), self.e(stmt.expr)
-        self.register_var_or_let(stmt.name, stmt.decltype, type_)
+        utils.register_var_or_let(stmt.name, stmt.decltype, type_)
         yield astlib.Decl(stmt.decltype, stmt.name, type_, expr)
 
     def struct_func_decl(self, stmt):

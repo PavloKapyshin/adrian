@@ -11,3 +11,4 @@ struct T(a) {
 }
 
 let justAVar = T(c#IntFast8(1))
+let f: c#IntFast8 = justAVar.field
