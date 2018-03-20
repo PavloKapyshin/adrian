@@ -1,4 +1,4 @@
-from . import astlib, layers, utils, inference, defs
+from . import astlib, layers, utils, inference, defs, env
 from .context import context
 from .utils import A
 
@@ -16,6 +16,7 @@ class _CoreInlining(layers.Layer):
         self.arg_mapping = amapping
         self.b = layers._b(
             _CoreInlining, tmapping=tmapping, amapping=amapping)
+        self.env = env.Env()
 
     def _e_callable(self, stmt):
         if stmt.callabletype == astlib.CallableT.cfunc:
@@ -27,6 +28,14 @@ class _CoreInlining(layers.Layer):
                 stmt.callabletype, self.t(stmt.parent), stmt.name,
                 self.a(stmt.args))
         return stmt
+
+    def n(self, name):
+        if name in self.env:
+            return astlib.Name(
+                "".join([
+                    defs.I_STRING, str(context.i_count), "_", str(name)]),
+                is_user_name=False)
+        return name
 
     def t(self, type_):
         if type_ in A(astlib.ParamedType):
@@ -42,9 +51,12 @@ class _CoreInlining(layers.Layer):
             return self._e_callable(expr)
         if expr in A(astlib.Name):
             result = self.arg_mapping.get(expr)
-            return (result if result else expr)
+            return (self.n(result) if result else self.n(expr))
         if expr in A(astlib.StructScalar):
             return astlib.StructScalar(self.t(expr.type_))
+        if expr in A(astlib.DataMember):
+            return astlib.DataMember(
+                expr.datatype, self.e(expr.parent), expr.member)
         return expr
 
     def a(self, args):
@@ -65,13 +77,14 @@ class _CoreInlining(layers.Layer):
 
     @layers.register(astlib.Decl)
     def decl(self, stmt):
+        self.env[stmt.name] = 1
         yield astlib.Decl(
-            stmt.decltype, stmt.name, self.t(stmt.type_),
+            stmt.decltype, self.n(stmt.name), self.t(stmt.type_),
             self.e(stmt.expr))
 
-    def main(self, stmt, type_mapping, arg_mapping):
+    def main(self, stmts, type_mapping, arg_mapping):
         result = layers.transform_ast(
-            [stmt], registry=_CoreInlining(
+            stmts, registry=_CoreInlining(
                 tmapping=type_mapping, amapping=arg_mapping).get_registry())
         yield from list(result)
 
@@ -130,10 +143,7 @@ class Inlining(layers.Layer):
         self.add_mappings(type_mapping, arg_mapping)
         body = self.b(method_info["body"])
         -context.env
-        new_body = []
-        for stmt in body:
-            new_body.extend(
-                self.inliner.main(stmt, type_mapping, arg_mapping))
+        new_body = list(self.inliner.main(body, type_mapping, arg_mapping))
         expr = None
         if new_body and new_body[-1] in A(astlib.Return):
             expr = new_body[-1].expr
@@ -180,7 +190,9 @@ class Inlining(layers.Layer):
         if self.arg_mapping:
             expr = self.replace_args(expr, parent)
         if struct_info["params"]:
-            return self.inline(type_, expr)
+            result = self.inline(type_, expr)
+            context.i_count += 1
+            return result
         return expr, []
 
     def _e_callable(self, type_, expr):

@@ -39,6 +39,7 @@ DEINIT_METHOD = "__deinit__"
 COPY_METHOD = "__copy__"
 REF = "ref"
 T_STRING = "t"
+I_STRING = "i"
 
 OP_TO_METHOD = {
     "+": "__add__",
