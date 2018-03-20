@@ -61,9 +61,9 @@ class TAC(layers.Layer):
 
     def a(self, args):
         if len(args) == 0:
-            return []
+            return [], []
         elif isinstance(args[0], tuple):
-            return args
+            return args, []
         new_args, decls = [], []
         for arg in args:
             new_arg, new_decls = self._inner_e(arg)
