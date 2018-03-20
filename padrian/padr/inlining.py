@@ -1,4 +1,4 @@
-from . import astlib, layers, utils, inference
+from . import astlib, layers, utils, inference, defs
 from .context import context
 from .utils import A
 
@@ -14,7 +14,8 @@ class _CoreInlining(layers.Layer):
     def __init__(self, tmapping=None, amapping=None):
         self.type_mapping = tmapping
         self.arg_mapping = amapping
-        self.b = layers._b(_CoreInlining, tmapping=tmapping, amapping=amapping)
+        self.b = layers._b(
+            _CoreInlining, tmapping=tmapping, amapping=amapping)
 
     def _e_callable(self, stmt):
         if stmt.callabletype == astlib.CallableT.cfunc:
@@ -118,30 +119,12 @@ class Inlining(layers.Layer):
             i += 1
         return mapping
 
-    def inline_struct_call(self, type_, call):
+    def inline(self, type_, call):
+        env_parent = _for_env(call.parent)
+        struct_info = context.env[env_parent]
         type_mapping = self.mapping(
-            context.env[call.name]["params"], type_)
-        init_info = context.env[call.name]["methods"]["__init__"]
-        arg_mapping = self.arg_mapping_(
-            init_info["args"], call.args)
-        +context.env
-        self.add_mappings(type_mapping, arg_mapping)
-        body = self.b(init_info["body"])
-        -context.env
-        new_body = []
-        for stmt in body:
-            new_body.extend(
-                self.inliner.main(stmt, type_mapping, arg_mapping))
-        expr = None
-        if new_body and new_body[-1] in A(astlib.Return):
-            expr = new_body[-1].expr
-            new_body = new_body[:-1]
-        return expr, new_body
-
-    def inline_struct_func_call(self, type_, call):
-        type_mapping = self.mapping(
-            context.env[_for_env(call.parent)]["params"], type_)
-        method_info = context.env[_for_env(call.parent)]["methods"][call.name]
+            struct_info["params"], type_)
+        method_info = struct_info["methods"][call.name]
         arg_mapping = self.arg_mapping_(method_info["args"], call.args)
         +context.env
         self.add_mappings(type_mapping, arg_mapping)
@@ -181,27 +164,34 @@ class Inlining(layers.Layer):
                 arg.datatype, self.replace_arg(arg.parent), arg.member)
         return arg
 
+    def replace_args(self, expr, parent):
+        args = []
+        for arg in expr.args:
+            args.append(self.replace_arg(arg))
+        return astlib.Callable(
+            expr.callabletype, parent, expr.name, args)
+
+    def opt_inline(self, parent, name, type_, expr):
+        env_parent = _for_env(parent)
+        if not (env_parent in context.env and utils.is_real_type(env_parent)):
+            parent = self.type_mapping[parent]
+            env_parent = _for_env(parent)
+        struct_info = context.env[env_parent]
+        if self.arg_mapping:
+            expr = self.replace_args(expr, parent)
+        if struct_info["params"]:
+            return self.inline(type_, expr)
+        return expr, []
+
     def _e_callable(self, type_, expr):
         if expr.callabletype == astlib.CallableT.struct:
-            struct_info = context.env[expr.name]
-            if struct_info["params"]:
-                return self.inline_struct_call(type_, expr)
+            return self.opt_inline(
+                expr.name, defs.INIT_METHOD, type_,
+                astlib.Callable(
+                    astlib.CallableT.struct_func, expr.name, defs.INIT_METHOD,
+                    expr.args))
         if expr.callabletype == astlib.CallableT.struct_func:
-            if (_for_env(expr.parent) in context.env and
-                    utils.is_real_type(_for_env(expr.parent))):
-                parent = expr.parent
-            else:
-                parent = self.type_mapping[expr.parent]
-            struct_info = context.env[_for_env(parent)]
-            if self.arg_mapping:
-                args = []
-                for arg in expr.args:
-                    args.append(self.replace_arg(arg))
-                expr = astlib.Callable(
-                    expr.callabletype, parent, expr.name, args)
-            if struct_info["params"]:
-                return self.inline_struct_func_call(type_, expr)
-        #elif expr.callabletype == astlib.CallableT.struct_func:
+            return self.opt_inline(expr.parent, expr.name, type_, expr)
         return expr, []
 
     # Inner translation
@@ -209,6 +199,7 @@ class Inlining(layers.Layer):
         if expr in A(astlib.Callable):
             return self._e_callable(type_, expr)
         if expr in A(astlib.DataMember):
+            # TODO: cast.
             return expr, []
         return expr, []
 
@@ -225,13 +216,7 @@ class Inlining(layers.Layer):
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
-        type_ = None
-        if stmt.left in A(astlib.Name):
-            type_ = context.env[stmt.left]["type_"]
-        elif stmt.left in A(astlib.DataMember):
-            type_ = context.env[_for_env(
-                context.env[stmt.left.parent]["type_"]
-                )]["fields"][stmt.left.member]
+        type_ = inference.infer_type(stmt.left)
         expr, stmts = self.e(type_, stmt.right)
         yield from stmts
         yield astlib.Assignment(stmt.left, stmt.op, expr)

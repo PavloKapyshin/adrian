@@ -96,8 +96,9 @@ class _Name(collections.UserString):
 
 class Name(_Name):
 
-    def __init__(self, data):
+    def __init__(self, data, is_user_name=True):
         super().__init__(data)
+        self.is_user_name = is_user_name
 
 
 class Decl(Node):

@@ -16,7 +16,8 @@ class TAC(layers.Layer):
 
     def new_tmp(self, expr):
         name = astlib.Name(
-            "".join([defs.T_STRING, str(self.tmp_count)]))
+            "".join([defs.T_STRING, str(self.tmp_count)]),
+            is_user_name=False)
         type_ = inference.infer_type(expr)
         utils.register_var_or_let(name, astlib.DeclT.let, type_)
         self.inc_tmp_count()
