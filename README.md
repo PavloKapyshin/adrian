@@ -1,4 +1,3 @@
-# Adrian
+**WIP**
 
-Adrian is a programming language that translates into C. Currently
-Adrian is work in progress.
+padrian is an Adrian compiler written in python.

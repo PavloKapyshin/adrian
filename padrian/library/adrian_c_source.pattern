@@ -1,0 +1,39 @@
+struct {type}* {type}__init__({ctype} literal) {{
+    struct {type}* self = malloc(sizeof(struct {type}));
+    self->literal = literal;
+    return self;
+}}
+
+void {type}__deinit__(struct {type}* self) {{
+    free(self);
+}}
+
+struct {type}* {type}__copy__(struct {type}* self) {{
+    struct {type}* new = malloc(sizeof(struct {type}));
+    new->literal = self->literal;
+    return new;
+}}
+
+struct {type}* {type}__add__(struct {type}* self, struct {type}* src) {{
+    struct {type}* new = malloc(sizeof(struct {type}));
+    new->literal = self->literal + src->literal;
+    return new;
+}}
+
+struct {type}* {type}__sub__(struct {type}* self, struct {type}* src) {{
+    struct {type}* new = malloc(sizeof(struct {type}));
+    new->literal = self->literal - src->literal;
+    return new;
+}}
+
+struct {type}* {type}__mul__(struct {type}* self, struct {type}* src) {{
+    struct {type}* new = malloc(sizeof(struct {type}));
+    new->literal = self->literal * src->literal;
+    return new;
+}}
+
+struct {type}* {type}__div__(struct {type}* self, struct {type}* src) {{
+    struct {type}* new = malloc(sizeof(struct {type}));
+    new->literal = self->literal / src->literal;
+    return new;
+}}
