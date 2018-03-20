@@ -140,6 +140,7 @@ class Inlining(layers.Layer):
         method_info = struct_info["methods"][call.name]
         arg_mapping = self.arg_mapping_(method_info["args"], call.args)
         +context.env
+        utils.register_args(method_info["args"])
         self.add_mappings(type_mapping, arg_mapping)
         body = self.b(method_info["body"])
         -context.env
@@ -212,11 +213,20 @@ class Inlining(layers.Layer):
             return self._e_callable(type_, expr)
         return expr, []
 
+    def get_t(self, expr, t=None):
+        if expr in A(astlib.Callable):
+            if expr.callabletype == astlib.CallableT.struct:
+                return t
+            elif expr.callabletype == astlib.CallableT.struct_func:
+                return inference.infer_type(expr.args[0])
+            return inference.infer_type(expr)
+        errors.not_now(errors.LATER)
+
     # Core
     @layers.register(astlib.Callable)
     def callable_stmt(self, stmt):
         if stmt.callabletype == astlib.CallableT.struct_func:
-            expr, stmts = self._e_callable(stmt.parent, stmt)
+            expr, stmts = self._e_callable(self.get_t(stmt), stmt)
             yield from stmts
             if expr:
                 yield expr
@@ -226,7 +236,7 @@ class Inlining(layers.Layer):
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
         type_ = inference.infer_type(stmt.left)
-        expr, stmts = self.e(type_, stmt.right)
+        expr, stmts = self.e(self.get_t(stmt.right, t=type_), stmt.right)
         yield from stmts
         yield astlib.Assignment(stmt.left, stmt.op, expr)
 
@@ -241,7 +251,7 @@ class Inlining(layers.Layer):
             yield stmt
         else:
             utils.register_var_or_let(stmt.name, stmt.decltype, stmt.type_)
-            expr, stmts = self.e(stmt.type_, stmt.expr)
+            expr, stmts = self.e(self.get_t(stmt.expr, t=stmt.type_), stmt.expr)
             yield from stmts
             yield astlib.Decl(stmt.decltype, stmt.name, stmt.type_, expr)
 
@@ -249,6 +259,7 @@ class Inlining(layers.Layer):
     def callable_decl(self, stmt):
         if stmt.decltype == astlib.DeclT.struct_func:
             self.register_func_as_child(stmt)
+            utils.register_args(stmt.args)
         yield stmt
 
     @layers.register(astlib.DataDecl)

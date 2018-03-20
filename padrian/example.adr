@@ -1,14 +1,14 @@
-struct T(a) {
-    field: a
+struct T {
+    field: c#IntFast8
 
-    fun getVar(arg: a): a {
+    fun getVar(arg: c#IntFast8): c#IntFast8 {
         return arg
     }
 
-    fun getField(): a {
+    fun getField(): c#IntFast8 {
         return self.field
     }
 }
 
 let justAVar = T(c#IntFast8(1))
-let f: c#IntFast8 = justAVar.field
+let f: c#IntFast8 = justAVar.getField()
