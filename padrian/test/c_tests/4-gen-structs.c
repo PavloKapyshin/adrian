@@ -9,6 +9,8 @@ struct IntFast8* t0 = IntFast8__init__(1);
 struct T* i0_self = malloc(sizeof(struct T));
 i0_self->field = IntFast8__copy__(t0);
 struct T* justAVar = i0_self;
+struct IntFast8* f = IntFast8__copy__(justAVar->field);
+IntFast8__deinit__(f);
 IntFast8__deinit__(justAVar->field);
 free(justAVar);
 IntFast8__deinit__(t0);

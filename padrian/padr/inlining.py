@@ -210,9 +210,6 @@ class Inlining(layers.Layer):
     def e(self, type_, expr):
         if expr in A(astlib.Callable):
             return self._e_callable(type_, expr)
-        if expr in A(astlib.DataMember):
-            # TODO: cast.
-            return expr, []
         return expr, []
 
     # Core
