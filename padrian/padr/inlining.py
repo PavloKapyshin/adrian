@@ -59,8 +59,9 @@ class _CoreInlining(layers.Layer):
                 return astlib.DataMember(
                     expr.datatype,
                     astlib.Cast(
-                        self.t(inference.infer_type(self.e(expr.parent))),
-                        self.e(expr.parent)), expr.member)
+                        self.e(expr.parent),
+                        self.t(inference.infer_type(self.e(expr.parent)))),
+                    expr.member)
             return astlib.DataMember(
                 expr.datatype, self.e(expr.parent), expr.member)
         return expr

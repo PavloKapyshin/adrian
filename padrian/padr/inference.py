@@ -76,7 +76,7 @@ def apply_(mapping, for_):
         return (found if found else for_)
     elif for_ in A(astlib.ParamedType):
         return astlib.ParamedType(
-            for_.type_, [apply_(mapping, param) for param in for_.params])
+            for_.base, [apply_(mapping, param) for param in for_.params])
     errors.not_implemented("stmt {} is unknown".format(for_), func=apply_)
 
 

@@ -235,10 +235,10 @@ class Return(Node):
 
 class Literal(Node):
 
-    def __init__(self, literaltype, literal):
-        self.literaltype = literaltype
+    def __init__(self, type_, literal):
+        self.type_ = type_
         self.literal = literal
-        self._keys = ("literaltype", "literal")
+        self._keys = ("type_", "literal")
 
 
 class LiteralType(Node):
@@ -250,16 +250,16 @@ class LiteralType(Node):
 
 class Cast(Node):
 
-    def __init__(self, to, expr):
-        self.to = to
+    def __init__(self, expr, to):
         self.expr = expr
-        self._keys = ("to", "expr")
+        self.to = to
+        self._keys = ("expr", "to")
 
 
-class CompilerT(BaseNode):
+class Void(BaseNode):
 
     def __str__(self):
-        return self.string
+        return "Void"
 
     def __hash__(self):
         return hash(self.__str__())
@@ -267,18 +267,13 @@ class CompilerT(BaseNode):
     __repr__ = __str__
 
 
-class Void(CompilerT):
-    string = "Void"
-
-class Object(CompilerT):
-    string = "Object"
-
 class ParamedType(Node):
 
     def __init__(self, type_, params):
         self.type_ = type_
+        self.base = type_
         self.params = params
-        self._keys = ("type_", "params")
+        self._keys = ("base", "params")
 
 
 class Ref(Node):
