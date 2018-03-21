@@ -1,5 +1,3 @@
-import itertools
-
 from .context import context
 from . import astlib
 
@@ -12,84 +10,41 @@ class A:
         return isinstance(other, self.types)
 
 
-def _check_found_info(info, request, node_type_checker):
-    if not info:
-        errors.unknown_name(request)
-    node_type = info["node_type"]
-    if not node_type_checker(node_type):
-        errors.wrong_node_type(request, node_type)
+def _is_node_type(*nodet):
+    def wrapper(name):
+        return context.env[name]["node_type"] in nodet
+    return wrapper
 
-
-def _get_info_maker(node_type_checker):
-    def helper(request):
-        info = context.env[request]
-        _check_found_info(info, request, node_type_checker)
-        return info
-    return helper
-
-
-def _is_of_nodetype_maker(*node_types):
-    def helper(node_type):
-        return node_type in node_types
-    return helper
-
-
-# Low-level checkings
-is_var = _is_of_nodetype_maker(astlib.NodeT.var)
-is_let = _is_of_nodetype_maker(astlib.NodeT.let)
-is_fun = _is_of_nodetype_maker(astlib.NodeT.fun)
-is_protocol = _is_of_nodetype_maker(astlib.NodeT.protocol)
-is_adt = _is_of_nodetype_maker(astlib.NodeT.adt)
-is_struct = _is_of_nodetype_maker(astlib.NodeT.struct)
-
-# High-level checkings
-is_variable = _is_of_nodetype_maker(
-    astlib.NodeT.let, astlib.NodeT.var, astlib.NodeT.arg)
-is_type = _is_of_nodetype_maker(
+is_struct = _is_node_type(astlib.NodeT.struct)
+is_var = _is_node_type(astlib.NodeT.var)
+is_let = _is_node_type(astlib.NodeT.let)
+is_fun = _is_node_type(astlib.NodeT.fun)
+is_protocol = _is_node_type(astlib.NodeT.protocol)
+is_adt = _is_node_type(astlib.NodeT.adt)
+is_type = _is_node_type(
     astlib.NodeT.struct, astlib.NodeT.commont,
     astlib.NodeT.adt, astlib.NodeT.protocol)
-is_real_type = _is_of_nodetype_maker(
-    astlib.NodeT.struct, astlib.NodeT.adt,
-    astlib.NodeT.protocol)
-is_function = _is_of_nodetype_maker(astlib.NodeT.fun)
-
-get_type_info = _get_info_maker(is_type)
-get_variable_info = _get_info_maker(is_variable)
-get_function_info = _get_info_maker(is_function)
-
-def get_parent_info(expr):
-    if expr in A(astlib.Name):
-        return get_variable_info(expr)
-    return get_parent_info(expr.parent)
-
-def get_node_type(request):
-    info = context.env[request]
-    if not info:
-        errors.unknown_name(request)
-    return info["node_type"]
-# TODO:
-#   get_method_info,
-#   get_field_info
-
-
-def partition(pred, iterable):
-    t1, t2 = itertools.tee(iterable)
-    return list(filter(pred, t1)), list(itertools.filterfalse(pred, t2))
-
-
-_is_field = lambda stmt: (
-    stmt in A(astlib.Decl) and stmt.decltype == astlib.DeclT.field)
-
+is_real_type = _is_node_type(
+    astlib.NodeT.struct,
+    astlib.NodeT.adt, astlib.NodeT.protocol)
 
 def split_body(body):
-    return partition(_is_field, body)
+    fields, methods = [], []
+    if body in A(astlib.Empty):
+        return [], []
+    for stmt in body:
+        if (stmt in A(astlib.Decl) and
+                stmt.decltype == astlib.DeclT.field):
+            fields.append(stmt)
+        else:
+            methods.append(stmt)
+    return fields, methods
 
 
 def only_fields(body):
-    return list(filter(_is_field, body))
+    return split_body(body)[0]
 
 
-# TODO:
 def declt_to_nodet(declt):
     nodet = astlib.NodeT.adt
     if declt == astlib.DeclT.struct:

@@ -43,9 +43,6 @@ class LayerMeta(type):
 
 class Layer(metaclass=LayerMeta):
 
-    def __init__(self):
-        pass
-
     def get_registry(self):
         reg = funcreg.TypeRegistry()
         for node_class, func in getattr(

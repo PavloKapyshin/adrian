@@ -1,6 +1,7 @@
 """Translates parser's AST to object-oriented AST."""
 
 import os
+import itertools
 from collections import OrderedDict
 
 from . import astlib, defs, errors
@@ -56,11 +57,14 @@ def translate(node):
     for subnode in node[1:]:
         if isinstance(subnode, list):
             args.extend(translate(subnode))
+        elif subnode is None:
+            args.append([])
         else:
             args.append(subnode)
     result = getattr(astlib, node[0])(*args)
     if result in A(astlib.LinkedListNode, astlib.Args):
-        yield from result.as_list()
+        yield list(itertools.chain.from_iterable(list(result)))
+        #yield list(result)
     elif result in A(astlib.DataMember):
         if result.datatype == astlib.DataT.module:
             add_to_clibs(result)

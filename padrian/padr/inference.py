@@ -1,38 +1,5 @@
-from . import astlib, errors, defs
+from . import astlib, errors, defs, utils
 from .utils import A
-from .context import context
-
-
-def check_found_info(info, request, node_type_checker):
-    if not info:
-        errors.unknown_name(request)
-    node_type = info["node_type"]
-    if not node_type_checker(node_type):
-        errors.wrong_node_type(request, node_type)
-
-
-def _get_info_maker(node_type_checker):
-    def helper(request):
-        info = context.env[request]
-        check_found_info(info, request, node_type_checker)
-        return info
-    return helper
-
-
-def _is_of_nodetype_maker(*node_types):
-    def helper(node_type):
-        return node_type in node_types
-    return helper
-
-
-is_variable = _is_of_nodetype_maker(
-    astlib.NodeT.let, astlib.NodeT.var, astlib.NodeT.arg)
-is_type = _is_of_nodetype_maker(astlib.NodeT.struct)
-is_function = _is_of_nodetype_maker(astlib.NodeT.fun)
-
-get_type_info = _get_info_maker(is_type)
-get_variable_info = _get_info_maker(is_variable)
-get_function_info = _get_info_maker(is_function)
 
 
 def _struct_func_call_from_struct_call(struct_call):
@@ -51,7 +18,7 @@ def make_mapping(params, decl_args, call_args):
 
 
 def _infer_type_from_struct_func_call(struct_func_call):
-    parent_info = get_type_info(struct_func_call.parent)
+    parent_info = utils.get_type_info(struct_func_call.parent)
     methods = parent_info["methods"]
     if struct_func_call.name not in methods:
         errors.no_such_method(struct_func_call.parent, struct_func_call.name)
@@ -62,12 +29,6 @@ def _infer_type_from_struct_func_call(struct_func_call):
     mapping = make_mapping(params, method["args"], struct_func_call.args)
     return astlib.ParamedType(
         method["type_"], [mapping[param] for param in params])
-
-
-def get_parent_info(expr):
-    if expr in A(astlib.Name):
-        return get_variable_info(expr)
-    return get_parent_info(expr.parent)
 
 
 def apply_(mapping, for_):
@@ -81,9 +42,9 @@ def apply_(mapping, for_):
 
 
 def _infer_type_from_data_member(expr):
-    parent_info = get_parent_info(expr.parent)
+    parent_info = utils.get_parent_info(expr.parent)
     parent_type = parent_info["type_"]
-    parent_type_info = get_type_info(parent_type)
+    parent_type_info = utils.get_type_info(parent_type)
     parent_fields = parent_type_info["fields"]
     if expr.member not in parent_fields:
         errors.no_such_field(
@@ -106,10 +67,10 @@ def infer_type(expr):
         elif expr.callabletype == astlib.CallableT.struct_func:
             return _infer_type_from_struct_func_call(expr)
         elif expr.callabletype == astlib.CallableT.fun:
-            return get_function_info(expr.name)["type_"]
+            return utils.get_function_info(expr.name)["type_"]
         return astlib.Empty()
     elif expr in A(astlib.Name):
-        return get_variable_info(expr)["type_"]
+        return utils.get_variable_info(expr)["type_"]
     elif expr in A(astlib.DataMember):
         if expr.datatype == astlib.DataT.struct:
             return _infer_type_from_data_member(expr)
@@ -117,7 +78,7 @@ def infer_type(expr):
 
 
 def _provide_init_args(type_):
-    info = get_type_info(type_)
+    info = utils.get_type_info(type_)
     methods = info["methods"]
     method_info = methods.get(defs.INIT_METHOD)
     if not method_info:

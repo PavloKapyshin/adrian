@@ -183,7 +183,7 @@ def p_struct_decl_1(content):
     """
     content[0] = [
         parser_astlib.DATA_DECL, astlib.DeclT.struct,
-        [parser_astlib.NAME, content[2]], [parser_astlib.EMPTY], content[4]]
+        [parser_astlib.NAME, content[2]], None, content[4]]
 
 
 def p_struct_decl_2(content):
@@ -201,7 +201,7 @@ def p_adt_decl_1(content):
     """
     content[0] = [
         parser_astlib.DATA_DECL, astlib.DeclT.adt,
-        [parser_astlib.NAME, content[2]], [parser_astlib.EMPTY], content[4]]
+        [parser_astlib.NAME, content[2]], None, content[4]]
 
 
 def p_adt_decl_2(content):
@@ -219,7 +219,7 @@ def p_protocol_decl(content):
     """
     content[0] = [
         parser_astlib.DATA_DECL, astlib.DeclT.protocol,
-        [parser_astlib.NAME, content[2]], [parser_astlib.EMPTY], content[4]]
+        [parser_astlib.NAME, content[2]], None, content[4]]
 
 
 def p_params_1(content):
@@ -234,11 +234,11 @@ def p_params_2(content):
     content[0] = [
         parser_astlib.LLNODE,
         astlib.LLT.params,
-        [parser_astlib.NAME, content[1]], [parser_astlib.EMPTY]]
+        [parser_astlib.NAME, content[1]], None]
 
 def p_params_3(content):
     """params : empty"""
-    content[0] = [parser_astlib.EMPTY]
+    content[0] = None
 
 
 def p_field_decl(content):
@@ -271,7 +271,7 @@ def p_fun_body_1(content):
 
 def p_fun_body_2(content):
     """fun_body : empty"""
-    content[0] = [parser_astlib.EMPTY]
+    content[0] = None
 
 
 def p_fun_body_stmt(content):
@@ -294,7 +294,7 @@ def p_struct_body_1(content):
 
 def p_struct_body_2(content):
     """struct_body : empty"""
-    content[0] = [parser_astlib.EMPTY]
+    content[0] = None
 
 
 def p_adt_body_1(content):
@@ -307,13 +307,12 @@ def p_adt_body_1(content):
 def p_adt_body_2(content):
     """adt_body : adt_body_stmt"""
     content[0] = [
-        parser_astlib.LLNODE, astlib.LLT.body,
-        content[1], [parser_astlib.EMPTY]]
+        parser_astlib.LLNODE, astlib.LLT.body, content[1], None]
 
 
 def p_adt_body_3(content):
     """adt_body : empty"""
-    content[0] = [parser_astlib.EMPTY]
+    content[0] = None
 
 
 def p_protocol_body_1(content):
@@ -325,7 +324,7 @@ def p_protocol_body_1(content):
 
 def p_protocol_body_2(content):
     """protocol_body : empty"""
-    content[0] = [parser_astlib.EMPTY]
+    content[0] = None
 
 
 def p_adt_body_stmt(content):
@@ -351,7 +350,7 @@ def p_protocol_body_stmt_3(content):
     content[0] = [
         parser_astlib.CALLABLE_DECL, astlib.DeclT.protocol_func,
         [parser_astlib.EMPTY], [parser_astlib.NAME, content[2]],
-        content[4], content[7], [parser_astlib.EMPTY]]
+        content[4], content[7], None]
 
 
 def p_struct_body_stmt_1(content):
@@ -378,12 +377,12 @@ def p_decl_args_2(content):
     """decl_args : NAME COLON type"""
     content[0] = [
         parser_astlib.ARGS, [parser_astlib.NAME, content[1]],
-        content[3], [parser_astlib.EMPTY]]
+        content[3], None]
 
 
 def p_decl_args_3(content):
     """decl_args : empty"""
-    content[0] = [parser_astlib.EMPTY]
+    content[0] = None
 
 
 def p_type_1(content):
@@ -400,7 +399,7 @@ def p_types_1(content):
     """types : type"""
     content[0] = [
         parser_astlib.LLNODE, astlib.LLT.params,
-        content[1], [parser_astlib.EMPTY]]
+        content[1], None]
 
 
 def p_types_2(content):
@@ -412,7 +411,7 @@ def p_types_2(content):
 
 def p_types_3(content):
     """types : empty"""
-    content[0] = [parser_astlib.EMPTY]
+    content[0] = None
 
 
 def p_arg_list_1(content):
@@ -426,12 +425,12 @@ def p_arg_list_2(content):
     """arg_list : bool_expr"""
     content[0] = [
         parser_astlib.LLNODE, astlib.LLT.call_args,
-        content[1], [parser_astlib.EMPTY]]
+        content[1], None]
 
 
 def p_arg_list_3(content):
     """arg_list : empty"""
-    content[0] = [parser_astlib.EMPTY]
+    content[0] = None
 
 
 def p_module_member_1(content):

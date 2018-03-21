@@ -30,7 +30,7 @@ class Analyzer(layers.Layer):
             return astlib.Ref(args[0])
         if (callabletype not in (
                     astlib.CallableT.cfunc, astlib.CallableT.struct_func)
-                and utils.is_type(callable_.name)):
+                and utils.is_type(utils.get_node_type(callable_.name))):
             callabletype = astlib.CallableT.struct
         return astlib.Callable(
             callabletype, callable_.parent,
@@ -78,15 +78,12 @@ class Analyzer(layers.Layer):
                 return type_
         if type_ in A(astlib.ParamedType):
             params = type_.params
-            if params in A(astlib.Empty):
-                params = []
-            else:
-                params = [self.t(t) for t in params]
+            params = [self.t(t) for t in params]
             return astlib.ParamedType(self.t(type_.type_), params)
         return type_
 
     def a(self, args):
-        if args in A(astlib.Empty) or len(args) == 0:
+        if not args:
             return []
         elif args[0] in A(astlib.Arg, tuple):
             new_args = []
@@ -102,8 +99,6 @@ class Analyzer(layers.Layer):
         return [self.e(arg) for arg in args]
 
     def p(self, params):
-        if params in A(astlib.Empty):
-            return []
         return params
 
     # Subcore funcs.

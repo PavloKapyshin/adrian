@@ -191,7 +191,7 @@ class Inlining(layers.Layer):
 
     def opt_inline(self, parent, name, type_, expr):
         env_parent = _for_env(parent)
-        if not (env_parent in context.env and utils.is_real_type(env_parent)):
+        if not (env_parent in context.env and utils.is_real_type(utils.get_node_type(env_parent))):
             parent = self.type_mapping[parent]
             env_parent = _for_env(parent)
         struct_info = context.env[env_parent]

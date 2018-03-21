@@ -175,9 +175,6 @@ class Empty(BaseNode):
     def __bool__(self):
         return False
 
-    def as_list(self):
-        return []
-
     __repr__ = __str__
 
 
@@ -185,16 +182,18 @@ class LinkedList:
 
     def __init__(self, value, rest=None):
         self.value = value
-        self.rest = rest or Empty()
+        self.rest = rest or None
 
-    def as_list(self):
-        def _gen():
-            current = self
-            rest = current.rest
-            if isinstance(rest, Empty):
-                rest = rest.as_list()
-            yield [current.value] + rest
-        return list(_gen())
+    def __iter__(self):
+        current = self
+        rest = current.rest
+        if current.value is not None:
+            if rest is None:
+                yield [current.value]
+            else:
+                yield [current.value] + rest
+        else:
+            yield from []
 
 
 class LinkedListNode(LinkedList, Node):

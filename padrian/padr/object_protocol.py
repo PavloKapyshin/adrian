@@ -10,9 +10,7 @@ SELF = astlib.Name("self")
 
 def totype(struct_decl):
     params = struct_decl.params
-    if params in A(astlib.Empty):
-        return struct_decl.name
-    if len(params) != 0:
+    if params:
         return astlib.ParamedType(struct_decl.name, params)
     return struct_decl.name
 
@@ -53,11 +51,7 @@ def deinit(struct, name):
 
 def mtostructf(method, struct):
     args = method.args
-    if args in A(astlib.Empty):
-        args = []
     body = method.body
-    if body in A(astlib.Empty):
-        body = []
     return astlib.CallableDecl(
         astlib.DeclT.struct_func, struct.name,
         method.name, args, method.rettype, body)
@@ -65,11 +59,7 @@ def mtostructf(method, struct):
 
 def ptoprotocolf(pfunc, protocol):
     args = pfunc.args
-    if args in A(astlib.Empty):
-        args = []
     body = pfunc.body
-    if body in A(astlib.Empty):
-        body = []
     return astlib.CallableDecl(
         astlib.DeclT.protocol_func, protocol.name,
         pfunc.name, args, pfunc.rettype, body)
@@ -135,11 +125,7 @@ class ObjectProtocol(layers.Layer):
 
     def method(self, method, struct):
         args = method.args
-        if args in A(astlib.Empty):
-            args = []
         body = method.body
-        if body in A(astlib.Empty):
-            body = []
         return astlib.CallableDecl(
             astlib.DeclT.method, astlib.Empty(), method.name,
             [astlib.Arg(SELF, totype(struct))] + args,
@@ -185,5 +171,4 @@ class ObjectProtocol(layers.Layer):
                     ptoprotocolf(pfunc, stmt) for pfunc in pfuncs])
         else:
             yield astlib.DataDecl(
-                stmt.decltype, stmt.name, stmt.params,
-                (stmt.body.as_list() if stmt.body in A(astlib.Empty) else stmt.body))
+                stmt.decltype, stmt.name, stmt.params, stmt.body)
