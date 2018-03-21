@@ -1,6 +1,7 @@
 import collections
 import enum
 
+@enum.unique
 class NodeT(enum.Enum):
     var = 1
     let = 2
@@ -12,12 +13,14 @@ class NodeT(enum.Enum):
     arg = 8
 
 
+@enum.unique
 class DataT(enum.Enum):
     module = 1
     struct = 2
     adt = 3
 
 
+@enum.unique
 class CallableT(enum.Enum):
     struct = 1
     fun = 2
@@ -25,6 +28,7 @@ class CallableT(enum.Enum):
     struct_func = 4
 
 
+@enum.unique
 class LLT(enum.Enum):
     body = 1
     call_args = 2
@@ -36,6 +40,7 @@ class LiteralT(enum.Enum):
     integer = 1
 
 
+@enum.unique
 class DeclT(enum.Enum):
     var = 1
     let = 2

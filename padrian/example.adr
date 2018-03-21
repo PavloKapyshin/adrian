@@ -1,7 +1,6 @@
-struct GenT(t) {
-    field: t
-    fun f(): t {
-        return self.field
-    }
+struct T {
+    data: c#IntFast8
+    length: c#UIntFast64
 }
-var a: c#IntFast8 = GenT(c#IntFast8(1)).f()
+
+var a: T
