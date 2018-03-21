@@ -24,7 +24,7 @@ class Analyzer(layers.Layer):
         callabletype = callable_.callabletype
         if (callable_.name == defs.REF and
                 callabletype == astlib.CallableT.fun):
-            args = self.a(callable_.args)[0]
+            args = self.a(callable_.args)
             if len(args) != 1:
                 errors.wrong_n_args(len(args), expected=1)
             return astlib.Ref(args[0])

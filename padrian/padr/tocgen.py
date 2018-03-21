@@ -44,11 +44,19 @@ class ToCgen(layers.Layer):
 
     # Inner translation.
     def f(self, fields, params):
+        def check(type_):
+            if type_ in A(astlib.Name):
+                return type_ in params
+            return any([check(t) for t in params])
+
+        def gt(type_):
+            if check(type_):
+                return cgen.CTypes.ptr(cgen.CTypes.void)
+            return type_
+
         fs = []
         for field in fields:
-            type_ = field.type_
-            if field.type_ in A(astlib.Name) and field.type_ in params:
-                type_ = cgen.CTypes.ptr(cgen.CTypes.void)
+            type_ = gt(field.type_)
             fs.append(cgen.Decl(field.name, type_=type_, expr=None))
         return fs
 
@@ -88,6 +96,9 @@ class ToCgen(layers.Layer):
             return cgen.Val(
                 literal=expr.literal,
                 type_=cgen.CTypes.int_fast64)
+        if expr in A(astlib.Cast):
+            return cgen.Cast(
+                self.e(expr.expr), self.t(expr.to))
 
     def a(self, args):
         if args and isinstance(args[0], tuple):

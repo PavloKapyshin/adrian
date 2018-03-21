@@ -138,7 +138,7 @@ def register_func_as_child(parent, name, rettype, args):
 def register_args(args):
     for name, type_ in args:
         context.env[name] = {
-            "node_type": astlib.NodeT.let,
+            "node_type": astlib.NodeT.arg,
             "type_": type_
         }
 

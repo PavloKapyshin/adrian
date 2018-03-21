@@ -33,7 +33,7 @@ class ARC(layers.Layer):
     def register_args(self, args):
         for name, type_ in args:
             context.env[name] = {
-                "node_type": astlib.NodeT.let,
+                "node_type": astlib.NodeT.arg,
                 "type_": type_,
                 "initialized": self.provide_initialized_from_type(name, type_)
             }
@@ -94,6 +94,8 @@ class ARC(layers.Layer):
                     not utils.is_type(_for_env(t))):
                 return {}
             t_info = context.env[_for_env(t)]
+            if t_info["node_type"] == astlib.NodeT.commont:
+                return {n: {}}
             fields = t_info["fields"]
             name_inited = {}
             for field_name, field_info in fields.items():
@@ -137,10 +139,24 @@ class ARC(layers.Layer):
         return self.free(astlib.Name(expr))
 
     def addtoflist(self, stmt):
-        if stmt.expr not in A(astlib.Ref):
-            self.flist[stmt.name] = {
-                "type_": stmt.type_
-            }
+        if stmt.expr in A(astlib.Ref):
+            return
+        elif stmt.expr in A(astlib.Callable):
+            if stmt.expr.callabletype == astlib.CallableT.struct_func:
+                type_info = context.env[_for_env(stmt.expr.parent)]
+                if type_info["node_type"] == astlib.NodeT.commont:
+                    return
+                methods = type_info["methods"]
+                if "is_arg_return" in methods[stmt.expr.name]:
+                    if methods[stmt.expr.name]["is_arg_return"]:
+                        return
+            elif stmt.expr.callabletype == astlib.CallableT.fun:
+                if "is_arg_return" in context.env[stmt.expr.name]:
+                    if context.env[stmt.expr.name]["is_arg_return"]:
+                        return
+        self.flist[stmt.name] = {
+            "type_": stmt.type_
+        }
 
     def delfromflist(self, name):
         if name in self.flist:
@@ -157,6 +173,7 @@ class ARC(layers.Layer):
         +self.flist
         self.register_args(stmt.args)
         self.update_b()
+        context.func = stmt.name
         body = self.b(stmt.body)
         if stmt.rettype in A(astlib.Void):
             body += list(self.free_scope())
@@ -173,6 +190,7 @@ class ARC(layers.Layer):
         +self.flist
         self.register_args(stmt.args)
         self.update_b()
+        context.func = (stmt.name, stmt.parent)
         body = self.b(stmt.body)
         if stmt.rettype in A(astlib.Void):
             body += list(self.free_scope())
@@ -181,6 +199,12 @@ class ARC(layers.Layer):
             stmt.args, stmt.rettype, body)
         -context.env
         -self.flist
+
+    def is_arg(self, expr):
+        if expr in A(astlib.Name):
+            return context.env[expr]["node_type"] == astlib.NodeT.arg
+        elif expr in A(astlib.DataMember):
+            return self.is_arg(expr.parent)
 
     # Core funcs.
     @layers.register(astlib.Assignment)
@@ -193,6 +217,12 @@ class ARC(layers.Layer):
     @layers.register(astlib.Return)
     def return_stmt(self, stmt):
         self.remove_return_expr_from_flist(stmt.expr)
+        if self.is_arg(stmt.expr):
+            if isinstance(context.func, tuple):
+                func, struct = context.func
+                context.env[struct]["methods"][func]["is_arg_return"] = True
+            else:
+                context.env[context.func]["is_arg_return"] = True
         yield from self.free_scope()
         yield stmt
 

@@ -81,11 +81,27 @@ def _infer_type_callable(expr):
 
 
 def _infer_type_datamember(expr):
+    def check(result, params):
+        if result in A(astlib.Name):
+            return result in params
+        return any([check(t, params) for t in result.params])
+
+    def replaced(result, params, mapping):
+        if result in A(astlib.Name):
+            if check(result, params):
+                return mapping[result]
+            return result
+        else:
+            if check(result, params):
+                return astlib.ParamedType(
+                    result.type_,
+                    [replaced(t, params, mapping) for t in result.params])
+
     info = context.env[_for_env(infer_type(expr.parent))]
     result = info["fields"][expr.member]["type_"]
     if "mapping" in context.env[expr.parent]:
-        if result in info["params"]:
-            return context.env[expr.parent]["mapping"][result]
+        return replaced(
+            result, info["params"], context.env[expr.parent]["mapping"])
     return result
 
 

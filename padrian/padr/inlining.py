@@ -1,4 +1,4 @@
-from . import astlib, layers, utils, inference, defs, env
+from . import astlib, layers, utils, inference, defs, env, errors
 from .context import context
 from .utils import A
 
@@ -55,6 +55,12 @@ class _CoreInlining(layers.Layer):
         if expr in A(astlib.StructScalar):
             return astlib.StructScalar(self.t(expr.type_))
         if expr in A(astlib.DataMember):
+            if expr.parent in A(astlib.DataMember):
+                return astlib.DataMember(
+                    expr.datatype,
+                    astlib.Cast(
+                        self.t(inference.infer_type(self.e(expr.parent))),
+                        self.e(expr.parent)), expr.member)
             return astlib.DataMember(
                 expr.datatype, self.e(expr.parent), expr.member)
         return expr
@@ -190,7 +196,7 @@ class Inlining(layers.Layer):
         struct_info = context.env[env_parent]
         if self.arg_mapping:
             expr = self.replace_args(expr, parent)
-        if struct_info["params"]:
+        if struct_info and struct_info["params"]:
             result = self.inline(type_, expr)
             context.i_count += 1
             return result
@@ -220,6 +226,12 @@ class Inlining(layers.Layer):
             elif expr.callabletype == astlib.CallableT.struct_func:
                 return inference.infer_type(expr.args[0])
             return inference.infer_type(expr)
+        if expr in A(astlib.Ref):
+            return self.get_t(expr.expr)
+        if expr in A(astlib.Name):
+            return context.env[expr]
+        if expr in A(astlib.DataMember):
+            return self.get_t(expr.parent)
         errors.not_now(errors.LATER)
 
     # Core

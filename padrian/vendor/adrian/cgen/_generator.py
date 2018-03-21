@@ -136,8 +136,6 @@ class NodeGenerator(_layers.Layer):
             return self.sub_name_descr(expr)
         elif isinstance(expr, objects.DeRef):
             return "*{}".format(self.expr(expr.expr))
-        #elif isinstance(expr, objects._Ptr):
-        #    return "*{}".format(self.expr(expr.type_))
         elif isinstance(expr, objects.StructElem):
             if isinstance(expr.struct_name, objects._Ptr):
                 sep = "->"
@@ -153,7 +151,7 @@ class NodeGenerator(_layers.Layer):
         errors.not_implemented("expr is not supported")  # pragma: no cover
 
     def sub_cast(self, cast):
-        return "({})({})".format(self.type_(cast.to), self.expr(cast.expr))
+        return "(({})({}))".format(self.type_(cast.to), self.expr(cast.expr))
 
     @_layers.register(objects.Include)
     def incl(self, include):

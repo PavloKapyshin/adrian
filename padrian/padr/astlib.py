@@ -9,6 +9,7 @@ class NodeT(enum.Enum):
     adt = 5
     protocol = 6
     commont = 7
+    arg = 8
 
 
 class DataT(enum.Enum):
