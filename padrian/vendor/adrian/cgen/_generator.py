@@ -314,7 +314,7 @@ class NodeGenerator(_layers.Layer):
             generated_body.merge(self.generate(stmt))
 
         for include in generated_body.includes:
-            self.add_include_string(Include)
+            self.add_include_string(include)
 
         body = "{\n" + "\n".join(generated_body.rest_code) + "\n}"
         return " ".join([

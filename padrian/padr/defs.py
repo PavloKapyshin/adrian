@@ -40,6 +40,7 @@ COPY_METHOD = "__copy__"
 REF = "ref"
 T_STRING = "t"
 I_STRING = "i"
+F_STRING = "f"
 
 OP_TO_METHOD = {
     "+": "__add__",

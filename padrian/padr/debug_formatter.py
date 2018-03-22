@@ -129,23 +129,9 @@ class DebugFormatter(layers.Layer):
             kwd = "protocol"
         if stmt.decltype == astlib.DeclT.adt:
             kwd = "adt"
-            decl_string = " ".join([
+        yield from self.stmt_with_body(
+            " ".join([
                 kwd,
                 "".join([self.n(stmt.name), "(", self.p(stmt.params), ")"]),
                 "{"
-            ])
-            self.up_ind()
-            body = [
-                " "*self.current_ind_level + self.t(t) + ","
-                for t in stmt.body]
-            self.down_ind()
-            yield "\n".join([decl_string] + body + [
-                " "*self.current_ind_level + "}"
-            ])
-        else:
-            yield from self.stmt_with_body(
-                " ".join([
-                    kwd,
-                    "".join([self.n(stmt.name), "(", self.p(stmt.params), ")"]),
-                    "{"
-                ]), stmt.body)
+            ]), stmt.body)

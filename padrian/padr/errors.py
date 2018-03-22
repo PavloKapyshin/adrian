@@ -1,6 +1,15 @@
 import sys
+import enum
 
 from .context import context
+
+
+@enum.unique
+class Version(enum.Enum):
+    v0m5 = "0.5"
+    v1m0 = "1.0"
+    v1m1 = "1.1"
+
 
 _SYNTAX_ERROR = "syntax error on line {line}"
 _ILLEGAL_CHAR = "illegal character '{char}'"
@@ -19,6 +28,7 @@ _INFER_EXPR = """cannot infer expression from type
 _NOT_IMPLEMENTED = "not implemented (func {func}): {msg}"
 _FATAL_ERROR = "FATAL ERROR: {msg}"
 _KEY_ERROR = "no such name '{key}' in container '{container}', requested '{request}'"
+_LATER = "not available now, will appear in version {version}"
 
 MODULES = "custom_modules_feature"
 ADT = "adt_feature"
@@ -94,6 +104,10 @@ def fatal_error(msg):
 
 def key_error(key, request, container):
     _error(_KEY_ERROR, key=key, request=request, container=container)
+
+
+def later(version):
+    _error(_LATER, version=version.value)
 
 
 def _error(msg, **keywords):

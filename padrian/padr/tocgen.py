@@ -162,8 +162,13 @@ class ToCgen(layers.Layer):
             yield cgen.Struct(self.n(stmt.name), fields)
             for func in funcs:
                 yield from self.callable_decl(func)
+        elif stmt.decltype == astlib.DeclT.adt:
+            fields, other = utils.split_body(stmt.body)
+            if other:
+                errors.later(errors.Version.v1m1)
+            yield cgen.Union(self.n(stmt.name), self.b(fields))
         else:
-            errors.not_now(errors.LATER)
+            errors.later(errors.Version.v0m5)
 
     @layers.register(astlib.AST)
     def main(self, ast_, registry):

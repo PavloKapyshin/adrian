@@ -1,35 +1,6 @@
-struct Some(a) {
-    field: a
-
-    fun getVar(arg: a): a {
-        return arg
-    }
-
-    fun getField(): a {
-        return self.field
-    }
-
-    fun lol(arg: a): a {
-        let b = arg
-        return b
-    }
+struct Blue {}
+struct Red {}
+struct Green {}
+adt Color {
+    Blue, Red, Green
 }
-
-let justAVar = Some(c#IntFast8(1))
-let f: c#IntFast8 = justAVar.field
-let fByMethod: c#IntFast8 = justAVar.getField()
-let same: c#IntFast8 = justAVar.getVar(c#IntFast8(3))
-let l: c#IntFast8 = justAVar.lol(c#IntFast8(1))
-
-
-struct LList(a) {
-    value: Some(a)
-
-    fun getValue(): Some(a) {
-        var variable: Some(a) = Some(self.value.field)
-        return variable
-    }
-}
-let hoping: LList(c#IntFast8) = LList(Some(c#IntFast8(1)))
-let anotherHope: Some(c#IntFast8) = ref(hoping.value)
-let hope: Some(c#IntFast8) = hoping.getValue()

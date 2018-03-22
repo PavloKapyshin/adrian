@@ -15,17 +15,34 @@ class Analyzer(layers.Layer):
                 register_func(stmt.parent, stmt.name, type_, args)
             +context.env
             utils.register_args(args)
+            self.update_b()
             yield astlib.CallableDecl(
                 stmt.decltype, stmt.parent, stmt.name,
                 args, type_, self.b(stmt.body))
             -context.env
         return helper
 
-    def __init__(self):
-        self.b = layers._b(Analyzer)
+    def __init__(self, f_count=None):
+        self.f_count = f_count or 0
         self.func_decl = self._func_decl_maker(utils.register_func)
         self.struct_func_decl = self._func_decl_maker(
             utils.register_func_as_child)
+        self.b = layers._b(Analyzer, f_count=self.f_count)
+
+    def update_b(self):
+        self.b = layers._b(Analyzer, f_count=self.f_count)
+
+    def make_adt_body(self, body):
+        def _provide_name():
+            name = astlib.Name(
+                "".join([defs.F_STRING, str(self.f_count)]),
+                is_user_name=False)
+            self.f_count += 1
+            return name
+        return [
+            astlib.Decl(
+                astlib.DeclT.field, _provide_name(), type_, astlib.Empty)
+            for type_ in body]
 
     def e_callable(self, callable_):
         callabletype = callable_.callabletype
@@ -151,8 +168,10 @@ class Analyzer(layers.Layer):
         +context.env
         context.parent = stmt.name
         utils.register_params(stmt.params)
+        body = stmt.body
         if stmt.decltype == astlib.DeclT.adt:
-            errors.not_now(errors.ADT)
-        body = self.b(stmt.body)
+            body = self.make_adt_body(body)
+        self.update_b()
+        body = self.b(body)
         yield astlib.DataDecl(stmt.decltype, stmt.name, stmt.params, body)
         -context.env
