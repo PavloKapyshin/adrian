@@ -1,32 +1,107 @@
-from . import astlib, layers, utils, inference, defs, env, errors
+from copy import deepcopy
+
+from . import astlib, layers, utils, env, defs, errors, inference
 from .context import context
 from .utils import A
 
 
-def _for_env(type_):
-    if type_ in A(astlib.ParamedType):
-        return type_.type_
-    return type_
+class _Mapping:
+
+    def __init__(self):
+        self._mapping = {}
+
+    def _validate_key(self, key):
+        if key in A(astlib.ParamedType):
+            return self._validate_key(key.base)
+        return str(key)
+
+    def __contains__(self, key):
+        key = self._validate_key(key)
+        return key in self._mapping
+
+    def __getitem__(self, key):
+        initial_key = key
+        key = self._validate_key(key)
+        found = self._mapping.get(key)
+        if not found:
+            errors.key_error(initial_key, request=key, container=_Mapping)
+        return found
+
+    def get(self, key):
+        key = self._validate_key(key)
+        found = self._mapping.get(key)
+        return found
+
+    def __setitem__(self, key, value):
+        key = self._validate_key(key)
+        self._mapping[key] = value
+
+    def __bool__(self):
+        return bool(self._mapping)
+
+    def __str__(self):
+        return str(self._mapping)
+
+
+class Mapping:
+    def __init__(self):
+        self.type_mapping = _Mapping()
+        self.args_mapping = _Mapping()
+
+    def apply_for_type(self, type_):
+        if type_ in A(astlib.Name):
+            found = self.type_mapping.get(type_)
+            return (found if found else type_)
+        elif type_ in A(astlib.ParamedType):
+            return astlib.ParamedType(
+                type_.base, list(map(self.apply_for_type, type_.params)))
+        return type_
+
+    def apply_for_node(self, node):
+        if node in A(astlib.Name):
+            tfound = self.type_mapping.get(node)
+            if tfound:
+                return tfound
+            afound = self.args_mapping.get(node)
+            if afound:
+                return afound
+            return node
+        elif node in A(astlib.DataMember):
+            return astlib.DataMember(
+                node.datatype, self.apply_for_node(node.parent), node.member)
+        elif node in A(astlib.Callable):
+            return astlib.Callable(
+                node.callabletype, self.apply_for_type(node.parent),
+                node.name, self.apply(node.args))
+        return node
+
+    def apply(self, for_):
+        return list(map(self.apply_for_node, for_))
+
+    def fill_type_mapping(self, type_):
+        if type_ in A(astlib.Name, astlib.DataMember):
+            return
+        struct_info = utils.get_type_info(type_)
+        for decl_param, param in zip(struct_info["params"], type_.params):
+            self.type_mapping[decl_param] = param
+
+    def fill_args_mapping(self, decl_args, args):
+        for (arg_name, _), arg_value in zip(decl_args, args):
+            self.args_mapping[arg_name] = arg_value
 
 
 class _CoreInlining(layers.Layer):
 
-    def __init__(self, tmapping=None, amapping=None):
-        self.type_mapping = tmapping
-        self.arg_mapping = amapping
-        self.b = layers._b(
-            _CoreInlining, tmapping=tmapping, amapping=amapping)
+    def __init__(self, mapping=None):
+        self.mapping = mapping or Mapping()
         self.env = env.Env()
 
     def _e_callable(self, stmt):
-        if stmt.callabletype == astlib.CallableT.cfunc:
+        if stmt.callabletype in (
+                astlib.CallableT.cfunc, astlib.CallableT.struct_func):
             return astlib.Callable(
-                stmt.callabletype, stmt.parent, stmt.name,
-                self.a(stmt.args))
-        if stmt.callabletype == astlib.CallableT.struct_func:
-            return astlib.Callable(
-                stmt.callabletype, self.t(stmt.parent), stmt.name,
-                self.a(stmt.args))
+                stmt.callabletype, self.t(stmt.parent),
+                stmt.name, self.a(stmt.args))
         return stmt
 
     def n(self, name):
@@ -38,41 +113,38 @@ class _CoreInlining(layers.Layer):
         return name
 
     def t(self, type_):
-        if type_ in A(astlib.ParamedType):
-            return astlib.ParamedType(
-                type_.type_, [self.t(param) for param in type_.params])
         if type_ in A(astlib.Name):
-            result = self.type_mapping.get(type_)
-            return (result if result else type_)
+            found = self.mapping.type_mapping.get(type_)
+            return (found if found else type_)
+        elif type_ in A(astlib.ParamedType):
+            return astlib.ParamedType(
+                type_.base, list(map(self.t, type_.params)))
         return type_
 
     def e(self, expr):
-        if expr in A(astlib.Callable):
-            return self._e_callable(expr)
         if expr in A(astlib.Name):
-            result = self.arg_mapping.get(expr)
-            return (self.n(result) if result else self.n(expr))
-        if expr in A(astlib.StructScalar):
+            found = self.mapping.args_mapping.get(expr)
+            return (self.n(found) if found else self.n(expr))
+        elif expr in A(astlib.Callable):
+            return self._e_callable(expr)
+        elif expr in A(astlib.StructScalar):
             return astlib.StructScalar(self.t(expr.type_))
-        if expr in A(astlib.DataMember):
+        elif expr in A(astlib.DataMember):
+            parent = self.e(expr.parent)
             if expr.parent in A(astlib.DataMember):
-                return astlib.DataMember(
-                    expr.datatype,
-                    astlib.Cast(
-                        self.e(expr.parent),
-                        self.t(inference.infer_type(self.e(expr.parent)))),
-                    expr.member)
-            return astlib.DataMember(
-                expr.datatype, self.e(expr.parent), expr.member)
+                parent = astlib.Cast(
+                    parent, self.t(inference.infer_type(parent)))
+            return astlib.DataMember(expr.datatype, parent, expr.member)
         return expr
 
     def a(self, args):
-        return [self.e(arg) for arg in args]
+        return list(map(self.e, args))
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
+        right = self.e(stmt.right)
         yield astlib.Assignment(
-            self.e(stmt.left), stmt.op, self.e(stmt.right))
+            self.e(stmt.left), stmt.op, right)
 
     @layers.register(astlib.Return)
     def return_stmt(self, stmt):
@@ -85,28 +157,26 @@ class _CoreInlining(layers.Layer):
     @layers.register(astlib.Decl)
     def decl(self, stmt):
         self.env[stmt.name] = 1
+        expr = self.e(stmt.expr)
         yield astlib.Decl(
-            stmt.decltype, self.n(stmt.name), self.t(stmt.type_),
-            self.e(stmt.expr))
+            stmt.decltype, self.n(stmt.name), self.t(stmt.type_), expr)
 
-    def main(self, stmts, type_mapping, arg_mapping):
-        result = layers.transform_ast(
-            stmts, registry=_CoreInlining(
-                tmapping=type_mapping, amapping=arg_mapping).get_registry())
-        yield from list(result)
+    def main(self, body, mapping):
+        yield from list(layers.transform_ast(
+            body, registry=_CoreInlining(mapping=mapping).get_registry()))
 
 
 class Inlining(layers.Layer):
 
-    def __init__(self, inliner=None, type_mapping=None, arg_mapping=None):
+    def __init__(self, inliner=None, mapping=None):
         self.inliner = inliner or _CoreInlining()
-        self.b = layers._b(Inlining, inliner=self.inliner,
-            type_mapping=type_mapping, arg_mapping=arg_mapping)
-        self.type_mapping = type_mapping or {}
-        self.arg_mapping = arg_mapping or {}
+        self.mapping = mapping or Mapping()
+        self.b = layers._b(
+            Inlining, inliner=self.inliner, mapping=self.mapping)
 
-    # Registration
     def register_func_as_child(self, stmt):
+        """Custom registration of struct_funcs."""
+        # TODO: refactor with utils.registration.
         context.env.update(stmt.parent, {
             "methods": utils.add_dicts(context.env[stmt.parent], {
                 stmt.name : {
@@ -117,145 +187,108 @@ class Inlining(layers.Layer):
             })
         })
 
-    # Inlining
-    def add_mappings(self, type_mapping, arg_mapping):
+    def update_b(self):
         self.b = layers._b(
-            Inlining, inliner=self.inliner, type_mapping=type_mapping,
-            arg_mapping=arg_mapping)
+            Inlining, inliner=self.inliner, mapping=self.mapping)
 
-    def mapping(self, params, type_):
-        i = 0
-        mapping = {}
-        for param in params:
-            mapping[param] = type_.params[i]
-            i += 1
-        return mapping
-
-    def arg_mapping_(self, decl_args, args):
-        i = 0
-        mapping = {}
-        for arg, _ in decl_args:
-            mapping[arg] = args[i]
-            i += 1
-        return mapping
-
-    def inline(self, type_, call):
-        env_parent = _for_env(call.parent)
-        struct_info = context.env[env_parent]
-        type_mapping = self.mapping(
-            struct_info["params"], type_)
-        method_info = struct_info["methods"][call.name]
-        arg_mapping = self.arg_mapping_(method_info["args"], call.args)
+    def inline(self, parent, method_name, args):
+        method_info, struct_info = utils.get_method_and_parent_infos(
+            parent, method_name)
+        method_decl_args = method_info["args"]
+        self.mapping.fill_args_mapping(method_decl_args, args)
         +context.env
-        utils.register_args(method_info["args"])
-        self.add_mappings(type_mapping, arg_mapping)
+        utils.register_args(method_decl_args)
+        self.update_b()
+        # ???????
+        old_mapping = deepcopy(self.mapping)
         body = self.b(method_info["body"])
+        self.mapping = old_mapping
+        self.mapping.args_mapping = _Mapping()
+        self.mapping.fill_args_mapping(method_decl_args, args)
+        # end ???
         -context.env
-        new_body = list(self.inliner.main(body, type_mapping, arg_mapping))
+        inlined_body = list(self.inliner.main(body, self.mapping))
         expr = None
-        if new_body and new_body[-1] in A(astlib.Return):
-            expr = new_body[-1].expr
-            new_body = new_body[:-1]
-        return expr, new_body
+        if inlined_body and inlined_body[-1] in A(astlib.Return):
+            expr = inlined_body[-1].expr
+            inlined_body = inlined_body[:-1]
+        return expr, inlined_body
 
-    # Misc.
-    def replace_type(self, type_):
-        if type_ in A(astlib.Name):
-            if type_ in self.type_mapping:
-                return self.type_mapping[type_]
-        if type_ in A(astlib.ParamedType):
-            return astlib.ParamedType(
-                type_.type_, [self.replace_type(t) for t in type_.params])
-        return type_
-
-    def replace_arg(self, arg):
-        if arg in A(astlib.Name):
-            if arg in self.arg_mapping:
-                return self.arg_mapping[arg]
-        if arg in A(astlib.Callable):
-            parent = self.replace_type(arg.parent)
-            return astlib.Callable(
-                arg.callabletype, parent, arg.name,
-                [self.replace_arg(a) for a in arg.args])
-        if arg in A(astlib.DataMember):
-            return astlib.DataMember(
-                arg.datatype, self.replace_arg(arg.parent), arg.member)
-        return arg
-
-    def replace_args(self, expr, parent):
-        args = []
-        for arg in expr.args:
-            args.append(self.replace_arg(arg))
-        return astlib.Callable(
-            expr.callabletype, parent, expr.name, args)
-
-    def opt_inline(self, parent, name, type_, expr):
-        env_parent = _for_env(parent)
-        if not (env_parent in context.env and utils.is_real_type(utils.get_node_type(env_parent))):
-            parent = self.type_mapping[parent]
-            env_parent = _for_env(parent)
-        struct_info = context.env[env_parent]
-        if self.arg_mapping:
-            expr = self.replace_args(expr, parent)
+    def optional_inlining(self, parent, method_name, args):
+        if (parent not in context.env or
+                not utils.is_real_type(utils.get_node_type(parent))):
+            parent = self.mapping.apply_for_type(parent)
+        struct_info = utils.raw_get_type_info(parent)
+        if self.mapping.args_mapping:
+            args = self.mapping.apply(args)
         if struct_info and struct_info["params"]:
-            result = self.inline(type_, expr)
+            result = self.inline(parent, method_name, args)
             context.i_count += 1
-            return result
-        return expr, []
+            return True, result[0], result[1]
+        return False, None, []
 
-    def _e_callable(self, type_, expr):
+    def _e_callable(self, expr):
         if expr.callabletype == astlib.CallableT.struct:
-            return self.opt_inline(
-                expr.name, defs.INIT_METHOD, type_,
-                astlib.Callable(
-                    astlib.CallableT.struct_func, expr.name, defs.INIT_METHOD,
-                    expr.args))
-        if expr.callabletype == astlib.CallableT.struct_func:
-            return self.opt_inline(expr.parent, expr.name, type_, expr)
+            is_inlined, expr_, stmts = self.optional_inlining(
+                expr.name, defs.INIT_METHOD, expr.args)
+            if is_inlined:
+                return expr_, stmts
+        elif expr.callabletype == astlib.CallableT.struct_func:
+            is_inlined, expr_, stmts = self.optional_inlining(
+                expr.parent, expr.name, expr.args)
+            if is_inlined:
+                return expr_, stmts
         return expr, []
 
-    # Inner translation
-    def e(self, type_, expr):
+    def e(self, expr):
         if expr in A(astlib.Callable):
-            return self._e_callable(type_, expr)
+            return self._e_callable(expr)
         return expr, []
 
-    def get_t(self, expr, t=None):
-        if expr in A(astlib.Callable):
-            if expr.callabletype == astlib.CallableT.struct:
-                return t
-            elif expr.callabletype == astlib.CallableT.struct_func:
+    def get_the_most_high_level_type(self, expr):
+        if expr in A(astlib.Name):
+            return utils.get_variable_info(expr)["type_"]
+        elif expr in A(astlib.DataMember):
+            return self.get_the_most_high_level_type(expr.parent)
+        elif expr in A(astlib.Ref):
+            return self.get_the_most_high_level_type(expr.expr)
+        elif expr in A(astlib.Callable):
+            if expr.callabletype == astlib.CallableT.struct_func:
+                if not expr.args:
+                    errors.fatal_error("self is undefined")
                 return inference.infer_type(expr.args[0])
             return inference.infer_type(expr)
-        if expr in A(astlib.Ref):
-            return self.get_t(expr.expr)
-        if expr in A(astlib.Name):
-            return context.env[expr]
-        if expr in A(astlib.DataMember):
-            return self.get_t(expr.parent)
-        errors.not_now(errors.LATER)
+        errors.not_implemented(
+            "stmt {} is unknown".format(expr),
+            func=self.get_the_most_high_level_type)
 
-    # Core
     @layers.register(astlib.Callable)
     def callable_stmt(self, stmt):
         if stmt.callabletype == astlib.CallableT.struct_func:
-            expr, stmts = self._e_callable(self.get_t(stmt), stmt)
+            self.mapping.fill_type_mapping(
+                self.get_the_most_high_level_type(stmt))
+            new_stmt, stmts = self._e_callable(stmt)
             yield from stmts
-            if expr:
-                yield expr
+            if new_stmt:
+                yield new_stmt
         else:
             yield stmt
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
-        type_ = inference.infer_type(stmt.left)
-        expr, stmts = self.e(self.get_t(stmt.right, t=type_), stmt.right)
+        self.mapping.fill_type_mapping(
+            self.get_the_most_high_level_type(stmt.left))
+        expr, stmts = self.e(stmt.right)
         yield from stmts
         yield astlib.Assignment(stmt.left, stmt.op, expr)
 
     @layers.register(astlib.Return)
     def return_stmt(self, stmt):
-        yield stmt
+        self.mapping.fill_type_mapping(
+            self.get_the_most_high_level_type(stmt.expr))
+        expr, stmts = self.e(stmt.expr)
+        yield from stmts
+        yield astlib.Return(expr)
 
     @layers.register(astlib.Decl)
     def decl(self, stmt):
@@ -264,7 +297,8 @@ class Inlining(layers.Layer):
             yield stmt
         else:
             utils.register_var_or_let(stmt.name, stmt.decltype, stmt.type_)
-            expr, stmts = self.e(self.get_t(stmt.expr, t=stmt.type_), stmt.expr)
+            self.mapping.fill_type_mapping(stmt.type_)
+            expr, stmts = self.e(stmt.expr)
             yield from stmts
             yield astlib.Decl(stmt.decltype, stmt.name, stmt.type_, expr)
 
@@ -272,12 +306,17 @@ class Inlining(layers.Layer):
     def callable_decl(self, stmt):
         if stmt.decltype == astlib.DeclT.struct_func:
             self.register_func_as_child(stmt)
-            utils.register_args(stmt.args)
+        else:
+            utils.register_func(stmt.name, stmt.rettype, stmt.args)
+        +context.env
+        utils.register_args(stmt.args)
+        -context.env
         yield stmt
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
-        utils.register_data_decl(stmt.name, stmt.decltype, stmt.params)
+        utils.register_data_decl(
+            stmt.name, stmt.decltype, stmt.params)
         +context.env
         context.parent = stmt.name
         utils.register_params(stmt.params)

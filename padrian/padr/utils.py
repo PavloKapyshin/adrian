@@ -1,7 +1,7 @@
 import itertools
 
 from .context import context
-from . import astlib
+from . import astlib, errors
 
 
 class A:
@@ -56,6 +56,9 @@ is_function = _is_of_nodetype_maker(astlib.NodeT.fun)
 get_type_info = _get_info_maker(is_type)
 get_variable_info = _get_info_maker(is_variable)
 get_function_info = _get_info_maker(is_function)
+
+def raw_get_type_info(request):
+    return context.env[request]
 
 def get_parent_info(expr):
     if expr in A(astlib.Name):

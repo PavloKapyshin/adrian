@@ -17,6 +17,8 @@ _INFER_TYPE = """cannot infer type from expression
 _INFER_EXPR = """cannot infer expression from type
 (ast equivalent is {ast_node})"""
 _NOT_IMPLEMENTED = "not implemented (func {func}): {msg}"
+_FATAL_ERROR = "FATAL ERROR: {msg}"
+_KEY_ERROR = "no such name '{key}' in container '{container}', requested '{request}'"
 
 MODULES = "custom_modules_feature"
 ADT = "adt_feature"
@@ -84,6 +86,14 @@ def cannot_find_file(file_name):
 
 def unknown_stmt(stmt):
     _error(_UNKNOWN_STMT, stmt=stmt)
+
+
+def fatal_error(msg):
+    _error(_FATAL_ERROR, msg=msg)
+
+
+def key_error(key, request, container):
+    _error(_KEY_ERROR, key=key, request=request, container=container)
 
 
 def _error(msg, **keywords):
