@@ -7,8 +7,7 @@ _ILLEGAL_CHAR = "illegal character '{char}'"
 _NOT_NOW = "try that out in later versions, key = {key}"
 _WRONG_N_ARGS = "wrong number of arguments, got {got}, expected {expected}"
 _CANNOT_FIND_FILE = "cannot find file {file}"
-_UNKNOWN_STMT = "unknown statement"
-
+_UNKNOWN_STMT = "unknown statement {stmt}"
 _NO_SUCH_FIELD = "name '{parent}' of type '{parent_type}' have no field '{field}'"
 _NO_SUCH_METHOD = "struct '{struct}' have no method '{method}'"
 _UNKNOWN_NAME = "unknown name {name}"
@@ -19,12 +18,11 @@ _INFER_EXPR = """cannot infer expression from type
 (ast equivalent is {ast_node})"""
 _NOT_IMPLEMENTED = "not implemented (func {func}): {msg}"
 
-MODULE = "unsupported_module"
+MODULES = "custom_modules_feature"
+ADT = "adt_feature"
 CUSTOM_OBJMETHOD = "custom_object_method"
 TYPE_INFERENCE = "type_inference"
 EXPR_INFERENCE = "expr_inference"
-BAD = "bad things happened"
-STRANGE_STMT = "strange statement"
 LATER = "just wait.."
 
 
@@ -76,7 +74,7 @@ def not_now(key):
     _error(_NOT_NOW, key=key)
 
 
-def wrong_n_args(got, expected):
+def wrong_number_of_args(got, expected):
     _error(_WRONG_N_ARGS, got=got, expected=expected)
 
 
@@ -84,8 +82,8 @@ def cannot_find_file(file_name):
     _error(_CANNOT_FIND_FILE, file=file_name)
 
 
-def unknown_stmt():
-    _error(_UNKNOWN_STMT)
+def unknown_stmt(stmt):
+    _error(_UNKNOWN_STMT, stmt=stmt)
 
 
 def _error(msg, **keywords):

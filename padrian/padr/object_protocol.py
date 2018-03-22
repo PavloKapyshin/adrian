@@ -83,7 +83,7 @@ class ObjectProtocol(layers.Layer):
         return astlib.CallableDecl(
             astlib.DeclT.method, astlib.Empty(),
             astlib.Name(defs.DEINIT_METHOD),
-            [astlib.Arg(SELF, totype(stmt))],
+            [(SELF, totype(stmt))],
             astlib.Name("Void"), body)
 
     def default_copy_method(self, stmt):
@@ -102,7 +102,7 @@ class ObjectProtocol(layers.Layer):
         return astlib.CallableDecl(
             astlib.DeclT.method, astlib.Empty(),
             astlib.Name(defs.COPY_METHOD),
-            [astlib.Arg(SELF, totype(stmt))],
+            [(SELF, totype(stmt))],
             totype(stmt), body)
 
     def default_init_method(self, stmt):
@@ -111,7 +111,7 @@ class ObjectProtocol(layers.Layer):
         return_self = astlib.Return(SELF)
         field_inits, args = [], []
         for field_decl in only_fields(stmt.body):
-            args.append(astlib.Arg(field_decl.name, field_decl.type_))
+            args.append((field_decl.name, field_decl.type_))
             field_inits.append(
                 astlib.Assignment(
                     self_field(field_decl.name), "=",
@@ -128,7 +128,7 @@ class ObjectProtocol(layers.Layer):
         body = method.body
         return astlib.CallableDecl(
             astlib.DeclT.method, astlib.Empty(), method.name,
-            [astlib.Arg(SELF, totype(struct))] + args,
+            [(SELF, totype(struct))] + args,
             method.rettype, body)
 
     @layers.register(astlib.DataDecl)
