@@ -67,9 +67,30 @@ def get_node_type(request):
     if not info:
         errors.unknown_name(request)
     return info["node_type"]
-# TODO:
-#   get_method_info,
-#   get_field_info
+
+def get_method_and_parent_infos(parent, method_name):
+    parent_info = get_type_info(parent)
+    methods = parent_info["methods"]
+    method_info = methods.get(method_name)
+    if not method_info:
+        errors.no_such_method(parent, method_name)
+    return method_info, parent_info
+
+def get_method_info(parent, method_name):
+    return get_method_and_parent_infos(parent, method_name)[0]
+
+def get_field_info(parent, field_name):
+    if parent in A(astlib.Name):
+        parent_info = get_parent_info(parent)
+    else:
+        parent_info = get_field_info(parent.parent, parent.member)
+    parent_type = parent_info["type_"]
+    parent_type_info = get_type_info(parent_type)
+    fields = parent_type_info["fields"]
+    field_info = fields.get(field_name)
+    if not field_info:
+        errors.no_such_field(parent, parent_type, field_name)
+    return field_info
 
 
 def partition(pred, iterable):
@@ -77,16 +98,16 @@ def partition(pred, iterable):
     return list(filter(pred, t1)), list(itertools.filterfalse(pred, t2))
 
 
-_is_field = lambda stmt: (
+_is_field_stmt = lambda stmt: (
     stmt in A(astlib.Decl) and stmt.decltype == astlib.DeclT.field)
 
 
 def split_body(body):
-    return partition(_is_field, body)
+    return partition(_is_field_stmt, body)
 
 
 def only_fields(body):
-    return list(filter(_is_field, body))
+    return list(filter(_is_field_stmt, body))
 
 
 # TODO:

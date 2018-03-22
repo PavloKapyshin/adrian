@@ -34,7 +34,7 @@ class CompileTimeError(Exception):
         self.message = message
 
 
-def no_such_field(*, parent, parent_type, field):
+def no_such_field(parent, parent_type, field):
     _error(
         _NO_SUCH_FIELD, parent=parent,
         parent_type=parent_type, field=field)

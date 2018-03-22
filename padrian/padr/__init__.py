@@ -47,9 +47,6 @@ def compile_(inp):
                     current_ast, registry=layer.get_registry()))
             clibs_includes = context.context.clibs_includes
             i_count = context.context.i_count
-    # generator = cgen.Generator()
-    # generator.add_ast(current_ast)
-    # return "\n".join(generator.generate())
     return current_ast
 
 

@@ -18,17 +18,15 @@ def make_mapping(params, decl_args, call_args):
 
 
 def _infer_type_from_struct_func_call(struct_func_call):
-    parent_info = utils.get_type_info(struct_func_call.parent)
-    methods = parent_info["methods"]
-    if struct_func_call.name not in methods:
-        errors.no_such_method(struct_func_call.parent, struct_func_call.name)
-    method = methods[struct_func_call.name]
+    method_info, parent_info = utils.get_method_and_parent_infos(
+        struct_func_call.parent, struct_func_call.name)
     params = parent_info["params"]
     if not params:
-        return method["type_"]
-    mapping = make_mapping(params, method["args"], struct_func_call.args)
+        return method_info["type_"]
+    mapping = make_mapping(
+        params, method_info["args"], struct_func_call.args)
     return astlib.ParamedType(
-        method["type_"], [mapping[param] for param in params])
+        method_info["type_"], [mapping[param] for param in params])
 
 
 def apply_(mapping, for_):
@@ -43,18 +41,11 @@ def apply_(mapping, for_):
 
 def _infer_type_from_data_member(expr):
     parent_info = utils.get_parent_info(expr.parent)
-    parent_type = parent_info["type_"]
-    parent_type_info = utils.get_type_info(parent_type)
-    parent_fields = parent_type_info["fields"]
-    if expr.member not in parent_fields:
-        errors.no_such_field(
-            parent=expr.parent, parent_type=parent_type,
-            field=expr.member)
-    member_info = parent_fields[expr.member]
+    field_info = utils.get_field_info(expr.parent, expr.member)
     mapping = parent_info.get("mapping")
     if mapping:
-        return apply_(mapping, for_=member_info["type_"])
-    return member_info["type_"]
+        return apply_(mapping, for_=field_info["type_"])
+    return field_info["type_"]
 
 
 def infer_type(expr):
@@ -78,11 +69,7 @@ def infer_type(expr):
 
 
 def _provide_init_args(type_):
-    info = utils.get_type_info(type_)
-    methods = info["methods"]
-    method_info = methods.get(defs.INIT_METHOD)
-    if not method_info:
-        errors.no_such_method(type_, defs.INIT_METHOD)
+    method_info = utils.get_method_info(type_, defs.INIT_METHOD)
     return [infer_expr(arg_type) for _, arg_type in method_info["args"]]
 
 
