@@ -2,7 +2,6 @@
 
 import os
 import itertools
-from collections import OrderedDict
 
 from . import astlib, defs, errors
 from .context import context
@@ -49,7 +48,7 @@ def add_to_clibs(module_elem):
             add_found_module("stdint", type_="c")
             add_found_module(defs.CMODULE, file_name=defs.CMODULE_FILE)
         else:
-            errors.not_now(errors.MODULE)
+            errors.not_now(errors.MODULES)
 
 
 def translate(node):
@@ -64,12 +63,10 @@ def translate(node):
     result = getattr(astlib, node[0])(*args)
     if result in A(astlib.LinkedListNode, astlib.Args):
         yield list(itertools.chain.from_iterable(list(result)))
-        #yield list(result)
-    elif result in A(astlib.DataMember):
-        if result.datatype == astlib.DataT.module:
-            add_to_clibs(result)
-        yield result
     else:
+        if result in A(astlib.DataMember):
+            if result.datatype == astlib.DataT.module:
+                add_to_clibs(result)
         yield result
 
 

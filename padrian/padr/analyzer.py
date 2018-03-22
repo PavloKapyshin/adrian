@@ -5,8 +5,27 @@ from .utils import A
 
 class Analyzer(layers.Layer):
 
+    def _func_decl_maker(self, register_func):
+        def helper(stmt):
+            type_ = self.t(stmt.rettype)
+            args = self.a(stmt.args)
+            if stmt.parent in A(astlib.Empty):
+                register_func(stmt.name, type_, args)
+            else:
+                register_func(stmt.parent, stmt.name, type_, args)
+            +context.env
+            utils.register_args(args)
+            yield astlib.CallableDecl(
+                stmt.decltype, stmt.parent, stmt.name,
+                args, type_, self.b(stmt.body))
+            -context.env
+        return helper
+
     def __init__(self):
         self.b = layers._b(Analyzer)
+        self.func_decl = self._func_decl_maker(utils.register_func)
+        self.struct_func_decl = self._func_decl_maker(
+            utils.register_func_as_child)
 
     def e_callable(self, callable_):
         callabletype = callable_.callabletype
@@ -35,7 +54,6 @@ class Analyzer(layers.Layer):
             expr.datatype, self.e(expr.parent),
             expr.member)
 
-    # Inner ast nodes translation.
     def e(self, expr):
         if expr in A(astlib.Callable):
             return self.e_callable(expr)
@@ -79,7 +97,6 @@ class Analyzer(layers.Layer):
             return type_, inference.infer_expr(type_)
         return self.t(type_), self.e(expr)
 
-    # Subcore funcs.
     def field_decl(self, stmt):
         type_ = self.t(stmt.type_)
         utils.register_field(stmt.name, type_)
@@ -90,29 +107,6 @@ class Analyzer(layers.Layer):
         utils.register_var_or_let(stmt.name, stmt.decltype, type_)
         yield astlib.Decl(stmt.decltype, stmt.name, type_, expr)
 
-    def struct_func_decl(self, stmt):
-        type_ = self.t(stmt.rettype)
-        args = self.a(stmt.args)
-        utils.register_func_as_child(stmt.parent, stmt.name, type_, args)
-        +context.env
-        utils.register_args(args)
-        yield astlib.CallableDecl(
-            stmt.decltype, stmt.parent, stmt.name,
-            args, type_, self.b(stmt.body))
-        -context.env
-
-    def func_decl(self, stmt):
-        type_ = self.t(stmt.rettype)
-        args = self.a(stmt.args)
-        utils.register_func(stmt.name, type_, args)
-        +context.env
-        utils.register_args(args)
-        yield astlib.CallableDecl(
-            stmt.decltype, stmt.parent, stmt.name,
-            args, type_, self.b(stmt.body))
-        -context.env
-
-    # Core funcs.
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
         yield astlib.Assignment(
@@ -159,7 +153,6 @@ class Analyzer(layers.Layer):
         utils.register_params(stmt.params)
         if stmt.decltype == astlib.DeclT.adt:
             errors.not_now(errors.ADT)
-        else:
-            body = self.b(stmt.body)
+        body = self.b(stmt.body)
         yield astlib.DataDecl(stmt.decltype, stmt.name, stmt.params, body)
         -context.env
