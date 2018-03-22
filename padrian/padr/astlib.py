@@ -18,6 +18,7 @@ class DataT(enum.Enum):
     module = 1
     struct = 2
     adt = 3
+    union = 4
 
 
 @enum.unique

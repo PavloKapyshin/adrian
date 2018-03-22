@@ -75,7 +75,8 @@ class Copying(layers.Layer):
             yield stmt
         else:
             expr = self.e(stmt.expr)
-            utils.register_var_or_let(stmt.name, stmt.decltype, stmt.type_)
+            utils.register_var_or_let(
+                stmt.name, stmt.decltype, stmt.type_, expr)
             yield astlib.Decl(stmt.decltype, stmt.name, stmt.type_, expr)
 
     @layers.register(astlib.CallableDecl)

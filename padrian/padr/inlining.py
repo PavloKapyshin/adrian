@@ -296,9 +296,10 @@ class Inlining(layers.Layer):
             utils.register_field(stmt.name, stmt.type_)
             yield stmt
         else:
-            utils.register_var_or_let(stmt.name, stmt.decltype, stmt.type_)
             self.mapping.fill_type_mapping(stmt.type_)
             expr, stmts = self.e(stmt.expr)
+            utils.register_var_or_let(
+                stmt.name, stmt.decltype, stmt.type_, expr)
             yield from stmts
             yield astlib.Decl(stmt.decltype, stmt.name, stmt.type_, expr)
 

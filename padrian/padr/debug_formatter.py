@@ -52,6 +52,8 @@ class DebugFormatter(layers.Layer):
         elif expr in A(astlib.DataMember):
             if expr.datatype == astlib.DataT.struct:
                 return "{}.{}".format(self.e(expr.parent), self.n(expr.member))
+            elif expr.datatype == astlib.DataT.adt:
+                return "{}.{}".format(self.e(expr.parent), self.e(expr.member))
             return "{}#{}".format(self.e(expr.parent), self.n(expr.member))
         elif expr in A(astlib.StructScalar):
             return "!*{}".format(self.t(expr.type_))

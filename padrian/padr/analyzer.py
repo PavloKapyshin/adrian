@@ -61,6 +61,10 @@ class Analyzer(layers.Layer):
             callable_.name, self.a(callable_.args))
 
     def e_struct_member(self, expr):
+        if (expr.parent in A(astlib.Name) and
+                utils.is_adt(utils.get_node_type(expr.parent))):
+            return astlib.DataMember(
+                astlib.DataT.adt, self.e(expr.parent), self.e(expr.member))
         if expr.member in A(astlib.Callable):
             call = expr.member
             parent = self.e(expr.parent)
@@ -121,7 +125,7 @@ class Analyzer(layers.Layer):
 
     def var_let_decl(self, stmt):
         type_, expr = self.te(stmt.type_, stmt.expr)
-        utils.register_var_or_let(stmt.name, stmt.decltype, type_)
+        utils.register_var_or_let(stmt.name, stmt.decltype, type_, expr)
         yield astlib.Decl(stmt.decltype, stmt.name, type_, expr)
 
     @layers.register(astlib.Assignment)

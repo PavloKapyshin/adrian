@@ -1,6 +1,7 @@
 import itertools
 
-from .context import context
+from .inference import infer_type
+from .context import context as c
 from . import astlib, errors
 
 
@@ -12,6 +13,7 @@ class A:
         return isinstance(other, self.types)
 
 
+# TODO: completely move to context.
 def _check_found_info(info, request, node_type_checker):
     if not info:
         errors.unknown_name(request)
@@ -22,7 +24,7 @@ def _check_found_info(info, request, node_type_checker):
 
 def _get_info_maker(node_type_checker):
     def helper(request):
-        info = context.env[request]
+        info = c.env[request]
         _check_found_info(info, request, node_type_checker)
         return info
     return helper
@@ -54,11 +56,12 @@ is_real_type = _is_of_nodetype_maker(
 is_function = _is_of_nodetype_maker(astlib.NodeT.fun)
 
 get_type_info = _get_info_maker(is_type)
+get_adt_info = _get_info_maker(is_adt)
 get_variable_info = _get_info_maker(is_variable)
 get_function_info = _get_info_maker(is_function)
 
 def raw_get_type_info(request):
-    return context.env[request]
+    return c.env[request]
 
 def get_parent_info(expr):
     if expr in A(astlib.Name):
@@ -66,7 +69,7 @@ def get_parent_info(expr):
     return get_parent_info(expr.parent)
 
 def get_node_type(request):
-    info = context.env[request]
+    info = c.env[request]
     if not info:
         errors.unknown_name(request)
     return info["node_type"]
@@ -95,6 +98,7 @@ def get_field_info(parent, field_name):
         errors.no_such_field(parent, parent_type, field_name)
     return field_info
 
+# end TODO
 
 def partition(pred, iterable):
     t1, t2 = itertools.tee(iterable)
@@ -144,7 +148,7 @@ def any_common(l1, l2):
 def get_mapping(type_):
     if type_ in A(astlib.ParamedType):
         mapping = {}
-        struct_info = context.env[type_.type_]
+        struct_info = c.env[type_.type_]
         params = struct_info["params"]
         i = 0
         for param in params:
@@ -155,18 +159,32 @@ def get_mapping(type_):
     return {}
 
 
-def register_var_or_let(name, decltype, type_):
-    context.env[name] = {
+def get_low_level_type(type_, expr):
+    if expr in A(astlib.DataMember):
+        if expr.datatype == astlib.DataT.adt:
+            return infer_type(expr.member)
+    errors.not_implemented("stmt {} is not supported".format(expr), func=get_low_level_type)
+
+
+def register_var_or_let(name, decltype, type_, expr):
+    low_level_type = None
+    info = c.env[type_]
+    if info:
+        type_node_type = info["node_type"]
+        if type_node_type == astlib.NodeT.adt:
+            low_level_type = get_low_level_type(type_, expr)
+    c.env[name] = {
         "node_type": declt_to_nodet(decltype),
         "type_": type_,
-        "mapping": get_mapping(type_)
+        "mapping": get_mapping(type_),
+        "low_level_type": low_level_type
     }
 
 
 def register_field(name, type_):
-    context.env.update(context.parent, {
+    c.env.update(c.parent, {
         "fields": add_dicts(
-            context.env[context.parent]["fields"], {
+            c.env[c.parent]["fields"], {
             name: {
                 "type_": type_
             }
@@ -175,7 +193,7 @@ def register_field(name, type_):
 
 
 def register_data_decl(name, decltype, params):
-    context.env[name] = {
+    c.env[name] = {
         "node_type": declt_to_nodet(decltype),
         "params": params,
         "methods": {},
@@ -184,7 +202,7 @@ def register_data_decl(name, decltype, params):
 
 
 def register_func(name, rettype, args):
-    context.env[name] = {
+    c.env[name] = {
         "node_type": astlib.NodeT.fun,
         "type_": rettype,
         "args": args
@@ -192,9 +210,9 @@ def register_func(name, rettype, args):
 
 
 def register_func_as_child(parent, name, rettype, args):
-    context.env.update(parent, {
+    c.env.update(parent, {
         "methods": add_dicts(
-            context.env[parent]["methods"], {
+            c.env[parent]["methods"], {
             name: {
                 "type_": rettype,
                 "args": args
@@ -205,7 +223,7 @@ def register_func_as_child(parent, name, rettype, args):
 
 def register_args(args):
     for name, type_ in args:
-        context.env[name] = {
+        c.env[name] = {
             "node_type": astlib.NodeT.arg,
             "type_": type_
         }
@@ -213,6 +231,6 @@ def register_args(args):
 
 def register_params(params):
     for param in params:
-        context.env[param] = {
+        c.env[param] = {
             "node_type": astlib.NodeT.commont
         }

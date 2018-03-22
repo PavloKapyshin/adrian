@@ -22,9 +22,11 @@ _NO_SUCH_METHOD = "struct '{struct}' have no method '{method}'"
 _UNKNOWN_NAME = "unknown name {name}"
 _WRONG_NODE_TYPE = "found name {name}, but its nodetype {node_type} is not acceptable"
 _INFER_TYPE = """cannot infer type from expression
-(ast equivalent is {ast_node})"""
+         (ast equivalent is {ast_node})
+hotfix: add type annotation"""
 _INFER_EXPR = """cannot infer expression from type
-(ast equivalent is {ast_node})"""
+         (ast equivalent is {ast_node})
+hotfix: add expression"""
 _NOT_IMPLEMENTED = "not implemented (func {func}): {msg}"
 _FATAL_ERROR = "FATAL ERROR: {msg}"
 _KEY_ERROR = "no such name '{key}' in container '{container}', requested '{request}'"

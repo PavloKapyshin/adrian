@@ -19,7 +19,7 @@ class TAC(layers.Layer):
             "".join([defs.T_STRING, str(self.tmp_count)]),
             is_user_name=False)
         type_ = inference.infer_type(expr)
-        utils.register_var_or_let(name, astlib.DeclT.let, type_)
+        utils.register_var_or_let(name, astlib.DeclT.let, type_, expr)
         self.inc_tmp_count()
         return name, [astlib.Decl(astlib.DeclT.let, name, type_, expr)]
 
@@ -117,7 +117,8 @@ class TAC(layers.Layer):
             yield stmt
         else:
             expr, decls = self.e(stmt.expr)
-            utils.register_var_or_let(stmt.name, stmt.decltype, stmt.type_)
+            utils.register_var_or_let(
+                stmt.name, stmt.decltype, stmt.type_, expr)
             yield from decls
             yield astlib.Decl(stmt.decltype, stmt.name, stmt.type_, expr)
 
