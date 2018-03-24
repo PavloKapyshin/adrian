@@ -176,16 +176,11 @@ class Inlining(layers.Layer):
 
     def register_func_as_child(self, stmt):
         """Custom registration of struct_funcs."""
-        # TODO: refactor with utils.registration.
-        context.env.update(stmt.parent, {
-            "methods": utils.add_dicts(context.env[stmt.parent], {
-                stmt.name : {
-                    "type_": stmt.rettype,
-                    "args": stmt.args,
-                    "body": stmt.body
-                }
-            })
-        })
+        context.env[stmt.parent]["methods"][stmt.name] = {
+            "type_": stmt.rettype,
+            "args": stmt.args,
+            "body": stmt.body
+        }
 
     def update_b(self):
         self.b = layers._b(
@@ -294,13 +289,12 @@ class Inlining(layers.Layer):
     @layers.register(astlib.Decl)
     def decl(self, stmt):
         if stmt.decltype == astlib.DeclT.field:
-            utils.register_field(stmt.name, stmt.type_)
+            utils.register(stmt)
             yield stmt
         else:
             self.mapping.fill_type_mapping(stmt.type_)
             expr, stmts = self.e(stmt.expr)
-            utils.register_var_or_let(
-                stmt.name, stmt.decltype, stmt.type_, expr)
+            utils.register(stmt, expr=expr)
             yield from stmts
             yield astlib.Decl(stmt.decltype, stmt.name, stmt.type_, expr)
 
@@ -309,7 +303,7 @@ class Inlining(layers.Layer):
         if stmt.decltype == astlib.DeclT.struct_func:
             self.register_func_as_child(stmt)
         else:
-            utils.register_func(stmt.name, stmt.rettype, stmt.args)
+            utils.register(stmt)
         +context.env
         utils.register_args(stmt.args)
         -context.env
@@ -317,8 +311,7 @@ class Inlining(layers.Layer):
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
-        utils.register_data_decl(
-            stmt.name, stmt.decltype, stmt.params)
+        utils.register(stmt)
         +context.env
         context.parent = stmt.name
         utils.register_params(stmt.params)

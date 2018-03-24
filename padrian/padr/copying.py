@@ -14,7 +14,6 @@ class Copying(layers.Layer):
     def __init__(self):
         self.b = layers._b(Copying)
 
-    # Inner ast nodes translation.
     def e(self, expr):
         if expr in A(astlib.Name, astlib.DataMember):
             return copy(expr)
@@ -32,27 +31,6 @@ class Copying(layers.Layer):
             return args
         return [self.ae(arg) for arg in args]
 
-    # Subcore funcs.
-    def fun_decl(self, stmt):
-        utils.register_func(stmt.name, stmt.rettype, stmt.args)
-        +context.env
-        utils.register_args(stmt.args)
-        yield astlib.CallableDecl(
-            stmt.decltype, stmt.parent, stmt.name,
-            stmt.args, stmt.rettype, self.b(stmt.body))
-        -context.env
-
-    def struct_func_decl(self, stmt):
-        utils.register_func_as_child(
-            stmt.parent, stmt.name, stmt.rettype, stmt.args)
-        +context.env
-        utils.register_args(stmt.args)
-        yield astlib.CallableDecl(
-            stmt.decltype, stmt.parent, stmt.name,
-            stmt.args, stmt.rettype, self.b(stmt.body))
-        -context.env
-
-    # Core funcs.
     @layers.register(astlib.Return)
     def return_stmt(self, stmt):
         expr = self.ae(stmt.expr)
@@ -71,24 +49,26 @@ class Copying(layers.Layer):
     @layers.register(astlib.Decl)
     def decl(self, stmt):
         if stmt.decltype == astlib.DeclT.field:
-            utils.register_field(stmt.name, stmt.type_)
+            utils.register(stmt)
             yield stmt
         else:
             expr = self.e(stmt.expr)
-            utils.register_var_or_let(
-                stmt.name, stmt.decltype, stmt.type_, expr)
+            utils.register(stmt, expr=expr)
             yield astlib.Decl(stmt.decltype, stmt.name, stmt.type_, expr)
 
     @layers.register(astlib.CallableDecl)
     def callable_decl(self, stmt):
-        if stmt.decltype == astlib.DeclT.fun:
-            yield from self.fun_decl(stmt)
-        if stmt.decltype == astlib.DeclT.struct_func:
-            yield from self.struct_func_decl(stmt)
+        utils.register(stmt)
+        +context.env
+        utils.register_args(stmt.args)
+        yield astlib.CallableDecl(
+            stmt.decltype, stmt.parent, stmt.name,
+            stmt.args, stmt.rettype, self.b(stmt.body))
+        -context.env
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
-        utils.register_data_decl(stmt.name, stmt.decltype, stmt.params)
+        utils.register(stmt)
         +context.env
         context.parent = stmt.name
         utils.register_params(stmt.params)

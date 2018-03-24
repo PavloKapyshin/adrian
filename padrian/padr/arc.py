@@ -3,12 +3,6 @@ from .context import context
 from .utils import A
 
 
-def _for_env(type_):
-    if type_ in A(astlib.ParamedType):
-        return type_.type_
-    return type_
-
-
 def deinit(name, type_):
     return astlib.Callable(
         astlib.CallableT.struct_func, type_,
@@ -21,13 +15,13 @@ class ARC(layers.Layer):
         self.flist = flist or env.Env()
         self.b = layers._b(ARC, flist=self.flist)
 
-    # Registration.
-    def register_var_or_let(self, decl):
+    def register_(self, decl):
         context.env[decl.name] = {
             "node_type": utils.declt_to_nodet(decl.decltype),
             "type_": decl.type_,
             "initialized": self.provide_initialized(
-                decl.name, decl.type_, decl.expr)
+                decl.name, decl.type_, decl.expr),
+            "expr": decl.expr,
         }
 
     def register_args(self, args):
@@ -38,7 +32,6 @@ class ARC(layers.Layer):
                 "initialized": self.provide_initialized_from_type(name, type_)
             }
 
-    # Misc.
     def update_b(self):
         self.b = layers._b(ARC, flist=self.flist)
 
@@ -90,10 +83,10 @@ class ARC(layers.Layer):
                 expr.callabletype == astlib.CallableT.cfunc):
             return {name: {}}
         def loop(n, t):
-            if (_for_env(t) not in context.env or
+            if (t not in context.env or
                     not context.env.is_type(context.env.get_node_type(t))):
                 return {}
-            t_info = context.env[_for_env(t)]
+            t_info = context.env[t]
             if t_info["node_type"] == astlib.NodeT.commont:
                 return {n: {}}
             fields = t_info["fields"]
@@ -143,7 +136,7 @@ class ARC(layers.Layer):
             return
         elif stmt.expr in A(astlib.Callable):
             if stmt.expr.callabletype == astlib.CallableT.struct_func:
-                type_info = context.env[_for_env(stmt.expr.parent)]
+                type_info = context.env[stmt.expr.parent]
                 if type_info["node_type"] == astlib.NodeT.commont:
                     return
                 methods = type_info["methods"]
@@ -168,7 +161,7 @@ class ARC(layers.Layer):
 
     # Subcore funcs.
     def fun_decl(self, stmt):
-        utils.register_func(stmt.name, stmt.rettype, stmt.args)
+        utils.register(stmt)
         +context.env
         +self.flist
         self.register_args(stmt.args)
@@ -184,8 +177,7 @@ class ARC(layers.Layer):
         -self.flist
 
     def struct_func_decl(self, stmt):
-        utils.register_func_as_child(
-            stmt.parent, stmt.name, stmt.rettype, stmt.args)
+        utils.register(stmt)
         +context.env
         +self.flist
         self.register_args(stmt.args)
@@ -206,7 +198,6 @@ class ARC(layers.Layer):
         elif expr in A(astlib.DataMember):
             return self.is_arg(expr.parent)
 
-    # Core funcs.
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
         if self.is_initialized(stmt.left):
@@ -233,10 +224,10 @@ class ARC(layers.Layer):
     @layers.register(astlib.Decl)
     def decl(self, stmt):
         if stmt.decltype == astlib.DeclT.field:
-            utils.register_field(stmt.name, stmt.type_)
+            utils.register(stmt)
             yield stmt
         else:
-            self.register_var_or_let(stmt)
+            self.register_(stmt)
             self.addtoflist(stmt)
             yield stmt
 
@@ -249,7 +240,7 @@ class ARC(layers.Layer):
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
-        utils.register_data_decl(stmt.name, stmt.decltype, stmt.params)
+        utils.register(stmt)
         +context.env
         +self.flist
         context.parent = stmt.name

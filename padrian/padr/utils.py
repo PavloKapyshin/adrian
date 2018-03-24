@@ -79,6 +79,47 @@ def get_low_level_type(type_, expr):
     errors.not_implemented("stmt {} is not supported".format(expr), func=get_low_level_type)
 
 
+def update(assignment):
+    if assignment.left in A(astlib.Name):
+        c.env[assignment.left]["expr"] = assignment.right
+
+
+def register(stmt, **kwds):
+    if stmt in A(astlib.Assignment):
+        _update(stmt)
+    elif stmt.decltype in (astlib.DeclT.var, astlib.DeclT.let):
+        c.env[stmt.name] = {**{
+            "node_type": declt_to_nodet(stmt.decltype),
+            "type_": stmt.type_,
+            "mapping": get_mapping(stmt.type_),
+            "expr": stmt.expr
+        }, **kwds}
+    elif stmt.decltype in (astlib.DeclT.fun,):
+        c.env[stmt.name] = {**{
+            "node_type": declt_to_nodet(stmt.decltype),
+            "type_": stmt.rettype,
+            "args": stmt.args,
+            "body": stmt.body
+        }, **kwds}
+    elif stmt.decltype in (astlib.DeclT.struct_func,):
+        c.env[c.parent]["methods"][stmt.name] = {**{
+            "type_": stmt.rettype,
+            "args": stmt.args,
+            "body": stmt.body
+        }, **kwds}
+    elif stmt.decltype in (astlib.DeclT.field,):
+        c.env[c.parent]["fields"][stmt.name] = {**{
+            "type_": stmt.type_,
+        }, **kwds}
+    elif stmt.decltype in (astlib.DeclT.struct, astlib.DeclT.adt):
+        c.env[stmt.name] = {**{
+            "node_type": declt_to_nodet(stmt.decltype),
+            "params": stmt.params,
+            "fields": {},
+            "methods": {}
+        }, **kwds}
+
+
 def register_var_or_let(name, decltype, type_, expr):
     low_level_type = None
     info = c.env[type_]

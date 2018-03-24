@@ -77,43 +77,50 @@ def _add_cnumeric_type(tname):
                 "type_": member,
                 "args": [
                     ("literal", astlib.LiteralType(astlib.LiteralT.integer))
-                ]
+                ],
+                "body": []
             },
             "__deinit__": {
                 "type_": astlib.Void(),
                 "args": [
                     ("self", member)
-                ]
+                ],
+                "body": []
             },
             "__copy__": {
                 "type_": member,
                 "args": [
                     ("self", member)
-                ]
+                ],
+                "body": []
             },
             "__add__": {
                 "type_": member,
                 "args": [
                     ("self", member), ("other", member)
-                ]
+                ],
+                "body": []
             },
             "__sub__": {
                 "type_": member,
                 "args": [
                     ("self", member), ("other", member)
-                ]
+                ],
+                "body": []
             },
             "__mul__": {
                 "type_": member,
                 "args": [
                     ("self", member), ("other", member)
-                ]
+                ],
+                "body": []
             },
             "__div__": {
                 "type_": member,
                 "args": [
                     ("self", member), ("other", member)
-                ]
+                ],
+                "body": []
             }
         }
     }

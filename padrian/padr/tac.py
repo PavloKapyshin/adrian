@@ -9,7 +9,6 @@ class TAC(layers.Layer):
         self.tmp_count = tmp_count
         self.b = layers._b(TAC, tmp_count=self.tmp_count)
 
-    # Misc.
     def inc_tmp_count(self):
         self.tmp_count += 1
         self.b = layers._b(TAC, tmp_count=self.tmp_count)
@@ -19,11 +18,11 @@ class TAC(layers.Layer):
             "".join([defs.T_STRING, str(self.tmp_count)]),
             is_user_name=False)
         type_ = inference.infer_type(expr)
-        utils.register_var_or_let(name, astlib.DeclT.let, type_, expr)
+        result = astlib.Decl(astlib.DeclT.let, name, type_, expr)
+        utils.register(result)
         self.inc_tmp_count()
-        return name, [astlib.Decl(astlib.DeclT.let, name, type_, expr)]
+        return name, [result]
 
-    # Inner ast nodes translation.
     def _inner_e(self, expr):
         if expr in A(astlib.Callable):
             if (expr.callabletype in (astlib.CallableT.struct_func,
@@ -71,27 +70,6 @@ class TAC(layers.Layer):
             decls.extend(new_decls)
         return new_args, decls
 
-    # Subcore funcs.
-    def fun_decl(self, stmt):
-        utils.register_func(stmt.name, stmt.rettype, stmt.args)
-        +context.env
-        utils.register_args(stmt.args)
-        yield astlib.CallableDecl(
-            stmt.decltype, stmt.parent, stmt.name,
-            stmt.args, stmt.rettype, self.b(stmt.body))
-        -context.env
-
-    def struct_func_decl(self, stmt):
-        utils.register_func_as_child(
-            stmt.parent, stmt.name, stmt.rettype, stmt.args)
-        +context.env
-        utils.register_args(stmt.args)
-        yield astlib.CallableDecl(
-            stmt.decltype, stmt.parent, stmt.name,
-            stmt.args, stmt.rettype, self.b(stmt.body))
-        -context.env
-
-    # Core funcs.
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
         expr, decls = self.e(stmt.right)
@@ -113,27 +91,27 @@ class TAC(layers.Layer):
     @layers.register(astlib.Decl)
     def decl(self, stmt):
         if stmt.decltype == astlib.DeclT.field:
-            utils.register_field(stmt.name, stmt.type_)
+            utils.register(stmt)
             yield stmt
         else:
             expr, decls = self.e(stmt.expr)
-            utils.register_var_or_let(
-                stmt.name, stmt.decltype, stmt.type_, expr)
+            utils.register(stmt, expr=expr)
             yield from decls
             yield astlib.Decl(stmt.decltype, stmt.name, stmt.type_, expr)
 
     @layers.register(astlib.CallableDecl)
     def callable_decl(self, stmt):
-        if stmt.decltype == astlib.DeclT.fun:
-            yield from self.fun_decl(stmt)
-        if stmt.decltype == astlib.DeclT.struct_func:
-            yield from self.struct_func_decl(stmt)
-        if stmt.decltype == astlib.DeclT.protocol_func:
-            errors.not_now(errors.LATER)
+        utils.register(stmt)
+        +context.env
+        utils.register_args(stmt.args)
+        yield astlib.CallableDecl(
+            stmt.decltype, stmt.parent, stmt.name,
+            stmt.args, stmt.rettype, self.b(stmt.body))
+        -context.env
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
-        utils.register_data_decl(stmt.name, stmt.decltype, stmt.params)
+        utils.register(stmt)
         +context.env
         context.parent = stmt.name
         utils.register_params(stmt.params)

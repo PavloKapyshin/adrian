@@ -65,7 +65,9 @@ class ToCgen(layers.Layer):
             return cgen.CTypes.void
         if type_ in A(astlib.DataMember):
             if type_.datatype == astlib.DataT.module:
-                return self.t(type_.member)
+                if type_.parent == defs.CMODULE:
+                    return cgen.CTypes.ptr(
+                        cgen.StructType(self.n(type_.member)))
             errors.not_now(errors.LATER)
         if type_ in A(astlib.Name):
             info = context.env.get_type_info(type_)
@@ -157,7 +159,7 @@ class ToCgen(layers.Layer):
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
-        utils.register_data_decl(stmt.name, stmt.decltype, stmt.params)
+        utils.register(stmt)
         if stmt.decltype == astlib.DeclT.struct:
             fields, funcs = utils.split_body(stmt.body)
             if stmt.params:
