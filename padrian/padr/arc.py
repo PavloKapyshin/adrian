@@ -91,7 +91,7 @@ class ARC(layers.Layer):
             return {name: {}}
         def loop(n, t):
             if (_for_env(t) not in context.env or
-                    not utils.is_type(utils.get_node_type(t))):
+                    not context.env.is_type(context.env.get_node_type(t))):
                 return {}
             t_info = context.env[_for_env(t)]
             if t_info["node_type"] == astlib.NodeT.commont:

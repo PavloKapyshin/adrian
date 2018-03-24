@@ -1,7 +1,6 @@
 from collections import OrderedDict
 
 from . import layers, astlib, errors, defs
-from .context import context
 from .utils import A, split_body, only_fields
 
 

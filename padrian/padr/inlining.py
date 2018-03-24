@@ -81,7 +81,7 @@ class Mapping:
     def fill_type_mapping(self, type_):
         if type_ in A(astlib.Name, astlib.DataMember):
             return
-        struct_info = utils.get_type_info(type_)
+        struct_info = context.env.get_type_info(type_)
         for decl_param, param in zip(struct_info["params"], type_.params):
             self.type_mapping[decl_param] = param
 
@@ -192,7 +192,7 @@ class Inlining(layers.Layer):
             Inlining, inliner=self.inliner, mapping=self.mapping)
 
     def inline(self, parent, method_name, args):
-        method_info, struct_info = utils.get_method_and_parent_infos(
+        method_info, struct_info = context.env.get_method_and_parent_infos(
             parent, method_name)
         method_decl_args = method_info["args"]
         self.mapping.fill_args_mapping(method_decl_args, args)
@@ -216,9 +216,10 @@ class Inlining(layers.Layer):
 
     def optional_inlining(self, parent, method_name, args):
         if (parent not in context.env or
-                not utils.is_real_type(utils.get_node_type(parent))):
+                not context.env.is_real_type(
+                    context.env.get_node_type(parent))):
             parent = self.mapping.apply_for_type(parent)
-        struct_info = utils.raw_get_type_info(parent)
+        struct_info = context.env.raw_get_type_info(parent)
         if self.mapping.args_mapping:
             args = self.mapping.apply(args)
         if struct_info and struct_info["params"]:
@@ -247,7 +248,7 @@ class Inlining(layers.Layer):
 
     def get_the_most_high_level_type(self, expr):
         if expr in A(astlib.Name):
-            return utils.get_variable_info(expr)["type_"]
+            return context.env.get_variable_info(expr)["type_"]
         elif expr in A(astlib.DataMember):
             return self.get_the_most_high_level_type(expr.parent)
         elif expr in A(astlib.Ref):

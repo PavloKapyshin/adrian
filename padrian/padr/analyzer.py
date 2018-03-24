@@ -54,7 +54,8 @@ class Analyzer(layers.Layer):
             return astlib.Ref(args[0])
         if (callabletype not in (
                     astlib.CallableT.cfunc, astlib.CallableT.struct_func)
-                and utils.is_type(utils.get_node_type(callable_.name))):
+                and context.env.is_type(
+                    context.env.get_node_type(callable_.name))):
             callabletype = astlib.CallableT.struct
         return astlib.Callable(
             callabletype, callable_.parent,
@@ -62,7 +63,7 @@ class Analyzer(layers.Layer):
 
     def e_struct_member(self, expr):
         if (expr.parent in A(astlib.Name) and
-                utils.is_adt(utils.get_node_type(expr.parent))):
+                context.env.is_adt(context.env.get_node_type(expr.parent))):
             return astlib.DataMember(
                 astlib.DataT.adt, self.e(expr.parent), self.e(expr.member))
         if expr.member in A(astlib.Callable):

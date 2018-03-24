@@ -1,5 +1,5 @@
-from .context import A
-from . import astlib, errors, defs, context
+from .context import A, context
+from . import astlib, errors, defs
 
 
 def _struct_func_call_from_struct_call(struct_call):
@@ -18,7 +18,7 @@ def make_mapping(params, decl_args, call_args):
 
 
 def _infer_type_from_struct_func_call(struct_func_call):
-    method_info, parent_info = context.get_method_and_parent_infos(
+    method_info, parent_info = context.env.get_method_and_parent_infos(
         struct_func_call.parent, struct_func_call.name)
     params = parent_info["params"]
     if not params:
@@ -40,8 +40,8 @@ def apply_(mapping, for_):
 
 
 def _infer_type_from_data_member(expr):
-    parent_info = context.get_parent_info(expr.parent)
-    field_info = context.get_field_info(expr.parent, expr.member)
+    parent_info = context.env.get_parent_info(expr.parent)
+    field_info = context.env.get_field_info(expr.parent, expr.member)
     mapping = parent_info.get("mapping")
     if mapping:
         return apply_(mapping, for_=field_info["type_"])
@@ -58,10 +58,10 @@ def infer_type(expr):
         elif expr.callabletype == astlib.CallableT.struct_func:
             return _infer_type_from_struct_func_call(expr)
         elif expr.callabletype == astlib.CallableT.fun:
-            return context.get_function_info(expr.name)["type_"]
+            return context.env.get_function_info(expr.name)["type_"]
         return astlib.Empty()
     elif expr in A(astlib.Name):
-        return context.get_variable_info(expr)["type_"]
+        return context.env.get_variable_info(expr)["type_"]
     elif expr in A(astlib.DataMember):
         if expr.datatype == astlib.DataT.struct:
             return _infer_type_from_data_member(expr)
@@ -69,7 +69,7 @@ def infer_type(expr):
 
 
 def _provide_init_args(type_):
-    method_info = context.get_method_info(type_, defs.INIT_METHOD)
+    method_info = context.env.get_method_info(type_, defs.INIT_METHOD)
     return [infer_expr(arg_type) for _, arg_type in method_info["args"]]
 
 
