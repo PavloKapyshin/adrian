@@ -11,18 +11,18 @@ class REPL(cmd.Cmd):
     prompt = ">>> "
     input_ = []
 
-    def do_eval(self, inp):
+    def do_eval(self):
         try:
-            print(padr.compile_("\n".join(self.input_)))
+            print(padr.compile_repl("\n".join(self.input_)))
         except padr.errors.CompileTimeError as e:
             print(e.message, file=sys.stderr)
         except Exception as e:
             traceback.print_exc(chain=False)
 
-    def do_debug(self, inp):
+    def do_debug(self):
         try:
             reg = padr.debug_formatter.DebugFormatter().get_registry()
-            compiled = padr.compile_("\n".join(self.input_))
+            compiled = padr.compile_repl("\n".join(self.input_))
             result = list(padr.layers.transform_ast(
                 compiled, registry=reg))
             print("\n".join(result))
@@ -33,13 +33,13 @@ class REPL(cmd.Cmd):
 
     def command(self, command):
         if command == "genc":
-            self.do_eval(self.input_)
+            self.do_eval()
         if command == "clear":
             self.input_ = []
         if command == "undo":
             self.input_ = self.input_[:-1]
         if command == "debug":
-            self.do_debug(self.input_)
+            self.do_debug()
 
     def do_exit(self, arg):
         sys.exit(0)

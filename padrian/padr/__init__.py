@@ -1,13 +1,10 @@
 import sys
-from collections import OrderedDict
 
-import adrian
+from adrian import cgen
 
-from . import (
-    parser, foreign_parser, analyzer,
-    object_protocol, tac, copying,
-    context, defs, layers, arc,
-    debug_formatter, tocgen, ccopts, inlining)
+from . import (analyzer, arc, ccopts, context, copying, debug_formatter, defs,
+               foreign_parser, inlining, layers, object_protocol, parser, tac,
+               tocgen, )
 
 
 LAYERS = (
@@ -22,63 +19,41 @@ LAYERS = (
 )
 
 
-def compile_(inp):
-    context_kargs = {
-        "env": defs.ENV,
-        "exit_on_error": False,
-        "module_paths": defs.DEFAULT_MODULE_PATHS,
-        "clibs_includes": None,
-        "i_count": 0,
-    }
-    clibs_includes = OrderedDict()
-    i_count = 0
-    layers_ = LAYERS
-    if layers_[-1][0] is tocgen.ToCgen:
-        layers_ = layers_[:-1]
+def compile_(input_code, layers_, default_context_args):
+    context_arguments = default_context_args
     current_ast = []
     for layer_cls, method_name in layers_:
-        with context.new_context(**context_kargs):
+        with context.new_context(**context_arguments):
             layer = layer_cls()
-            context.context.clibs_includes = clibs_includes
-            context.context.i_count = i_count
+            # TODO: replace parser by more high-level layer
+            # (which will combine _parser and foreign_parser).
             if method_name == "parse":
-                current_ast = foreign_parser.main(layer.parse(inp))
+                current_ast = foreign_parser.main(layer.parse(input_code))
             else:
                 current_ast = list(getattr(layers, method_name)(
-                    current_ast, registry=layer.get_registry()))
-            clibs_includes = context.context.clibs_includes
-            i_count = context.context.i_count
+                    current_ast, registry=layer.get_registry()
+                ))
+            context_arguments = context.modified_context_args()
+            # You should always pass default environment to
+            # layer to avoid possible bugs.
+            context_arguments["env"] = defs.ENV
     return current_ast
 
 
-def compile_from_string(inp, out_file, cc):
-    context_kargs = {
-        "env": defs.ENV,
-        "exit_on_error": False,
-        "module_paths": defs.DEFAULT_MODULE_PATHS,
-        "clibs_includes": None,
-        "i_count": 0,
-    }
-    clibs_includes = OrderedDict()
-    i_count = 0
-    current_ast = []
-    for layer_cls, method_name in LAYERS:
-        with context.new_context(**context_kargs):
-            layer = layer_cls()
-            context.context.clibs_includes = clibs_includes
-            context.context.i_count = i_count
-            if method_name == "parse":
-                current_ast = foreign_parser.main(layer.parse(inp))
-            else:
-                current_ast = list(getattr(layers, method_name)(
-                    current_ast, registry=layer.get_registry()))
-            clibs_includes = context.context.clibs_includes
-            i_count = context.context.i_count
-    generator = adrian.cgen.Generator()
-    generator.add_ast(current_ast)
+def compile_repl(input_code):
+    layers_ = LAYERS
+    if layers_[-1][0] is tocgen.ToCgen:
+        layers_ = layers_[:-1]
+    return compile_(input_code, layers_, defs.DEFAULT_CONTEXT_ARGUMENTS)
+
+
+def compile_from_string(input_code, out_file, cc):
+    generator = cgen.Generator()
+    generator.add_ast(
+        compile_(input_code, LAYERS, defs.DEFAULT_CONTEXT_ARGUMENTS))
     return {
         "code": "\n".join(generator.generate()),
-        "cc_opts": ccopts.make(cc, ["library/"], out_file)
+        "cc_opts": ccopts.make(cc, defs.DEFAULT_MODULE_PATHS, out_file)
     }
 
 

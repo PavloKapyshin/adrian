@@ -9,6 +9,13 @@ from . import env, astlib
 # Compiler defs.
 ENV = env.Env()
 DEFAULT_MODULE_PATHS = ["library/"]
+DEFAULT_CONTEXT_ARGUMENTS = {
+    "env": ENV,
+    "exit_on_error": False,
+    "module_paths": DEFAULT_MODULE_PATHS,
+    "clibs_includes": None,
+    "i_count": 0,
+}
 
 RESERVED_WORDS = {
     keyword: keyword.upper()

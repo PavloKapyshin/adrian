@@ -2,10 +2,9 @@ import threading
 import contextlib
 from collections import OrderedDict
 
-from . import astlib
-
 
 context = threading.local()
+
 
 @contextlib.contextmanager
 def new_context(*, env, exit_on_error, module_paths, clibs_includes, i_count):
@@ -19,7 +18,18 @@ def new_context(*, env, exit_on_error, module_paths, clibs_includes, i_count):
     yield
 
 
+def modified_context_args():
+    return {
+        key: getattr(context, key)
+        for key in (
+            "env", "exit_on_error", "module_paths",
+            "clibs_includes", "i_count"
+        )
+    }
+
+
 class A:
+
     def __init__(self, *types):
         self.types = types
 
