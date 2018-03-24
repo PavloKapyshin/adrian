@@ -61,7 +61,11 @@ def infer_type(expr):
             return context.env.get_function_info(expr.name)["type_"]
         return astlib.Empty()
     elif expr in A(astlib.Name):
-        return context.env.get_variable_info(expr)["type_"]
+        var_info = context.env.get_variable_info(expr)
+        type_ = var_info["type_"]
+        if context.env.is_adt(context.env.get_type_info(type_)["node_type"]):
+            return var_info["low_level_type"]
+        return type_
     elif expr in A(astlib.DataMember):
         if expr.datatype == astlib.DataT.struct:
             return _infer_type_from_data_member(expr)

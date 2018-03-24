@@ -62,10 +62,6 @@ class Analyzer(layers.Layer):
             callable_.name, self.a(callable_.args))
 
     def e_struct_member(self, expr):
-        if (expr.parent in A(astlib.Name) and
-                context.env.is_adt(context.env.get_node_type(expr.parent))):
-            return astlib.DataMember(
-                astlib.DataT.adt, self.e(expr.parent), self.e(expr.member))
         if expr.member in A(astlib.Callable):
             call = expr.member
             parent = self.e(expr.parent)

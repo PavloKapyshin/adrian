@@ -68,6 +68,9 @@ class ToCgen(layers.Layer):
                 return self.t(type_.member)
             errors.not_now(errors.LATER)
         if type_ in A(astlib.Name):
+            info = context.env.get_type_info(type_)
+            if context.env.is_adt(info["node_type"]):
+                return cgen.UnionType(self.n(type_))
             return cgen.CTypes.ptr(cgen.StructType(self.n(type_)))
         if type_ in A(astlib.ParamedType):
             return self.t(type_.type_)
@@ -92,6 +95,8 @@ class ToCgen(layers.Layer):
                 return cgen.StructElem(
                     cgen.CTypes.ptr(self.e(expr.parent)),
                     self.e(expr.member))
+            elif expr.datatype == astlib.DataT.adt:
+                print("Implement: tocgen")
         if expr in A(astlib.Literal):
             return cgen.Val(
                 literal=expr.literal,
@@ -152,6 +157,7 @@ class ToCgen(layers.Layer):
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
+        utils.register_data_decl(stmt.name, stmt.decltype, stmt.params)
         if stmt.decltype == astlib.DeclT.struct:
             fields, funcs = utils.split_body(stmt.body)
             if stmt.params:

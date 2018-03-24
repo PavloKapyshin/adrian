@@ -267,6 +267,17 @@ class Void(BaseNode):
     __repr__ = __str__
 
 
+class Object(BaseNode):
+
+    def __str__(self):
+        return "Object"
+
+    def __hash__(self):
+        return hash(self.__str__())
+
+    __repr__ = __str__
+
+
 class ParamedType(Node):
 
     def __init__(self, type_, params):
