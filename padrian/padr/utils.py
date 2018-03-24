@@ -30,6 +30,12 @@ def only_fields(body):
     return list(filter(_is_field_stmt, body))
 
 
+def get_parent(expr):
+    if expr in A(astlib.DataMember):
+        return get_parent(expr.parent)
+    return expr
+
+
 # TODO:
 def declt_to_nodet(declt):
     nodet = astlib.NodeT.adt

@@ -8,4 +8,4 @@ adt Maybe(a) {
 }
 
 let b: Maybe(c#IntFast8) = Some(c#IntFast8(1))
-b = None()
+let c: c#IntFast8 = b.data
