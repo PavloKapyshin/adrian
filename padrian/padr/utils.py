@@ -79,9 +79,21 @@ def get_low_level_type(type_, expr):
     errors.not_implemented("stmt {} is not supported".format(expr), func=get_low_level_type)
 
 
+def get_parent_name(expr):
+    if expr in A(astlib.DataMember):
+        return get_parent_name(expr.parent)
+    return expr
+
+
 def _update(assignment):
     if assignment.left in A(astlib.Name):
         c.env[assignment.left]["expr"] = assignment.right
+    elif assignment.left in A(astlib.DataMember):
+        if assignment.left.datatype == astlib.DataT.adt:
+            parent = get_parent_name(assignment.left)
+            c.env[parent]["expr"] = assignment.right
+    else:
+        print("Bad::_update", assignment.left)
 
 
 def register(stmt, **kwds):

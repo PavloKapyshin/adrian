@@ -28,8 +28,6 @@ def _infer_type_from_struct_func_call(struct_func_call):
     if mapping:
         return apply_(mapping, for_=method_info["type_"])
     print("HAy, badd, infer...")
-    # return astlib.ParamedType(
-    #     method_info["type_"], [mapping[param] for param in params])
 
 
 def apply_(mapping, for_):
@@ -49,6 +47,16 @@ def _infer_type_from_data_member(expr):
     if mapping:
         return apply_(mapping, for_=field_info["type_"])
     return field_info["type_"]
+
+
+def _infer_type_from_adt_member(expr):
+    variable_info = context.env.get_variable_info(expr.parent)
+    return infer_type(variable_info["expr"])
+
+
+def _infer_generic_type_from_adt_member(expr):
+    variable_info = context.env.get_variable_info(expr.parent)
+    return variable_info["type_"]
 
 
 def infer_type(expr):
@@ -72,6 +80,36 @@ def infer_type(expr):
     elif expr in A(astlib.DataMember):
         if expr.datatype == astlib.DataT.struct:
             return _infer_type_from_data_member(expr)
+        elif expr.datatype == astlib.DataT.adt:
+            return _infer_type_from_adt_member(expr)
+    elif expr in A(astlib.Empty):
+        return astlib.Empty()
+    errors.infer_type(expr)
+
+
+def infer_generic_type(expr):
+    if expr in A(astlib.Ref):
+        return infer_generic_type(expr.expr)
+    elif expr in A(astlib.Callable):
+        if expr.callabletype == astlib.CallableT.struct:
+            return _infer_type_from_struct_func_call(
+                _struct_func_call_from_struct_call(expr))
+        elif expr.callabletype == astlib.CallableT.struct_func:
+            return _infer_type_from_struct_func_call(expr)
+        elif expr.callabletype == astlib.CallableT.fun:
+            return context.env.get_function_info(expr.name)["type_"]
+        return astlib.Empty()
+    elif expr in A(astlib.Name):
+        var_info = context.env.get_variable_info(expr)
+        type_ = var_info["type_"]
+        return type_
+    elif expr in A(astlib.DataMember):
+        if expr.datatype == astlib.DataT.struct:
+            return _infer_type_from_data_member(expr)
+        elif expr.datatype == astlib.DataT.adt:
+            return _infer_generic_type_from_adt_member(expr)
+    elif expr in A(astlib.Empty):
+        return astlib.Empty()
     errors.infer_type(expr)
 
 

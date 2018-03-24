@@ -29,7 +29,7 @@ class ARC(layers.Layer):
             context.env[name] = {
                 "node_type": astlib.NodeT.arg,
                 "type_": type_,
-                "initialized": self.provide_initialized_from_type(name, type_)
+                "initialized": self.provide_initialized_from_type(name, type_),
             }
 
     def update_b(self):
@@ -124,12 +124,58 @@ class ARC(layers.Layer):
         if expr in A(astlib.DataMember):
             self.remove_return_expr_from_flist(expr.parent)
 
+    def get_parent(self, expr):
+        if expr in A(astlib.DataMember):
+            return self.get_parent(expr.parent)
+        return expr
+
     def free(self, expr):
         if expr in A(astlib.Name):
-            return deinit(expr, inference.infer_type(expr))
+            info = context.env.get_variable_info(expr)
+            if ("expr" not in info or
+                    info["expr"] in A(astlib.Empty)):
+                return None
+            generic_type = inference.infer_generic_type(expr)
+            if context.env.is_adt(context.env.get_node_type(generic_type)):
+                type_ = inference.infer_type(
+                    context.env.get_variable_info(expr)["expr"])
+                expr = self.get_adt_field_by_type(expr, type_)
+            else:
+                type_ = inference.infer_type(expr)
+                expr = expr
+            return deinit(expr, type_)
         elif expr in A(astlib.DataMember):
-            return deinit(expr, inference.infer_type(expr))
+            parent = self.get_parent(expr)
+            parent_info = context.env.get_variable_info(parent)
+            if "expr" not in parent_info:
+                return deinit(expr, inference.infer_type(expr))
+            if parent_info["expr"] in A(astlib.Empty):
+                return None
+            generic_type = parent_info["type_"]
+            if context.env.is_adt(context.env.get_node_type(generic_type)):
+                type_ = inference.infer_type(parent_info["expr"])
+                expr = self.get_adt_field_by_type(parent, type_)
+            else:
+                type_ = inference.infer_type(expr)
+                expr = expr
+            return deinit(expr, type_)
         return self.free(astlib.Name(expr))
+
+    def types_are_equal(self, type1, type2):
+        if type1 in A(astlib.ParamedType) and type2 in A(astlib.ParamedType):
+            return type1.base == type2.base
+        elif type1 in A(astlib.Name) and type2 in A(astlib.Name):
+            return type1 == type2
+        return False
+
+    def get_adt_field_by_type(self, parent, type_):
+        adt_type = context.env.get_variable_info(parent)["type_"]
+        adt_type_info = context.env.get_type_info(adt_type)
+        for field_name, field_info in adt_type_info["fields"].items():
+            if self.types_are_equal(field_info["type_"], type_):
+                return astlib.DataMember(
+                    astlib.DataT.adt, parent, astlib.Name(field_name))
+        errors.no_adt_field(adt_type, type_)
 
     def addtoflist(self, stmt):
         if stmt.expr in A(astlib.Ref):
@@ -157,7 +203,9 @@ class ARC(layers.Layer):
 
     def free_scope(self):
         for key, info in sorted(self.flist.cspace()):
-            yield self.free(key)
+            result = self.free(key)
+            if result is not None:
+                yield result
 
     # Subcore funcs.
     def fun_decl(self, stmt):
@@ -201,8 +249,11 @@ class ARC(layers.Layer):
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
         if self.is_initialized(stmt.left):
-            yield self.free(stmt.left)
+            result = self.free(stmt.left)
+            if result is not None:
+                yield result
         yield stmt
+        utils.register(stmt)
         self.write_initiazed(stmt.left)
 
     @layers.register(astlib.Return)
