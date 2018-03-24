@@ -79,7 +79,8 @@ class Mapping:
         return list(map(self.apply_for_node, for_))
 
     def fill_type_mapping(self, type_):
-        if type_ in A(astlib.Name, astlib.DataMember):
+        if type_ in A(
+                astlib.Name, astlib.DataMember, astlib.Empty):
             return
         struct_info = context.env.get_type_info(type_)
         for decl_param, param in zip(struct_info["params"], type_.params):
@@ -217,7 +218,11 @@ class Inlining(layers.Layer):
         struct_info = context.env.raw_get_type_info(parent)
         if self.mapping.args_mapping:
             args = self.mapping.apply(args)
-        if struct_info and struct_info["params"]:
+        # if struct_info and "params" not in struct_info:
+        #     print("That.", struct_info, parent)
+        if (struct_info and
+                context.env.is_type(struct_info["node_type"]) and
+                struct_info["params"]):
             result = self.inline(parent, method_name, args)
             context.i_count += 1
             return True, result[0], result[1]

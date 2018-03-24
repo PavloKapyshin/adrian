@@ -33,8 +33,8 @@ def compile_(inp):
     clibs_includes = OrderedDict()
     i_count = 0
     layers_ = LAYERS
-    if layers_[-1][0] is tocgen.ToCgen:
-        layers_ = layers_[:-1]
+    # if layers_[-1][0] is tocgen.ToCgen:
+    #     layers_ = layers_[:-1]
     for layer_cls, method_name in layers_:
         with context.new_context(**context_kargs):
             layer = layer_cls()
@@ -53,7 +53,7 @@ def compile_(inp):
 def compile_from_string(inp, out_file, cc):
     context_kargs = {
         "env": defs.ENV,
-        "exit_on_error": True,
+        "exit_on_error": False,
         "module_paths": defs.DEFAULT_MODULE_PATHS,
         "clibs_includes": None,
         "i_count": 0,

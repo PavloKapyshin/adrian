@@ -98,7 +98,9 @@ class ToCgen(layers.Layer):
                     cgen.CTypes.ptr(self.e(expr.parent)),
                     self.e(expr.member))
             elif expr.datatype == astlib.DataT.adt:
-                print("Implement: tocgen")
+                return cgen.StructElem(
+                    self.e(expr.parent),
+                    self.e(expr.member))
         if expr in A(astlib.Literal):
             return cgen.Val(
                 literal=expr.literal,
@@ -106,12 +108,15 @@ class ToCgen(layers.Layer):
         if expr in A(astlib.Cast):
             return cgen.Cast(
                 self.e(expr.expr), self.t(expr.to))
+        if expr in A(astlib.Empty):
+            return None
 
     def a(self, args):
         if args and isinstance(args[0], tuple):
             return [
                 cgen.Decl(self.n(name), type_=self.t(type_))
                 for name, type_ in args]
+        print("__", args)
         return list(map(self.e, args))
 
     def n(self, name):
