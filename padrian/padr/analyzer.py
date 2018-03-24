@@ -53,6 +53,13 @@ class Analyzer(layers.Layer):
             expr.member)
 
     def e(self, expr):
+        if expr in A(astlib.Name):
+            variable_info = context.env.get_variable_info(expr)
+            if context.env.is_adt(
+                    context.env.get_node_type(variable_info["type_"])):
+                return self.get_adt_field_by_type(
+                    expr, inference.infer_type(variable_info["expr"]))
+            return expr
         if expr in A(astlib.Callable):
             return self.e_callable(expr)
         if expr in A(astlib.DataMember):
@@ -100,15 +107,44 @@ class Analyzer(layers.Layer):
         utils.register(stmt, type_=type_)
         yield astlib.Decl(stmt.decltype, stmt.name, type_, stmt.expr)
 
+    def types_are_equal(self, type1, type2):
+        if type1 in A(astlib.ParamedType) and type2 in A(astlib.ParamedType):
+            return type1.base == type2.base
+        elif type1 in A(astlib.Name) and type2 in A(astlib.Name):
+            return type1 == type2
+        return False
+
+    def get_adt_field_by_type(self, parent, type_):
+        adt_type = context.env.get_variable_info(parent)["type_"]
+        adt_type_info = context.env.get_type_info(adt_type)
+        for field_name, field_info in adt_type_info["fields"].items():
+            if self.types_are_equal(field_info["type_"], type_):
+                return astlib.DataMember(
+                    astlib.DataT.adt, parent, astlib.Name(field_name))
+        errors.no_adt_field(adt_type, type_)
+
+    def split_adt_usage(self, stmt):
+        yield astlib.Decl(
+            stmt.decltype, stmt.name, stmt.type_, astlib.Empty())
+        yield astlib.Assignment(
+            self.get_adt_field_by_type(
+                stmt.name, inference.infer_type(stmt.expr)), "=", stmt.expr)
+
     def var_let_decl(self, stmt):
         type_, expr = self.te(stmt.type_, stmt.expr)
         utils.register(stmt, type_=type_, expr=expr)
-        yield astlib.Decl(stmt.decltype, stmt.name, type_, expr)
+        result = astlib.Decl(stmt.decltype, stmt.name, type_, expr)
+        if context.env.is_adt(context.env.get_node_type(type_)):
+            yield from self.split_adt_usage(result)
+        else:
+            yield result
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
+        right = self.e(stmt.right)
+        utils.register(astlib.Assignment(stmt.left, stmt.op, right))
         yield astlib.Assignment(
-            self.e(stmt.left), stmt.op, self.e(stmt.right))
+            self.e(stmt.left), stmt.op, right)
 
     @layers.register(astlib.Return)
     def return_stmt(self, stmt):

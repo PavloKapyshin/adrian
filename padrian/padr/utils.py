@@ -79,7 +79,7 @@ def get_low_level_type(type_, expr):
     errors.not_implemented("stmt {} is not supported".format(expr), func=get_low_level_type)
 
 
-def update(assignment):
+def _update(assignment):
     if assignment.left in A(astlib.Name):
         c.env[assignment.left]["expr"] = assignment.right
 

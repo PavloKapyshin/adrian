@@ -94,9 +94,10 @@ class _Name(collections.UserString):
             return self.data == other
         elif isinstance(other, _Name):
             return self.data == other.data
-        raise TypeError(
-            "comparison cannot be applied to {} and {}.".format(
-                type(self), type(other)))
+        return False
+        # raise TypeError(
+        #     "comparison cannot be applied to {} and {}.".format(
+        #         type(self), type(other)))
 
     def __hash__(self):
         return hash(self.data)

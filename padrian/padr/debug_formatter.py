@@ -61,6 +61,8 @@ class DebugFormatter(layers.Layer):
             return str(expr.literal)
         elif expr in A(str):
             return expr
+        elif expr in A(astlib.Empty):
+            return "EMPTY"
 
     def t(self, type_):
         if type_ in A(astlib.Name):

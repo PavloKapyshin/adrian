@@ -25,8 +25,11 @@ def _infer_type_from_struct_func_call(struct_func_call):
         return method_info["type_"]
     mapping = make_mapping(
         params, method_info["args"], struct_func_call.args)
-    return astlib.ParamedType(
-        method_info["type_"], [mapping[param] for param in params])
+    if mapping:
+        return apply_(mapping, for_=method_info["type_"])
+    print("HAy, badd, infer...")
+    # return astlib.ParamedType(
+    #     method_info["type_"], [mapping[param] for param in params])
 
 
 def apply_(mapping, for_):
@@ -64,7 +67,7 @@ def infer_type(expr):
         var_info = context.env.get_variable_info(expr)
         type_ = var_info["type_"]
         if context.env.is_adt(context.env.get_type_info(type_)["node_type"]):
-            return var_info["low_level_type"]
+            return infer_type(var_info["expr"])
         return type_
     elif expr in A(astlib.DataMember):
         if expr.datatype == astlib.DataT.struct:
