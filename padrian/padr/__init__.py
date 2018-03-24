@@ -1,7 +1,7 @@
 import sys
 from collections import OrderedDict
 
-from adrian import cgen
+import adrian
 
 from . import (
     parser, foreign_parser, analyzer,
@@ -33,8 +33,9 @@ def compile_(inp):
     clibs_includes = OrderedDict()
     i_count = 0
     layers_ = LAYERS
-    # if layers_[-1][0] is tocgen.ToCgen:
-    #     layers_ = layers_[:-1]
+    if layers_[-1][0] is tocgen.ToCgen:
+        layers_ = layers_[:-1]
+    current_ast = []
     for layer_cls, method_name in layers_:
         with context.new_context(**context_kargs):
             layer = layer_cls()
@@ -60,6 +61,7 @@ def compile_from_string(inp, out_file, cc):
     }
     clibs_includes = OrderedDict()
     i_count = 0
+    current_ast = []
     for layer_cls, method_name in LAYERS:
         with context.new_context(**context_kargs):
             layer = layer_cls()
@@ -72,7 +74,7 @@ def compile_from_string(inp, out_file, cc):
                     current_ast, registry=layer.get_registry()))
             clibs_includes = context.context.clibs_includes
             i_count = context.context.i_count
-    generator = cgen.Generator()
+    generator = adrian.cgen.Generator()
     generator.add_ast(current_ast)
     return {
         "code": "\n".join(generator.generate()),
