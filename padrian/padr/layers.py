@@ -1,6 +1,8 @@
 """Helper for creating new layers."""
 
 import itertools
+import typing
+
 import types
 import functools
 
@@ -68,6 +70,7 @@ def expand_ast(ast_, *, registry):
     yield from registry.get(astlib.AST)(ast_, registry)
 
 
+# Deprecated.
 def _b(layer, **kwords):
     def wrapper(body):
         reg = layer(**kwords).get_registry()
@@ -75,3 +78,13 @@ def _b(layer, **kwords):
             map(lambda stmt: list(
                     transform_node(stmt, registry=reg)), body)))
     return wrapper
+
+
+def b(layer: typing.Type[Layer], **kwords):
+    def helper(body: typing.Sequence[astlib.Node]):
+        return list(itertools.chain.from_iterable(
+            map(lambda stmt: list(
+                transform_node(stmt, registry=layer(**kwords).get_registry())
+            ), body)
+        ))
+    return helper

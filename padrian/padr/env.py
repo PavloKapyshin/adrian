@@ -117,13 +117,6 @@ class Env:
     def __getitem__(self, key):
         return self._get_with_scope(key)[0]
 
-    def update(self, key, value):
-        key = self._validate_key(key)
-        entry, scope = self._get_with_scope(key)
-        for k, v in value.items():
-            entry[k] = v
-        self.space[scope][key] = entry
-
     def __delitem__(self, key):
         del self.space[self.scope][key]
 

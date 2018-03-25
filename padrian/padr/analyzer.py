@@ -7,10 +7,10 @@ class Analyzer(layers.Layer):
 
     def __init__(self, f_count=None):
         self.f_count = f_count or 0
-        self.b = layers._b(Analyzer, f_count=self.f_count)
+        self.b = layers.b(Analyzer, f_count=self.f_count)
 
     def update_b(self):
-        self.b = layers._b(Analyzer, f_count=self.f_count)
+        self.b = layers.b(Analyzer, f_count=self.f_count)
 
     def make_adt_body(self, body):
         def _provide_name():

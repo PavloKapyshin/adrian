@@ -1,4 +1,4 @@
-from . import astlib, layers, env, inference, utils, defs
+from . import astlib, layers, env, inference, utils, defs, errors
 from .context import context
 from .utils import A
 

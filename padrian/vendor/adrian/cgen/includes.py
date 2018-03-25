@@ -1,4 +1,4 @@
-from adrian.cgen import Include
+from .objects import Include
 
 
 stdlib = Include("stdlib.h")
