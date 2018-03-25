@@ -1,6 +1,7 @@
 from . import astlib, errors
 from .utils import A
 
+
 class Env:
 
     def _validate_key(self, key):
@@ -20,12 +21,13 @@ class Env:
             info = self[request]
             self._check_found_info(info, request, node_type_checker)
             return info
-        return helper
 
+        return helper
 
     def _is_of_nodetype_maker(self, *node_types):
         def helper(node_type):
             return node_type in node_types
+
         return helper
 
     def __init__(self):
@@ -88,6 +90,14 @@ class Env:
         if not field_info:
             errors.no_such_field(parent, parent_type, field_name)
         return field_info
+
+    def add_scope(self):
+        self.scope += 1
+        self.space[self.scope] = {}
+
+    def remove_scope(self):
+        del self.space[self.scope]
+        self.scope -= 1
 
     def __neg__(self):
         del self.space[self.scope]

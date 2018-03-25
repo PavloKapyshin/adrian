@@ -3,6 +3,32 @@ from . import astlib, layers, errors, defs, inference, utils
 from .utils import A
 
 
+def types_are_equal(type1, type2):
+    if type1 in A(astlib.ParamedType) and type2 in A(astlib.ParamedType):
+        return type1.base == type2.base
+    elif type1 in A(astlib.Name) and type2 in A(astlib.Name):
+        return type1 == type2
+    return False
+
+
+def get_adt_field_by_type(parent, type_):
+    adt_type = context.env.get_variable_info(parent)["type_"]
+    adt_type_info = context.env.get_type_info(adt_type)
+    for field_name, field_info in adt_type_info["fields"].items():
+        if types_are_equal(field_info["type_"], type_):
+            return astlib.DataMember(
+                astlib.DataT.adt, parent, astlib.Name(field_name))
+    errors.no_adt_field(adt_type, type_)
+
+
+def split_adt_usage(stmt):
+    yield astlib.Decl(
+        stmt.decltype, stmt.name, stmt.type_, astlib.Empty())
+    yield astlib.Assignment(
+        get_adt_field_by_type(
+            stmt.name, inference.infer_type(stmt.expr)), "=", stmt.expr)
+
+
 class Analyzer(layers.Layer):
 
     def __init__(self, f_count=None):
@@ -57,7 +83,7 @@ class Analyzer(layers.Layer):
             variable_info = context.env.get_variable_info(expr)
             if context.env.is_adt(
                     context.env.get_node_type(variable_info["type_"])):
-                return self.get_adt_field_by_type(
+                return get_adt_field_by_type(
                     expr, inference.infer_type(variable_info["expr"]))
             return expr
         if expr in A(astlib.Callable):
@@ -107,35 +133,12 @@ class Analyzer(layers.Layer):
         utils.register(stmt, type_=type_)
         yield astlib.Decl(stmt.decltype, stmt.name, type_, stmt.expr)
 
-    def types_are_equal(self, type1, type2):
-        if type1 in A(astlib.ParamedType) and type2 in A(astlib.ParamedType):
-            return type1.base == type2.base
-        elif type1 in A(astlib.Name) and type2 in A(astlib.Name):
-            return type1 == type2
-        return False
-
-    def get_adt_field_by_type(self, parent, type_):
-        adt_type = context.env.get_variable_info(parent)["type_"]
-        adt_type_info = context.env.get_type_info(adt_type)
-        for field_name, field_info in adt_type_info["fields"].items():
-            if self.types_are_equal(field_info["type_"], type_):
-                return astlib.DataMember(
-                    astlib.DataT.adt, parent, astlib.Name(field_name))
-        errors.no_adt_field(adt_type, type_)
-
-    def split_adt_usage(self, stmt):
-        yield astlib.Decl(
-            stmt.decltype, stmt.name, stmt.type_, astlib.Empty())
-        yield astlib.Assignment(
-            self.get_adt_field_by_type(
-                stmt.name, inference.infer_type(stmt.expr)), "=", stmt.expr)
-
     def var_let_decl(self, stmt):
         type_, expr = self.te(stmt.type_, stmt.expr)
         utils.register(stmt, type_=type_, expr=expr)
         result = astlib.Decl(stmt.decltype, stmt.name, type_, expr)
         if context.env.is_adt(context.env.get_node_type(type_)):
-            yield from self.split_adt_usage(result)
+            yield from split_adt_usage(result)
         else:
             yield result
 
@@ -175,18 +178,18 @@ class Analyzer(layers.Layer):
         type_ = self.t(stmt.rettype)
         args = self.a(stmt.args)
         utils.register(stmt, args=args, type_=type_)
-        +context.env
+        context.env.add_scope()
         utils.register_args(args)
         self.update_b()
         yield astlib.CallableDecl(
             stmt.decltype, stmt.parent, stmt.name,
             args, type_, self.b(stmt.body))
-        -context.env
+        context.env.remove_scope()
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
         utils.register(stmt)
-        +context.env
+        context.env.add_scope()
         context.parent = stmt.name
         utils.register_params(stmt.params)
         body = stmt.body
@@ -195,4 +198,4 @@ class Analyzer(layers.Layer):
         self.update_b()
         body = self.b(body)
         yield astlib.DataDecl(stmt.decltype, stmt.name, stmt.params, body)
-        -context.env
+        context.env.remove_scope()
