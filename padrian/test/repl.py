@@ -14,9 +14,7 @@ class REPL(cmd.Cmd):
     def do_eval(self):
         try:
             print(padr.compile_repl("\n".join(self.input_)))
-        except padr.errors.CompileTimeError as e:
-            print(e.message, file=sys.stderr)
-        except Exception as e:
+        except Exception:
             traceback.print_exc(chain=False)
 
     def do_debug(self):
@@ -26,9 +24,7 @@ class REPL(cmd.Cmd):
             result = list(padr.layers.transform_ast(
                 compiled, registry=reg))
             print("\n".join(result))
-        except padr.errors.CompileTimeError as e:
-            print(e.message, file=sys.stderr)
-        except Exception as e:
+        except Exception:
             traceback.print_exc(chain=False)
 
     def command(self, command):

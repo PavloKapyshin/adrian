@@ -20,17 +20,7 @@ def main():
     parser.add_argument(
         "-o", "--out", default="-",
         type=argparse.FileType("w", encoding="utf-8"))
-    parser.add_argument(
-        "--modules", type=argparse.FileType("r", encoding="utf-8"))
     args = parser.parse_args()
-
-    libs = None
-    if args.modules:
-        with open(args.modules.name, "r") as f:
-            content = f.read()
-        libs = []
-        for line in content.splitlines():
-            libs.append(line)
 
     print(
         padr.compile_from_file(args.in_file.name, out_file=args.out),

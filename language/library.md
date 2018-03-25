@@ -1,6 +1,6 @@
-# c module
+## c
 
-## Types
+#### Types
 
 Numeric types:
 
