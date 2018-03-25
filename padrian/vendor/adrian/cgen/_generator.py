@@ -181,9 +181,8 @@ class NodeGenerator(_layers.Layer):
         # If it is an array, add size of array (or at least square brackets).
         if isinstance(decl.type_, objects._Array):
             orig_size = decl.type_.size
-            if orig_size is None:
-                size = ""
-            elif isinstance(orig_size, int):
+            size = ""
+            if isinstance(orig_size, int):
                 size = str(orig_size)
             elif orig_size == "auto":
                 size = str(len(decl.expr.literal))

@@ -3,7 +3,7 @@
 _BAD_NAME = "Bad name '{name}'."
 _BAD_LITERAL = "Bad literal '{literal}'."
 
-_NOT_IMPLEMENTED = "Not implemented:"
+_NOT_IMPLEMENTED = "Not implemented: {}."
 
 
 class CheckError(Exception):
@@ -21,7 +21,7 @@ def bad_literal(literal):
 
 
 def not_implemented(message):
-    _error(" ".join([_NOT_IMPLEMENTED, "".join([message, "."])]))
+    _error(_NOT_IMPLEMENTED.format(message))
 
 
 def _error(message, **keywords):
