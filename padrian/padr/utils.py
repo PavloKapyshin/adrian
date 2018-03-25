@@ -91,20 +91,22 @@ def get_parent_name(expr):
     return expr
 
 
-def _update(assignment):
+def _update(assignment, **kwds):
     if assignment.left in A(astlib.Name):
-        c.env[assignment.left]["expr"] = assignment.right
+        right = kwds.get("right", assignment.right)
+        c.env[assignment.left]["expr"] = right
     elif assignment.left in A(astlib.DataMember):
         if assignment.left.datatype == astlib.DataT.adt:
             parent = get_parent_name(assignment.left)
-            c.env[parent]["expr"] = assignment.right
+            right = kwds.get("right", assignment.right)
+            c.env[parent]["expr"] = right
     else:
         print("Bad::_update", assignment.left)
 
 
 def register(stmt, **kwds):
     if stmt in A(astlib.Assignment):
-        _update(stmt)
+        _update(stmt, **kwds)
     elif stmt.decltype in (astlib.DeclT.var, astlib.DeclT.let):
         c.env[stmt.name] = {**{
             "node_type": declt_to_nodet(stmt.decltype),

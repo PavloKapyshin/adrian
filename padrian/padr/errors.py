@@ -27,8 +27,8 @@ hotfix: add type annotation"""
 _INFER_EXPR = """cannot infer expression from type
          (ast equivalent is {ast_node})
 hotfix: add expression"""
-_NOT_IMPLEMENTED = "not implemented (func {func}): {msg}"
-_FATAL_ERROR = "FATAL ERROR: {msg}"
+_NOT_IMPLEMENTED = "not implemented (func {func}): {message}"
+_FATAL_ERROR = "FATAL ERROR: {message}"
 _KEY_ERROR = "no such name '{key}' in container '{container}', requested '{request}'"
 _LATER = "not available now, will appear in version {version}"
 _NO_ADT_FIELD = "adt type {adt_type} has no field with type {type_}"
@@ -73,8 +73,8 @@ def infer_expr(ast_node):
     _error(_INFER_EXPR, ast_node=ast_node)
 
 
-def not_implemented(msg, func):
-    _error(_NOT_IMPLEMENTED, msg=msg, func=func)
+def not_implemented(message, func):
+    _error(_NOT_IMPLEMENTED, message=message, func=func)
 
 
 def syntax_error(line):
@@ -101,8 +101,8 @@ def unknown_stmt(stmt):
     _error(_UNKNOWN_STMT, stmt=stmt)
 
 
-def fatal_error(msg):
-    _error(_FATAL_ERROR, msg=msg)
+def fatal_error(message):
+    _error(_FATAL_ERROR, message=message)
 
 
 def key_error(key, request, container):

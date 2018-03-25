@@ -1,10 +1,9 @@
 import sys
 
 from adrian import cgen
-
 from . import (analyzer, arc, ccopts, context, copying, debug_formatter, defs,
-               foreign_parser, inlining, layers, object_protocol, parser, tac,
-               tocgen, )
+               env, foreign_parser, inlining, layers, object_protocol, parser,
+               tac, tocgen, )
 
 
 LAYERS = (
