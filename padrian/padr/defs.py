@@ -66,6 +66,12 @@ OP_TO_METHOD = {
     "-": "__sub__",
     "*": "__mul__",
     "/": "__div__",
+    "==": "__eq__",
+    "!=": "__neq__",
+    ">=": "__gte__",
+    "<=": "__lte__",
+    "<": "__lt__",
+    ">": "__gt__",
 }
 
 # Adrian's c module defs
@@ -141,7 +147,49 @@ def _add_cnumeric_type(tname):
                     ("self", member), ("other", member)
                 ],
                 "body": []
-            }
+            },
+            "__eq__": {
+                "type_": BOOL_TRANSLATION,
+                "args": [
+                    ("self", member), ("other", member)
+                ],
+                "body": []
+            },
+            "__neq__": {
+                "type_": BOOL_TRANSLATION,
+                "args": [
+                    ("self", member), ("other", member)
+                ],
+                "body": []
+            },
+            "__gte__": {
+                "type_": BOOL_TRANSLATION,
+                "args": [
+                    ("self", member), ("other", member)
+                ],
+                "body": []
+            },
+            "__lte__": {
+                "type_": BOOL_TRANSLATION,
+                "args": [
+                    ("self", member), ("other", member)
+                ],
+                "body": []
+            },
+            "__gt__": {
+                "type_": BOOL_TRANSLATION,
+                "args": [
+                    ("self", member), ("other", member)
+                ],
+                "body": []
+            },
+            "__lt__": {
+                "type_": BOOL_TRANSLATION,
+                "args": [
+                    ("self", member), ("other", member)
+                ],
+                "body": []
+            },
         }
     }
 

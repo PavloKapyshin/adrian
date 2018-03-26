@@ -43,3 +43,45 @@ struct {type}* {type}__div__(struct {type}* self, struct {type}* src) {{
     new->type_tag = {type_tag_number};
     return new;
 }}
+
+struct IntFast8* {type}__eq__(struct {type}* self, struct {type}* src) {{
+    struct IntFast8* new = malloc(sizeof(struct IntFast8));
+    new->literal = (self->literal == src->literal);
+    new->type_tag = 0;
+    return new;
+}}
+
+struct IntFast8* {type}__neq__(struct {type}* self, struct {type}* src) {{
+    struct IntFast8* new = malloc(sizeof(struct IntFast8));
+    new->literal = (self->literal != src->literal);
+    new->type_tag = 0;
+    return new;
+}}
+
+struct IntFast8* {type}__gte__(struct {type}* self, struct {type}* src) {{
+    struct IntFast8* new = malloc(sizeof(struct IntFast8));
+    new->literal = (self->literal >= src->literal);
+    new->type_tag = 0;
+    return new;
+}}
+
+struct IntFast8* {type}__lte__(struct {type}* self, struct {type}* src) {{
+    struct IntFast8* new = malloc(sizeof(struct IntFast8));
+    new->literal = (self->literal <= src->literal);
+    new->type_tag = 0;
+    return new;
+}}
+
+struct IntFast8* {type}__gt__(struct {type}* self, struct {type}* src) {{
+    struct IntFast8* new = malloc(sizeof(struct IntFast8));
+    new->literal = (self->literal > src->literal);
+    new->type_tag = 0;
+    return new;
+}}
+
+struct IntFast8* {type}__lt__(struct {type}* self, struct {type}* src) {{
+    struct IntFast8* new = malloc(sizeof(struct IntFast8));
+    new->literal = (self->literal < src->literal);
+    new->type_tag = 0;
+    return new;
+}}
