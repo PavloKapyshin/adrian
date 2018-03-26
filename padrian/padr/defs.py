@@ -45,6 +45,16 @@ INIT_METHOD = "__init__"
 DEINIT_METHOD = "__deinit__"
 COPY_METHOD = "__copy__"
 REF = "ref"
+BOOL = "Bool"
+BOOL_TRANSLATION = astlib.DataMember(astlib.DataT.module, "c", astlib.Name("IntFast8"))
+TRUE = "True"
+TRUE_TRANSLATION = astlib.Callable(
+    astlib.CallableT.struct, astlib.Empty,
+    BOOL_TRANSLATION, [astlib.Literal(astlib.LiteralT.integer, "1")])
+FALSE = "False"
+FALSE_TRANSLATION = astlib.Callable(
+    astlib.CallableT.struct, astlib.Empty,
+    BOOL_TRANSLATION, [astlib.Literal(astlib.LiteralT.integer, "0")])
 T_STRING = "t"
 I_STRING = "i"
 F_STRING = "f"

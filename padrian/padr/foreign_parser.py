@@ -67,6 +67,9 @@ def translate(node):
         if result in A(astlib.DataMember):
             if result.datatype == astlib.DataT.module:
                 add_to_clibs(result)
+        elif result in A(astlib.Name):
+            if result == defs.BOOL:
+                add_to_clibs(defs.BOOL_TRANSLATION)
         yield result
 
 

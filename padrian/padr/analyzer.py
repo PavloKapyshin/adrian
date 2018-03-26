@@ -50,6 +50,10 @@ def _e_data_member(expr: astlib.DataMember):
 
 def _e(expr):
     if expr in A(astlib.Name):
+        if expr == defs.TRUE:
+            return defs.TRUE_TRANSLATION
+        elif expr == defs.FALSE:
+            return defs.FALSE_TRANSLATION
         variable_info = context.env.get_variable_info(expr)
         if context.env.is_adt(context.env.get_node_type(variable_info["type_"])):
             return _get_adt_field_by_type(
@@ -80,6 +84,8 @@ def _t(type_):
     if type_ in A(astlib.Name):
         if type_ == "Void":
             return astlib.Void()
+        elif type_ == defs.BOOL:
+            return defs.BOOL_TRANSLATION
     elif type_ in A(
             astlib.DataMember) and type_.datatype == astlib.DataT.module:
         if type_.parent != defs.CMODULE:
