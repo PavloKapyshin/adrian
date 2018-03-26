@@ -228,6 +228,12 @@ class ComplexExpr(Node):
         self._keys = ("left", "op", "right")
 
 
+class Not(Node):
+    def __init__(self, expr):
+        self.expr = expr
+        self._keys = ("expr",)
+
+
 class Expr(ComplexExpr):
     pass
 

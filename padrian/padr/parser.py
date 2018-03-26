@@ -526,6 +526,8 @@ def p_boolop(content):
            | GTEQ
            | LT
            | GT
+           | AND
+           | OR
     """
     content[0] = content[1]
 
@@ -536,6 +538,10 @@ def p_bool_expr_1(content):
 
 
 def p_bool_expr_2(content):
+    """bool_expr : NOT bool_expr"""
+    content[0] = [parser_astlib.NOT, content[2]]
+
+def p_bool_expr_3(content):
     """bool_expr : expr"""
     content[0] = content[1]
 

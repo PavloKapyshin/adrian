@@ -1,1 +1,1 @@
-let a: Bool = c#IntFast16(0) == c#IntFast16(1)
+let a: Bool = not c#IntFast16(0)

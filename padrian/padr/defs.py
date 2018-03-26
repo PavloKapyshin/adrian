@@ -24,7 +24,7 @@ RESERVED_WORDS = {
     for keyword in (
     "var", "let", "struct",
     "return", "fun", "adt",
-    "protocol", "if", "else", "elif",
+    "protocol", "if", "else", "elif", "not", "and", "or"
 )
 }
 
@@ -61,6 +61,7 @@ T_STRING = "t"
 I_STRING = "i"
 F_STRING = "f"
 
+NOT_METHOD = "__not__"
 OP_TO_METHOD = {
     "+": "__add__",
     "-": "__sub__",
@@ -72,6 +73,8 @@ OP_TO_METHOD = {
     "<=": "__lte__",
     "<": "__lt__",
     ">": "__gt__",
+    "and": "__and__",
+    "or": "__or__",
 }
 
 # Adrian's c module defs
@@ -187,6 +190,27 @@ def _add_cnumeric_type(tname):
                 "type_": BOOL_TRANSLATION,
                 "args": [
                     ("self", member), ("other", member)
+                ],
+                "body": []
+            },
+            "__and__": {
+                "type_": BOOL_TRANSLATION,
+                "args": [
+                    ("self", member), ("other", member)
+                ],
+                "body": []
+            },
+            "__or__": {
+                "type_": BOOL_TRANSLATION,
+                "args": [
+                    ("self", member), ("other", member)
+                ],
+                "body": []
+            },
+            "__not__": {
+                "type_": BOOL_TRANSLATION,
+                "args": [
+                    ("self", member)
                 ],
                 "body": []
             },

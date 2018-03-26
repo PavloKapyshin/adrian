@@ -17,3 +17,6 @@ extern struct IntFast8* {type}__gte__(struct {type}* self, struct {type}* src);
 extern struct IntFast8* {type}__lte__(struct {type}* self, struct {type}* src);
 extern struct IntFast8* {type}__gt__(struct {type}* self, struct {type}* src);
 extern struct IntFast8* {type}__lt__(struct {type}* self, struct {type}* src);
+extern struct IntFast8* {type}__not__(struct {type}* self);
+extern struct IntFast8* {type}__and__(struct {type}* self, struct {type}* src);
+extern struct IntFast8* {type}__or__(struct {type}* self, struct {type}* src);

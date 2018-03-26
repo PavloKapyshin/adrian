@@ -49,6 +49,11 @@ def _e_data_member(expr: astlib.DataMember):
 
 
 def _e(expr):
+    if expr in A(astlib.Not):
+        inner_expr = _e(expr.expr)
+        return astlib.Callable(
+            astlib.CallableT.struct_func, inference.infer_type(inner_expr),
+            defs.NOT_METHOD, [inner_expr])
     if expr in A(astlib.Name):
         if expr == defs.TRUE:
             return defs.TRUE_TRANSLATION

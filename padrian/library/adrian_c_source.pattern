@@ -85,3 +85,24 @@ struct IntFast8* {type}__lt__(struct {type}* self, struct {type}* src) {{
     new->type_tag = 0;
     return new;
 }}
+
+struct IntFast8* {type}__not__(struct {type}* self) {{
+    struct IntFast8* new = malloc(sizeof(struct IntFast8));
+    new->literal = !(self->literal);
+    new->type_tag = 0;
+    return new;
+}}
+
+struct IntFast8* {type}__and__(struct {type}* self, struct {type}* src) {{
+    struct IntFast8* new = malloc(sizeof(struct IntFast8));
+    new->literal = (self->literal && src->literal);
+    new->type_tag = 0;
+    return new;
+}}
+
+struct IntFast8* {type}__or__(struct {type}* self, struct {type}* src) {{
+    struct IntFast8* new = malloc(sizeof(struct IntFast8));
+    new->literal = (self->literal || src->literal);
+    new->type_tag = 0;
+    return new;
+}}
