@@ -73,6 +73,7 @@ class TAC(layers.Layer):
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
         expr, decls = self.e(stmt.right)
+        utils.register(stmt, right=expr)
         yield from decls
         yield astlib.Assignment(stmt.left, stmt.op, expr)
 
