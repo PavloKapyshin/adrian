@@ -255,6 +255,54 @@ class ARC(layers.Layer):
         elif expr in A(astlib.DataMember):
             return self.is_arg(expr.parent)
 
+    def _if_stmt(self, stmt):
+        context.env.add_virtual_scope()
+        self.flist.add_virtual_scope()
+        self.update_b()
+        body = self.b(stmt.body)
+        #if stmt.rettype in A(astlib.Void):
+        body += list(self.free_scope())
+        result = astlib.If(stmt.expr, body)
+        context.env.remove_virtual_scope()
+        self.flist.remove_virtual_scope()
+        return result
+
+    def _elif_stmt(self, stmt):
+        context.env.add_virtual_scope()
+        self.flist.add_virtual_scope()
+        self.update_b()
+        body = self.b(stmt.body)
+        #if stmt.rettype in A(astlib.Void):
+        body += list(self.free_scope())
+        result = astlib.ElseIf(stmt.expr, body)
+        context.env.remove_virtual_scope()
+        self.flist.remove_virtual_scope()
+        return result
+
+    def _else(self, stmt):
+        context.env.add_virtual_scope()
+        self.flist.add_virtual_scope()
+        self.update_b()
+        body = self.b(stmt.body)
+        #if stmt.rettype in A(astlib.Void):
+        body += list(self.free_scope())
+        result = astlib.Else(body)
+        context.env.remove_virtual_scope()
+        self.flist.remove_virtual_scope()
+        return result
+
+    @layers.register(astlib.Cond)
+    def translate_cond(self, stmt: astlib.Cond):
+        if_stmt = self._if_stmt(stmt.if_stmt)
+        elifs = []
+        for elif_ in stmt.else_ifs:
+            elifs.append(self._elif_stmt(elif_))
+        if stmt.else_ is None:
+            else_ = None
+        else:
+            else_ = self._else(stmt.else_)
+        yield astlib.Cond(if_stmt, elifs, else_)
+
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
         if self.is_initialized(stmt.left):

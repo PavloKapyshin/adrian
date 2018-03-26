@@ -92,6 +92,37 @@ class DebugFormatter(layers.Layer):
     def p(self, params):
         return ", ".join([str(param) for param in params])
 
+    def _if(self, stmt):
+        yield from self.stmt_with_body(" ".join([
+            "if",
+            self.e(stmt.expr),
+            "{"
+        ]), stmt.body)
+
+    def _elif(self, stmt):
+        yield from self.stmt_with_body(" ".join([
+            "elif",
+            self.e(stmt.expr),
+            "{"
+        ]), stmt.body)
+
+    def _else(self, stmt):
+        yield from self.stmt_with_body(" ".join([
+            "else", "{"
+        ]), stmt.body)
+
+    @layers.register(astlib.Cond)
+    def cond(self, stmt: astlib.Cond):
+        if_stmt = list(self._if(stmt.if_stmt))
+        elifs = []
+        for elif_ in stmt.else_ifs:
+            elifs.extend(self._elif(elif_))
+        if stmt.else_ is None:
+            else_ = []
+        else:
+            else_ = list(self._else(stmt.else_))
+        yield " ".join(if_stmt + elifs + else_)
+
     @layers.register(astlib.Decl)
     def decl(self, stmt):
         if stmt.decltype == astlib.DeclT.field:

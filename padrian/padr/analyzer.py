@@ -55,7 +55,8 @@ def _e(expr):
         elif expr == defs.FALSE:
             return defs.FALSE_TRANSLATION
         variable_info = context.env.get_variable_info(expr)
-        if context.env.is_adt(context.env.get_node_type(variable_info["type_"])):
+        if context.env.is_adt(
+                context.env.get_node_type(variable_info["type_"])):
             return _get_adt_field_by_type(
                 expr, inference.infer_type(variable_info["expr"]))
     elif expr in A(astlib.Callable):
@@ -142,6 +143,36 @@ class Analyzer(layers.Layer):
     @layers.register(astlib.DataMember)
     def translate_data_member(self, stmt):
         yield _e_data_member(stmt)
+
+    def _if_stmt(self, stmt):
+        context.env.add_scope()
+        result = astlib.If(_e(stmt.expr), self.b(stmt.body))
+        context.env.remove_scope()
+        return result
+
+    def _elif_stmt(self, stmt):
+        context.env.add_scope()
+        result = astlib.ElseIf(_e(stmt.expr), self.b(stmt.body))
+        context.env.remove_scope()
+        return result
+
+    def _else(self, stmt):
+        context.env.add_scope()
+        result = astlib.Else(self.b(stmt.body))
+        context.env.remove_scope()
+        return result
+
+    @layers.register(astlib.Cond)
+    def translate_cond(self, stmt: astlib.Cond):
+        if_stmt = self._if_stmt(stmt.if_stmt)
+        elifs = []
+        for elif_ in stmt.else_ifs:
+            elifs.append(self._elif_stmt(elif_))
+        if stmt.else_ in A(list):
+            else_ = None
+        else:
+            else_ = self._else(stmt.else_)
+        yield astlib.Cond(if_stmt, elifs, else_)
 
     @layers.register(astlib.Decl)
     def translate_declaration(self, stmt):

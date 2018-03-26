@@ -32,6 +32,7 @@ class Env:
 
     def __init__(self):
         self.scope = 0
+        self.virtual_scope = 0
         self.space = {self.scope: {}}
         self.is_var = self._is_of_nodetype_maker(astlib.NodeT.var)
         self.is_let = self._is_of_nodetype_maker(astlib.NodeT.let)
@@ -91,32 +92,48 @@ class Env:
             errors.no_such_field(parent, parent_type, field_name)
         return field_info
 
+    def add_virtual_scope(self):
+        self.virtual_scope += 1
+        self.space[self.virtual_scope] = {}
+
+    def remove_virtual_scope(self):
+        del self.space[self.virtual_scope]
+        self.virtual_scope -= 1
+
     def add_scope(self):
         self.scope += 1
+        self.virtual_scope += 1
         self.space[self.scope] = {}
 
     def remove_scope(self):
         del self.space[self.scope]
         self.scope -= 1
+        self.virtual_scope -= 1
 
     def __neg__(self):
         del self.space[self.scope]
         self.scope -= 1
+        self.virtual_scope -= 1
 
     def __pos__(self):
         self.scope += 1
+        self.virtual_scope += 1
         self.space[self.scope] = {}
 
     def __setitem__(self, key, value):
+        scope = (self.scope if self.scope >= self.virtual_scope
+            else self.virtual_scope)
         key = self._validate_key(key)
-        self.space[self.scope][key] = value
+        self.space[scope][key] = value
 
     def __contains__(self, key):
         return self[key] is not None
 
     def _get_with_scope(self, key):
         key = self._validate_key(key)
-        scope = self.scope
+        scope = (
+            self.scope if self.scope >= self.virtual_scope
+            else self.virtual_scope)
         while scope >= 0:
             found = self.space[scope].get(key)
             if found:
@@ -131,4 +148,15 @@ class Env:
         del self.space[self.scope][key]
 
     def cspace(self):
-        return self.space[self.scope].items()
+        scope = (
+            self.scope if self.scope >= self.virtual_scope
+            else self.virtual_scope)
+        return self.space[scope].items()
+
+    def cspace_return(self):
+        if self.virtual_scope == self.scope:
+            return self.space[self.scope].items()
+        result = {}
+        for i in reversed(range(self.scope, self.virtual_scope + 1)):
+            result = {**result, **self.space[i]}
+        return result.items()

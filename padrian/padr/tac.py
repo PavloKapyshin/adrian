@@ -70,6 +70,41 @@ class TAC(layers.Layer):
             decls.extend(new_decls)
         return new_args, decls
 
+    def _if_stmt(self, stmt):
+        context.env.add_scope()
+        expr, decls = self.e(stmt.expr)
+        result = (astlib.If(expr, self.b(stmt.body)), decls)
+        context.env.remove_scope()
+        return result
+
+    def _elif_stmt(self, stmt):
+        context.env.add_scope()
+        expr, decls = self.e(stmt.expr)
+        result = (astlib.ElseIf(expr, self.b(stmt.body)), decls)
+        context.env.remove_scope()
+        return result
+
+    def _else(self, stmt):
+        context.env.add_scope()
+        result = astlib.Else(self.b(stmt.body))
+        context.env.remove_scope()
+        return result
+
+    @layers.register(astlib.Cond)
+    def translate_cond(self, stmt: astlib.Cond):
+        if_stmt, main_decls = self._if_stmt(stmt.if_stmt)
+        elifs = []
+        for elif_ in stmt.else_ifs:
+            res = self._elif_stmt(elif_)
+            elifs.append(res[0])
+            main_decls.extend(res[1])
+        if stmt.else_ is None:
+            else_ = None
+        else:
+            else_ = self._else(stmt.else_)
+        yield from main_decls
+        yield astlib.Cond(if_stmt, elifs, else_)
+
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
         expr, decls = self.e(stmt.right)

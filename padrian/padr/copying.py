@@ -31,6 +31,36 @@ class Copying(layers.Layer):
             return args
         return [self.ae(arg) for arg in args]
 
+    def _if_stmt(self, stmt):
+        context.env.add_scope()
+        result = astlib.If(self.e(stmt.expr), self.b(stmt.body))
+        context.env.remove_scope()
+        return result
+
+    def _elif_stmt(self, stmt):
+        context.env.add_scope()
+        result = astlib.ElseIf(self.e(stmt.expr), self.b(stmt.body))
+        context.env.remove_scope()
+        return result
+
+    def _else(self, stmt):
+        context.env.add_scope()
+        result = astlib.Else(self.b(stmt.body))
+        context.env.remove_scope()
+        return result
+
+    @layers.register(astlib.Cond)
+    def translate_cond(self, stmt: astlib.Cond):
+        if_stmt = self._if_stmt(stmt.if_stmt)
+        elifs = []
+        for elif_ in stmt.else_ifs:
+            elifs.append(self._elif_stmt(elif_))
+        if stmt.else_ is None:
+            else_ = None
+        else:
+            else_ = self._else(stmt.else_)
+        yield astlib.Cond(if_stmt, elifs, else_)
+
     @layers.register(astlib.Return)
     def return_stmt(self, stmt):
         expr = self.ae(stmt.expr)
