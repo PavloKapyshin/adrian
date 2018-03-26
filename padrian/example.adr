@@ -1,11 +1,5 @@
-struct Some(a) {
-    data: a
+struct True {}
+struct False {}
+adt Bool {
+    True, False
 }
-struct None {}
-
-adt Maybe(a) {
-    Some(a), None
-}
-
-let b: Maybe(c#IntFast8) = Some(c#IntFast8(1))
-let c: c#IntFast8 = b.data
