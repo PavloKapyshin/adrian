@@ -39,6 +39,7 @@ class Copying(layers.Layer):
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
         expr = self.e(stmt.right)
+        utils.register(stmt, right=expr)
         yield astlib.Assignment(stmt.left, stmt.op, expr)
 
     @layers.register(astlib.Callable)

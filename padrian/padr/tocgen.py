@@ -116,7 +116,6 @@ class ToCgen(layers.Layer):
             return [
                 cgen.Decl(self.n(name), type_=self.t(type_))
                 for name, type_ in args]
-        print("__", args)
         return list(map(self.e, args))
 
     def n(self, name):

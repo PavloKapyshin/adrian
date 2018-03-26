@@ -27,7 +27,6 @@ def _infer_type_from_struct_func_call(struct_func_call):
         params, method_info["args"], struct_func_call.args)
     if mapping:
         return apply_(mapping, for_=method_info["type_"])
-    print("HAy, badd, infer...")
 
 
 def apply_(mapping, for_):

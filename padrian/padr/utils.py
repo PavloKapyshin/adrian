@@ -100,8 +100,6 @@ def _update(assignment, **kwds):
             parent = get_parent_name(assignment.left)
             right = kwds.get("right", assignment.right)
             c.env[parent]["expr"] = right
-    else:
-        print("Bad::_update", assignment.left)
 
 
 def register(stmt, **kwds):
