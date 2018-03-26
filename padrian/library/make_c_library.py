@@ -65,7 +65,12 @@ def merge_header_file(header_pattern):
 def merge_source_file(source_pattern):
     return SOURCE_FORMAT_STRING.format_map({
         "includes": SOURCE_INCLUDES,
-        "body": make_body_from_pattern(source_pattern)
+        "body": "\n".join([
+            source_pattern.format_map({
+                "type": type, "ctype": ctype, "type_tag_number": i,
+            })
+            for i, (type, ctype) in enumerate(C_TYPE_LIST)
+        ])
     })
 
 

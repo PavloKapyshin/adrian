@@ -76,6 +76,9 @@ class ToCgen(layers.Layer):
             return cgen.CTypes.ptr(cgen.StructType(self.n(type_)))
         if type_ in A(astlib.ParamedType):
             return self.t(type_.type_)
+        if type_ in A(astlib.LiteralType):
+            if type_.type_ == astlib.LiteralT.uint_fast64_t:
+                return cgen.CTypes.uint_fast64
 
     def e(self, expr):
         if expr in A(astlib.Ref):
@@ -102,9 +105,13 @@ class ToCgen(layers.Layer):
                     self.e(expr.parent),
                     self.e(expr.member))
         if expr in A(astlib.Literal):
+            if expr.type_ == astlib.LiteralT.integer:
+                return cgen.Val(
+                    literal=expr.literal,
+                    type_=cgen.CTypes.int_fast64)
             return cgen.Val(
                 literal=expr.literal,
-                type_=cgen.CTypes.int_fast64)
+                type_=cgen.CTypes.uint_fast64)
         if expr in A(astlib.Cast):
             return cgen.Cast(
                 self.e(expr.expr), self.t(expr.to))

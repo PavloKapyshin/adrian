@@ -4,9 +4,11 @@ from .utils import A
 
 
 def deinit(name, type_):
-    return astlib.Callable(
-        astlib.CallableT.struct_func, type_,
-        defs.DEINIT_METHOD, [name])
+    if type_ not in A(astlib.LiteralType):
+        return astlib.Callable(
+            astlib.CallableT.struct_func, type_,
+            defs.DEINIT_METHOD, [name])
+    return None
 
 
 class ARC(layers.Layer):
@@ -42,6 +44,8 @@ class ARC(layers.Layer):
         elif name in A(astlib.DataMember):
             if name.parent in A(astlib.Name):
                 info = context.env[name.parent]["initialized"]
+                if info is None:
+                    return True
                 if name.parent in info:
                     return name.member in info[name.parent]
                 return False
@@ -71,7 +75,10 @@ class ARC(layers.Layer):
                 for field, info in fields.items():
                     res = self.provide_initialized_from_type(
                         field, info["type_"])
-                    result[field] = res[field]
+                    if res is None:
+                        result[field] = {}
+                    else:
+                        result[field] = res[field]
                 return {name: result}
             else:
                 return {name: {}}
@@ -113,6 +120,8 @@ class ARC(layers.Layer):
             to_unwrap.append(parent)
             to_unwrap = reversed(to_unwrap)
             info = context.env[parent]["initialized"]
+            if info is None:
+                return
             for memb in to_unwrap:
                 if memb not in info:
                     info[memb] = {}

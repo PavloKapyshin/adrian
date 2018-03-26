@@ -1,5 +1,6 @@
 struct {type} {{
     {ctype} literal;
+    uint_fast64_t type_tag;
 }};
 
 

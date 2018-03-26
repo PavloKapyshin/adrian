@@ -39,6 +39,7 @@ class LLT(enum.Enum):
 
 class LiteralT(enum.Enum):
     integer = 1
+    uint_fast64_t = 2
 
 
 @enum.unique
@@ -95,9 +96,6 @@ class _Name(collections.UserString):
         elif isinstance(other, _Name):
             return self.data == other.data
         return False
-        # raise TypeError(
-        #     "comparison cannot be applied to {} and {}.".format(
-        #         type(self), type(other)))
 
     def __hash__(self):
         return hash(self.data)

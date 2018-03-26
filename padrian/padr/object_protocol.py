@@ -66,6 +66,9 @@ def ptoprotocolf(pfunc, protocol):
 
 class ObjectProtocol(layers.Layer):
 
+    def __init__(self):
+        self.type_tag_number = defs.TYPE_TAG_START
+
     def complete_init_method(self, method, stmt):
         errors.not_now(errors.CUSTOM_OBJMETHOD)
 
@@ -96,6 +99,13 @@ class ObjectProtocol(layers.Layer):
                 field_of_new(field_decl.name), "=",
                 copy(field_decl.type_,
                     self_field(field_decl.name))))
+        type_tag_field = self.render_type_tag()
+        field_inits.append(
+            astlib.Assignment(
+                self_field(type_tag_field.name), "=",
+                astlib.Literal(astlib.LiteralT.uint_fast64_t,
+                    str(self.type_tag_number))
+            ))
         return_new = astlib.Return(new)
         body = [new_decl] + field_inits + [return_new]
         return astlib.CallableDecl(
@@ -115,6 +125,12 @@ class ObjectProtocol(layers.Layer):
                 astlib.Assignment(
                     self_field(field_decl.name), "=",
                     copy(field_decl.type_, field_decl.name)))
+        type_tag_field = self.render_type_tag()
+        field_inits.append(
+            astlib.Assignment(
+                self_field(type_tag_field.name), "=",
+                astlib.Literal(astlib.LiteralT.uint_fast64_t, str(self.type_tag_number))
+        ))
         body = [self_decl] + field_inits + [return_self]
         rettype = totype(stmt)
         return astlib.CallableDecl(
@@ -129,6 +145,14 @@ class ObjectProtocol(layers.Layer):
             astlib.DeclT.method, astlib.Empty(), method.name,
             [(SELF, totype(struct))] + args,
             method.rettype, body)
+
+    def render_type_tag(self):
+        return astlib.Decl(
+            astlib.DeclT.field, astlib.Name(defs.TYPE_TAG_NAME),
+            defs.TYPE_TAG_TYPE, astlib.Empty())
+
+    def add_type_tag(self, fields):
+        return fields + [self.render_type_tag()]
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
@@ -159,9 +183,10 @@ class ObjectProtocol(layers.Layer):
                     additional_methods.append(f(stmt))
             yield astlib.DataDecl(
                 stmt.decltype, stmt.name,
-                stmt.params, fields + [
+                stmt.params, self.add_type_tag(fields) + [
                     mtostructf(method, stmt)
                     for method in additional_methods + new_methods])
+            self.type_tag_number += 1
         elif stmt.decltype == astlib.DeclT.protocol:
             fields, pfuncs = split_body(stmt.body)
             yield astlib.DataDecl(

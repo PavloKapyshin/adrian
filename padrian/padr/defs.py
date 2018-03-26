@@ -7,6 +7,9 @@ from . import env, astlib
 
 
 # Compiler defs.
+TYPE_TAG_START = 8
+TYPE_TAG_TYPE = astlib.LiteralType(astlib.LiteralT.uint_fast64_t)
+TYPE_TAG_NAME = "type_tag"
 ENV = env.Env()
 DEFAULT_MODULE_PATHS = ["library/"]
 DEFAULT_CONTEXT_ARGUMENTS = {
