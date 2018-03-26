@@ -47,6 +47,8 @@ def declt_to_nodet(declt):
         nodet = astlib.NodeT.var
     elif declt == astlib.DeclT.let:
         nodet = astlib.NodeT.let
+    elif declt == astlib.DeclT.fun:
+        nodet = astlib.NodeT.fun
     return nodet
 
 

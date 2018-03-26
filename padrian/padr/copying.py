@@ -33,13 +33,13 @@ class Copying(layers.Layer):
 
     def _if_stmt(self, stmt):
         context.env.add_scope()
-        result = astlib.If(self.e(stmt.expr), self.b(stmt.body))
+        result = astlib.If(self.ae(stmt.expr), self.b(stmt.body))
         context.env.remove_scope()
         return result
 
     def _elif_stmt(self, stmt):
         context.env.add_scope()
-        result = astlib.ElseIf(self.e(stmt.expr), self.b(stmt.body))
+        result = astlib.ElseIf(self.ae(stmt.expr), self.b(stmt.body))
         context.env.remove_scope()
         return result
 

@@ -72,14 +72,14 @@ class TAC(layers.Layer):
 
     def _if_stmt(self, stmt):
         context.env.add_scope()
-        expr, decls = self.e(stmt.expr)
+        expr, decls = self._inner_e(stmt.expr)
         result = (astlib.If(expr, self.b(stmt.body)), decls)
         context.env.remove_scope()
         return result
 
     def _elif_stmt(self, stmt):
         context.env.add_scope()
-        expr, decls = self.e(stmt.expr)
+        expr, decls = self._inner_e(stmt.expr)
         result = (astlib.ElseIf(expr, self.b(stmt.body)), decls)
         context.env.remove_scope()
         return result

@@ -28,7 +28,7 @@ def _e_callable(expr: astlib.Callable):
         if len(args) != 1:
             errors.wrong_number_of_args(len(args), 1)
         return astlib.Ref(args[0])
-    elif callable_type not in (
+    if callable_type not in (
             astlib.CallableT.cfunc, astlib.CallableT.struct_func)\
             and context.env.is_type(context.env.get_node_type(expr.name)):
         callable_type = astlib.CallableT.struct

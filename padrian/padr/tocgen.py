@@ -50,6 +50,8 @@ class ToCgen(layers.Layer):
             return any([check(t) for t in params])
 
         def gt(type_):
+            if type_ in A(astlib.LiteralType):
+                return cgen.CTypes.uint_fast64
             if check(type_):
                 return cgen.CTypes.ptr(cgen.CTypes.void)
             return type_
@@ -79,6 +81,11 @@ class ToCgen(layers.Layer):
         if type_ in A(astlib.LiteralType):
             if type_.type_ == astlib.LiteralT.uint_fast64_t:
                 return cgen.CTypes.uint_fast64
+
+    def bool_e(self, expr):
+        return cgen.StructElem(
+            cgen.CTypes.ptr(self.e(expr)),
+            cgen.Var("literal"))
 
     def e(self, expr):
         if expr in A(astlib.Ref):
@@ -133,7 +140,37 @@ class ToCgen(layers.Layer):
             return self.n(name.type_)
         return str(name)
 
-    # Core.
+    def _if_stmt(self, stmt):
+        context.env.add_scope()
+        result = astlib.If(self.bool_e(stmt.expr), self.b(stmt.body))
+        context.env.remove_scope()
+        return result.expr, result.body
+
+    def _elif_stmt(self, stmt):
+        context.env.add_scope()
+        result = cgen.ElseIf(self.bool_e(stmt.expr), self.b(stmt.body))
+        context.env.remove_scope()
+        return result
+
+    def _else(self, stmt):
+        context.env.add_scope()
+        result = cgen.Else(self.b(stmt.body))
+        context.env.remove_scope()
+        return result
+
+    @layers.register(astlib.Cond)
+    def translate_cond(self, stmt: astlib.Cond):
+        if_stmt_expr, if_stmt_body = self._if_stmt(stmt.if_stmt)
+        elifs = []
+        for elif_ in stmt.else_ifs:
+            elifs.append(self._elif_stmt(elif_))
+        if stmt.else_ is None:
+            else_ = None
+        else:
+            else_ = self._else(stmt.else_)
+        yield cgen.If(
+            if_stmt_expr, if_stmt_body, else_ifs=elifs, else_=else_)
+
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
         yield cgen.Assignment(

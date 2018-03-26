@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from . import astlib, layers, utils, env, defs, errors, inference
+from . import astlib, defs, env, errors, inference, layers, utils
 from .context import context
 from .utils import A
 
@@ -44,6 +44,7 @@ class _Mapping:
 
 
 class Mapping:
+
     def __init__(self):
         self.type_mapping = _Mapping()
         self.args_mapping = _Mapping()
@@ -93,9 +94,13 @@ class Mapping:
 
 class _CoreInlining(layers.Layer):
 
-    def __init__(self, mapping=None):
+    def __init__(self, mapping=None, env_=None):
         self.mapping = mapping or Mapping()
-        self.env = env.Env()
+        self.env = env_ or env.Env()
+        self.update_b()
+
+    def update_b(self):
+        self.b = layers.b(_CoreInlining, mapping=self.mapping, env_=self.env)
 
     def _e_callable(self, stmt):
         if stmt.callabletype in (
@@ -116,7 +121,7 @@ class _CoreInlining(layers.Layer):
     def t(self, type_):
         if type_ in A(astlib.Name):
             found = self.mapping.type_mapping.get(type_)
-            return (found if found else type_)
+            return found if found else type_
         elif type_ in A(astlib.ParamedType):
             return astlib.ParamedType(
                 type_.base, list(map(self.t, type_.params)))
@@ -125,7 +130,7 @@ class _CoreInlining(layers.Layer):
     def e(self, expr):
         if expr in A(astlib.Name):
             found = self.mapping.args_mapping.get(expr)
-            return (self.n(found) if found else self.n(expr))
+            return self.n(found) if found else self.n(expr)
         elif expr in A(astlib.Callable):
             return self._e_callable(expr)
         elif expr in A(astlib.StructScalar):
@@ -140,6 +145,39 @@ class _CoreInlining(layers.Layer):
 
     def a(self, args):
         return list(map(self.e, args))
+
+    def _if_stmt(self, stmt):
+        context.env.add_scope()
+        self.update_b()
+        result = astlib.If(self.e(stmt.expr), self.b(stmt.body))
+        context.env.remove_scope()
+        return result
+
+    def _elif_stmt(self, stmt):
+        context.env.add_scope()
+        self.update_b()
+        result = astlib.ElseIf(self.e(stmt.expr), self.b(stmt.body))
+        context.env.remove_scope()
+        return result
+
+    def _else(self, stmt):
+        context.env.add_scope()
+        self.update_b()
+        result = astlib.Else(self.b(stmt.body))
+        context.env.remove_scope()
+        return result
+
+    @layers.register(astlib.Cond)
+    def translate_cond(self, stmt: astlib.Cond):
+        if_stmt = self._if_stmt(stmt.if_stmt)
+        elifs = []
+        for elif_ in stmt.else_ifs:
+            elifs.append(self._elif_stmt(elif_))
+        if stmt.else_ is None:
+            else_ = None
+        else:
+            else_ = self._else(stmt.else_)
+        yield astlib.Cond(if_stmt, elifs, else_)
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
@@ -219,9 +257,11 @@ class Inlining(layers.Layer):
         if self.mapping.args_mapping:
             args = self.mapping.apply(args)
         # if struct_info and "params" not in struct_info:
-        #     print("That.", struct_info, parent)
+        #     print("StructInfo", struct_info)
+        #     print()
+        #     print("Parent", parent)
         if (struct_info and
-                context.env.is_type(struct_info["node_type"]) and
+                context.env.is_real_type(struct_info["node_type"]) and
                 struct_info["params"]):
             result = self.inline(parent, method_name, args)
             context.i_count += 1
@@ -262,6 +302,41 @@ class Inlining(layers.Layer):
         errors.not_implemented(
             "stmt {} is unknown".format(expr),
             func=self.get_the_most_high_level_type)
+
+    def _if_stmt(self, stmt):
+        context.env.add_scope()
+        expr, decls = self.e(stmt.expr)
+        result = (astlib.If(expr, self.b(stmt.body)), decls)
+        context.env.remove_scope()
+        return result
+
+    def _elif_stmt(self, stmt):
+        context.env.add_scope()
+        expr, decls = self.e(stmt.expr)
+        result = (astlib.ElseIf(expr, self.b(stmt.body)), decls)
+        context.env.remove_scope()
+        return result
+
+    def _else(self, stmt):
+        context.env.add_scope()
+        result = astlib.Else(self.b(stmt.body))
+        context.env.remove_scope()
+        return result
+
+    @layers.register(astlib.Cond)
+    def translate_cond(self, stmt: astlib.Cond):
+        if_stmt, main_decls = self._if_stmt(stmt.if_stmt)
+        elifs = []
+        for elif_ in stmt.else_ifs:
+            res = self._elif_stmt(elif_)
+            elifs.append(res[0])
+            main_decls.extend(res[1])
+        if stmt.else_ is None:
+            else_ = None
+        else:
+            else_ = self._else(stmt.else_)
+        yield from main_decls
+        yield astlib.Cond(if_stmt, elifs, else_)
 
     @layers.register(astlib.Callable)
     def callable_stmt(self, stmt):
@@ -311,8 +386,12 @@ class Inlining(layers.Layer):
             utils.register(stmt)
         +context.env
         utils.register_args(stmt.args)
+        body = self.b(stmt.body)
         -context.env
-        yield stmt
+        yield astlib.CallableDecl(
+            stmt.decltype, stmt.parent, stmt.name, stmt.args,
+            stmt.rettype, body
+        )
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):

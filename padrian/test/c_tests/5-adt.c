@@ -3,7 +3,7 @@
 #include <adrian_c.h>
 struct Some {
 void* data;
-void* type_tag;
+uint_fast64_t type_tag;
 };
 struct None {
 uint_fast64_t type_tag;

@@ -1,14 +1,15 @@
-struct Some(a) {
-    data: a
+fun f(): Bool {
+    let a: c#IntFast8 = c#IntFast8(2)
+    if True {
+        if True {
+            return True
+        }
+        let b: c#IntFast8 = c#IntFast8(1)
+        return False
+    } else {
+        let c: c#IntFast8 = c#IntFast8(2)
+    }
+    return True
 }
-struct None {}
 
-adt Maybe(a) {
-    Some(a), None
-}
-
-let b: Maybe(c#IntFast8) = Some(c#IntFast8(1))
-b = None()
-b = Some(c#IntFast8(2))
-let c: c#IntFast8 = b.data
-let d: Some(c#IntFast8) = b
+let a: Bool = f()

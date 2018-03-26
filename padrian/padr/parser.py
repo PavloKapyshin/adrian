@@ -191,6 +191,7 @@ def p_if_body_stmt(content):
                  | assignment
                  | factor
                  | cond
+                 | return_stmt
     """
     content[0] = content[1]
 
@@ -351,6 +352,7 @@ def p_fun_body_stmt(content):
                   | assignment
                   | return_stmt
                   | factor
+                  | cond
     """
     content[0] = content[1]
 

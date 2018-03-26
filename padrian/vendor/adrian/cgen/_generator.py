@@ -279,6 +279,51 @@ class NodeGenerator(_layers.Layer):
         expr = self.expr(assmt.expr)
         return "{} = {};".format(name, expr)
 
+    def _elif(self, stmt):
+        generated_body = Generated()
+        for stmt_ in stmt.body:
+            generated_body.merge(self.generate(stmt_))
+
+        for include in generated_body.includes:
+            self.add_include_string(include)
+        return "\n".join([
+            " ".join(["else if ({})".format(self.expr(stmt.cond)), "{"]),
+            "\n".join(generated_body.rest_code),
+            "}"
+        ])
+
+    def else_(self, stmt):
+        generated_body = Generated()
+        for stmt_ in stmt.body:
+            generated_body.merge(self.generate(stmt_))
+
+        for include in generated_body.includes:
+            self.add_include_string(include)
+        return "\n".join([
+            " ".join(["else", "{"]),
+            "\n".join(generated_body.rest_code),
+            "}"
+        ])
+
+    @_layers.register(objects.If)
+    def if_(self, stmt):
+        expr = self.expr(stmt.cond)
+        generated_body = Generated()
+        for stmt_ in stmt.body:
+            generated_body.merge(self.generate(stmt_))
+
+        for include in generated_body.includes:
+            self.add_include_string(include)
+        elifs = [self._elif(elif_) for elif_ in stmt.else_ifs]
+        to_proceed = [
+             " ".join(["if ({})".format(expr), "{"]),
+             "\n".join(generated_body.rest_code),
+             "}"
+         ] + elifs
+        if stmt.else_ is not None:
+            to_proceed += [self.else_(stmt.else_)]
+        return "\n".join(to_proceed)
+
     @_layers.register(objects.While)
     def while_(self, stmt):
         generated_body = Generated()

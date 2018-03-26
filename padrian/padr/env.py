@@ -145,7 +145,15 @@ class Env:
         return self._get_with_scope(key)[0]
 
     def __delitem__(self, key):
-        del self.space[self.scope][key]
+        scope = (
+            self.scope if self.scope >= self.virtual_scope
+            else self.virtual_scope)
+        key = self._validate_key(key)
+        while scope >= 0:
+            if key in self.space[scope]:
+                del self.space[scope][key]
+                return
+            scope -= 1
 
     def cspace(self):
         scope = (

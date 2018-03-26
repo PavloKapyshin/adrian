@@ -216,6 +216,12 @@ class ARC(layers.Layer):
             if result is not None:
                 yield result
 
+    def return_free_scope(self):
+        for key, info in sorted(self.flist.cspace_return()):
+            result = self.free(key)
+            if result is not None:
+                yield result
+
     # Subcore funcs.
     def fun_decl(self, stmt):
         utils.register(stmt)
@@ -255,13 +261,34 @@ class ARC(layers.Layer):
         elif expr in A(astlib.DataMember):
             return self.is_arg(expr.parent)
 
+    def no_return_in_body(self, body):
+        for stmt in body:
+            if stmt in A(astlib.Return):
+                return False
+            elif stmt in A(astlib.Cond):
+                if_stmt = stmt.if_stmt
+                elifs = stmt.else_ifs
+                else_ = stmt.else_
+
+                return_in_if = self.no_return_in_body(if_stmt.body)
+                return_in_elifs = []
+                for elif_ in elifs:
+                    return_in_elifs.append(self.no_return_in_body(elif_.body))
+                return_in_elifs = any(return_in_elifs)
+                return_in_else = False
+                if else_ is not None:
+                    return_in_else = self.no_return_in_body(else_.body)
+                if return_in_if or return_in_elifs or return_in_else:
+                    return False
+        return True
+
     def _if_stmt(self, stmt):
         context.env.add_virtual_scope()
         self.flist.add_virtual_scope()
         self.update_b()
         body = self.b(stmt.body)
-        #if stmt.rettype in A(astlib.Void):
-        body += list(self.free_scope())
+        if self.no_return_in_body(body):
+            body += list(self.free_scope())
         result = astlib.If(stmt.expr, body)
         context.env.remove_virtual_scope()
         self.flist.remove_virtual_scope()
@@ -272,8 +299,8 @@ class ARC(layers.Layer):
         self.flist.add_virtual_scope()
         self.update_b()
         body = self.b(stmt.body)
-        #if stmt.rettype in A(astlib.Void):
-        body += list(self.free_scope())
+        if self.no_return_in_body(body):
+            body += list(self.free_scope())
         result = astlib.ElseIf(stmt.expr, body)
         context.env.remove_virtual_scope()
         self.flist.remove_virtual_scope()
@@ -284,8 +311,8 @@ class ARC(layers.Layer):
         self.flist.add_virtual_scope()
         self.update_b()
         body = self.b(stmt.body)
-        #if stmt.rettype in A(astlib.Void):
-        body += list(self.free_scope())
+        if self.no_return_in_body(body):
+            body += list(self.free_scope())
         result = astlib.Else(body)
         context.env.remove_virtual_scope()
         self.flist.remove_virtual_scope()
@@ -322,7 +349,7 @@ class ARC(layers.Layer):
                 context.env[struct]["methods"][func]["is_arg_return"] = True
             else:
                 context.env[context.func]["is_arg_return"] = True
-        yield from self.free_scope()
+        yield from self.return_free_scope()
         yield stmt
 
     @layers.register(astlib.Callable)
