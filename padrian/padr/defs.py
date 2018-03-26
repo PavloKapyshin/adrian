@@ -2,8 +2,7 @@ import re
 from functools import partial
 
 from adrian.cgen import libc
-
-from . import env, astlib
+from . import astlib, env
 
 
 # Compiler defs.
@@ -23,10 +22,10 @@ DEFAULT_CONTEXT_ARGUMENTS = {
 RESERVED_WORDS = {
     keyword: keyword.upper()
     for keyword in (
-        "var", "let", "struct",
-        "return", "fun", "adt",
-        "protocol",
-    )
+    "var", "let", "struct",
+    "return", "fun", "adt",
+    "protocol", "if", "else", "elif",
+)
 }
 
 NAME_REGEX = re.compile(r"[a-z][a-zA-Z0-9]*")
@@ -42,14 +41,14 @@ COMMON_REGEX = "".join([
         TYPE_REGEX, MODULE_REGEX, METHOD_REGEX)]),
     ")"])
 
-
 # Adrian lang defs
 INIT_METHOD = "__init__"
 DEINIT_METHOD = "__deinit__"
 COPY_METHOD = "__copy__"
 REF = "ref"
 BOOL = "Bool"
-BOOL_TRANSLATION = astlib.DataMember(astlib.DataT.module, "c", astlib.Name("IntFast8"))
+BOOL_TRANSLATION = astlib.DataMember(astlib.DataT.module, "c",
+    astlib.Name("IntFast8"))
 TRUE = "True"
 TRUE_TRANSLATION = astlib.Callable(
     astlib.CallableT.struct, astlib.Empty,
@@ -85,6 +84,7 @@ FREE_FUNC_DESCR = libc.free
 
 _c_module_member = partial(
     astlib.DataMember, astlib.DataT.module, astlib.Name(CMODULE))
+
 
 def _add_cnumeric_type(tname):
     member = _c_module_member(astlib.Name(tname))
@@ -144,6 +144,7 @@ def _add_cnumeric_type(tname):
             }
         }
     }
+
 
 _add_cnumeric_type("IntFast8")
 _add_cnumeric_type("IntFast16")

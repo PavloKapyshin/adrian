@@ -7,7 +7,6 @@ RETURN = "Return"
 NAME = "Name"
 SEXPR = "Expr"
 
-
 LLNODE = "LinkedListNode"
 PARAMED_TYPE = "ParamedType"
 ARGS = "Args"
@@ -18,3 +17,7 @@ DATA_MEMBER = "DataMember"
 CALLABLE = "Callable"
 
 EMPTY = "Empty"
+IF = "If"
+ELSE = "Else"
+ELSEIF = "ElseIf"
+CONDITIONAL = "Cond"

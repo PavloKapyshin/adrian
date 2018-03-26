@@ -1,5 +1,5 @@
-import sys
 import enum
+import sys
 
 from .context import context
 

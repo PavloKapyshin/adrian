@@ -1,5 +1,7 @@
-import collections
 import enum
+
+import collections
+
 
 @enum.unique
 class NodeT(enum.Enum):
@@ -35,6 +37,7 @@ class LLT(enum.Enum):
     call_args = 2
     args = 3
     params = 4
+    elseif = 5
 
 
 class LiteralT(enum.Enum):
@@ -57,8 +60,11 @@ class DeclT(enum.Enum):
 
 
 AST = object()
+
+
 class BaseNode:
     pass
+
 
 class Node(BaseNode):
     _keys = ()  # Override in subclass.
@@ -67,7 +73,7 @@ class Node(BaseNode):
         fields = ", ".join(
             "{}={!r}".format(
                 key, getattr(self, key))
-            for key in self._keys)
+                for key in self._keys)
         return "{}({})".format(
             self.__class__.__name__, fields)
 
@@ -100,6 +106,7 @@ class _Name(collections.UserString):
     def __hash__(self):
         return hash(self.data)
 
+
 class Name(_Name):
 
     def __init__(self, data, is_user_name=True):
@@ -116,6 +123,7 @@ class Decl(Node):
         self.expr = expr
         self._keys = ("decltype", "name", "type_", "expr")
 
+
 class CallableDecl(Node):
 
     def __init__(
@@ -129,6 +137,7 @@ class CallableDecl(Node):
         self._keys = (
             "decltype", "parent", "name",
             "args", "rettype", "body")
+
 
 class DataDecl(Node):
 
@@ -203,6 +212,7 @@ class LinkedListNode(LinkedList, Node):
         self.lltype = lltype
         self._keys = ("lltype", "value", "rest")
 
+
 class Args(LinkedListNode):
 
     def __init__(self, name, type_, rest=None):
@@ -221,6 +231,7 @@ class ComplexExpr(Node):
 class Expr(ComplexExpr):
     pass
 
+
 class Assignment(ComplexExpr):
     pass
 
@@ -229,7 +240,7 @@ class Return(Node):
 
     def __init__(self, expr):
         self.expr = expr
-        self._keys = ("expr", )
+        self._keys = ("expr",)
 
 
 class Literal(Node):
@@ -290,10 +301,43 @@ class Ref(Node):
 
     def __init__(self, expr):
         self.expr = expr
-        self._keys = ("expr", )
+        self._keys = ("expr",)
+
 
 class StructScalar(Node):
 
     def __init__(self, type_):
         self.type_ = type_
-        self._keys = ("type_", )
+        self._keys = ("type_",)
+
+
+class Cond(Node):
+
+    def __init__(self, if_stmt, else_ifs, else_):
+        self.if_stmt = if_stmt
+        self.else_ifs = else_ifs
+        self.else_ = else_
+        self._keys = ("if_stmt", "else_ifs", "else_")
+
+
+class If(Node):
+
+    def __init__(self, expr, body):
+        self.expr = expr
+        self.body = body
+        self._keys = ("expr", "body")
+
+
+class ElseIf(Node):
+
+    def __init__(self, expr, body):
+        self.expr = expr
+        self.body = body
+        self._keys = ("expr", "body")
+
+
+class Else(Node):
+
+    def __init__(self, body):
+        self.body = body
+        self._keys = ("body",)

@@ -1,9 +1,9 @@
-import re
 import sys
 
-from ply import lex, yacc
+import re
 
-from . import parser_astlib, astlib, defs, errors
+from ply import lex, yacc
+from . import astlib, defs, errors, parser_astlib
 
 
 _RESERVED_WORDS = defs.RESERVED_WORDS
@@ -35,9 +35,9 @@ _TOKENS = {
 }
 
 tokens = (
-    "INTEGER",
-    "NAME",
-) + tuple(_TOKENS.values()) + tuple(_RESERVED_WORDS.values())
+             "INTEGER",
+             "NAME",
+         ) + tuple(_TOKENS.values()) + tuple(_RESERVED_WORDS.values())
 
 
 def _escape_tok_regex(regex, escape=set("#.{}()*+")):
@@ -68,6 +68,8 @@ def t_NAME(token):
     # Check for reserved words.
     token.type = _RESERVED_WORDS.get(token.value, "NAME")
     return token
+
+
 t_NAME.__doc__ = defs.COMMON_REGEX
 
 
@@ -80,12 +82,13 @@ def t_comment(token):
     r"""--.*"""
     pass
 
+
 t_ignore = " \t"
+
 
 def t_error(token):
     """Error handling rule."""
-    errors.illegal_char(
-        token.lexer.lineno, char=token.value[0])
+    errors.illegal_char(char=token.value[0])
 
 
 precedence = (
@@ -123,6 +126,71 @@ def p_stmt(content):
          | factor
          | adt_decl
          | protocol_decl
+         | cond
+    """
+    content[0] = content[1]
+
+
+def p_cond_1(content):
+    """cond : if_stmt else_if_stmts else_stmt"""
+    content[0] = [parser_astlib.CONDITIONAL, content[1], content[2], content[3]]
+
+def p_cond_2(content):
+    """cond : if_stmt else_if_stmts"""
+    content[0] = [parser_astlib.CONDITIONAL, content[1], content[2], None]
+
+def p_cond_3(content):
+    """cond : if_stmt else_stmt"""
+    content[0] = [parser_astlib.CONDITIONAL, content[1], None, content[2]]
+
+def p_cond_4(content):
+    """cond : if_stmt"""
+    content[0] = [parser_astlib.CONDITIONAL, content[1], None, None]
+
+
+def p_if_stmt(content):
+    """if_stmt : IF bool_expr LBRACE if_body RBRACE"""
+    content[0] = [parser_astlib.IF, content[2], content[4]]
+
+def p_else_if_stmts_1(content):
+    """else_if_stmts : else_if_stmt"""
+    content[0] = [parser_astlib.LLNODE, astlib.LLT.elseif, content[1], None]
+
+def p_else_if_stmts_2(content):
+    """else_if_stmts : else_if_stmt else_if_stmts"""
+    content[0] = [parser_astlib.LLNODE, astlib.LLT.elseif, content[1], content[2]]
+
+def p_else_if_stmts_3(content):
+    """else_if_stmts : empty"""
+    content[0] = None
+
+def p_else_if_stmt(content):
+    """else_if_stmt : ELIF bool_expr LBRACE if_body RBRACE"""
+    content[0] = [parser_astlib.ELSEIF, content[3], content[5]]
+
+def p_else_stmt(content):
+    """else_stmt : ELSE LBRACE if_body RBRACE"""
+    content[0] = [parser_astlib.ELSE, content[3]]
+
+
+def p_if_body_1(content):
+    """if_body : if_body_stmt if_body"""
+    content[0] = [parser_astlib.LLNODE, astlib.LLT.body, content[1],
+        content[2]]
+
+
+def p_if_body_2(content):
+    """if_body : empty"""
+    content[0] = None
+
+
+def p_if_body_stmt(content):
+    """
+    if_body_stmt : let_decl
+                 | var_decl
+                 | assignment
+                 | factor
+                 | cond
     """
     content[0] = content[1]
 
@@ -229,12 +297,14 @@ def p_params_1(content):
         astlib.LLT.params,
         [parser_astlib.NAME, content[1]], content[3]]
 
+
 def p_params_2(content):
     """params : NAME"""
     content[0] = [
         parser_astlib.LLNODE,
         astlib.LLT.params,
         [parser_astlib.NAME, content[1]], None]
+
 
 def p_params_3(content):
     """params : empty"""
