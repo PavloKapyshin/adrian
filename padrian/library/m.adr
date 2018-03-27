@@ -1,6 +1,0 @@
-struct Some(a) {
-  field: a
-}
-struct None {}
-adt Maybe(a) {Some(a), None}
-

@@ -109,10 +109,15 @@ class Linker(layers.Layer):
             stmts.extend(res[1])
         return ps, stmts
 
+    def up(self, d_):
+        for key, value in d_.items():
+            if key not in self.inlined_modules:
+                self.inlined_modules[key] = value
+
     def t(self, type_):
         if type_ in A(astlib.DataMember):
             if type_.parent != defs.CMODULE:
-                if type_.parent not in self.inlined_modules:
+                if str(type_.parent) not in self.inlined_modules:
                     file_contents = read_file(find_file(type_.parent))
                     file_hash = get_file_hash(file_contents)
                     self.inlined_modules[str(type_.parent)] = file_hash
@@ -120,9 +125,10 @@ class Linker(layers.Layer):
                     current_ast = foreign_parser.main(
                         parser_.parse(file_contents))
                     linker = Linker(file_hash, self.inlined_modules)
-                    stmts = list(layers.expand_ast(current_ast,
+                    stmts = list(layers.transform_ast(current_ast,
                         registry=linker.get_registry()))
                     new_type = self.inner_t(type_.member, file_hash)
+                    self.up(linker.inlined_modules)
                     return new_type, stmts
                 return self.inner_t(type_.member, self.inlined_modules[str(type_.parent)]), []
         if type_ in A(astlib.Name):
@@ -173,7 +179,7 @@ class Linker(layers.Layer):
         if expr in A(astlib.DataMember):
             if expr.datatype == astlib.DataT.module:
                 if expr.parent != defs.CMODULE:
-                    if expr.parent not in self.inlined_modules:
+                    if str(expr.parent) not in self.inlined_modules:
                         file_contents = read_file(find_file(expr.parent))
                         file_hash = get_file_hash(file_contents)
                         self.inlined_modules[str(expr.parent)] = file_hash
@@ -182,8 +188,10 @@ class Linker(layers.Layer):
                             parser_.parse(file_contents))
                         linker = Linker(file_hash, self.inlined_modules)
                         new_expr = self.inner_e(expr.member, file_hash)
-                        return new_expr, list(layers.expand_ast(current_ast,
+                        stmts = list(layers.transform_ast(current_ast,
                             registry=linker.get_registry()))
+                        self.up(linker.inlined_modules)
+                        return new_expr, stmts
                     return self.inner_e(expr.member,
                         self.inlined_modules[str(expr.parent)]), []
             elif expr.datatype == astlib.DataT.struct:
