@@ -256,10 +256,6 @@ class Inlining(layers.Layer):
         struct_info = context.env.raw_get_type_info(parent)
         if self.mapping.args_mapping:
             args = self.mapping.apply(args)
-        # if struct_info and "params" not in struct_info:
-        #     print("StructInfo", struct_info)
-        #     print()
-        #     print("Parent", parent)
         if (struct_info and
                 context.env.is_real_type(struct_info["node_type"]) and
                 struct_info["params"]):
@@ -302,6 +298,14 @@ class Inlining(layers.Layer):
         errors.not_implemented(
             "stmt {} is unknown".format(expr),
             func=self.get_the_most_high_level_type)
+
+    @layers.register(astlib.While)
+    def while_stmt(self, stmt):
+        context.env.add_scope()
+        expr, decls = self.e(stmt.expr)
+        yield from decls
+        yield astlib.While(expr, self.b(stmt.body))
+        context.env.remove_scope()
 
     def _if_stmt(self, stmt):
         context.env.add_scope()

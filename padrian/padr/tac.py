@@ -1,6 +1,12 @@
-from . import astlib, layers, defs, utils, inference
+from . import astlib, defs, inference, layers, utils
 from .context import context
-from .utils import A
+from .utils import A, get_parent
+
+
+def get_parent(name):
+    if name in A(astlib.DataMember):
+        return get_parent(name.parent)
+    return name
 
 
 class TAC(layers.Layer):
@@ -26,7 +32,7 @@ class TAC(layers.Layer):
     def _inner_e(self, expr):
         if expr in A(astlib.Callable):
             if (expr.callabletype in (astlib.CallableT.struct_func,
-                    astlib.CallableT.struct, astlib.CallableT.fun)):
+            astlib.CallableT.struct, astlib.CallableT.fun)):
                 args, decls = self.a(expr.args)
                 tmp, decls_ = self.new_tmp(
                     astlib.Callable(
@@ -48,7 +54,7 @@ class TAC(layers.Layer):
     def e(self, expr):
         if expr in A(astlib.Callable):
             if (expr.callabletype in (astlib.CallableT.struct_func,
-                    astlib.CallableT.struct, astlib.CallableT.fun)):
+            astlib.CallableT.struct, astlib.CallableT.fun)):
                 args, decls = self.a(expr.args)
                 return astlib.Callable(
                     expr.callabletype, expr.parent,
@@ -69,6 +75,17 @@ class TAC(layers.Layer):
             new_args.append(new_arg)
             decls.extend(new_decls)
         return new_args, decls
+
+    @layers.register(astlib.While)
+    def while_stmt(self, stmt):
+        context.env.add_scope()
+        expr, decls = self._inner_e(stmt.expr)
+        body = self.b(stmt.body)
+        for decl in decls:
+            body.append(astlib.Assignment(decl.name, "=", decl.expr))
+        yield from decls
+        yield astlib.While(expr, body)
+        context.env.remove_scope()
 
     def _if_stmt(self, stmt):
         context.env.add_scope()
@@ -105,9 +122,50 @@ class TAC(layers.Layer):
         yield from main_decls
         yield astlib.Cond(if_stmt, elifs, else_)
 
+    def replace_ass_a(self, what, with_, args):
+        return [self.replace_ass_e(what, with_, a) for a in args]
+
+    def replace_ass_e(self, what, with_, expr):
+        if expr in A(astlib.Name):
+            if expr == what:
+                return with_
+        if expr in A(astlib.DataMember):
+            return astlib.DataMember(
+                self.replace_ass_e(what, with_, expr.parent), expr.member)
+        if expr in A(astlib.Callable):
+            return astlib.Callable(
+                expr.callabletype, expr.parent, expr.name,
+                self.replace_ass_a(what, with_, expr.args))
+        return expr
+
+    def _a_tail_pointer(self, name, args):
+        return any(self._tail_pointer(name, a) for a in args)
+
+    def _tail_pointer(self, name, expr):
+        if expr in A(astlib.Name):
+            return expr == name
+        if expr in A(astlib.DataMember):
+            expr_p = get_parent(expr)
+            return expr_p == name
+        if expr in A(astlib.Callable):
+            return self._a_tail_pointer(name, expr.args)
+        return False
+
+    def _ass_e(self, name, expr):
+        if name in A(astlib.DataMember):
+            name = get_parent(name)
+        if self._tail_pointer(name, expr):
+            tmp_name, decl = self.new_tmp(name)
+            return self.replace_ass_e(name, tmp_name, expr), decl
+        return expr, None
+
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
-        expr, decls = self.e(stmt.right)
+        expr_, decls_ = self._ass_e(stmt.left, stmt.right)
+        if decls_:
+            for decl in decls_:
+                yield from self.decl(decl)
+        expr, decls = self.e(expr_)
         utils.register(stmt, right=expr)
         yield from decls
         yield astlib.Assignment(stmt.left, stmt.op, expr)

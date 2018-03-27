@@ -270,17 +270,33 @@ class ARC(layers.Layer):
                 elifs = stmt.else_ifs
                 else_ = stmt.else_
 
-                return_in_if = self.no_return_in_body(if_stmt.body)
+                return_in_if = not self.no_return_in_body(if_stmt.body)
                 return_in_elifs = []
                 for elif_ in elifs:
-                    return_in_elifs.append(self.no_return_in_body(elif_.body))
+                    return_in_elifs.append(not self.no_return_in_body(elif_.body))
                 return_in_elifs = any(return_in_elifs)
-                return_in_else = False
+                return_in_else = True
                 if else_ is not None:
-                    return_in_else = self.no_return_in_body(else_.body)
+                    return_in_else = not self.no_return_in_body(else_.body)
                 if return_in_if or return_in_elifs or return_in_else:
                     return False
+            elif stmt in A(astlib.While):
+                result = not self.no_return_in_body(stmt.body)
+                if result:
+                    return False
         return True
+
+    @layers.register(astlib.While)
+    def while_stmt(self, stmt):
+        context.env.add_virtual_scope()
+        self.flist.add_virtual_scope()
+        self.update_b()
+        body = self.b(stmt.body)
+        if self.no_return_in_body(body):
+            body += list(self.free_scope())
+        yield astlib.While(stmt.expr, body)
+        context.env.remove_virtual_scope()
+        self.flist.remove_virtual_scope()
 
     def _if_stmt(self, stmt):
         context.env.add_virtual_scope()

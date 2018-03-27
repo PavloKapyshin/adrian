@@ -229,6 +229,7 @@ class ComplexExpr(Node):
 
 
 class Not(Node):
+
     def __init__(self, expr):
         self.expr = expr
         self._keys = ("expr",)
@@ -315,6 +316,14 @@ class StructScalar(Node):
     def __init__(self, type_):
         self.type_ = type_
         self._keys = ("type_",)
+
+
+class While(Node):
+
+    def __init__(self, expr, body):
+        self.expr = expr
+        self.body = body
+        self._keys = ("expr", "body")
 
 
 class Cond(Node):

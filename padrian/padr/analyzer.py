@@ -131,6 +131,13 @@ class Analyzer(layers.Layer):
             astlib.Decl(astlib.DeclT.field, self._provide_name_for_adt_field(),
                 type_, astlib.Empty()) for type_ in body]
 
+    @layers.register(astlib.While)
+    def while_stmt(self, stmt):
+        context.env.add_scope()
+        self._update_b()
+        yield astlib.While(_e(stmt.expr), self.b(stmt.body))
+        context.env.remove_scope()
+
     @layers.register(astlib.Assignment)
     def translate_assignment(self, stmt):
         right = _e(stmt.right)

@@ -127,21 +127,31 @@ def p_stmt(content):
          | adt_decl
          | protocol_decl
          | cond
+         | while_stmt
     """
     content[0] = content[1]
 
 
+def p_while_stmt(content):
+    """while_stmt : WHILE bool_expr LBRACE if_body RBRACE"""
+    content[0] = [parser_astlib.WHILE, content[2], content[4]]
+
+
 def p_cond_1(content):
     """cond : if_stmt else_if_stmts else_stmt"""
-    content[0] = [parser_astlib.CONDITIONAL, content[1], content[2], content[3]]
+    content[0] = [parser_astlib.CONDITIONAL, content[1], content[2],
+        content[3]]
+
 
 def p_cond_2(content):
     """cond : if_stmt else_if_stmts"""
     content[0] = [parser_astlib.CONDITIONAL, content[1], content[2], None]
 
+
 def p_cond_3(content):
     """cond : if_stmt else_stmt"""
     content[0] = [parser_astlib.CONDITIONAL, content[1], None, content[2]]
+
 
 def p_cond_4(content):
     """cond : if_stmt"""
@@ -152,21 +162,27 @@ def p_if_stmt(content):
     """if_stmt : IF bool_expr LBRACE if_body RBRACE"""
     content[0] = [parser_astlib.IF, content[2], content[4]]
 
+
 def p_else_if_stmts_1(content):
     """else_if_stmts : else_if_stmt"""
     content[0] = [parser_astlib.LLNODE, astlib.LLT.elseif, content[1], None]
 
+
 def p_else_if_stmts_2(content):
     """else_if_stmts : else_if_stmt else_if_stmts"""
-    content[0] = [parser_astlib.LLNODE, astlib.LLT.elseif, content[1], content[2]]
+    content[0] = [parser_astlib.LLNODE, astlib.LLT.elseif, content[1],
+        content[2]]
+
 
 def p_else_if_stmts_3(content):
     """else_if_stmts : empty"""
     content[0] = None
 
+
 def p_else_if_stmt(content):
     """else_if_stmt : ELIF bool_expr LBRACE if_body RBRACE"""
     content[0] = [parser_astlib.ELSEIF, content[3], content[5]]
+
 
 def p_else_stmt(content):
     """else_stmt : ELSE LBRACE if_body RBRACE"""
@@ -191,6 +207,7 @@ def p_if_body_stmt(content):
                  | assignment
                  | factor
                  | cond
+                 | while_stmt
                  | return_stmt
     """
     content[0] = content[1]
@@ -353,6 +370,7 @@ def p_fun_body_stmt(content):
                   | return_stmt
                   | factor
                   | cond
+                  | while_stmt
     """
     content[0] = content[1]
 
@@ -540,6 +558,7 @@ def p_bool_expr_1(content):
 def p_bool_expr_2(content):
     """bool_expr : NOT bool_expr"""
     content[0] = [parser_astlib.NOT, content[2]]
+
 
 def p_bool_expr_3(content):
     """bool_expr : expr"""

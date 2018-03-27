@@ -1,8 +1,7 @@
-from . import astlib, layers, defs, errors, utils
+from adrian import cgen
+from . import astlib, defs, errors, layers, utils
 from .context import context
 from .utils import A
-
-from adrian import cgen
 
 
 class ToCgen(layers.Layer):
@@ -28,7 +27,7 @@ class ToCgen(layers.Layer):
             elif expr.name in defs.CFUNCS:
                 return getattr(
                     defs, str(expr.name).upper() + "_FUNC_DESCR")(
-                        *self.a(expr.args))
+                    *self.a(expr.args))
         elif expr.callabletype == astlib.CallableT.fun:
             return cgen.FuncCall(
                 self.n(expr.name), *self.a(expr.args))
@@ -140,6 +139,12 @@ class ToCgen(layers.Layer):
             return self.n(name.type_)
         return str(name)
 
+    @layers.register(astlib.While)
+    def while_stmt(self, stmt):
+        context.env.add_scope()
+        yield cgen.While(self.bool_e(stmt.expr), self.b(stmt.body))
+        context.env.remove_scope()
+
     def _if_stmt(self, stmt):
         context.env.add_scope()
         result = astlib.If(self.bool_e(stmt.expr), self.b(stmt.body))
@@ -231,12 +236,13 @@ class ToCgen(layers.Layer):
         ast_ = layers.transform_ast(ast_, registry=registry)
         yield from [
             (cgen.Include(info["header"])
-                if info["type_"] == "adr" else
-                    cgen.CInclude(info["header"]))
+             if info["type_"] == "adr" else
+             cgen.CInclude(info["header"]))
             for _, info in context.clibs_includes.items()]
         main_func_body = []
         for node in ast_:
-            if node in A(cgen.Decl, cgen.FuncCall, cgen.Assignment):
+            if node in A(cgen.Decl, cgen.FuncCall, cgen.Assignment, cgen.If,
+                    cgen.While):
                 main_func_body.append(node)
             else:
                 yield node

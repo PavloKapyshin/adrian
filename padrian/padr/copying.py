@@ -31,6 +31,12 @@ class Copying(layers.Layer):
             return args
         return [self.ae(arg) for arg in args]
 
+    @layers.register(astlib.While)
+    def while_stmt(self, stmt):
+        context.env.add_scope()
+        yield astlib.While(self.ae(stmt.expr), self.b(stmt.body))
+        context.env.remove_scope()
+
     def _if_stmt(self, stmt):
         context.env.add_scope()
         result = astlib.If(self.ae(stmt.expr), self.b(stmt.body))
