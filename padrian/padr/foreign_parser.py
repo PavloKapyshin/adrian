@@ -47,8 +47,6 @@ def add_to_clibs(module_elem):
         if module_elem.parent == defs.CMODULE:
             add_found_module("stdint", type_="c")
             add_found_module(defs.CMODULE, file_name=defs.CMODULE_FILE)
-        else:
-            errors.not_now(errors.MODULES)
 
 
 def translate(node):

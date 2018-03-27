@@ -60,6 +60,7 @@ FALSE_TRANSLATION = astlib.Callable(
 T_STRING = "t"
 I_STRING = "i"
 F_STRING = "f"
+U_STRING = "u"
 
 NOT_METHOD = "__not__"
 OP_TO_METHOD = {

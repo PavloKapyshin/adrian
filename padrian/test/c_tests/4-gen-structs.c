@@ -1,59 +1,59 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <adrian_c.h>
-struct Some {
-void* field;
+struct u9b4dcfSome {
+void* u9b4dcffield;
 uint_fast64_t type_tag;
 };
-struct LList {
-void* value;
+struct u9b4dcfLList {
+void* u9b4dcfvalue;
 uint_fast64_t type_tag;
 };
 int main(void) {
 struct IntFast8* t0 = IntFast8__init__(1);
-struct Some* i0_self = malloc(sizeof(struct Some));
-i0_self->field = IntFast8__copy__(t0);
+struct u9b4dcfSome* i0_self = malloc(sizeof(struct u9b4dcfSome));
+i0_self->u9b4dcffield = IntFast8__copy__(t0);
 i0_self->type_tag = 8;
-struct Some* justAVar = i0_self;
-struct IntFast8* f = IntFast8__copy__(justAVar->field);
-struct IntFast8* fByMethod = justAVar->field;
+struct u9b4dcfSome* u9b4dcfjustAVar = i0_self;
+struct IntFast8* u9b4dcff = IntFast8__copy__(u9b4dcfjustAVar->u9b4dcffield);
+struct IntFast8* u9b4dcffByMethod = u9b4dcfjustAVar->u9b4dcffield;
 struct IntFast8* t1 = IntFast8__init__(3);
-struct IntFast8* same = t1;
+struct IntFast8* u9b4dcfsame = t1;
 struct IntFast8* t2 = IntFast8__init__(1);
-struct IntFast8* i3_b = IntFast8__copy__(t2);
-struct IntFast8* l = i3_b;
+struct IntFast8* i3_u9b4dcfb = IntFast8__copy__(t2);
+struct IntFast8* u9b4dcfl = i3_u9b4dcfb;
 struct IntFast8* t3 = IntFast8__init__(1);
-struct Some* i8_self = malloc(sizeof(struct Some));
-i8_self->field = IntFast8__copy__(t3);
+struct u9b4dcfSome* i8_self = malloc(sizeof(struct u9b4dcfSome));
+i8_self->u9b4dcffield = IntFast8__copy__(t3);
 i8_self->type_tag = 8;
-struct Some* t4 = i8_self;
-struct LList* i10_self = malloc(sizeof(struct LList));
-struct Some* i10_i9_new = malloc(sizeof(struct Some));
-i10_i9_new->field = IntFast8__copy__(t4->field);
+struct u9b4dcfSome* t4 = i8_self;
+struct u9b4dcfLList* i10_self = malloc(sizeof(struct u9b4dcfLList));
+struct u9b4dcfSome* i10_i9_new = malloc(sizeof(struct u9b4dcfSome));
+i10_i9_new->u9b4dcffield = IntFast8__copy__(t4->u9b4dcffield);
 t4->type_tag = 8;
-i10_self->value = i10_i9_new;
+i10_self->u9b4dcfvalue = i10_i9_new;
 i10_self->type_tag = 9;
-struct LList* hoping = i10_self;
-struct Some* anotherHope = hoping->value;
-struct Some* i12_i11_self = malloc(sizeof(struct Some));
-i12_i11_self->field = IntFast8__copy__(((struct Some*)(hoping->value))->field);
+struct u9b4dcfLList* u9b4dcfhoping = i10_self;
+struct u9b4dcfSome* u9b4dcfanotherHope = u9b4dcfhoping->u9b4dcfvalue;
+struct u9b4dcfSome* i12_i11_self = malloc(sizeof(struct u9b4dcfSome));
+i12_i11_self->u9b4dcffield = IntFast8__copy__(((struct u9b4dcfSome*)(u9b4dcfhoping->u9b4dcfvalue))->u9b4dcffield);
 i12_i11_self->type_tag = 8;
-struct Some* i12_variable = i12_i11_self;
-struct Some* hope = i12_variable;
-IntFast8__deinit__(f);
-IntFast8__deinit__(hope->field);
-free(hope);
-IntFast8__deinit__(((struct Some*)(hoping->value))->field);
-free(hoping->value);
-free(hoping);
-IntFast8__deinit__(justAVar->field);
-free(justAVar);
-IntFast8__deinit__(l);
+struct u9b4dcfSome* i12_u9b4dcfvariable = i12_i11_self;
+struct u9b4dcfSome* u9b4dcfhope = i12_u9b4dcfvariable;
 IntFast8__deinit__(t0);
 IntFast8__deinit__(t1);
 IntFast8__deinit__(t2);
 IntFast8__deinit__(t3);
-IntFast8__deinit__(t4->field);
+IntFast8__deinit__(t4->u9b4dcffield);
 free(t4);
+IntFast8__deinit__(u9b4dcff);
+IntFast8__deinit__(u9b4dcfhope->u9b4dcffield);
+free(u9b4dcfhope);
+IntFast8__deinit__(((struct u9b4dcfSome*)(u9b4dcfhoping->u9b4dcfvalue))->u9b4dcffield);
+free(u9b4dcfhoping->u9b4dcfvalue);
+free(u9b4dcfhoping);
+IntFast8__deinit__(u9b4dcfjustAVar->u9b4dcffield);
+free(u9b4dcfjustAVar);
+IntFast8__deinit__(u9b4dcfl);
 return 0;
 }

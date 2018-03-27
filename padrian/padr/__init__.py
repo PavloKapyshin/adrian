@@ -3,11 +3,10 @@ import sys
 from adrian import cgen
 from . import (analyzer, arc, ccopts, context, copying, debug_formatter, defs,
                env, foreign_parser, inlining, layers, object_protocol, parser,
-               tac, tocgen, )
+               tac, tocgen, linker)
 
 
 LAYERS = (
-    (parser.Parser, "parse"),
     (object_protocol.ObjectProtocol, "transform_ast"),
     (analyzer.Analyzer, "transform_ast"),
     (tac.TAC, "transform_ast"),
@@ -18,20 +17,14 @@ LAYERS = (
 )
 
 
-def compile_(input_code, layers_, default_context_args):
+def compile_(current_ast, layers_, default_context_args):
     context_arguments = default_context_args
-    current_ast = []
     for layer_cls, method_name in layers_:
         with context.new_context(**context_arguments):
             layer = layer_cls()
-            # TODO: replace parser by more high-level layer
-            # (which will combine _parser and foreign_parser).
-            if method_name == "parse":
-                current_ast = foreign_parser.main(layer.parse(input_code))
-            else:
-                current_ast = list(getattr(layers, method_name)(
-                    current_ast, registry=layer.get_registry()
-                ))
+            current_ast = list(getattr(layers, method_name)(
+                current_ast, registry=layer.get_registry()
+            ))
             context_arguments = context.modified_context_args()
             # You should always pass default environment to
             # layer to avoid possible bugs.
@@ -43,13 +36,19 @@ def compile_repl(input_code):
     layers_ = LAYERS
     if layers_[-1][0] is tocgen.ToCgen:
         layers_ = layers_[:-1]
-    return compile_(input_code, layers_, defs.DEFAULT_CONTEXT_ARGUMENTS)
+    with context.new_context(**defs.DEFAULT_CONTEXT_ARGUMENTS):
+        current_ast = linker.unwrap_module_usage(input_code)
+        context_args = context.modified_context_args()
+    return compile_(current_ast, layers_, context_args)
 
 
 def compile_from_string(input_code, out_file, cc):
+    with context.new_context(**defs.DEFAULT_CONTEXT_ARGUMENTS):
+        current_ast = linker.unwrap_module_usage(input_code)
+        context_args = context.modified_context_args()
     generator = cgen.Generator()
     generator.add_ast(
-        compile_(input_code, LAYERS, defs.DEFAULT_CONTEXT_ARGUMENTS))
+        compile_(current_ast, LAYERS, context_args))
     return {
         "code": "\n".join(generator.generate()),
         "cc_opts": ccopts.make(cc, defs.DEFAULT_MODULE_PATHS, out_file)

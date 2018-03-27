@@ -15,6 +15,7 @@ def new_context(*, env, exit_on_error, module_paths, clibs_includes, i_count):
     context.i_count = i_count
     context.func = None
     context.parent = None
+    context.inlining = []
     yield
 
 

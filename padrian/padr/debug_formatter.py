@@ -23,7 +23,12 @@ class DebugFormatter(layers.Layer):
     def stmt_with_body(self, decl_string, body):
         body = self.b(body)
         self.up_ind()
-        b = ["".join([" " * self.current_ind_level, s]) for s in body]
+        b = []
+        for s in body:
+            if s in A(astlib.Name, astlib.ParamedType, astlib.DataMember):
+                b.append("".join([" " * self.current_ind_level, self.t(s)]))
+            else:
+                b.append("".join([" " * self.current_ind_level, s]))
         self.down_ind()
         yield "\n".join([
             decl_string
@@ -76,6 +81,8 @@ class DebugFormatter(layers.Layer):
             return "{}#{}".format(self.n(type_.parent), self.t(type_.member))
         elif type_ in A(astlib.Void):
             return str(type_)
+        elif type_ in A(astlib.LiteralType):
+            return type_.type_
 
     def a(self, args):
         if len(args) == 0:

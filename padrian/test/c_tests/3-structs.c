@@ -1,50 +1,50 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <adrian_c.h>
-struct Date {
-struct UIntFast8* day;
-struct UIntFast8* month;
-struct UIntFast64* year;
+struct u55fcbfDate {
+struct UIntFast8* u55fcbfday;
+struct UIntFast8* u55fcbfmonth;
+struct UIntFast64* u55fcbfyear;
 uint_fast64_t type_tag;
 };
-struct Date* Date__init__(struct UIntFast8* day, struct UIntFast8* month, struct UIntFast64* year) {
-struct Date* self = malloc(sizeof(struct Date));
-self->day = UIntFast8__copy__(day);
-self->month = UIntFast8__copy__(month);
-self->year = UIntFast64__copy__(year);
+struct u55fcbfDate* u55fcbfDate__init__(struct UIntFast8* u55fcbfday, struct UIntFast8* u55fcbfmonth, struct UIntFast64* u55fcbfyear) {
+struct u55fcbfDate* self = malloc(sizeof(struct u55fcbfDate));
+self->u55fcbfday = UIntFast8__copy__(u55fcbfday);
+self->u55fcbfmonth = UIntFast8__copy__(u55fcbfmonth);
+self->u55fcbfyear = UIntFast64__copy__(u55fcbfyear);
 self->type_tag = 8;
 return self;
 }
-struct Date* Date__copy__(struct Date* self) {
-struct Date* new = malloc(sizeof(struct Date));
-new->day = UIntFast8__copy__(self->day);
-new->month = UIntFast8__copy__(self->month);
-new->year = UIntFast64__copy__(self->year);
+struct u55fcbfDate* u55fcbfDate__copy__(struct u55fcbfDate* self) {
+struct u55fcbfDate* new = malloc(sizeof(struct u55fcbfDate));
+new->u55fcbfday = UIntFast8__copy__(self->u55fcbfday);
+new->u55fcbfmonth = UIntFast8__copy__(self->u55fcbfmonth);
+new->u55fcbfyear = UIntFast64__copy__(self->u55fcbfyear);
 self->type_tag = 8;
 return new;
 }
-void Date__deinit__(struct Date* self) {
-UIntFast8__deinit__(self->day);
-UIntFast8__deinit__(self->month);
-UIntFast64__deinit__(self->year);
+void u55fcbfDate__deinit__(struct u55fcbfDate* self) {
+UIntFast8__deinit__(self->u55fcbfday);
+UIntFast8__deinit__(self->u55fcbfmonth);
+UIntFast64__deinit__(self->u55fcbfyear);
 free(self);
 }
-void Date_firstDayOfMonth(struct Date* self, struct UIntFast8* month) {
-UIntFast8__deinit__(self->day);
-self->day = UIntFast8__init__(1);
-UIntFast8__deinit__(self->month);
-self->month = UIntFast8__copy__(month);
+void u55fcbfDate_u55fcbffirstDayOfMonth(struct u55fcbfDate* self, struct UIntFast8* u55fcbfmonth) {
+UIntFast8__deinit__(self->u55fcbfday);
+self->u55fcbfday = UIntFast8__init__(1);
+UIntFast8__deinit__(self->u55fcbfmonth);
+self->u55fcbfmonth = UIntFast8__copy__(u55fcbfmonth);
 }
-void Date_lastDayOfYear(struct Date* self, struct UIntFast64* year) {
-UIntFast8__deinit__(self->day);
-self->day = UIntFast8__init__(31);
-UIntFast8__deinit__(self->month);
-self->month = UIntFast8__init__(12);
-UIntFast64__deinit__(self->year);
-self->year = UIntFast64__copy__(year);
+void u55fcbfDate_u55fcbflastDayOfYear(struct u55fcbfDate* self, struct UIntFast64* u55fcbfyear) {
+UIntFast8__deinit__(self->u55fcbfday);
+self->u55fcbfday = UIntFast8__init__(31);
+UIntFast8__deinit__(self->u55fcbfmonth);
+self->u55fcbfmonth = UIntFast8__init__(12);
+UIntFast64__deinit__(self->u55fcbfyear);
+self->u55fcbfyear = UIntFast64__copy__(u55fcbfyear);
 }
-void Date_firstDayOfCurrentMonth(struct Date* self) {
-Date_firstDayOfMonth(self, self->month);
+void u55fcbfDate_u55fcbffirstDayOfCurrentMonth(struct u55fcbfDate* self) {
+u55fcbfDate_u55fcbffirstDayOfMonth(self, self->u55fcbfmonth);
 }
 int main(void) {
 return 0;
