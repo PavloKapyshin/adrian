@@ -1,6 +1,6 @@
 HEADER_PATTERN_FILE_NAME = "adrian_c_header"
 SOURCE_PATTERN_FILE_NAME = "adrian_c_source"
-LIBRARY_FILE_NAME = "adrian_c"
+LIBRARY_FILE_NAME = "adrian_c_numeric"
 
 PATTERN_FILE_EXTENSION = "pattern"
 HEADER_FILE_EXTENSION = "h"
