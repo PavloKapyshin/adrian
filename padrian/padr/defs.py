@@ -6,7 +6,8 @@ from . import astlib, env
 
 
 # Compiler defs.
-TYPE_TAG_START = 8
+# First 50 types are reserved for compiler.
+TYPE_TAG_START = 51
 TYPE_TAG_TYPE = astlib.LiteralType(astlib.LiteralT.uint_fast64_t)
 TYPE_TAG_NAME = "type_tag"
 ENV = env.Env()
