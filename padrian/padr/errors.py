@@ -32,6 +32,8 @@ _FATAL_ERROR = "FATAL ERROR: {message}"
 _KEY_ERROR = "no such name '{key}' in container '{container}', requested '{request}'"
 _LATER = "not available now, will appear in version {version}"
 _NO_ADT_FIELD = "adt type {adt_type} has no field with type {type_}"
+_NO_SUCH_FUNC = "no function named {name}"
+_NO_SUCH_TYPE = "no type named {name}"
 
 MODULES = "custom_modules_feature"
 ADT = "adt_feature"
@@ -115,6 +117,14 @@ def later(version):
 
 def no_adt_field(adt_type, type_):
     _error(_NO_ADT_FIELD, adt_type=adt_type, type_=type_)
+
+
+def no_such_func(name):
+    _error(_NO_SUCH_FUNC, name=name)
+
+
+def no_such_type(name):
+    _error(_NO_SUCH_TYPE, name=name)
 
 
 def _error(msg, **keywords):

@@ -357,3 +357,10 @@ class Else(Node):
     def __init__(self, body):
         self.body = body
         self._keys = ("body",)
+
+class NotIs(Node):
+
+    def __init__(self, expr1, expr2):
+        self.expr1 = expr1
+        self.expr2 = expr2
+        self._keys = ("expr1", "expr2")

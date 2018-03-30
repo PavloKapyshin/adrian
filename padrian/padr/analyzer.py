@@ -3,6 +3,10 @@ from .context import context
 from .utils import A
 
 
+def is_adt(type_):
+    return context.env.is_adt(context.env.get_node_type(type_))
+
+
 def _get_adt_field_by_type(parent, type_):
     adt_type = context.env.get_variable_info(parent)["type_"]
     adt_type_info = context.env.get_type_info(adt_type)
@@ -13,12 +17,36 @@ def _get_adt_field_by_type(parent, type_):
     errors.no_adt_field(adt_type, type_)
 
 
-def _split_adt_usage(stmt):
-    yield astlib.Decl(
-        stmt.decltype, stmt.name, stmt.type_, astlib.Empty())
-    yield astlib.Assignment(
-        _get_adt_field_by_type(
-            stmt.name, inference.infer_type(stmt.expr)), "=", stmt.expr)
+def _get_adt_field_by_name(name, member):
+    return astlib.DataMember(astlib.DataT.adt, name, member)
+
+
+def _split_adt_usage(type_, expr, name=None):
+    if is_adt(inference.infer_type(expr)):
+        expr_ = astlib.Empty()
+        adt_info = context.env.get_type_info(type_)
+        exprs, bodies = [], []
+        for f_name, f_type in adt_info["fields"].items():
+            exprs.append(
+                astlib.NotIs(
+                    _get_adt_field_by_name(expr, f_name), astlib.Null()))
+            if name is None:
+                stmt = astlib.Callable()
+            else:
+                stmt = astlib.Assignment(
+                    _get_adt_field_by_name(name, f_name), "=",
+                    _get_adt_field_by_name(expr, f_name))
+            bodies.append(stmt)
+        cond = astlib.Cond(
+            astlib.If(exprs[0], bodies[0]),
+            [astlib.ElseIf(expr_, body_)
+            for expr_, body_ in zip(exprs[1:], bodies[1:])],
+            else_=None)
+        return expr_, cond
+    else:
+        return astlib.Empty(), astlib.Assignment(
+            _get_adt_field_by_type(
+                name, inference.infer_type(expr)), "=", expr)
 
 
 def _e_callable(expr: astlib.Callable):
@@ -197,7 +225,10 @@ class Analyzer(layers.Layer):
             utils.register(stmt, type_=type_, expr=expr)
             result = astlib.Decl(stmt.decltype, stmt.name, type_, expr)
             if context.env.is_adt(context.env.get_node_type(type_)):
-                yield from _split_adt_usage(result)
+                expr, assignments = _split_adt_usage(
+                    type_, expr, name=stmt.name)
+                yield astlib.Decl(stmt.decltype, stmt.name, type_, expr)
+                yield assignments
             else:
                 yield result
 
