@@ -3,6 +3,23 @@ from .context import context
 from . import astlib, layers, errors, inference, utils
 
 
+def _check_fields_exist_in_parent(data_member):
+    def _get_type_of_parent(expr):
+        if expr in A(astlib.Name):
+            found = context.env.get(expr)
+            if not found:
+                errors.unknown_name(expr)
+            return found["type_"]
+        return _check_fields_exist_in_parent(expr)
+
+    parent_type = _get_type_of_parent(data_member.parent)
+    parent_type_info = context.env.get_type_info(parent_type)
+    if data_member.member not in parent_type_info["fields"]:
+        errors.no_such_field(
+            data_member.parent, parent_type, data_member.member)
+    return parent_type
+
+
 def _scroll_to_parent(struct_field):
     if struct_field in A(astlib.DataMember):
         return _scroll_to_parent(struct_field.parent)
@@ -17,12 +34,17 @@ def _check_name_is_variable(name):
         if info["node_type"] != astlib.NodeT.var:
             errors.cannot_reassign_name(name)
     elif name in A(astlib.DataMember):
-        # TODO: field exists in parent
-        parent = _scroll_to_parent(name)
-        _check_name_is_variable(parent)
+        if name.datatype == astlib.DataT.struct:
+            _ = _check_fields_exist_in_parent(name)
+            parent = _scroll_to_parent(name)
+            _check_name_is_variable(parent)
+        else:
+            # TODO: write for adt
+            pass
 
 
 def _check_you_can_declarate_name_for_variable(name):
+    print(context.env[name])
     if name in context.env:
         errors.name_already_exists(name)
 

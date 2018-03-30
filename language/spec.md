@@ -119,3 +119,12 @@ n: T
 
 ##### Method declaration
 Same as function, but `statements` may include use of `self`.
+
+
+#### Adt declaration
+```adrian
+adt N {
+    T1, T2, ...
+}
+```
+`N` is a name for adt, `T1` and `T2` are types.

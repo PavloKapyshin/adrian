@@ -1,14 +1,16 @@
 import sys
+from copy import deepcopy as dcopy
 
 from adrian import cgen
 from . import (analyzer, arc, ccopts, context, copying, debug_formatter, defs,
                env, foreign_parser, inlining, layers, object_protocol, parser,
-               tac, tocgen, linker)
+               tac, tocgen, linker, checker)
 
 
 LAYERS = (
     (object_protocol.ObjectProtocol, "transform_ast"),
     (analyzer.Analyzer, "transform_ast"),
+    # (checker.Checker, "transform_ast"),
     (tac.TAC, "transform_ast"),
     (copying.Copying, "transform_ast"),
     (arc.ARC, "expand_ast"),

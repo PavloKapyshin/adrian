@@ -1,8 +1,7 @@
-struct Some(a) {
-    data: a
-}
-struct None {}
+let a: c#IntFast8 = c#IntFast8(0)
+var b = c#UIntFast8(1)
 
-adt Maybe(a) {
-    Some(a), None
-}
+b = c#UIntFast8(5)
+
+let c = b
+let d = ref(c)

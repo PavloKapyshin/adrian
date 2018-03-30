@@ -34,6 +34,8 @@ _LATER = "not available now, will appear in version {version}"
 _NO_ADT_FIELD = "adt type {adt_type} has no field with type {type_}"
 _NO_SUCH_FUNC = "no function named {name}"
 _NO_SUCH_TYPE = "no type named {name}"
+_NAME_ALREADY_EXISTS = "name {name} already exists"
+
 
 MODULES = "custom_modules_feature"
 ADT = "adt_feature"
@@ -125,6 +127,10 @@ def no_such_func(name):
 
 def no_such_type(name):
     _error(_NO_SUCH_TYPE, name=name)
+
+
+def name_already_exists(name):
+    _error(_NAME_ALREADY_EXISTS, name=name)
 
 
 def _error(msg, **keywords):

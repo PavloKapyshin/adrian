@@ -87,8 +87,8 @@ def _e(expr):
             return defs.TRUE_TRANSLATION
         elif expr == defs.FALSE:
             return defs.FALSE_TRANSLATION
-        variable_info = context.env.get_variable_info(expr)
-        if context.env.is_adt(
+        variable_info = context.env[expr]
+        if variable_info and context.env.is_adt(
                 context.env.get_node_type(variable_info["type_"])):
             return _get_adt_field_by_type(
                 expr, inference.infer_type(variable_info["expr"]))
