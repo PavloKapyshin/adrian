@@ -1,63 +1,70 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <adrian_c.h>
-struct u77c3e0Some {
-void* u77c3e0data;
+struct u87a4f1Some {
+void* u87a4f1data;
 uint_fast64_t type_tag;
 };
-struct u77c3e0None {
+struct u87a4f1None {
 uint_fast64_t type_tag;
 };
-struct u77c3e0None* u77c3e0None__init__() {
-struct u77c3e0None* self = malloc(sizeof(struct u77c3e0None));
+struct u87a4f1None* u87a4f1None__init__() {
+struct u87a4f1None* self = malloc(sizeof(struct u87a4f1None));
 self->type_tag = 52;
 return self;
 }
-struct u77c3e0None* u77c3e0None__copy__(struct u77c3e0None* self) {
-struct u77c3e0None* new = malloc(sizeof(struct u77c3e0None));
+struct u87a4f1None* u87a4f1None__copy__(struct u87a4f1None* self) {
+struct u87a4f1None* new = malloc(sizeof(struct u87a4f1None));
 self->type_tag = 52;
 return new;
 }
-void u77c3e0None__deinit__(struct u77c3e0None* self) {
+void u87a4f1None__deinit__(struct u87a4f1None* self) {
 free(self);
 }
-union u77c3e0Maybe {
-struct u77c3e0Some* f0;
-struct u77c3e0None* f1;
+union u87a4f1Maybe {
+struct u87a4f1Some* f0;
+struct u87a4f1None* f1;
 };
 int main(void) {
-union u77c3e0Maybe u77c3e0b;
+union u87a4f1Maybe u87a4f1b;
 struct IntFast8* t0 = IntFast8__init__(1);
-struct u77c3e0Some* i0_self = malloc(sizeof(struct u77c3e0Some));
-i0_self->u77c3e0data = IntFast8__copy__(t0);
+struct u87a4f1Some* i0_self = malloc(sizeof(struct u87a4f1Some));
+i0_self->u87a4f1data = IntFast8__copy__(t0);
 i0_self->type_tag = 51;
-u77c3e0b.f0 = i0_self;
-IntFast8__deinit__(u77c3e0b.f0->u77c3e0data);
-free(u77c3e0b.f0);
-u77c3e0b.f1 = u77c3e0None__init__();
+u87a4f1b.f0 = i0_self;
+IntFast8__deinit__(u87a4f1b.f0->u87a4f1data);
+free(u87a4f1b.f0);
+u87a4f1b.f1 = u87a4f1None__init__();
 struct IntFast8* t1 = IntFast8__init__(2);
-u77c3e0None__deinit__(u77c3e0b.f1);
-struct u77c3e0Some* i2_self = malloc(sizeof(struct u77c3e0Some));
-i2_self->u77c3e0data = IntFast8__copy__(t1);
+u87a4f1None__deinit__(u87a4f1b.f1);
+struct u87a4f1Some* i2_self = malloc(sizeof(struct u87a4f1Some));
+i2_self->u87a4f1data = IntFast8__copy__(t1);
 i2_self->type_tag = 51;
-u77c3e0b.f0 = i2_self;
-struct u77c3e0Some* i3_new = malloc(sizeof(struct u77c3e0Some));
-i3_new->u77c3e0data = IntFast8__copy__(u77c3e0b.f0->u77c3e0data);
-u77c3e0b.f0->type_tag = 51;
-struct u77c3e0Some* t2 = i3_new;
-struct IntFast8* u77c3e0c = IntFast8__copy__(t2->u77c3e0data);
-struct u77c3e0Some* i4_new = malloc(sizeof(struct u77c3e0Some));
-i4_new->u77c3e0data = IntFast8__copy__(u77c3e0b.f0->u77c3e0data);
-u77c3e0b.f0->type_tag = 51;
-struct u77c3e0Some* u77c3e0d = i4_new;
+u87a4f1b.f0 = i2_self;
+struct u87a4f1Some* i3_new = malloc(sizeof(struct u87a4f1Some));
+i3_new->u87a4f1data = IntFast8__copy__(u87a4f1b.f0->u87a4f1data);
+u87a4f1b.f0->type_tag = 51;
+struct u87a4f1Some* t2 = i3_new;
+struct IntFast8* u87a4f1c = IntFast8__copy__(t2->u87a4f1data);
+struct u87a4f1Some* i4_new = malloc(sizeof(struct u87a4f1Some));
+i4_new->u87a4f1data = IntFast8__copy__(u87a4f1b.f0->u87a4f1data);
+u87a4f1b.f0->type_tag = 51;
+struct u87a4f1Some* u87a4f1d = i4_new;
+union u87a4f1Maybe u87a4f1e;
+struct u87a4f1Some* i5_new = malloc(sizeof(struct u87a4f1Some));
+i5_new->u87a4f1data = IntFast8__copy__(u87a4f1b.f0->u87a4f1data);
+u87a4f1b.f0->type_tag = 51;
+u87a4f1e.f0 = i5_new;
 IntFast8__deinit__(t0);
 IntFast8__deinit__(t1);
-IntFast8__deinit__(t2->u77c3e0data);
+IntFast8__deinit__(t2->u87a4f1data);
 free(t2);
-IntFast8__deinit__(u77c3e0b.f0->u77c3e0data);
-free(u77c3e0b.f0);
-IntFast8__deinit__(u77c3e0c);
-IntFast8__deinit__(u77c3e0d->u77c3e0data);
-free(u77c3e0d);
+IntFast8__deinit__(u87a4f1b.f0->u87a4f1data);
+free(u87a4f1b.f0);
+IntFast8__deinit__(u87a4f1c);
+IntFast8__deinit__(u87a4f1d->u87a4f1data);
+free(u87a4f1d);
+IntFast8__deinit__(u87a4f1e.f0->u87a4f1data);
+free(u87a4f1e.f0);
 return 0;
 }

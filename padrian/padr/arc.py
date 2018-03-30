@@ -146,8 +146,9 @@ class ARC(layers.Layer):
                 return None
             generic_type = inference.infer_generic_type(expr)
             if context.env.is_adt(context.env.get_node_type(generic_type)):
+                variable_info = context.env.get_variable_info(expr)
                 type_ = inference.infer_type(
-                    context.env.get_variable_info(expr)["expr"])
+                    variable_info["expr"])
                 expr = self.get_adt_field_by_type(expr, type_)
             else:
                 type_ = inference.infer_type(expr)

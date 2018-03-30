@@ -1,11 +1,8 @@
 struct Some(a) {
-    field: a
+    data: a
 }
 struct None {}
 
 adt Maybe(a) {
-    Some(a),
-    None
+    Some(a), None
 }
-
-let data: Maybe(c#UIntFast64) = Some(c#UIntFast64(1))
