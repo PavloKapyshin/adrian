@@ -8,7 +8,7 @@ NAME = "Name"
 SEXPR = "Expr"
 
 LLNODE = "LinkedListNode"
-PARAMED_TYPE = "ParamedType"
+PARAMED_TYPE = "GenericType"
 ARGS = "Args"
 
 LITERAL = "Literal"

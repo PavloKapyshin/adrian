@@ -1,6 +1,6 @@
 from .utils import A
 from .context import context
-from . import astlib, layers, errors, inference, utils
+from . import astlib, layers, errors, inference, utils, defs, typelib
 
 
 def _check_fields_exist_in_parent(data_member):
@@ -44,7 +44,6 @@ def _check_name_is_variable(name):
 
 
 def _check_you_can_declarate_name_for_variable(name):
-    print(context.env[name])
     if name in context.env:
         errors.name_already_exists(name)
 
@@ -65,7 +64,7 @@ def _check_for_valid_usage_of_c_type(c_type):
         errors.fatal_error("is not a type actually")
 
 
-def _check_type(self, type_):
+def _check_type(type_):
     if type_ in A(astlib.Name):
         if type_ not in ("Void", defs.BOOL):
             _check_type_name(type_)

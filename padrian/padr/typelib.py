@@ -5,22 +5,27 @@ from .context import context
 from .utils import A
 
 
-AdrianType = Union[Type[astlib.Name], Type[astlib.ParamedType]]
+AdrianType = Union[Type[astlib.Name], Type[astlib.GenericType]]
 
 
 def _types_are_equal_mismatch(type1: AdrianType, type2: AdrianType) -> bool:
     if type1 in A(astlib.Name):
-        return types_are_equal(type1, cast(astlib.ParamedType, type2).base)
+        return types_are_equal(type1, cast(astlib.GenericType, type2).base)
+    elif type1 in A(astlib.DataMember):
+        return False
     return _types_are_equal_mismatch(type2, type1)
 
 
 def types_are_equal(type1: AdrianType, type2: AdrianType) -> bool:
     if type1 in A(astlib.Name) and type2 in A(astlib.Name):
         return type2 == type1
-    elif type1 in A(astlib.ParamedType) and type2 in A(astlib.ParamedType):
+    elif type1 in A(astlib.GenericType) and type2 in A(astlib.GenericType):
         return types_are_equal(
-            cast(astlib.ParamedType, type1).base,
-            cast(astlib.ParamedType, type2).base)
+            cast(astlib.GenericType, type1).base,
+            cast(astlib.GenericType, type2).base)
+    elif type1 in A(astlib.DataMember) and type2 in A(astlib.DataMember):
+        return (type1.parent == type2.parent and
+            types_are_equal(type1.member, type2.member))
     return _types_are_equal_mismatch(type1, type2)
 
 

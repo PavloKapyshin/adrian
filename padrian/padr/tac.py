@@ -1,12 +1,6 @@
 from . import astlib, defs, inference, layers, utils
 from .context import context
-from .utils import A, get_parent
-
-
-def get_parent(name):
-    if name in A(astlib.DataMember):
-        return get_parent(name.parent)
-    return name
+from .utils import A, scroll_to_parent
 
 
 class TAC(layers.Layer):
@@ -145,7 +139,7 @@ class TAC(layers.Layer):
         if expr in A(astlib.Name):
             return expr == name
         if expr in A(astlib.DataMember):
-            expr_p = get_parent(expr)
+            expr_p = scroll_to_parent(expr)
             return expr_p == name
         if expr in A(astlib.Callable):
             return self._a_tail_pointer(name, expr.args)
@@ -153,7 +147,7 @@ class TAC(layers.Layer):
 
     def _ass_e(self, name, expr):
         if name in A(astlib.DataMember):
-            name = get_parent(name)
+            name = scroll_to_parent(name)
         if self._tail_pointer(name, expr):
             tmp_name, decl = self.new_tmp(name)
             return self.replace_ass_e(name, tmp_name, expr), decl

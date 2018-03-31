@@ -18,8 +18,9 @@ class ARC(layers.Layer):
         self.b = layers._b(ARC, flist=self.flist)
 
     def register_(self, decl):
+        print("register", decl.name)
         context.env[decl.name] = {
-            "node_type": utils.declt_to_nodet(decl.decltype),
+            "node_type": utils.nodetype_from_decl(decl.decltype),
             "type_": decl.type_,
             "initialized": self.provide_initialized(
                 decl.name, decl.type_, decl.expr),
@@ -133,15 +134,11 @@ class ARC(layers.Layer):
         if expr in A(astlib.DataMember):
             self.remove_return_expr_from_flist(expr.parent)
 
-    def get_parent(self, expr):
-        if expr in A(astlib.DataMember):
-            return self.get_parent(expr.parent)
-        return expr
-
     def free(self, expr):
         if expr in A(astlib.Name):
-            info = context.env.get_variable_info(expr)
-            if ("expr" not in info or
+            info = context.env[expr]
+            # does not work: info = context.env.get_variable_info(expr)
+            if not info or ("expr" not in info or
                     info["expr"] in A(astlib.Empty)):
                 return None
             generic_type = inference.infer_generic_type(expr)
@@ -155,7 +152,7 @@ class ARC(layers.Layer):
                 expr = expr
             return deinit(expr, type_)
         elif expr in A(astlib.DataMember):
-            parent = self.get_parent(expr)
+            parent = utils.scroll_to_parent(expr)
             parent_info = context.env.get_variable_info(parent)
             if "expr" not in parent_info:
                 return deinit(expr, inference.infer_type(expr))

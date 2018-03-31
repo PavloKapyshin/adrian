@@ -1,4 +1,5 @@
 import re
+import copy
 from functools import partial
 
 from adrian.cgen import libc
@@ -13,7 +14,7 @@ TYPE_TAG_NAME = "type_tag"
 ENV = env.Env()
 DEFAULT_MODULE_PATHS = ["library/"]
 DEFAULT_CONTEXT_ARGUMENTS = {
-    "env": ENV,
+    "env": copy.deepcopy(ENV),
     "exit_on_error": False,
     "module_paths": DEFAULT_MODULE_PATHS,
     "clibs_includes": None,

@@ -11,7 +11,7 @@ class NodeT(enum.Enum):
     struct = 4
     adt = 5
     protocol = 6
-    commont = 7
+    parameter = 7
     arg = 8
 
 
@@ -296,11 +296,10 @@ class Object(BaseNode):
     __repr__ = __str__
 
 
-class ParamedType(Node):
+class GenericType(Node):
 
-    def __init__(self, type_, params):
-        self.type_ = type_
-        self.base = type_
+    def __init__(self, base, params):
+        self.base = base
         self.params = params
         self._keys = ("base", "params")
 
@@ -329,11 +328,11 @@ class While(Node):
 
 class Cond(Node):
 
-    def __init__(self, if_stmt, else_ifs, else_):
-        self.if_stmt = if_stmt
-        self.else_ifs = else_ifs
+    def __init__(self, if_, elifs_, else_):
+        self.if_ = if_
+        self.elifs_ = elifs_
         self.else_ = else_
-        self._keys = ("if_stmt", "else_ifs", "else_")
+        self._keys = ("if_", "elifs_", "else_")
 
 
 class If(Node):
@@ -344,7 +343,7 @@ class If(Node):
         self._keys = ("expr", "body")
 
 
-class ElseIf(Node):
+class Elif(Node):
 
     def __init__(self, expr, body):
         self.expr = expr

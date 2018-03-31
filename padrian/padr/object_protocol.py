@@ -7,10 +7,24 @@ from .utils import A, split_body, only_fields
 SELF = astlib.Name("self")
 
 
+def make_initial_impl_dict():
+    return OrderedDict(sorted({
+        key: (
+            i, False,
+            getattr(self, "_".join(["complete", mname])),
+            getattr(self, "_".join(["default", mname])))
+        for i, key, mname in (
+            (1, defs.INIT_METHOD, "init_method"),
+            (2, defs.COPY_METHOD, "copy_method"),
+            (3, defs.DEINIT_METHOD, "deinit_method"),
+        )
+    }.items(), key=lambda x: x[1]))
+
+
 def totype(struct_decl):
     params = struct_decl.params
     if params:
-        return astlib.ParamedType(struct_decl.name, params)
+        return astlib.GenericType(struct_decl.name, params)
     return struct_decl.name
 
 
@@ -48,20 +62,12 @@ def deinit(struct, name):
         astlib.Name(defs.DEINIT_METHOD), [name])
 
 
-def mtostructf(method, struct):
+def mtosf(method, struct):
     args = method.args
     body = method.body
     return astlib.CallableDecl(
         astlib.DeclT.struct_func, struct.name,
         method.name, args, method.rettype, body)
-
-
-def ptoprotocolf(pfunc, protocol):
-    args = pfunc.args
-    body = pfunc.body
-    return astlib.CallableDecl(
-        astlib.DeclT.protocol_func, protocol.name,
-        pfunc.name, args, pfunc.rettype, body)
 
 
 class ObjectProtocol(layers.Layer):
@@ -70,13 +76,13 @@ class ObjectProtocol(layers.Layer):
         self.type_tag_number = defs.TYPE_TAG_START
 
     def complete_init_method(self, method, stmt):
-        errors.not_now(errors.CUSTOM_OBJMETHOD)
+        errors.later(errors.Version.v0m9.value)
 
     def complete_deinit_method(self, method, stmt):
-        errors.not_now(errors.CUSTOM_OBJMETHOD)
+        errors.later(errors.Version.v0m9.value)
 
     def complete_copy_method(self, method, stmt):
-        errors.not_now(errors.CUSTOM_OBJMETHOD)
+        errors.later(errors.Version.v0m9.value)
 
     def default_deinit_method(self, stmt):
         body = [deinit(
@@ -129,7 +135,8 @@ class ObjectProtocol(layers.Layer):
         field_inits.append(
             astlib.Assignment(
                 self_field(type_tag_field.name), "=",
-                astlib.Literal(astlib.LiteralT.uint_fast64_t, str(self.type_tag_number))
+                astlib.Literal(
+                    astlib.LiteralT.uint_fast64_t, str(self.type_tag_number))
         ))
         body = [self_decl] + field_inits + [return_self]
         rettype = totype(stmt)
@@ -158,41 +165,27 @@ class ObjectProtocol(layers.Layer):
     def data_decl(self, stmt):
         if stmt.decltype == astlib.DeclT.struct:
             fields, methods = split_body(stmt.body)
-            have = OrderedDict(sorted({
-                key: (
-                    i, False,
-                    getattr(self, "_".join(["complete", mname])),
-                    getattr(self, "_".join(["default", mname])))
-                for i, key, mname in (
-                    (1, defs.INIT_METHOD, "init_method"),
-                    (2, defs.COPY_METHOD, "copy_method"),
-                    (3, defs.DEINIT_METHOD, "deinit_method"),
-                )
-            }.items(), key=lambda x: x[1]))
+            implemented_methods = make_initial_impl_dict()
             new_methods = []
             for method in methods:
-                entry = have.get(str(method.name))
+                entry = implemented_methods.get(str(method.name))
                 if entry:
-                    have.update({str(method.name): (True, entry[1], entry[2])})
+                    implemented_methods.update(
+                        {str(method.name): (True, entry[1], entry[2])})
                     new_methods.append(entry[1](method, stmt))
                 else:
                     new_methods.append(self.method(method, stmt))
-            additional_methods = []
-            for method_name, (_, exists, _, f) in have.items():
+            object_protocol_methods = []
+            for _, (_, exists, _, f) in implemented_methods.items():
                 if not exists:
-                    additional_methods.append(f(stmt))
-            yield astlib.DataDecl(
-                stmt.decltype, stmt.name,
-                stmt.params, self.add_type_tag(fields) + [
-                    mtostructf(method, stmt)
-                    for method in additional_methods + new_methods])
-            self.type_tag_number += 1
-        elif stmt.decltype == astlib.DeclT.protocol:
-            fields, pfuncs = split_body(stmt.body)
+                    object_protocol_methods.append(f(stmt))
             yield astlib.DataDecl(
                 stmt.decltype, stmt.name, stmt.params,
-                fields + [
-                    ptoprotocolf(pfunc, stmt) for pfunc in pfuncs])
+                self.add_type_tag(fields) + [
+                    mtosf(method, stmt)
+                    for method in object_protocol_methods + new_methods])
+            self.type_tag_number += 1
+        elif stmt.decltype == astlib.DeclT.protocol:
+            errors.later(errors.Version.v0m5.value)
         else:
-            yield astlib.DataDecl(
-                stmt.decltype, stmt.name, stmt.params, stmt.body)
+            yield stmt
