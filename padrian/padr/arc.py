@@ -15,7 +15,7 @@ class ARC(layers.Layer):
 
     def __init__(self, flist=None):
         self.flist = flist or env.Env()
-        self.b = layers._b(ARC, flist=self.flist)
+        self.b = layers.b(ARC, flist=self.flist)
 
     def register_(self, decl):
         print("register", decl.name)
@@ -36,7 +36,7 @@ class ARC(layers.Layer):
             }
 
     def update_b(self):
-        self.b = layers._b(ARC, flist=self.flist)
+        self.b = layers.b(ARC, flist=self.flist)
 
     def is_initialized(self, name):
         if name in A(astlib.Name):

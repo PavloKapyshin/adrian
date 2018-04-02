@@ -7,11 +7,11 @@ class TAC(layers.Layer):
 
     def __init__(self, tmp_count=0):
         self.tmp_count = tmp_count
-        self.b = layers._b(TAC, tmp_count=self.tmp_count)
+        self.b = layers.b(TAC, tmp_count=self.tmp_count)
 
     def inc_tmp_count(self):
         self.tmp_count += 1
-        self.b = layers._b(TAC, tmp_count=self.tmp_count)
+        self.b = layers.b(TAC, tmp_count=self.tmp_count)
 
     def new_tmp(self, expr):
         name = astlib.Name(

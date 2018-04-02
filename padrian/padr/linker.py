@@ -54,8 +54,8 @@ class Linker(layers.Layer):
         if type_ in A(astlib.Name):
             if type_ not in ("Void", defs.BOOL):
                 return self.inner_n(type_, hash_)
-        if type_ in A(astlib.ParamedType):
-            return astlib.ParamedType(
+        if type_ in A(astlib.GenericType):
+            return astlib.GenericType(
                 self.inner_t(type_.base, hash_),
                 [self.inner_t(t, hash_) for t in type_.params])
         return type_
@@ -134,10 +134,10 @@ class Linker(layers.Layer):
         if type_ in A(astlib.Name):
             if type_ not in ("Void", defs.BOOL):
                 return self.n(type_), []
-        if type_ in A(astlib.ParamedType):
+        if type_ in A(astlib.GenericType):
             base, stmts1 = self.t(type_.base)
             params, stmts2 = self.t_params(type_.params)
-            return astlib.ParamedType(base, params), stmts1 + stmts2
+            return astlib.GenericType(base, params), stmts1 + stmts2
         return type_, []
 
     def a(self, args):
@@ -206,7 +206,7 @@ class Linker(layers.Layer):
         return expr, []
 
     def update_b(self):
-        self.b = layers._b(
+        self.b = layers.b(
             Linker, main_file_hash=self.main_file_hash,
             inlined_modules=self.inlined_modules)
 
@@ -239,7 +239,7 @@ class Linker(layers.Layer):
         self.update_b()
         body = self.b(stmt.body)
         context.inlining.extend(stmts)
-        return astlib.ElseIf(expr, body)
+        return astlib.Elif(expr, body)
 
     def _else(self, stmt):
         self.update_b()
@@ -248,15 +248,15 @@ class Linker(layers.Layer):
 
     @layers.register(astlib.Cond)
     def cond(self, stmt):
-        if_stmt = self._if_stmt(stmt.if_stmt)
-        elifs = []
-        for elif_ in stmt.else_ifs:
-            elifs.append(self._elif_stmt(elif_))
+        if_ = self._if_stmt(stmt.if_)
+        elifs_ = []
+        for elif_ in stmt.elifs_:
+            elifs_.append(self._elif_stmt(elif_))
         if stmt.else_ in A(list):
             else_ = stmt.else_
         else:
             else_ = self._else(stmt.else_)
-        yield astlib.Cond(if_stmt, elifs, else_)
+        yield astlib.Cond(if_, elifs_, else_)
 
     @layers.register(astlib.Callable)
     def callable_(self, stmt):

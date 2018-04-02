@@ -1,10 +1,14 @@
-from . import astlib, defs, errors, inference, layers, typelib, utils
+from . import astlib, defs, errors, inference, layers, typelib, utils, env_api
 from .context import context
 from .utils import A
 
 
 def is_adt(type_):
-    return context.env.is_adt(context.env.get_node_type(type_))
+    return env_api.is_adt(utils.nodetype(type_))
+
+
+def is_type(type_):
+    return env_api.is_type(utils.nodetype(type_))
 
 
 def _get_adt_field_by_type(parent, type_):
@@ -14,7 +18,7 @@ def _get_adt_field_by_type(parent, type_):
         if typelib.types_are_equal(field_info["type_"], type_):
             return astlib.DataMember(
                 astlib.DataT.adt, parent, astlib.Name(field_name))
-    errors.no_adt_field(adt_type, type_)
+    errors.type_mismatch(adt_type, type_)
 
 
 def _get_adt_field_by_name(name, member):
@@ -24,7 +28,7 @@ def _get_adt_field_by_name(name, member):
 def _split_adt_usage(type_, expr, name=None):
     if is_adt(inference.infer_type(expr)):
         expr_ = astlib.Empty()
-        adt_info = context.env.get_type_info(type_)
+        adt_info = env_api.adt_info(type_)
         exprs, bodies = [], []
         for f_name, f_type in adt_info["fields"].items():
             exprs.append(
@@ -54,11 +58,11 @@ def _e_callable(expr: astlib.Callable):
     if expr.name == defs.REF and callable_type == astlib.CallableT.fun:
         args = _a(expr.args)
         if len(args) != 1:
-            errors.wrong_number_of_args(len(args), 1)
+            errors.args_number_mismatch(len(args), 1)
         return astlib.Ref(args[0])
-    if callable_type not in (
-            astlib.CallableT.cfunc, astlib.CallableT.struct_func)\
-            and context.env.is_type(context.env.get_node_type(expr.name)):
+    if (callable_type not in (
+            astlib.CallableT.cfunc, astlib.CallableT.struct_func) and
+            is_type(expr.name)):
         callable_type = astlib.CallableT.struct
     return astlib.Callable(
         callable_type, expr.parent, expr.name, _a(expr.args))
@@ -88,8 +92,7 @@ def _e(expr):
         elif expr == defs.FALSE:
             return defs.FALSE_TRANSLATION
         variable_info = context.env[expr]
-        if variable_info and context.env.is_adt(
-                context.env.get_node_type(variable_info["type_"])):
+        if variable_info and is_adt(variable_info["type_"]):
             return _get_adt_field_by_type(
                 expr, inference.infer_type(variable_info["expr"]))
     elif expr in A(astlib.Callable):
@@ -123,9 +126,9 @@ def _t(type_):
     elif type_ in A(
             astlib.DataMember) and type_.datatype == astlib.DataT.module:
         if type_.parent != defs.CMODULE:
-            errors.not_now(errors.MODULES)
-    elif type_ in A(astlib.ParamedType):
-        return astlib.ParamedType(_t(type_.base), list(map(_t, type_.params)))
+            errors.fatal("Linker is broken: it passed non-c module")
+    elif type_ in A(astlib.GenericType):
+        return astlib.GenericType(_t(type_.base), list(map(_t, type_.params)))
     return type_
 
 
@@ -169,7 +172,7 @@ class Analyzer(layers.Layer):
     @layers.register(astlib.Assignment)
     def translate_assignment(self, stmt):
         right = _e(stmt.right)
-        utils.register(stmt, right=right)
+        env_api.register(stmt, right=right)
         yield astlib.Assignment(_e(stmt.left), stmt.op, right)
 
     @layers.register(astlib.Return)
@@ -192,7 +195,7 @@ class Analyzer(layers.Layer):
 
     def _elif_stmt(self, stmt):
         context.env.add_scope()
-        result = astlib.ElseIf(_e(stmt.expr), self.b(stmt.body))
+        result = astlib.Elif(_e(stmt.expr), self.b(stmt.body))
         context.env.remove_scope()
         return result
 
@@ -204,27 +207,27 @@ class Analyzer(layers.Layer):
 
     @layers.register(astlib.Cond)
     def translate_cond(self, stmt: astlib.Cond):
-        if_stmt = self._if_stmt(stmt.if_stmt)
-        elifs = []
-        for elif_ in stmt.else_ifs:
-            elifs.append(self._elif_stmt(elif_))
+        if_ = self._if(stmt.if_)
+        elifs_ = []
+        for elif_ in stmt.elifs_:
+            elifs_.append(self._elif(elif_))
         if stmt.else_ in A(list):
             else_ = None
         else:
             else_ = self._else(stmt.else_)
-        yield astlib.Cond(if_stmt, elifs, else_)
+        yield astlib.Cond(if_, elifs_, else_)
 
     @layers.register(astlib.Decl)
     def translate_declaration(self, stmt):
         if stmt.decltype == astlib.DeclT.field:
             type_ = _t(stmt.type_)
-            utils.register(stmt, type_=type_)
+            env_api.register(stmt, type_=type_)
             yield astlib.Decl(stmt.decltype, stmt.name, type_, stmt.expr)
         else:
             type_, expr = _infer_unknown(stmt.type_, stmt.expr)
-            utils.register(stmt, type_=type_, expr=expr)
+            env_api.register(stmt, type_=type_, expr=expr)
             result = astlib.Decl(stmt.decltype, stmt.name, type_, expr)
-            if context.env.is_adt(context.env.get_node_type(type_)):
+            if is_adt(type_):
                 expr, assignments = _split_adt_usage(
                     type_, expr, name=stmt.name)
                 yield astlib.Decl(stmt.decltype, stmt.name, type_, expr)
@@ -236,9 +239,9 @@ class Analyzer(layers.Layer):
     def translate_callable_declaration(self, stmt):
         type_ = _t(stmt.rettype)
         args = _a(stmt.args)
-        utils.register(stmt, args=args, type_=type_)
+        env_api.register(stmt, args=args, type_=type_)
         context.env.add_scope()
-        utils.register_args(args)
+        env_api.register_args(args)
         self._update_b()
         yield astlib.CallableDecl(
             stmt.decltype, stmt.parent, stmt.name,
@@ -247,10 +250,10 @@ class Analyzer(layers.Layer):
 
     @layers.register(astlib.DataDecl)
     def translate_data_declaration(self, stmt):
-        utils.register(stmt)
+        env_api.register(stmt)
         context.env.add_scope()
         context.parent = stmt.name
-        utils.register_params(stmt.params)
+        env_api.register_params(stmt.params)
         body = stmt.body
         if stmt.decltype == astlib.DeclT.adt:
             body = self._make_adt_body(body)

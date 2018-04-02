@@ -210,7 +210,7 @@ class Inlining(layers.Layer):
     def __init__(self, inliner=None, mapping=None):
         self.inliner = inliner or _CoreInlining()
         self.mapping = mapping or Mapping()
-        self.b = layers._b(
+        self.b = layers.b(
             Inlining, inliner=self.inliner, mapping=self.mapping)
 
     def register_func_as_child(self, stmt):
@@ -222,7 +222,7 @@ class Inlining(layers.Layer):
         }
 
     def update_b(self):
-        self.b = layers._b(
+        self.b = layers.b(
             Inlining, inliner=self.inliner, mapping=self.mapping)
 
     def inline(self, parent, method_name, args):

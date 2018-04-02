@@ -180,11 +180,3 @@ def register(stmt, **kwds):
             "fields": {},
             "methods": {}
         }, **kwds}
-
-
-# Other useful functions.
-def nodetype(request):
-    info = unsafe_info(request)
-    if info is None:
-        errors.unknown_name(request)
-    return info["node_type"]

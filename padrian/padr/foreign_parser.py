@@ -1,5 +1,3 @@
-"""Translates parser's AST to object-oriented AST."""
-
 import os
 import itertools
 
@@ -49,6 +47,15 @@ def add_to_clibs(module_elem):
             add_found_module(defs.CMODULE, file_name=defs.CMODULE_FILE)
 
 
+def register_linkage_if_needed(result):
+    if result in A(astlib.DataMember):
+        if result.datatype == astlib.DataT.module:
+            add_to_clibs(result)
+    elif result in A(astlib.Name):
+        if result == defs.BOOL:
+            add_to_clibs(defs.BOOL_TRANSLATION)
+
+
 def translate(node):
     args = []
     for subnode in node[1:]:
@@ -62,12 +69,7 @@ def translate(node):
     if result in A(astlib.LinkedListNode, astlib.Args):
         yield list(itertools.chain.from_iterable(list(result)))
     else:
-        if result in A(astlib.DataMember):
-            if result.datatype == astlib.DataT.module:
-                add_to_clibs(result)
-        elif result in A(astlib.Name):
-            if result == defs.BOOL:
-                add_to_clibs(defs.BOOL_TRANSLATION)
+        register_linkage_if_needed(result)
         yield result
 
 

@@ -7,9 +7,8 @@ from .utils import A
 class ToCgen(layers.Layer):
 
     def __init__(self):
-        self.b = layers._b(ToCgen)
+        self.b = layers.b(ToCgen)
 
-    # Misc.
     def struct_func_n(self, parent, name):
         name = self.n(name)
         if not name.startswith("_"):

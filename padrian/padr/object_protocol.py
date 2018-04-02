@@ -7,20 +7,6 @@ from .utils import A, split_body, only_fields
 SELF = astlib.Name("self")
 
 
-def make_initial_impl_dict():
-    return OrderedDict(sorted({
-        key: (
-            i, False,
-            getattr(self, "_".join(["complete", mname])),
-            getattr(self, "_".join(["default", mname])))
-        for i, key, mname in (
-            (1, defs.INIT_METHOD, "init_method"),
-            (2, defs.COPY_METHOD, "copy_method"),
-            (3, defs.DEINIT_METHOD, "deinit_method"),
-        )
-    }.items(), key=lambda x: x[1]))
-
-
 def totype(struct_decl):
     params = struct_decl.params
     if params:
@@ -161,11 +147,24 @@ class ObjectProtocol(layers.Layer):
     def add_type_tag(self, fields):
         return fields + [self.render_type_tag()]
 
+    def make_initial_impl_dict(self):
+        return OrderedDict(sorted({
+            key: (
+                i, False,
+                getattr(self, "_".join(["complete", mname])),
+                getattr(self, "_".join(["default", mname])))
+            for i, key, mname in (
+                (1, defs.INIT_METHOD, "init_method"),
+                (2, defs.COPY_METHOD, "copy_method"),
+                (3, defs.DEINIT_METHOD, "deinit_method"),
+            )
+        }.items(), key=lambda x: x[1]))
+
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
         if stmt.decltype == astlib.DeclT.struct:
             fields, methods = split_body(stmt.body)
-            implemented_methods = make_initial_impl_dict()
+            implemented_methods = self.make_initial_impl_dict()
             new_methods = []
             for method in methods:
                 entry = implemented_methods.get(str(method.name))

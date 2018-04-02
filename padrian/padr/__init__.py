@@ -4,11 +4,12 @@ from copy import deepcopy
 from adrian import cgen
 from . import (
     analyzer, arc, ccopts, context, copying, defs, foreign_parser, inlining,
-    layers, object_protocol, parser, tac, tocgen, linker, checker)
+    layers, object_protocol, parser, tac, tocgen, linker, checker,
+    debug_formatter)
 
 LAYERS = (
     (object_protocol.ObjectProtocol, "transform_ast"),
-    # (analyzer.Analyzer, "transform_ast"),
+    (analyzer.Analyzer, "transform_ast"),
     # (checker.Checker, "transform_ast"),
     # (tac.TAC, "transform_ast"),
     # (copying.Copying, "transform_ast"),
@@ -23,11 +24,9 @@ def compile_(current_ast, layers_, default_context_args):
     for layer_cls, method_name in layers_:
         with context.new_context(**context_arguments):
             layer = layer_cls()
-            before = deepcopy(defs.ENV)
             current_ast = list(getattr(layers, method_name)(
                 current_ast, registry=layer.get_registry()
             ))
-            assert(before.space == defs.ENV.space)
         context_arguments = _update_context_args()
     return current_ast
 

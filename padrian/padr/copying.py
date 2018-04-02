@@ -12,7 +12,7 @@ def copy(expr):
 class Copying(layers.Layer):
 
     def __init__(self):
-        self.b = layers._b(Copying)
+        self.b = layers.b(Copying)
 
     def e(self, expr):
         if expr in A(astlib.Name, astlib.DataMember):

@@ -1,6 +1,7 @@
 import itertools
 
-from . import astlib
+from . import astlib, errors
+from .context import context
 
 
 class A:
@@ -39,3 +40,23 @@ def scroll_to_parent(node):
     if node in A(astlib.DataMember):
         return scroll_to_parent(node.parent)
     return node
+
+
+def nodetype(request):
+    info = context.env[request]
+    if info is None:
+        errors.unknown_name(request)
+    return info["node_type"]
+
+
+# def _is_of_nodetype(*nodetypes):
+#     def helper(request):
+#         return nodetype(request) in nodetypes
+#     return helper
+
+
+# is_adt = _is_of_nodetype(astlib.NodeT.adt)
+# is_struct = _is_of_nodetype(astlib.NodeT.struct)
+# is_fun = _is_of_nodetype(astlib.NodeT.fun)
+# is_var = _is_of_nodetype(astlib.NodeT.var)
+# is_let = _is_of_nodetype(astlib.NodeT.let)

@@ -6,30 +6,29 @@ class DebugFormatter(layers.Layer):
 
     def __init__(self, current_ind_level=None):
         self.current_ind_level = current_ind_level or 0
-        self.b = layers._b(
+        self.b = layers.b(
             DebugFormatter, current_ind_level=self.current_ind_level+2)
 
-    def up_ind(self):
+    def inc_ind(self):
         self.current_ind_level += 2
-        self.b = layers._b(
+        self.b = layers.b(
             DebugFormatter, current_ind_level=self.current_ind_level+2)
 
-    def down_ind(self):
+    def deinc_ind(self):
         self.current_ind_level -= 2
-        self.b = layers._b(
+        self.b = layers.b(
             DebugFormatter, current_ind_level=self.current_ind_level+2)
 
-    # Misc.
     def stmt_with_body(self, decl_string, body):
         body = self.b(body)
-        self.up_ind()
+        self.inc_ind()
         b = []
         for s in body:
-            if s in A(astlib.Name, astlib.ParamedType, astlib.DataMember):
+            if s in A(astlib.Name, astlib.GenericType, astlib.DataMember):
                 b.append("".join([" " * self.current_ind_level, self.t(s)]))
             else:
                 b.append("".join([" " * self.current_ind_level, s]))
-        self.down_ind()
+        self.deinc_ind()
         yield "\n".join([
             decl_string
         ] + b + [" "*self.current_ind_level + "}"])
@@ -72,9 +71,9 @@ class DebugFormatter(layers.Layer):
     def t(self, type_):
         if type_ in A(astlib.Name):
             return self.n(type_)
-        elif type_ in A(astlib.ParamedType):
+        elif type_ in A(astlib.GenericType):
             return "{}({})".format(
-                self.t(type_.type_),
+                self.t(type_.base),
                 ", ".join([
                     self.t(param) for param in type_.params]))
         elif type_ in A(astlib.DataMember):
@@ -120,15 +119,15 @@ class DebugFormatter(layers.Layer):
 
     @layers.register(astlib.Cond)
     def cond(self, stmt: astlib.Cond):
-        if_stmt = list(self._if(stmt.if_stmt))
-        elifs = []
-        for elif_ in stmt.else_ifs:
-            elifs.extend(self._elif(elif_))
+        if_stmt = list(self._if(stmt.if_))
+        elifs_ = []
+        for elif_ in stmt.elifs_:
+            elifs_.extend(self._elif(elif_))
         if stmt.else_ is None:
             else_ = []
         else:
             else_ = list(self._else(stmt.else_))
-        yield " ".join(if_stmt + elifs + else_)
+        yield " ".join(if_ + elifs_ + else_)
 
     @layers.register(astlib.Decl)
     def decl(self, stmt):
