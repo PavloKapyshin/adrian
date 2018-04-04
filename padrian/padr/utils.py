@@ -49,14 +49,17 @@ def nodetype(request):
     return info["node_type"]
 
 
-# def _is_of_nodetype(*nodetypes):
-#     def helper(request):
-#         return nodetype(request) in nodetypes
-#     return helper
+def _is_of_nodetype(*nodetypes):
+    def helper(request):
+        return nodetype(request) in nodetypes
+    return helper
 
 
-# is_adt = _is_of_nodetype(astlib.NodeT.adt)
-# is_struct = _is_of_nodetype(astlib.NodeT.struct)
-# is_fun = _is_of_nodetype(astlib.NodeT.fun)
-# is_var = _is_of_nodetype(astlib.NodeT.var)
-# is_let = _is_of_nodetype(astlib.NodeT.let)
+is_type = _is_of_nodetype(
+    astlib.NodeT.adt, astlib.NodeT.struct, astlib.NodeT.parameter)
+is_real_type = _is_of_nodetype(astlib.NodeT.adt, astlib.NodeT.struct)
+is_adt = _is_of_nodetype(astlib.NodeT.adt)
+is_struct = _is_of_nodetype(astlib.NodeT.struct)
+is_fun = _is_of_nodetype(astlib.NodeT.fun)
+is_var = _is_of_nodetype(astlib.NodeT.var)
+is_let = _is_of_nodetype(astlib.NodeT.let)

@@ -77,9 +77,9 @@ def field_info(parent, member):
     else:
         parent_info_ = parent_info(parent)
     struct_info_ = struct_info(parent_info_["type_"])
-    field_info_ = struct_info_["fields"].get(field_name)
+    field_info_ = struct_info_["fields"].get(member)
     if field_info is None:
-        errors.no_such_field(parent, parent_info_["type_"], field_name)
+        errors.no_such_field(parent, parent_info_["type_"], member)
     return field_info_
 
 
@@ -107,10 +107,10 @@ def _update_by_assignment(assignment, **kwds):
             context.env[left] = right
 
 
-def _create_type_mapping(type_):
+def create_type_mapping(type_):
     mapping = {}
     if type_ in A(astlib.GenericType):
-        struct_info_ = struct_info(type_.base)
+        struct_info_ = type_info(type_.base)
         for param, passed_param in zip(struct_info_["params"], type_.params):
             mapping[param] = passed_param
     return mapping
@@ -131,7 +131,7 @@ def register_args(args):
         context.env[name] = {
             "node_type": astlib.NodeT.arg,
             "type_": type_,
-            "mapping": _create_type_mapping(type_),
+            "mapping": create_type_mapping(type_),
             "expr": astlib.Empty()
         }
 
@@ -145,7 +145,7 @@ def register(stmt, **kwds):
                 if stmt.decltype == astlib.DeclT.var
                 else astlib.NodeT.let),
             "type_": stmt.type_,
-            "mapping": _create_type_mapping(stmt.type_),
+            "mapping": create_type_mapping(stmt.type_),
             "expr": stmt.expr
         }, **kwds}
     elif stmt.decltype in (astlib.DeclT.fun,):
@@ -157,7 +157,7 @@ def register(stmt, **kwds):
         }, **kwds}
     elif stmt.decltype in (astlib.DeclT.struct_func,):
         # Just for checking.
-        _ = struct_info(context.parent)
+        _ = type_info(context.parent)
         context.env[context.parent]["methods"][stmt.name] = {**{
             "type_": stmt.rettype,
             "args": stmt.args,
@@ -165,7 +165,7 @@ def register(stmt, **kwds):
         }, **kwds}
     elif stmt.decltype in (astlib.DeclT.field,):
         # Just for checking.
-        _ = struct_info(context.parent)
+        _ = type_info(context.parent)
         context.env[context.parent]["fields"][stmt.name] = {**{
             "type_": stmt.type_,
         }, **kwds}

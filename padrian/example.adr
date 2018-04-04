@@ -1,1 +1,7 @@
-let a = c#IntFast8(0)
+let a: c#IntFast8 = c#IntFast8(1)
+var conditional: c#IntFast8 = c#IntFast8(10)
+while (conditional > c#IntFast8(0)) or (conditional > c#IntFast8(1)) {
+    a = a + c#IntFast8(1)
+    conditional = conditional - c#IntFast8(1)
+}
+let b = a

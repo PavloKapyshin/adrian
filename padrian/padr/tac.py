@@ -1,4 +1,4 @@
-from . import astlib, defs, inference, layers, utils
+from . import astlib, defs, inference, layers, env_api
 from .context import context
 from .utils import A, scroll_to_parent
 
@@ -19,7 +19,7 @@ class TAC(layers.Layer):
             is_user_name=False)
         type_ = inference.infer_type(expr)
         result = astlib.Decl(astlib.DeclT.let, name, type_, expr)
-        utils.register(result)
+        env_api.register(result)
         self.inc_tmp_count()
         return name, [result]
 
@@ -81,17 +81,17 @@ class TAC(layers.Layer):
         yield astlib.While(expr, body)
         context.env.remove_scope()
 
-    def _if_stmt(self, stmt):
+    def _if(self, stmt):
         context.env.add_scope()
         expr, decls = self._inner_e(stmt.expr)
         result = (astlib.If(expr, self.b(stmt.body)), decls)
         context.env.remove_scope()
         return result
 
-    def _elif_stmt(self, stmt):
+    def _elif(self, stmt):
         context.env.add_scope()
         expr, decls = self._inner_e(stmt.expr)
-        result = (astlib.ElseIf(expr, self.b(stmt.body)), decls)
+        result = (astlib.Elif(expr, self.b(stmt.body)), decls)
         context.env.remove_scope()
         return result
 
@@ -103,10 +103,10 @@ class TAC(layers.Layer):
 
     @layers.register(astlib.Cond)
     def translate_cond(self, stmt: astlib.Cond):
-        if_stmt, main_decls = self._if_stmt(stmt.if_stmt)
+        if_, main_decls = self._if(stmt.if_)
         elifs = []
-        for elif_ in stmt.else_ifs:
-            res = self._elif_stmt(elif_)
+        for elif_ in stmt.elifs_:
+            res = self._elif(elif_)
             elifs.append(res[0])
             main_decls.extend(res[1])
         if stmt.else_ is None:
@@ -114,7 +114,7 @@ class TAC(layers.Layer):
         else:
             else_ = self._else(stmt.else_)
         yield from main_decls
-        yield astlib.Cond(if_stmt, elifs, else_)
+        yield astlib.Cond(if_, elifs, else_)
 
     def replace_ass_a(self, what, with_, args):
         return [self.replace_ass_e(what, with_, a) for a in args]
@@ -160,7 +160,7 @@ class TAC(layers.Layer):
             for decl in decls_:
                 yield from self.decl(decl)
         expr, decls = self.e(expr_)
-        utils.register(stmt, right=expr)
+        env_api.register(stmt, right=expr)
         yield from decls
         yield astlib.Assignment(stmt.left, stmt.op, expr)
 
@@ -179,19 +179,19 @@ class TAC(layers.Layer):
     @layers.register(astlib.Decl)
     def decl(self, stmt):
         if stmt.decltype == astlib.DeclT.field:
-            utils.register(stmt)
+            env_api.register(stmt)
             yield stmt
         else:
             expr, decls = self.e(stmt.expr)
-            utils.register(stmt, expr=expr)
+            env_api.register(stmt, expr=expr)
             yield from decls
             yield astlib.Decl(stmt.decltype, stmt.name, stmt.type_, expr)
 
     @layers.register(astlib.CallableDecl)
     def callable_decl(self, stmt):
-        utils.register(stmt)
+        env_api.register(stmt)
         +context.env
-        utils.register_args(stmt.args)
+        env_api.register_args(stmt.args)
         yield astlib.CallableDecl(
             stmt.decltype, stmt.parent, stmt.name,
             stmt.args, stmt.rettype, self.b(stmt.body))
@@ -199,10 +199,10 @@ class TAC(layers.Layer):
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
-        utils.register(stmt)
+        env_api.register(stmt)
         +context.env
         context.parent = stmt.name
-        utils.register_params(stmt.params)
+        env_api.register_params(stmt.params)
         yield astlib.DataDecl(
             stmt.decltype, stmt.name, stmt.params, self.b(stmt.body))
         -context.env

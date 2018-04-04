@@ -6,7 +6,7 @@ from .utils import A
 def _types_are_equal_mismatch(type1, type2) -> bool:
     if type1 in A(astlib.Name):
         return types_are_equal(type1, type2.base)
-    elif type1 in A(astlib.DataMember):
+    elif type1 in A(astlib.DataMember, astlib.LiteralType):
         return False
     return _types_are_equal_mismatch(type2, type1)
 
@@ -21,6 +21,8 @@ def types_are_equal(type1, type2) -> bool:
     elif type1 in A(astlib.DataMember) and type2 in A(astlib.DataMember):
         return (type1.parent == type2.parent and
             types_are_equal(type1.member, type2.member))
+    elif type1 in A(astlib.LiteralType) and type2 in A(astlib.LiteralType):
+        return type1.type_ == type2.type_
     return _types_are_equal_mismatch(type1, type2)
 
 

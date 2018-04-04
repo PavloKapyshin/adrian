@@ -1,6 +1,6 @@
 from .context import context
 from .utils import A
-from . import astlib, layers, defs, inference, utils
+from . import astlib, layers, defs, inference, env_api
 
 
 def copy(expr):
@@ -37,15 +37,15 @@ class Copying(layers.Layer):
         yield astlib.While(self.ae(stmt.expr), self.b(stmt.body))
         context.env.remove_scope()
 
-    def _if_stmt(self, stmt):
+    def _if(self, stmt):
         context.env.add_scope()
         result = astlib.If(self.ae(stmt.expr), self.b(stmt.body))
         context.env.remove_scope()
         return result
 
-    def _elif_stmt(self, stmt):
+    def _elif(self, stmt):
         context.env.add_scope()
-        result = astlib.ElseIf(self.ae(stmt.expr), self.b(stmt.body))
+        result = astlib.Elif(self.ae(stmt.expr), self.b(stmt.body))
         context.env.remove_scope()
         return result
 
@@ -57,15 +57,15 @@ class Copying(layers.Layer):
 
     @layers.register(astlib.Cond)
     def translate_cond(self, stmt: astlib.Cond):
-        if_stmt = self._if_stmt(stmt.if_stmt)
-        elifs = []
-        for elif_ in stmt.else_ifs:
-            elifs.append(self._elif_stmt(elif_))
+        if_ = self._if(stmt.if_)
+        elifs_ = []
+        for elif_ in stmt.elifs_:
+            elifs_.append(self._elif(elif_))
         if stmt.else_ is None:
             else_ = None
         else:
             else_ = self._else(stmt.else_)
-        yield astlib.Cond(if_stmt, elifs, else_)
+        yield astlib.Cond(if_, elifs_, else_)
 
     @layers.register(astlib.Return)
     def return_stmt(self, stmt):
@@ -75,7 +75,7 @@ class Copying(layers.Layer):
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
         expr = self.e(stmt.right)
-        utils.register(stmt, right=expr)
+        env_api.register(stmt, right=expr)
         yield astlib.Assignment(stmt.left, stmt.op, expr)
 
     @layers.register(astlib.Callable)
@@ -86,18 +86,18 @@ class Copying(layers.Layer):
     @layers.register(astlib.Decl)
     def decl(self, stmt):
         if stmt.decltype == astlib.DeclT.field:
-            utils.register(stmt)
+            env_api.register(stmt)
             yield stmt
         else:
             expr = self.e(stmt.expr)
-            utils.register(stmt, expr=expr)
+            env_api.register(stmt, expr=expr)
             yield astlib.Decl(stmt.decltype, stmt.name, stmt.type_, expr)
 
     @layers.register(astlib.CallableDecl)
     def callable_decl(self, stmt):
-        utils.register(stmt)
+        env_api.register(stmt)
         +context.env
-        utils.register_args(stmt.args)
+        env_api.register_args(stmt.args)
         yield astlib.CallableDecl(
             stmt.decltype, stmt.parent, stmt.name,
             stmt.args, stmt.rettype, self.b(stmt.body))
@@ -105,10 +105,10 @@ class Copying(layers.Layer):
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
-        utils.register(stmt)
+        env_api.register(stmt)
         +context.env
         context.parent = stmt.name
-        utils.register_params(stmt.params)
+        env_api.register_params(stmt.params)
         yield astlib.DataDecl(
             stmt.decltype, stmt.name, stmt.params, self.b(stmt.body))
         -context.env

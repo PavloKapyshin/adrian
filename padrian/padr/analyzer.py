@@ -3,17 +3,9 @@ from .context import context
 from .utils import A
 
 
-def is_adt(type_):
-    return env_api.is_adt(utils.nodetype(type_))
-
-
-def is_type(type_):
-    return env_api.is_type(utils.nodetype(type_))
-
-
 def _get_adt_field_by_type(parent, type_):
-    adt_type = context.env.get_variable_info(parent)["type_"]
-    adt_type_info = context.env.get_type_info(adt_type)
+    adt_type = env_api.variable_info(parent)["type_"]
+    adt_type_info = env_api.type_info(adt_type)
     for field_name, field_info in adt_type_info["fields"].items():
         if typelib.types_are_equal(field_info["type_"], type_):
             return astlib.DataMember(
@@ -26,7 +18,7 @@ def _get_adt_field_by_name(name, member):
 
 
 def _split_adt_usage(type_, expr, name=None):
-    if is_adt(inference.infer_type(expr)):
+    if utils.is_adt(inference.infer_type(expr)):
         expr_ = astlib.Empty()
         adt_info = env_api.adt_info(type_)
         exprs, bodies = [], []
@@ -43,7 +35,7 @@ def _split_adt_usage(type_, expr, name=None):
             bodies.append(stmt)
         cond = astlib.Cond(
             astlib.If(exprs[0], bodies[0]),
-            [astlib.ElseIf(expr_, body_)
+            [astlib.Elif(expr_, body_)
             for expr_, body_ in zip(exprs[1:], bodies[1:])],
             else_=None)
         return expr_, cond
@@ -62,7 +54,7 @@ def _e_callable(expr: astlib.Callable):
         return astlib.Ref(args[0])
     if (callable_type not in (
             astlib.CallableT.cfunc, astlib.CallableT.struct_func) and
-            is_type(expr.name)):
+            utils.is_type(expr.name)):
         callable_type = astlib.CallableT.struct
     return astlib.Callable(
         callable_type, expr.parent, expr.name, _a(expr.args))
@@ -92,7 +84,7 @@ def _e(expr):
         elif expr == defs.FALSE:
             return defs.FALSE_TRANSLATION
         variable_info = context.env[expr]
-        if variable_info and is_adt(variable_info["type_"]):
+        if variable_info and utils.is_adt(variable_info["type_"]):
             return _get_adt_field_by_type(
                 expr, inference.infer_type(variable_info["expr"]))
     elif expr in A(astlib.Callable):
@@ -187,13 +179,13 @@ class Analyzer(layers.Layer):
     def translate_data_member(self, stmt):
         yield _e_data_member(stmt)
 
-    def _if_stmt(self, stmt):
+    def _if(self, stmt):
         context.env.add_scope()
         result = astlib.If(_e(stmt.expr), self.b(stmt.body))
         context.env.remove_scope()
         return result
 
-    def _elif_stmt(self, stmt):
+    def _elif(self, stmt):
         context.env.add_scope()
         result = astlib.Elif(_e(stmt.expr), self.b(stmt.body))
         context.env.remove_scope()
@@ -227,7 +219,7 @@ class Analyzer(layers.Layer):
             type_, expr = _infer_unknown(stmt.type_, stmt.expr)
             env_api.register(stmt, type_=type_, expr=expr)
             result = astlib.Decl(stmt.decltype, stmt.name, type_, expr)
-            if is_adt(type_):
+            if utils.is_adt(type_):
                 expr, assignments = _split_adt_usage(
                     type_, expr, name=stmt.name)
                 yield astlib.Decl(stmt.decltype, stmt.name, type_, expr)

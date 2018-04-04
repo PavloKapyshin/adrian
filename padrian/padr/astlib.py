@@ -363,3 +363,11 @@ class NotIs(Node):
         self.expr1 = expr1
         self.expr2 = expr2
         self._keys = ("expr1", "expr2")
+
+
+class Null(BaseNode):
+
+    def __str__(self):
+        return "NULL"
+
+    __repr__ = __str__

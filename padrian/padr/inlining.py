@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from . import astlib, defs, env, errors, inference, layers, utils
+from . import astlib, defs, env, errors, inference, layers, env_api, utils
 from .context import context
 from .utils import A
 
@@ -11,7 +11,7 @@ class _Mapping:
         self._mapping = {}
 
     def _validate_key(self, key):
-        if key in A(astlib.ParamedType):
+        if key in A(astlib.GenericType):
             return self._validate_key(key.base)
         return str(key)
 
@@ -24,7 +24,7 @@ class _Mapping:
         key = self._validate_key(key)
         found = self._mapping.get(key)
         if not found:
-            errors.key_error(initial_key, request=key, container=_Mapping)
+            errors.unknown_name(initial_key)
         return found
 
     def get(self, key):
@@ -53,8 +53,8 @@ class Mapping:
         if type_ in A(astlib.Name):
             found = self.type_mapping.get(type_)
             return (found if found else type_)
-        elif type_ in A(astlib.ParamedType):
-            return astlib.ParamedType(
+        elif type_ in A(astlib.GenericType):
+            return astlib.GenericType(
                 type_.base, list(map(self.apply_for_type, type_.params)))
         return type_
 
@@ -81,9 +81,10 @@ class Mapping:
 
     def fill_type_mapping(self, type_):
         if type_ in A(
-                astlib.Name, astlib.DataMember, astlib.Empty):
+                astlib.Name, astlib.DataMember,
+                astlib.Empty, astlib.LiteralType, astlib.Void):
             return
-        struct_info = context.env.get_type_info(type_)
+        struct_info = env_api.type_info(type_)
         for decl_param, param in zip(struct_info["params"], type_.params):
             self.type_mapping[decl_param] = param
 
@@ -122,8 +123,8 @@ class _CoreInlining(layers.Layer):
         if type_ in A(astlib.Name):
             found = self.mapping.type_mapping.get(type_)
             return found if found else type_
-        elif type_ in A(astlib.ParamedType):
-            return astlib.ParamedType(
+        elif type_ in A(astlib.GenericType):
+            return astlib.GenericType(
                 type_.base, list(map(self.t, type_.params)))
         return type_
 
@@ -156,7 +157,7 @@ class _CoreInlining(layers.Layer):
     def _elif_stmt(self, stmt):
         context.env.add_scope()
         self.update_b()
-        result = astlib.ElseIf(self.e(stmt.expr), self.b(stmt.body))
+        result = astlib.Elif(self.e(stmt.expr), self.b(stmt.body))
         context.env.remove_scope()
         return result
 
@@ -169,9 +170,9 @@ class _CoreInlining(layers.Layer):
 
     @layers.register(astlib.Cond)
     def translate_cond(self, stmt: astlib.Cond):
-        if_stmt = self._if_stmt(stmt.if_stmt)
+        if_stmt = self._if_stmt(stmt.if_)
         elifs = []
-        for elif_ in stmt.else_ifs:
+        for elif_ in stmt.elifs_:
             elifs.append(self._elif_stmt(elif_))
         if stmt.else_ is None:
             else_ = None
@@ -182,6 +183,7 @@ class _CoreInlining(layers.Layer):
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
         right = self.e(stmt.right)
+        self.env[stmt.left] = 1
         yield astlib.Assignment(
             self.e(stmt.left), stmt.op, right)
 
@@ -196,9 +198,15 @@ class _CoreInlining(layers.Layer):
     @layers.register(astlib.Decl)
     def decl(self, stmt):
         self.env[stmt.name] = 1
+        type_ = self.t(stmt.type_)
+        name = self.n(stmt.name)
         expr = self.e(stmt.expr)
+        context.env[name] = {
+            "node_type": astlib.NodeT.let,
+            "type_": type_
+        }
         yield astlib.Decl(
-            stmt.decltype, self.n(stmt.name), self.t(stmt.type_), expr)
+            stmt.decltype, name, type_, expr)
 
     def main(self, body, mapping):
         yield from list(layers.transform_ast(
@@ -226,20 +234,18 @@ class Inlining(layers.Layer):
             Inlining, inliner=self.inliner, mapping=self.mapping)
 
     def inline(self, parent, method_name, args):
-        method_info, struct_info = context.env.get_method_and_parent_infos(
+        method_info, struct_info = env_api.method_and_struct_info(
             parent, method_name)
         method_decl_args = method_info["args"]
         self.mapping.fill_args_mapping(method_decl_args, args)
         +context.env
-        utils.register_args(method_decl_args)
+        env_api.register_args(method_decl_args)
         self.update_b()
-        # ???????
         old_mapping = deepcopy(self.mapping)
         body = self.b(method_info["body"])
         self.mapping = old_mapping
         self.mapping.args_mapping = _Mapping()
         self.mapping.fill_args_mapping(method_decl_args, args)
-        # end ???
         -context.env
         inlined_body = list(self.inliner.main(body, self.mapping))
         expr = None
@@ -250,14 +256,13 @@ class Inlining(layers.Layer):
 
     def optional_inlining(self, parent, method_name, args):
         if (parent not in context.env or
-                not context.env.is_real_type(
-                    context.env.get_node_type(parent))):
+                not utils.is_real_type(parent)):
             parent = self.mapping.apply_for_type(parent)
-        struct_info = context.env.raw_get_type_info(parent)
+        struct_info = env_api.unsafe_info(parent)
         if self.mapping.args_mapping:
             args = self.mapping.apply(args)
         if (struct_info and
-                context.env.is_real_type(struct_info["node_type"]) and
+                env_api.is_real_type(struct_info["node_type"]) and
                 struct_info["params"]):
             result = self.inline(parent, method_name, args)
             context.i_count += 1
@@ -284,7 +289,7 @@ class Inlining(layers.Layer):
 
     def get_the_most_high_level_type(self, expr):
         if expr in A(astlib.Name):
-            return context.env.get_variable_info(expr)["type_"]
+            return env_api.variable_info(expr)["type_"]
         elif expr in A(astlib.DataMember):
             return self.get_the_most_high_level_type(expr.parent)
         elif expr in A(astlib.Ref):
@@ -295,9 +300,6 @@ class Inlining(layers.Layer):
                     errors.fatal_error("self is undefined")
                 return inference.infer_type(expr.args[0])
             return inference.infer_type(expr)
-        errors.not_implemented(
-            "stmt {} is unknown".format(expr),
-            func=self.get_the_most_high_level_type)
 
     @layers.register(astlib.While)
     def while_stmt(self, stmt):
@@ -317,7 +319,7 @@ class Inlining(layers.Layer):
     def _elif_stmt(self, stmt):
         context.env.add_scope()
         expr, decls = self.e(stmt.expr)
-        result = (astlib.ElseIf(expr, self.b(stmt.body)), decls)
+        result = (astlib.Elif(expr, self.b(stmt.body)), decls)
         context.env.remove_scope()
         return result
 
@@ -329,9 +331,9 @@ class Inlining(layers.Layer):
 
     @layers.register(astlib.Cond)
     def translate_cond(self, stmt: astlib.Cond):
-        if_stmt, main_decls = self._if_stmt(stmt.if_stmt)
+        if_stmt, main_decls = self._if_stmt(stmt.if_)
         elifs = []
-        for elif_ in stmt.else_ifs:
+        for elif_ in stmt.elifs_:
             res = self._elif_stmt(elif_)
             elifs.append(res[0])
             main_decls.extend(res[1])
@@ -359,6 +361,7 @@ class Inlining(layers.Layer):
         self.mapping.fill_type_mapping(
             self.get_the_most_high_level_type(stmt.left))
         expr, stmts = self.e(stmt.right)
+        env_api.register(stmt, right=expr)
         yield from stmts
         yield astlib.Assignment(stmt.left, stmt.op, expr)
 
@@ -373,12 +376,12 @@ class Inlining(layers.Layer):
     @layers.register(astlib.Decl)
     def decl(self, stmt):
         if stmt.decltype == astlib.DeclT.field:
-            utils.register(stmt)
+            env_api.register(stmt)
             yield stmt
         else:
             self.mapping.fill_type_mapping(stmt.type_)
             expr, stmts = self.e(stmt.expr)
-            utils.register(stmt, expr=expr)
+            env_api.register(stmt, expr=expr)
             yield from stmts
             yield astlib.Decl(stmt.decltype, stmt.name, stmt.type_, expr)
 
@@ -387,9 +390,9 @@ class Inlining(layers.Layer):
         if stmt.decltype == astlib.DeclT.struct_func:
             self.register_func_as_child(stmt)
         else:
-            utils.register(stmt)
+            env_api.register(stmt)
         +context.env
-        utils.register_args(stmt.args)
+        env_api.register_args(stmt.args)
         body = self.b(stmt.body)
         -context.env
         yield astlib.CallableDecl(
@@ -399,10 +402,10 @@ class Inlining(layers.Layer):
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
-        utils.register(stmt)
+        env_api.register(stmt)
         +context.env
         context.parent = stmt.name
-        utils.register_params(stmt.params)
+        env_api.register_params(stmt.params)
         yield astlib.DataDecl(
             stmt.decltype, stmt.name, stmt.params, self.b(stmt.body))
         -context.env

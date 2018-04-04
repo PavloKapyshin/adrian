@@ -1,5 +1,5 @@
 from adrian import cgen
-from . import astlib, defs, errors, layers, utils
+from . import astlib, defs, errors, layers, utils, env_api
 from .context import context
 from .utils import A
 
@@ -68,14 +68,13 @@ class ToCgen(layers.Layer):
                 if type_.parent == defs.CMODULE:
                     return cgen.CTypes.ptr(
                         cgen.StructType(self.n(type_.member)))
-            errors.not_now(errors.LATER)
         if type_ in A(astlib.Name):
-            info = context.env.get_type_info(type_)
-            if context.env.is_adt(info["node_type"]):
+            info = env_api.type_info(type_)
+            if env_api.is_adt(info["node_type"]):
                 return cgen.UnionType(self.n(type_))
             return cgen.CTypes.ptr(cgen.StructType(self.n(type_)))
-        if type_ in A(astlib.ParamedType):
-            return self.t(type_.type_)
+        if type_ in A(astlib.GenericType):
+            return self.t(type_.base)
         if type_ in A(astlib.LiteralType):
             if type_.type_ == astlib.LiteralT.uint_fast64_t:
                 return cgen.CTypes.uint_fast64
@@ -98,7 +97,6 @@ class ToCgen(layers.Layer):
                 if (expr.datatype == astlib.DataT.module and
                         expr.parent == defs.CMODULE):
                     return translated
-                errors.not_now(errors.LATER)
             return cgen.StructType(translated)
         if expr in A(astlib.DataMember):
             if expr.datatype == astlib.DataT.struct:
@@ -134,7 +132,7 @@ class ToCgen(layers.Layer):
         if name in A(astlib.DataMember):
             if name.datatype == astlib.DataT.module:
                 return self.n(name.member)
-        if name in A(astlib.ParamedType):
+        if name in A(astlib.GenericType):
             return self.n(name.type_)
         return str(name)
 
@@ -152,7 +150,7 @@ class ToCgen(layers.Layer):
 
     def _elif_stmt(self, stmt):
         context.env.add_scope()
-        result = cgen.ElseIf(self.bool_e(stmt.expr), self.b(stmt.body))
+        result = cgen.Elif(self.bool_e(stmt.expr), self.b(stmt.body))
         context.env.remove_scope()
         return result
 
@@ -164,9 +162,9 @@ class ToCgen(layers.Layer):
 
     @layers.register(astlib.Cond)
     def translate_cond(self, stmt: astlib.Cond):
-        if_stmt_expr, if_stmt_body = self._if_stmt(stmt.if_stmt)
+        if_stmt_expr, if_stmt_body = self._if_stmt(stmt.if_)
         elifs = []
-        for elif_ in stmt.else_ifs:
+        for elif_ in stmt.elifs_:
             elifs.append(self._elif_stmt(elif_))
         if stmt.else_ is None:
             else_ = None
@@ -211,7 +209,7 @@ class ToCgen(layers.Layer):
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
-        utils.register(stmt)
+        env_api.register(stmt)
         if stmt.decltype == astlib.DeclT.struct:
             fields, funcs = utils.split_body(stmt.body)
             if stmt.params:
@@ -225,10 +223,10 @@ class ToCgen(layers.Layer):
         elif stmt.decltype == astlib.DeclT.adt:
             fields, other = utils.split_body(stmt.body)
             if other:
-                errors.later(errors.Version.v1m1)
+                errors.later(errors.Version.v1m1.value)
             yield cgen.Union(self.n(stmt.name), self.b(fields))
         else:
-            errors.later(errors.Version.v0m5)
+            errors.later(errors.Version.v0m5.value)
 
     @layers.register(astlib.AST)
     def main(self, ast_, registry):

@@ -53,6 +53,7 @@ GTE_METHOD = "__gte__"
 AND_METHOD = "__and__"
 OR_METHOD = "__or__"
 NOT_METHOD = "__not__"
+SELF = "self"
 REF = "ref"
 BOOL = "Bool"
 BOOL_TRANSLATION = astlib.DataMember(astlib.DataT.module, "c",

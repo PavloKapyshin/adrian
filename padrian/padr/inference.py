@@ -1,5 +1,5 @@
 from .utils import A
-from . import astlib, errors, defs, env_api
+from . import astlib, errors, defs, env_api, utils
 
 
 def _struct_func_call_from_struct_call(struct_call):
@@ -38,7 +38,7 @@ def apply_(mapping, for_):
     elif for_ in A(astlib.GenericType):
         return astlib.GenericType(
             for_.base, [apply_(mapping, param) for param in for_.params])
-    assert(None)
+    return for_
 
 
 def _infer_type_from_data_member(expr):
@@ -55,7 +55,7 @@ def _infer_type_from_adt_member(expr):
     return infer_type(variable_info["expr"])
 
 
-def _infer_generic_type_from_adt_member(expr):
+def _infer_general_type_from_adt_member(expr):
     variable_info = env_api.variable_info(expr.parent)
     return variable_info["type_"]
 
@@ -75,7 +75,7 @@ def infer_type(expr):
     elif expr in A(astlib.Name):
         var_info = env_api.variable_info(expr)
         type_ = var_info["type_"]
-        if env_api.is_adt(utils.nodetype(type_)):
+        if utils.is_adt(type_):
             return infer_type(var_info["expr"])
         return type_
     elif expr in A(astlib.DataMember):
@@ -85,12 +85,14 @@ def infer_type(expr):
             return _infer_type_from_adt_member(expr)
     elif expr in A(astlib.Empty):
         return astlib.Empty()
+    elif expr in A(astlib.Literal):
+        return astlib.LiteralType(expr.type_)
     errors.cannot_infer_type(expr)
 
 
-def infer_generic_type(expr):
+def infer_general_type(expr):
     if expr in A(astlib.Ref):
-        return infer_generic_type(expr.expr)
+        return infer_general_type(expr.expr)
     elif expr in A(astlib.Callable):
         if expr.callabletype == astlib.CallableT.struct:
             return _infer_type_from_struct_func_call(
@@ -106,7 +108,7 @@ def infer_generic_type(expr):
         if expr.datatype == astlib.DataT.struct:
             return _infer_type_from_data_member(expr)
         elif expr.datatype == astlib.DataT.adt:
-            return _infer_generic_type_from_adt_member(expr)
+            return _infer_general_type_from_adt_member(expr)
     elif expr in A(astlib.Empty):
         return astlib.Empty()
     errors.cannot_infer_type(expr)

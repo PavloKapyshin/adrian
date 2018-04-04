@@ -142,6 +142,13 @@ class DebugFormatter(layers.Layer):
                 self.e(stmt.expr)
             ])
 
+    @layers.register(astlib.While)
+    def while_(self, stmt):
+        yield from self.stmt_with_body(
+            " ".join(["while", "".join(["(", self.e(stmt.expr), ")"])]),
+            stmt.body
+        )
+
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
         yield "{} {} {}".format(

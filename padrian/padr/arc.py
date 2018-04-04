@@ -1,4 +1,4 @@
-from . import astlib, layers, env, inference, utils, defs, errors
+from . import astlib, layers, env, inference, utils, defs, errors, env_api
 from .context import context
 from .utils import A
 
@@ -18,12 +18,14 @@ class ARC(layers.Layer):
         self.b = layers.b(ARC, flist=self.flist)
 
     def register_(self, decl):
-        print("register", decl.name)
         context.env[decl.name] = {
-            "node_type": utils.nodetype_from_decl(decl.decltype),
+            "node_type": (
+                astlib.NodeT.var if decl.decltype == astlib.DeclT.var
+                else astlib.NodeT.let),
             "type_": decl.type_,
             "initialized": self.provide_initialized(
                 decl.name, decl.type_, decl.expr),
+            "mapping": env_api.create_type_mapping(decl.type_),
             "expr": decl.expr,
         }
 
@@ -33,6 +35,7 @@ class ARC(layers.Layer):
                 "node_type": astlib.NodeT.arg,
                 "type_": type_,
                 "initialized": self.provide_initialized_from_type(name, type_),
+                "mapping": env_api.create_type_mapping(type_),
             }
 
     def update_b(self):
@@ -92,10 +95,10 @@ class ARC(layers.Layer):
             return {name: {}}
         def loop(n, t):
             if (t not in context.env or
-                    not context.env.is_type(context.env.get_node_type(t))):
+                    not utils.is_type(t)):
                 return {}
             t_info = context.env[t]
-            if t_info["node_type"] == astlib.NodeT.commont:
+            if t_info["node_type"] == astlib.NodeT.parameter:
                 return {n: {}}
             fields = t_info["fields"]
             name_inited = {}
@@ -141,9 +144,9 @@ class ARC(layers.Layer):
             if not info or ("expr" not in info or
                     info["expr"] in A(astlib.Empty)):
                 return None
-            generic_type = inference.infer_generic_type(expr)
-            if context.env.is_adt(context.env.get_node_type(generic_type)):
-                variable_info = context.env.get_variable_info(expr)
+            generic_type = inference.infer_general_type(expr)
+            if utils.is_adt(generic_type):
+                variable_info = env_api.variable_info(expr)
                 type_ = inference.infer_type(
                     variable_info["expr"])
                 expr = self.get_adt_field_by_type(expr, type_)
@@ -153,13 +156,13 @@ class ARC(layers.Layer):
             return deinit(expr, type_)
         elif expr in A(astlib.DataMember):
             parent = utils.scroll_to_parent(expr)
-            parent_info = context.env.get_variable_info(parent)
+            parent_info = env_api.variable_info(parent)
             if "expr" not in parent_info:
                 return deinit(expr, inference.infer_type(expr))
             if parent_info["expr"] in A(astlib.Empty):
                 return None
             generic_type = parent_info["type_"]
-            if context.env.is_adt(context.env.get_node_type(generic_type)):
+            if utils.is_adt(generic_type):
                 type_ = inference.infer_type(parent_info["expr"])
                 expr = self.get_adt_field_by_type(parent, type_)
             else:
@@ -169,20 +172,20 @@ class ARC(layers.Layer):
         return self.free(astlib.Name(expr))
 
     def types_are_equal(self, type1, type2):
-        if type1 in A(astlib.ParamedType) and type2 in A(astlib.ParamedType):
+        if type1 in A(astlib.GenericType) and type2 in A(astlib.GenericType):
             return type1.base == type2.base
         elif type1 in A(astlib.Name) and type2 in A(astlib.Name):
             return type1 == type2
         return False
 
     def get_adt_field_by_type(self, parent, type_):
-        adt_type = context.env.get_variable_info(parent)["type_"]
-        adt_type_info = context.env.get_type_info(adt_type)
+        adt_type = env_api.variable_info(parent)["type_"]
+        adt_type_info = env_api.type_info(adt_type)
         for field_name, field_info in adt_type_info["fields"].items():
             if self.types_are_equal(field_info["type_"], type_):
                 return astlib.DataMember(
                     astlib.DataT.adt, parent, astlib.Name(field_name))
-        errors.no_adt_field(adt_type, type_)
+        errors.no_such_field(adt_type, type_)
 
     def addtoflist(self, stmt):
         if stmt.expr in A(astlib.Ref):
@@ -190,7 +193,7 @@ class ARC(layers.Layer):
         elif stmt.expr in A(astlib.Callable):
             if stmt.expr.callabletype == astlib.CallableT.struct_func:
                 type_info = context.env[stmt.expr.parent]
-                if type_info["node_type"] == astlib.NodeT.commont:
+                if type_info["node_type"] == astlib.NodeT.parameter:
                     return
                 methods = type_info["methods"]
                 if "is_arg_return" in methods[stmt.expr.name]:
@@ -222,7 +225,7 @@ class ARC(layers.Layer):
 
     # Subcore funcs.
     def fun_decl(self, stmt):
-        utils.register(stmt)
+        env_api.register(stmt)
         +context.env
         +self.flist
         self.register_args(stmt.args)
@@ -238,7 +241,7 @@ class ARC(layers.Layer):
         -self.flist
 
     def struct_func_decl(self, stmt):
-        utils.register(stmt)
+        env_api.register(stmt)
         +context.env
         +self.flist
         self.register_args(stmt.args)
@@ -264,8 +267,8 @@ class ARC(layers.Layer):
             if stmt in A(astlib.Return):
                 return False
             elif stmt in A(astlib.Cond):
-                if_stmt = stmt.if_stmt
-                elifs = stmt.else_ifs
+                if_stmt = stmt.if_
+                elifs = stmt.elifs_
                 else_ = stmt.else_
 
                 return_in_if = not self.no_return_in_body(if_stmt.body)
@@ -296,7 +299,7 @@ class ARC(layers.Layer):
         context.env.remove_virtual_scope()
         self.flist.remove_virtual_scope()
 
-    def _if_stmt(self, stmt):
+    def _if(self, stmt):
         context.env.add_virtual_scope()
         self.flist.add_virtual_scope()
         self.update_b()
@@ -308,14 +311,14 @@ class ARC(layers.Layer):
         self.flist.remove_virtual_scope()
         return result
 
-    def _elif_stmt(self, stmt):
+    def _elif(self, stmt):
         context.env.add_virtual_scope()
         self.flist.add_virtual_scope()
         self.update_b()
         body = self.b(stmt.body)
         if self.no_return_in_body(body):
             body += list(self.free_scope())
-        result = astlib.ElseIf(stmt.expr, body)
+        result = astlib.Elif(stmt.expr, body)
         context.env.remove_virtual_scope()
         self.flist.remove_virtual_scope()
         return result
@@ -334,15 +337,15 @@ class ARC(layers.Layer):
 
     @layers.register(astlib.Cond)
     def translate_cond(self, stmt: astlib.Cond):
-        if_stmt = self._if_stmt(stmt.if_stmt)
+        if_ = self._if(stmt.if_)
         elifs = []
-        for elif_ in stmt.else_ifs:
-            elifs.append(self._elif_stmt(elif_))
+        for elif_ in stmt.elifs_:
+            elifs.append(self._elif(elif_))
         if stmt.else_ is None:
             else_ = None
         else:
             else_ = self._else(stmt.else_)
-        yield astlib.Cond(if_stmt, elifs, else_)
+        yield astlib.Cond(if_, elifs, else_)
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
@@ -351,8 +354,8 @@ class ARC(layers.Layer):
             if result is not None:
                 yield result
         yield stmt
-        utils.register(stmt)
         self.write_initiazed(stmt.left)
+        env_api.register(stmt)
 
     @layers.register(astlib.Return)
     def return_stmt(self, stmt):
@@ -373,7 +376,7 @@ class ARC(layers.Layer):
     @layers.register(astlib.Decl)
     def decl(self, stmt):
         if stmt.decltype == astlib.DeclT.field:
-            utils.register(stmt)
+            env_api.register(stmt)
             yield stmt
         else:
             self.register_(stmt)
@@ -389,11 +392,11 @@ class ARC(layers.Layer):
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
-        utils.register(stmt)
+        env_api.register(stmt)
         +context.env
         +self.flist
         context.parent = stmt.name
-        utils.register_params(stmt.params)
+        env_api.register_params(stmt.params)
         self.update_b()
         yield astlib.DataDecl(
             stmt.decltype, stmt.name, stmt.params, self.b(stmt.body))
