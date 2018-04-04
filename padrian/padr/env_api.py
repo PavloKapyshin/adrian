@@ -32,6 +32,7 @@ is_fun = _is_of_nodetype_maker(astlib.NodeT.fun)
 is_struct = _is_of_nodetype_maker(astlib.NodeT.struct)
 is_protocol = _is_of_nodetype_maker(astlib.NodeT.protocol)
 is_adt = _is_of_nodetype_maker(astlib.NodeT.adt)
+is_parameter = _is_of_nodetype_maker(astlib.NodeT.parameter)
 
 is_variable = _is_of_nodetype_maker(
     astlib.NodeT.var, astlib.NodeT.let, astlib.NodeT.arg)

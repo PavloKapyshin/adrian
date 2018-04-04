@@ -18,6 +18,12 @@ def make_mapping(params, decl_args, call_args):
 
 
 def _infer_type_from_struct_func_call(struct_func_call):
+    parent_info = env_api.type_info(struct_func_call.parent)
+    if env_api.is_parameter(parent_info["node_type"]):
+        if struct_func_call.name in (defs.INIT_METHOD, defs.COPY_METHOD):
+            return struct_func_call.parent
+        elif struct_func_call.name == defs.DEINIT_METHOD:
+            return astlib.Void()
     method_info, parent_info = env_api.method_and_struct_info(
         struct_func_call.parent, struct_func_call.name)
     params = parent_info["params"]

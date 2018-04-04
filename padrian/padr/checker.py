@@ -1,6 +1,6 @@
 from .utils import A
 from .context import context
-from . import astlib, layers, errors, inference, utils, defs, typelib, env_api
+from . import astlib, layers, errors, inference, utils, defs, env_api
 
 
 def _check_fields_exist_in_parent(data_member):
@@ -83,22 +83,11 @@ def _check_type(type_):
         errors.bad_type(type_)
 
 
-def _check_type_and_type_of_expr_are_equal(name, type_, expr):
-    expr_type = inference.infer_type(expr)
-    if expr_type in A(astlib.Empty) or type_ in A(astlib.Empty):
-        pass
-    elif (typelib.types_are_equal(type_, expr_type) or
-            typelib.is_supertype(type_, of=expr)):
-        pass
-    else:
-        errors.type_mismatch(type_, expr_type)
-
-
 def _check_callable_exists(expr):
     if expr.callabletype == astlib.CallableT.struct_func:
         if expr.parent not in context.env:
             errors.unknown_name(expr.parent)
-        parent_info = context.env.get_type_info(expr.parent)
+        parent_info = env_api.type_info(expr.parent)
         if expr.name not in parent_info["methods"]:
             errors.no_such_method(expr.parent, expr.name)
     elif expr.callabletype == astlib.CallableT.struct:
@@ -117,7 +106,7 @@ def _check_expr(name, expr):
             errors.unknown_name(name)
     elif expr in A(astlib.DataMember):
         if expr.datatype in (astlib.DataT.struct, astlib.DataT.adt):
-            _check_expr(expr.parent)
+            _check_expr(name, expr.parent)
         else:
             errors.bad_expr(expr)
     elif expr in A(astlib.Callable):
@@ -125,7 +114,8 @@ def _check_expr(name, expr):
         #   * check you passed right args (number, types)
         _check_type(expr.parent)
         _check_callable_exists(expr)
-        map(_check_expr, expr.args)
+        for arg in expr.args:
+            _check_expr(name, arg)
     elif expr in A(astlib.Ref):
         _check_expr(name, expr.expr)
     elif expr in A(astlib.StructScalar, astlib.Literal, astlib.Empty):
@@ -144,8 +134,6 @@ class Checker(layers.Layer):
         _check_you_can_declarate_name_for_variable(stmt.name)
         _check_type(stmt.type_)
         if stmt.decltype != astlib.DeclT.field:
-            _check_type_and_type_of_expr_are_equal(
-                stmt.name, stmt.type_, stmt.expr)
             _check_expr(stmt.name, stmt.expr)
         env_api.register(stmt)
         yield stmt
@@ -153,8 +141,6 @@ class Checker(layers.Layer):
     @layers.register(astlib.Assignment)
     def _check_assignment(self, stmt):
         _check_name_is_variable(stmt.left)
-        _check_type_and_type_of_expr_are_equal(
-            stmt.left, inference.infer_type(stmt.left), stmt.right)
         env_api.register(stmt)
         yield stmt
 
