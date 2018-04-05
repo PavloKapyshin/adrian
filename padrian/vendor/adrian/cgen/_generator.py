@@ -154,6 +154,8 @@ class NodeGenerator(_layers.Layer):
             return "NULL"
         elif isinstance(expr, objects.Cast):
             return self.sub_cast(expr)
+        elif expr is None:
+            return ""
         errors.not_implemented("expr is not supported")  # pragma: no cover
 
     def sub_cast(self, cast):
