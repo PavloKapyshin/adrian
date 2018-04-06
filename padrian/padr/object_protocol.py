@@ -156,13 +156,7 @@ class ObjectProtocol(layers.Layer):
                 elifs_=[], else_=[])
 
         def _init_adt():
-            ret = astlib.Return(astlib.Callable(
-                astlib.CallableT.cfunc, astlib.Empty(),
-                astlib.Name(defs.MALLOC_FUNC), [
-                    astlib.Callable(
-                        astlib.CallableT.cfunc, astlib.Empty(),
-                        astlib.Name(defs.SIZEOF), [
-                            astlib.StructScalar(adt_as_type)])]))
+            ret = astlib.Return(malloc(adt_as_type))
             return astlib.CallableDecl(
                 astlib.DeclT.struct_func, adt_decl.name,
                 astlib.Name(defs.INIT_METHOD),
