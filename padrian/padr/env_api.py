@@ -141,7 +141,8 @@ def register(stmt, **kwds):
     if stmt in A(astlib.Assignment):
         _update_by_assignment(stmt, **kwds)
     elif stmt.decltype in (astlib.DeclT.var, astlib.DeclT.let):
-        context.env[stmt.name] = {**{
+        name = kwds.get("name", stmt.name)
+        context.env[name] = {**{
             "node_type": (astlib.NodeT.var
                 if stmt.decltype == astlib.DeclT.var
                 else astlib.NodeT.let),

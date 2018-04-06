@@ -60,12 +60,9 @@ class Mapping:
 
     def apply_for_node(self, node):
         if node in A(astlib.Name):
-            tfound = self.type_mapping.get(node)
-            if tfound:
-                return tfound
-            afound = self.args_mapping.get(node)
-            if afound:
-                return afound
+            found = self.args_mapping.get(node)
+            if found:
+                return found
             return node
         elif node in A(astlib.DataMember):
             return astlib.DataMember(
@@ -201,10 +198,7 @@ class _CoreInlining(layers.Layer):
         type_ = self.t(stmt.type_)
         name = self.n(stmt.name)
         expr = self.e(stmt.expr)
-        context.env[name] = {
-            "node_type": astlib.NodeT.let,
-            "type_": type_
-        }
+        env_api.register(stmt, type_=type_, name=name, expr=expr)
         yield astlib.Decl(
             stmt.decltype, name, type_, expr)
 

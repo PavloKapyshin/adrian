@@ -85,6 +85,7 @@ def _e(expr):
             return defs.FALSE_TRANSLATION
         variable_info = context.env[expr]
         if variable_info and utils.is_adt(variable_info["type_"]):
+            print(variable_info)
             return _get_adt_field_by_type(
                 expr, inference.infer_type(variable_info["expr"]))
     elif expr in A(astlib.Callable):

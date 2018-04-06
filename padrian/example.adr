@@ -1,10 +1,5 @@
-struct None {}
-struct Some(a) {
-    data: a
+struct Generic1(a) {
+    value: a
 }
 
-adt Maybe(a) {
-    Some(a), None
-}
-
-let b: Maybe(c#IntFast8) = Some(c#IntFast8(1))
+let a: Generic1(c#IntFast8) = Generic1(c#IntFast8(1))

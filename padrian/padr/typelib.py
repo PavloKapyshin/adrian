@@ -5,8 +5,10 @@ from .utils import A
 
 def _types_are_equal_mismatch(type1, type2) -> bool:
     if type1 in A(astlib.Name):
-        return types_are_equal(type1, type2.base)
-    elif type1 in A(astlib.DataMember, astlib.LiteralType):
+        if type2 in A(astlib.GenericType):
+            return types_are_equal(type1, type2.base)
+        return False
+    elif type1 in A(astlib.DataMember, astlib.LiteralType, astlib.Empty):
         return False
     return _types_are_equal_mismatch(type2, type1)
 
