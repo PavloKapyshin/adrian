@@ -52,12 +52,11 @@ class ToCgen(layers.Layer):
                 return cgen.CTypes.uint_fast64
             if check(type_):
                 return cgen.CTypes.ptr(cgen.CTypes.void)
-            return type_
+            return self.t(type_)
 
         fs = []
         for field in fields:
-            type_ = gt(field.type_)
-            fs.append(cgen.Decl(field.name, type_=type_, expr=None))
+            fs.append(cgen.Decl(field.name, type_=gt(field.type_), expr=None))
         return fs
 
     def t(self, type_):
@@ -71,7 +70,7 @@ class ToCgen(layers.Layer):
         if type_ in A(astlib.Name):
             info = env_api.type_info(type_)
             if env_api.is_adt(info["node_type"]):
-                return cgen.UnionType(self.n(type_))
+                return cgen.CTypes.ptr(cgen.UnionType(self.n(type_)))
             return cgen.CTypes.ptr(cgen.StructType(self.n(type_)))
         if type_ in A(astlib.GenericType):
             return self.t(type_.base)
@@ -80,6 +79,9 @@ class ToCgen(layers.Layer):
                 return cgen.CTypes.uint_fast64
 
     def bool_e(self, expr):
+        if expr in A(astlib.CExpr):
+            return cgen.Expr(
+                cgen.COps.eq, self.e(expr.left), self.e(expr.right))
         return cgen.StructElem(
             cgen.CTypes.ptr(self.e(expr)),
             cgen.Var("literal"))
@@ -97,16 +99,13 @@ class ToCgen(layers.Layer):
                 if (expr.datatype == astlib.DataT.module and
                         expr.parent == defs.CMODULE):
                     return translated
+            if utils.is_adt(expr.type_):
+                return cgen.UnionType(translated)
             return cgen.StructType(translated)
         if expr in A(astlib.DataMember):
-            if expr.datatype == astlib.DataT.struct:
-                return cgen.StructElem(
-                    cgen.CTypes.ptr(self.e(expr.parent)),
-                    self.e(expr.member))
-            elif expr.datatype == astlib.DataT.adt:
-                return cgen.StructElem(
-                    self.e(expr.parent),
-                    self.e(expr.member))
+            return cgen.StructElem(
+                cgen.CTypes.ptr(self.e(expr.parent)),
+                self.e(expr.member))
         if expr in A(astlib.Literal):
             if expr.type_ == astlib.LiteralT.integer:
                 return cgen.Val(
@@ -116,10 +115,18 @@ class ToCgen(layers.Layer):
                 literal=expr.literal,
                 type_=cgen.CTypes.uint_fast64)
         if expr in A(astlib.Cast):
-            return cgen.Cast(
-                self.e(expr.expr), self.t(expr.to))
+            type_ = self.t(expr.to)
+            if type_ is None:
+                return self.e(expr.expr)
+            return cgen.Cast(self.e(expr.expr), type_)
         if expr in A(astlib.Empty):
             return None
+        if expr in A(astlib.CExpr):
+            return cgen.Expr(
+                cgen.COps.neq, self.e(expr.left), self.e(expr.right))
+        if expr in A(astlib.Null):
+            return cgen.Null
+        return cgen.Val(literal=expr, type_=cgen.CTypes.uint_fast64)
 
     def a(self, args):
         if args and isinstance(args[0], tuple):
@@ -222,9 +229,14 @@ class ToCgen(layers.Layer):
                 yield from self.callable_decl(func)
         elif stmt.decltype == astlib.DeclT.adt:
             fields, other = utils.split_body(stmt.body)
-            if other:
-                errors.later(errors.Version.v1m1.value)
-            yield cgen.Union(self.n(stmt.name), self.b(fields))
+            if stmt.params:
+                # fields = self.f(fields, stmt.params)
+                funcs = []
+            # else:
+            fields = self.b(fields)
+            yield cgen.Union(self.n(stmt.name), fields)
+            for func in funcs:
+                yield from self.callable_decl(func)
         else:
             errors.later(errors.Version.v0m5.value)
 

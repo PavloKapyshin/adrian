@@ -180,4 +180,5 @@ DEFAULT_CONTEXT_ARGUMENTS = {
     "module_paths": DEFAULT_MODULE_PATHS,
     "clibs_includes": None,
     "i_count": 0,
+    "structs_to_type_tag": {},
 }

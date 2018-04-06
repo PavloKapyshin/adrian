@@ -123,6 +123,8 @@ class NodeGenerator(_layers.Layer):
         elif isinstance(type_, objects._File):
             self.add_include(includes.stdio)
             return _CTYPE_TO_STRING[type(type_)]
+        elif type_ is None:
+            return None
         errors.not_implemented("type is not supported")  # pragma: no cover
 
     def expr(self, expr):

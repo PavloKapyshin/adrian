@@ -139,6 +139,8 @@ class _CoreInlining(layers.Layer):
                 parent = astlib.Cast(
                     parent, self.t(inference.infer_type(parent)))
             return astlib.DataMember(expr.datatype, parent, expr.member)
+        elif expr in A(astlib.CExpr):
+            return astlib.CExpr(self.e(expr.left), expr.op, self.e(expr.right))
         return expr
 
     def a(self, args):

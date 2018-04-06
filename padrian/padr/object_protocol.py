@@ -2,6 +2,7 @@ from collections import OrderedDict
 
 from . import layers, astlib, errors, defs
 from .utils import A, split_body, only_fields
+from .context import context
 
 
 SELF = astlib.Name("self")
@@ -21,6 +22,12 @@ def field_maker(struct_name):
     return wrapper
 
 self_field = field_maker(SELF)
+
+
+def init(type_, args):
+    return astlib.Callable(
+        astlib.CallableT.struct_func,
+        type_, defs.INIT_METHOD, args)
 
 
 def copy(type_, name):
@@ -95,7 +102,7 @@ class ObjectProtocol(layers.Layer):
         type_tag_field = self.render_type_tag()
         field_inits.append(
             astlib.Assignment(
-                self_field(type_tag_field.name), "=",
+                field_of_new(type_tag_field.name), "=",
                 astlib.Literal(astlib.LiteralT.uint_fast64_t,
                     str(self.type_tag_number))
             ))
@@ -156,7 +163,7 @@ class ObjectProtocol(layers.Layer):
                 elifs_=[], else_=[])
 
         def _init_adt():
-            ret = astlib.Return(malloc(adt_as_type))
+            ret = astlib.Return(malloc(adt_decl.name))
             return astlib.CallableDecl(
                 astlib.DeclT.struct_func, adt_decl.name,
                 astlib.Name(defs.INIT_METHOD),
@@ -179,7 +186,7 @@ class ObjectProtocol(layers.Layer):
             new = astlib.Name("new")
             field_of_new = field_maker(new)
             new_decl = astlib.Decl(
-                astlib.DeclT.var, new, adt_as_type, astlib.Empty())
+                astlib.DeclT.var, new, adt_as_type, init(adt_as_type, []))
             ret = astlib.Return(new)
             field_copies = []
             for field in adt_fields:
@@ -244,6 +251,7 @@ class ObjectProtocol(layers.Layer):
                 self.add_type_tag(fields) + [
                     mtosf(method, stmt)
                     for method in object_protocol_methods + new_methods])
+            context.structs_to_type_tag[str(stmt.name)] = self.type_tag_number
             self.type_tag_number += 1
         elif stmt.decltype == astlib.DeclT.protocol:
             errors.later(errors.Version.v0m5.value)

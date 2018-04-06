@@ -5,7 +5,7 @@ from . import astlib, layers, defs, inference, env_api
 
 def copy(expr):
     return astlib.Callable(
-        astlib.CallableT.struct_func, inference.infer_type(expr),
+        astlib.CallableT.struct_func, inference.infer_general_type(expr),
         defs.COPY_METHOD, [expr])
 
 

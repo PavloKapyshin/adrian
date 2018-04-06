@@ -65,7 +65,7 @@ def parent_info(node):
 
 
 def method_and_struct_info(struct, method_name):
-    struct_info_ = struct_info(struct)
+    struct_info_ = type_info(struct)
     method_info_ = struct_info_["methods"].get(method_name)
     if method_info_ is None:
         errors.no_such_method(struct, method_name)
@@ -77,7 +77,7 @@ def field_info(parent, member):
         parent_info_ = field_info(parent.parent, parent.member)
     else:
         parent_info_ = parent_info(parent)
-    struct_info_ = struct_info(parent_info_["type_"])
+    struct_info_ = type_info(parent_info_["type_"])
     field_info_ = struct_info_["fields"].get(member)
     if field_info is None:
         errors.no_such_field(parent, parent_info_["type_"], member)

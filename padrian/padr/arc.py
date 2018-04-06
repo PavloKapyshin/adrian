@@ -70,10 +70,7 @@ class ARC(layers.Layer):
 
     def provide_initialized_from_type(self, name, type_):
         if type_ in A(astlib.Name, astlib.DataMember):
-            if (type_ in context.env and
-                    context.env[type_]["node_type"] in (
-                        astlib.NodeT.struct, astlib.NodeT.adt,
-                        astlib.NodeT.protocol)):
+            if type_ in context.env and utils.is_real_type(type_):
                 fields = context.env[type_]["fields"]
                 result = {}
                 for field, info in fields.items():
@@ -90,12 +87,13 @@ class ARC(layers.Layer):
     def provide_initialized(self, name, type_, expr):
         if type_ in A(astlib.Void):
             return {}
+        if type_ in context.env and utils.is_adt(type_):
+            return {name: {}}
         if (expr in A(astlib.Callable) and
                 expr.callabletype == astlib.CallableT.cfunc):
             return {name: {}}
         def loop(n, t):
-            if (t not in context.env or
-                    not utils.is_type(t)):
+            if t not in context.env or not utils.is_type(t):
                 return {}
             t_info = context.env[t]
             if t_info["node_type"] == astlib.NodeT.parameter:
@@ -140,19 +138,12 @@ class ARC(layers.Layer):
     def free(self, expr):
         if expr in A(astlib.Name):
             info = context.env[expr]
-            # does not work: info = context.env.get_variable_info(expr)
             if not info or ("expr" not in info or
                     info["expr"] in A(astlib.Empty)):
                 return None
             generic_type = inference.infer_general_type(expr)
-            if utils.is_adt(generic_type):
-                variable_info = env_api.variable_info(expr)
-                type_ = inference.infer_type(
-                    variable_info["expr"])
-                expr = self.get_adt_field_by_type(expr, type_)
-            else:
-                type_ = inference.infer_type(expr)
-                expr = expr
+            type_ = inference.infer_general_type(expr)
+            expr = expr
             return deinit(expr, type_)
         elif expr in A(astlib.DataMember):
             parent = utils.scroll_to_parent(expr)
@@ -162,12 +153,8 @@ class ARC(layers.Layer):
             if parent_info["expr"] in A(astlib.Empty):
                 return None
             generic_type = parent_info["type_"]
-            if utils.is_adt(generic_type):
-                type_ = inference.infer_type(parent_info["expr"])
-                expr = self.get_adt_field_by_type(parent, type_)
-            else:
-                type_ = inference.infer_type(expr)
-                expr = expr
+            type_ = inference.infer_type(expr)
+            expr = expr
             return deinit(expr, type_)
         return self.free(astlib.Name(expr))
 

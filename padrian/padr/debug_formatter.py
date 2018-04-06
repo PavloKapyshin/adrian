@@ -72,6 +72,9 @@ class DebugFormatter(layers.Layer):
                 self.e(expr.left), expr.op, self.e(expr.right))
         elif expr in A(astlib.Null):
             return "NULL"
+        elif expr in A(astlib.Cast):
+            return "(({}){})".format(self.t(expr.to), self.e(expr.expr))
+        print("Cant translate Expr to string", expr)
 
     def t(self, type_):
         if type_ in A(astlib.Name):

@@ -41,7 +41,7 @@ class TAC(layers.Layer):
                     astlib.DataT.struct, parent, expr.member), decls
         if expr in A(
                 astlib.Name, astlib.Literal,
-                astlib.Ref, astlib.StructScalar):
+                astlib.Ref, astlib.StructScalar, astlib.CExpr):
             return expr, []
         return self.new_tmp(expr)
 

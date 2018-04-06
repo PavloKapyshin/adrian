@@ -3,6 +3,12 @@ from .context import context
 from .utils import A
 
 
+def scroll(t):
+    if t in A(astlib.GenericType):
+        return scroll(t.base)
+    return t
+
+
 def _get_adt_field_by_type(parent, type_):
     adt_type = env_api.variable_info(parent)["type_"]
     adt_type_info = env_api.type_info(adt_type)
@@ -18,10 +24,6 @@ def _get_adt_field_by_name(name, member):
 
 
 def adt_init(type_):
-    def scroll(t):
-        if t in A(astlib.GenericType):
-            return scroll(t.base)
-        return t
     return astlib.Callable(
         astlib.CallableT.struct_func, scroll(type_),
         astlib.Name(defs.INIT_METHOD), [])
@@ -31,7 +33,6 @@ def _split_adt_usage(type_, expr, name=None):
     expr_type = inference.infer_general_type(expr)
     if expr_type in A(astlib.Empty) or utils.is_adt(expr_type):
         return expr, None
-    print("For", expr_type)
     return adt_init(type_), astlib.Assignment(
         _get_adt_field_by_type(
             name, inference.infer_type(expr)), "=", expr)
@@ -89,9 +90,11 @@ def _e(expr):
         )
     elif expr in A(astlib.Is):
         return astlib.CExpr(
-            _get_adt_field_by_type(_e(expr.expr), expr.type_),
-            "!=", astlib.Null())
-        return astlib.CExpr(_e(expr.expr), "!=", astlib.Null())
+            astlib.DataMember(
+                astlib.DataT.struct,
+                _get_adt_field_by_type(_e(expr.expr), expr.type_),
+                astlib.Name("type_tag")), "==",
+            context.structs_to_type_tag[str(scroll(expr.type_))])
     return expr
 
 

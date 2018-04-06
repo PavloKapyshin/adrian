@@ -20,7 +20,7 @@ struct u55fcbfDate* new = malloc(sizeof(struct u55fcbfDate));
 new->u55fcbfday = UIntFast8__copy__(self->u55fcbfday);
 new->u55fcbfmonth = UIntFast8__copy__(self->u55fcbfmonth);
 new->u55fcbfyear = UIntFast64__copy__(self->u55fcbfyear);
-self->type_tag = 51;
+new->type_tag = 51;
 return new;
 }
 void u55fcbfDate__deinit__(struct u55fcbfDate* self) {
