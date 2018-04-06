@@ -140,4 +140,6 @@ def infer_expr(type_):
     elif type_ in A(astlib.DataMember):
         if type_.datatype == astlib.DataT.module:
             return _infer_expr_from_defined_type(type_)
+    elif type_ in A(astlib.GenericType):
+        return astlib.Empty()
     errors.cannot_infer_expr(type_)

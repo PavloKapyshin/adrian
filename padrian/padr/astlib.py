@@ -236,6 +236,10 @@ class Not(Node):
         self._keys = ("expr",)
 
 
+class CExpr(ComplexExpr):
+    pass
+
+
 class Expr(ComplexExpr):
     pass
 
@@ -357,12 +361,12 @@ class Else(Node):
         self.body = body
         self._keys = ("body",)
 
-class NotIs(Node):
+class Is(Node):
 
-    def __init__(self, expr1, expr2):
-        self.expr1 = expr1
-        self.expr2 = expr2
-        self._keys = ("expr1", "expr2")
+    def __init__(self, expr, type_):
+        self.expr = expr
+        self.type_ = type_
+        self._keys = ("expr", "type_")
 
 
 class Null(BaseNode):

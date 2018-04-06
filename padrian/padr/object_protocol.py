@@ -60,6 +60,7 @@ class ObjectProtocol(layers.Layer):
 
     def __init__(self):
         self.type_tag_number = defs.TYPE_TAG_START
+        self.f_count = 0
 
     def complete_init_method(self, method, stmt):
         errors.later(errors.Version.v0m9.value)
@@ -147,6 +148,61 @@ class ObjectProtocol(layers.Layer):
     def add_type_tag(self, fields):
         return fields + [self.render_type_tag()]
 
+    def provide_methods_for_adt(self, adt_decl, adt_fields):
+        adt_as_type = totype(adt_decl)
+        def _create_conditional(type_, stmt):
+            return astlib.Cond(
+                if_=astlib.If(astlib.Is(SELF, type_), [stmt]),
+                elifs_=[], else_=[])
+
+        def _init_adt():
+            ret = astlib.Return(astlib.Callable(
+                astlib.CallableT.cfunc, astlib.Empty(),
+                astlib.Name(defs.MALLOC_FUNC), [
+                    astlib.Callable(
+                        astlib.CallableT.cfunc, astlib.Empty(),
+                        astlib.Name(defs.SIZEOF), [
+                            astlib.StructScalar(adt_as_type)])]))
+            return astlib.CallableDecl(
+                astlib.DeclT.struct_func, adt_decl.name,
+                astlib.Name(defs.INIT_METHOD),
+                [], adt_as_type, [ret])
+
+        def _deinit_adt():
+            field_deinits = []
+            for field in adt_fields:
+                field_deinits.append(
+                    _create_conditional(
+                        field.type_,
+                        deinit(field.type_, self_field(field.name))))
+            return astlib.CallableDecl(
+                astlib.DeclT.struct_func, adt_decl.name,
+                astlib.Name(defs.DEINIT_METHOD),
+                [(SELF, adt_as_type)], astlib.Void(),
+                field_deinits + [free(SELF)])
+
+        def _copy_adt():
+            new = astlib.Name("new")
+            field_of_new = field_maker(new)
+            new_decl = astlib.Decl(
+                astlib.DeclT.var, new, adt_as_type, astlib.Empty())
+            ret = astlib.Return(new)
+            field_copies = []
+            for field in adt_fields:
+                field_copies.append(
+                    _create_conditional(
+                        field.type_,
+                        astlib.Assignment(
+                            field_of_new(field.name), "=",
+                            copy(field.type_, self_field(field.name)))))
+            return astlib.CallableDecl(
+                astlib.DeclT.struct_func, adt_decl.name,
+                astlib.Name(defs.COPY_METHOD),
+                [(SELF, adt_as_type)], adt_as_type,
+                [new_decl] + field_copies + [ret])
+
+        return [_init_adt(), _deinit_adt(), _copy_adt()]
+
     def make_initial_impl_dict(self):
         return OrderedDict(sorted({
             key: (
@@ -159,6 +215,17 @@ class ObjectProtocol(layers.Layer):
                 (3, defs.DEINIT_METHOD, "deinit_method"),
             )
         }.items(), key=lambda x: x[1]))
+
+    def _provide_name_for_adt_field(self):
+        name = astlib.Name("".join([defs.F_STRING, str(self.f_count)]),
+            is_user_name=False)
+        self.f_count += 1
+        return name
+
+    def _make_adt_body(self, body):
+        return [
+            astlib.Decl(astlib.DeclT.field, self._provide_name_for_adt_field(),
+                type_, astlib.Empty()) for type_ in body]
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
@@ -187,4 +254,7 @@ class ObjectProtocol(layers.Layer):
         elif stmt.decltype == astlib.DeclT.protocol:
             errors.later(errors.Version.v0m5.value)
         else:
-            yield stmt
+            fields = self._make_adt_body(stmt.body)
+            yield astlib.DataDecl(
+                stmt.decltype, stmt.name, stmt.params,
+                fields + self.provide_methods_for_adt(stmt, fields))

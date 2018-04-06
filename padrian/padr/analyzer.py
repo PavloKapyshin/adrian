@@ -17,32 +17,24 @@ def _get_adt_field_by_name(name, member):
     return astlib.DataMember(astlib.DataT.adt, name, member)
 
 
+def adt_init(type_):
+    def scroll(t):
+        if t in A(astlib.GenericType):
+            return scroll(t.base)
+        return t
+    return astlib.Callable(
+        astlib.CallableT.struct_func, scroll(type_),
+        astlib.Name(defs.INIT_METHOD), [])
+
+
 def _split_adt_usage(type_, expr, name=None):
-    if utils.is_adt(inference.infer_type(expr)):
-        expr_ = astlib.Empty()
-        adt_info = env_api.adt_info(type_)
-        exprs, bodies = [], []
-        for f_name, f_type in adt_info["fields"].items():
-            exprs.append(
-                astlib.NotIs(
-                    _get_adt_field_by_name(expr, f_name), astlib.Null()))
-            if name is None:
-                stmt = astlib.Callable()
-            else:
-                stmt = astlib.Assignment(
-                    _get_adt_field_by_name(name, f_name), "=",
-                    _get_adt_field_by_name(expr, f_name))
-            bodies.append(stmt)
-        cond = astlib.Cond(
-            astlib.If(exprs[0], bodies[0]),
-            [astlib.Elif(expr_, body_)
-            for expr_, body_ in zip(exprs[1:], bodies[1:])],
-            else_=None)
-        return expr_, cond
-    else:
-        return astlib.Empty(), astlib.Assignment(
-            _get_adt_field_by_type(
-                name, inference.infer_type(expr)), "=", expr)
+    expr_type = inference.infer_general_type(expr)
+    if expr_type in A(astlib.Empty) or utils.is_adt(expr_type):
+        return expr, None
+    print("For", expr_type)
+    return adt_init(type_), astlib.Assignment(
+        _get_adt_field_by_type(
+            name, inference.infer_type(expr)), "=", expr)
 
 
 def _e_callable(expr: astlib.Callable):
@@ -83,11 +75,7 @@ def _e(expr):
             return defs.TRUE_TRANSLATION
         elif expr == defs.FALSE:
             return defs.FALSE_TRANSLATION
-        variable_info = context.env[expr]
-        if variable_info and utils.is_adt(variable_info["type_"]):
-            print(variable_info)
-            return _get_adt_field_by_type(
-                expr, inference.infer_type(variable_info["expr"]))
+        return expr
     elif expr in A(astlib.Callable):
         return _e_callable(expr)
     elif expr in A(astlib.DataMember):
@@ -99,6 +87,11 @@ def _e(expr):
             astlib.CallableT.struct_func, inference.infer_type(left),
             defs.OP_TO_METHOD[expr.op], [left, right]
         )
+    elif expr in A(astlib.Is):
+        return astlib.CExpr(
+            _get_adt_field_by_type(_e(expr.expr), expr.type_),
+            "!=", astlib.Null())
+        return astlib.CExpr(_e(expr.expr), "!=", astlib.Null())
     return expr
 
 
@@ -137,28 +130,12 @@ def _infer_unknown(type_, expr):
 
 class Analyzer(layers.Layer):
 
-    def __init__(self, f_count=0):
-        self.f_count = f_count
-        self._update_b()
-
-    def _update_b(self):
-        self.b = layers.b(Analyzer, f_count=self.f_count)
-
-    def _provide_name_for_adt_field(self):
-        name = astlib.Name("".join([defs.F_STRING, str(self.f_count)]),
-            is_user_name=False)
-        self.f_count += 1
-        return name
-
-    def _make_adt_body(self, body):
-        return [
-            astlib.Decl(astlib.DeclT.field, self._provide_name_for_adt_field(),
-                type_, astlib.Empty()) for type_ in body]
+    def __init__(self):
+        self.b = layers.b(Analyzer)
 
     @layers.register(astlib.While)
     def while_stmt(self, stmt):
         context.env.add_scope()
-        self._update_b()
         yield astlib.While(_e(stmt.expr), self.b(stmt.body))
         context.env.remove_scope()
 
@@ -224,7 +201,8 @@ class Analyzer(layers.Layer):
                 expr, assignments = _split_adt_usage(
                     type_, expr, name=stmt.name)
                 yield astlib.Decl(stmt.decltype, stmt.name, type_, expr)
-                yield assignments
+                if assignments is not None:
+                    yield assignments
             else:
                 yield result
 
@@ -235,7 +213,6 @@ class Analyzer(layers.Layer):
         env_api.register(stmt, args=args, type_=type_)
         context.env.add_scope()
         env_api.register_args(args)
-        self._update_b()
         yield astlib.CallableDecl(
             stmt.decltype, stmt.parent, stmt.name,
             args, type_, self.b(stmt.body))
@@ -248,9 +225,6 @@ class Analyzer(layers.Layer):
         context.parent = stmt.name
         env_api.register_params(stmt.params)
         body = stmt.body
-        if stmt.decltype == astlib.DeclT.adt:
-            body = self._make_adt_body(body)
-        self._update_b()
         body = self.b(body)
         yield astlib.DataDecl(stmt.decltype, stmt.name, stmt.params, body)
         context.env.remove_scope()

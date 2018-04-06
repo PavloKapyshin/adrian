@@ -67,6 +67,11 @@ class DebugFormatter(layers.Layer):
             return expr
         elif expr in A(astlib.Empty):
             return "EMPTY"
+        elif expr in A(astlib.CExpr):
+            return "{} {} {}".format(
+                self.e(expr.left), expr.op, self.e(expr.right))
+        elif expr in A(astlib.Null):
+            return "NULL"
 
     def t(self, type_):
         if type_ in A(astlib.Name):
@@ -119,7 +124,7 @@ class DebugFormatter(layers.Layer):
 
     @layers.register(astlib.Cond)
     def cond(self, stmt: astlib.Cond):
-        if_stmt = list(self._if(stmt.if_))
+        if_ = list(self._if(stmt.if_))
         elifs_ = []
         for elif_ in stmt.elifs_:
             elifs_.extend(self._elif(elif_))
