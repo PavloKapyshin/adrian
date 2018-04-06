@@ -145,8 +145,17 @@ class Analyzer(layers.Layer):
     @layers.register(astlib.Assignment)
     def translate_assignment(self, stmt):
         right = _e(stmt.right)
+        left = _e(stmt.left)
         env_api.register(stmt, right=right)
-        yield astlib.Assignment(_e(stmt.left), stmt.op, right)
+        type_ = inference.infer_general_type(left)
+        if type_ in A(astlib.Name, astlib.GenericType) and utils.is_adt(type_):
+            expr, assignment = _split_adt_usage(
+                type_, right, name=left)
+            yield astlib.Assignment(left, stmt.op, expr)
+            if assignment is not None:
+                yield assignment
+        else:
+            yield astlib.Assignment(left, stmt.op, right)
 
     @layers.register(astlib.Return)
     def translate_return(self, stmt):

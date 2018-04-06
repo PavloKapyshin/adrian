@@ -1,12 +1,13 @@
-struct None {}
-
 struct Some(a) {
     data: a
 }
+struct None {}
 
 adt Maybe(a) {
     Some(a), None
 }
 
-let a: Maybe(c#IntFast8) = Some(c#IntFast8(1))
-let b: Maybe(c#IntFast8) = a
+var b: Maybe(c#IntFast8) = Some(c#IntFast8(1))
+b = Some(c#IntFast8(2))
+--b = Some(c#IntFast8(2))
+--let e: Maybe(c#IntFast8) = b

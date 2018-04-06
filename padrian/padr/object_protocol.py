@@ -171,16 +171,20 @@ class ObjectProtocol(layers.Layer):
 
         def _deinit_adt():
             field_deinits = []
-            for field in adt_fields:
+            field = adt_fields[0]
+            if_ = astlib.If(
+                astlib.Is(SELF, field.type_),
+                [deinit(field.type_, self_field(field.name))])
+            for field in adt_fields[1:]:
                 field_deinits.append(
-                    _create_conditional(
-                        field.type_,
-                        deinit(field.type_, self_field(field.name))))
+                    astlib.Elif(
+                        astlib.Is(SELF, field.type_),
+                        [deinit(field.type_, self_field(field.name))]))
             return astlib.CallableDecl(
                 astlib.DeclT.struct_func, adt_decl.name,
                 astlib.Name(defs.DEINIT_METHOD),
                 [(SELF, adt_as_type)], astlib.Void(),
-                field_deinits + [free(SELF)])
+                [astlib.Cond(if_, elifs_=field_deinits, else_=[])] + [free(SELF)])
 
         def _copy_adt():
             new = astlib.Name("new")
@@ -188,19 +192,23 @@ class ObjectProtocol(layers.Layer):
             new_decl = astlib.Decl(
                 astlib.DeclT.var, new, adt_as_type, init(adt_as_type, []))
             ret = astlib.Return(new)
+            field = adt_fields[0]
+            if_ = astlib.If(
+                astlib.Is(SELF, field.type_),
+                [astlib.Assignment(field_of_new(field.name), "=",
+                    copy(field.type_, self_field(field.name)))])
             field_copies = []
-            for field in adt_fields:
+            for field in adt_fields[1:]:
                 field_copies.append(
-                    _create_conditional(
-                        field.type_,
-                        astlib.Assignment(
-                            field_of_new(field.name), "=",
-                            copy(field.type_, self_field(field.name)))))
+                    astlib.Elif(
+                        astlib.Is(SELF, field.type_),
+                        [astlib.Assignment(field_of_new(field.name), "=",
+                            copy(field.type_, self_field(field.name)))]))
             return astlib.CallableDecl(
                 astlib.DeclT.struct_func, adt_decl.name,
                 astlib.Name(defs.COPY_METHOD),
                 [(SELF, adt_as_type)], adt_as_type,
-                [new_decl] + field_copies + [ret])
+                [new_decl] + [astlib.Cond(if_, elifs_=field_copies, else_=[])] + [ret])
 
         return [_init_adt(), _deinit_adt(), _copy_adt()]
 

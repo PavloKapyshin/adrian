@@ -157,7 +157,7 @@ class ToCgen(layers.Layer):
 
     def _elif_stmt(self, stmt):
         context.env.add_scope()
-        result = cgen.Elif(self.bool_e(stmt.expr), self.b(stmt.body))
+        result = cgen.ElseIf(self.bool_e(stmt.expr), self.b(stmt.body))
         context.env.remove_scope()
         return result
 
