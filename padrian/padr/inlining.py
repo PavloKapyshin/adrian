@@ -192,7 +192,8 @@ class _CoreInlining(layers.Layer):
 
     @layers.register(astlib.Callable)
     def callable_stmt(self, stmt):
-        yield self._e_callable(stmt)
+        result = self._e_callable(stmt)
+        yield result
 
     @layers.register(astlib.Decl)
     def decl(self, stmt):
@@ -201,8 +202,7 @@ class _CoreInlining(layers.Layer):
         name = self.n(stmt.name)
         expr = self.e(stmt.expr)
         env_api.register(stmt, type_=type_, name=name, expr=expr)
-        yield astlib.Decl(
-            stmt.decltype, name, type_, expr)
+        yield astlib.Decl(stmt.decltype, name, type_, expr)
 
     def main(self, body, mapping):
         yield from list(layers.transform_ast(

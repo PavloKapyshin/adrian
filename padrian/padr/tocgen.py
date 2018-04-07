@@ -140,7 +140,7 @@ class ToCgen(layers.Layer):
             if name.datatype == astlib.DataT.module:
                 return self.n(name.member)
         if name in A(astlib.GenericType):
-            return self.n(name.type_)
+            return self.n(name.base)
         return str(name)
 
     @layers.register(astlib.While)
