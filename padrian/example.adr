@@ -9,3 +9,4 @@ adt Maybe(a) {
 
 var b: Maybe(c#IntFast8) = Some(c#IntFast8(1))
 b = Some(c#IntFast8(2))
+let c: Maybe(c#IntFast8) = b
