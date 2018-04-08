@@ -135,7 +135,9 @@ class _CoreInlining(layers.Layer):
             return astlib.StructScalar(self.t(expr.type_))
         elif expr in A(astlib.DataMember):
             parent = self.e(expr.parent)
-            if expr.parent in A(astlib.DataMember):
+            print("HERERERER    ", parent, "\nmember=", expr.member)
+            # if expr.parent in A(astlib.DataMember):
+            if parent in A(astlib.DataMember):
                 parent = astlib.Cast(
                     parent, self.t(inference.infer_type(parent)))
             return astlib.DataMember(expr.datatype, parent, expr.member)
@@ -229,38 +231,60 @@ class Inlining(layers.Layer):
         self.b = layers.b(
             Inlining, inliner=self.inliner, mapping=self.mapping)
 
-    def inline(self, parent, method_name, args):
-        method_info, struct_info = env_api.method_and_struct_info(
-            parent, method_name)
-        method_decl_args = method_info["args"]
-        self.mapping.fill_args_mapping(method_decl_args, args)
-        +context.env
-        env_api.register_args(method_decl_args)
-        self.update_b()
-        old_mapping = deepcopy(self.mapping)
-        body = self.b(method_info["body"])
-        self.mapping = old_mapping
-        self.mapping.args_mapping = _Mapping()
-        self.mapping.fill_args_mapping(method_decl_args, args)
-        -context.env
-        inlined_body = list(self.inliner.main(body, self.mapping))
+    def fix_cast(self, args):
+        #
+        # parent = astlib.Cast(
+        #             parent, self.t(inference.infer_type(parent)))
+        #     return astlib.DataMember(expr.datatype, parent, expr.member)
+        def _fix(arg):
+            if arg in A(astlib.DataMember):
+                if arg.parent in A(astlib.DataMember):
+                    return astlib.DataMember(
+                        arg.datatype,
+                        astlib.Cast(
+                            arg.parent, inference.infer_type(arg.parent)),
+                        arg.member)
+            return arg
+        return [_fix(arg) for arg in args]
+
+    def inline(self, method_info, call_args):
+        print()
+        print()
+        print()
+        print("-----------")
+        print()
+        args = method_info["args"]
+        print("ALREADY in", self.mapping.args_mapping)
+        if self.mapping.args_mapping:
+            call_args = self.mapping.apply(call_args)
+            call_args = self.fix_cast(call_args)
+            self.mapping.args_mapping = _Mapping()
+        # Empty mapping to avoid wrong arguments.
+        # self.mapping.args_mapping = _Mapping()
+        self.mapping.fill_args_mapping(args, call_args)
+        inlined_body = list(
+            self.inliner.main(method_info["body"], self.mapping))
+        print()
+        print("DECL_ARGS {}\nCALL_ARGS {}".format(args, call_args))
+        print()
+        print("before inlining (declaration)  ", method_info["body"])
+        print()
+        print("inlined (between)              ", inlined_body)
+        print("-----------")
+        inlined_body = self.b(inlined_body)
         expr = None
         if inlined_body and inlined_body[-1] in A(astlib.Return):
+            # Yeah TODO: add ability to use multiply returns (ifs)
             expr = inlined_body[-1].expr
             inlined_body = inlined_body[:-1]
+        self.mapping.args_mapping = _Mapping()
         return expr, inlined_body
 
-    def optional_inlining(self, parent, method_name, args):
-        if (parent not in context.env or
-                not utils.is_real_type(parent)):
-            parent = self.mapping.apply_for_type(parent)
-        struct_info = env_api.unsafe_info(parent)
-        if self.mapping.args_mapping:
-            args = self.mapping.apply(args)
-        if (struct_info and
-                env_api.is_real_type(struct_info["node_type"]) and
-                struct_info["params"]):
-            result = self.inline(parent, method_name, args)
+    def optional_inlining(self, structure_name, method_name, call_args):
+        structure_info = env_api.type_info(structure_name)
+        if structure_info["params"]:
+            method_info = env_api.method_info(structure_name, method_name)
+            result = self.inline(method_info, call_args)
             context.i_count += 1
             return True, result[0], result[1]
         return False, None, []

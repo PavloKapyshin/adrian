@@ -61,7 +61,9 @@ def parent_info(node):
         return parent_info(node.parent)
     elif node in A(astlib.Name):
         return variable_info(node)
-    errors.cannot_get_info(node, func=parent_info)
+    elif node in A(astlib.Cast):
+        return parent_info(node.expr)
+    errors.cannot_get_info(node, parent_info)
 
 
 def method_and_struct_info(struct, method_name):
@@ -75,12 +77,14 @@ def method_and_struct_info(struct, method_name):
 def field_info(parent, member):
     if parent in A(astlib.DataMember):
         parent_info_ = field_info(parent.parent, parent.member)
+    elif parent in A(astlib.Cast):
+        parent_info_ = parent_info(parent.expr)
     else:
         parent_info_ = parent_info(parent)
     struct_info_ = type_info(parent_info_["type_"])
     field_info_ = struct_info_["fields"].get(member)
     if field_info_ is None:
-        errors.no_such_field(parent, parent_info_["type_"], member)
+        errors.no_such_field(parent_info_["type_"], member)
     return field_info_
 
 

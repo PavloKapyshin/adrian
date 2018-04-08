@@ -42,7 +42,7 @@ _NO_SUCH_MODULE_MEMBER = "no member {member} in module {module_name}"
 
 _WRONG_NODETYPE = (
     "found name {name}, but it has non acceptable nodetype {nodetype}")
-_CANNOT_GET_INFO = "cannot find info for {request} ({func})"
+_CANNOT_GET_INFO = "cannot find info for {node} ({func})"
 _CANNOT_INFER_TYPE = "cannot infer type"
 _CANNOT_INFER_EXPR = "cannot infer expression"
 _CANNOT_FIND_FILE = "cannot find file {file_name}"
