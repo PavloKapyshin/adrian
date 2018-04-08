@@ -79,7 +79,7 @@ def field_info(parent, member):
         parent_info_ = parent_info(parent)
     struct_info_ = type_info(parent_info_["type_"])
     field_info_ = struct_info_["fields"].get(member)
-    if field_info is None:
+    if field_info_ is None:
         errors.no_such_field(parent, parent_info_["type_"], member)
     return field_info_
 
