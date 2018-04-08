@@ -57,8 +57,8 @@ def _infer_type_from_data_member(expr):
 
 
 def _infer_type_from_adt_member(expr):
-    variable_info = env_api.variable_info(expr.parent)
-    return infer_type(variable_info["expr"])
+    variable_info = env_api.field_info(expr.parent, expr.member)
+    return variable_info["type_"]
 
 
 def _infer_general_type_from_adt_member(expr):

@@ -1,4 +1,5 @@
 from copy import deepcopy
+import sys
 
 from . import astlib, defs, env, errors, inference, layers, env_api, utils
 from .context import context
@@ -135,8 +136,6 @@ class _CoreInlining(layers.Layer):
             return astlib.StructScalar(self.t(expr.type_))
         elif expr in A(astlib.DataMember):
             parent = self.e(expr.parent)
-            print("HERERERER    ", parent, "\nmember=", expr.member)
-            # if expr.parent in A(astlib.DataMember):
             if expr.parent in A(astlib.DataMember) or parent in A(astlib.DataMember):
                 parent = astlib.Cast(
                     parent, self.t(inference.infer_type(parent)))
@@ -248,29 +247,14 @@ class Inlining(layers.Layer):
         return [_fix(arg) for arg in args]
 
     def inline(self, method_info, call_args):
-        print()
-        print()
-        print()
-        print("-----------")
-        print()
         args = method_info["args"]
-        print("ALREADY in", self.mapping.args_mapping)
         if self.mapping.args_mapping:
             call_args = self.mapping.apply(call_args)
             call_args = self.fix_cast(call_args)
             self.mapping.args_mapping = _Mapping()
-        # Empty mapping to avoid wrong arguments.
-        # self.mapping.args_mapping = _Mapping()
         self.mapping.fill_args_mapping(args, call_args)
         inlined_body = list(
             self.inliner.main(method_info["body"], self.mapping))
-        print()
-        print("DECL_ARGS {}\nCALL_ARGS {}".format(args, call_args))
-        print()
-        print("before inlining (declaration)  ", method_info["body"])
-        print()
-        print("inlined (between)              ", inlined_body)
-        print("-----------")
         inlined_body = self.b(inlined_body)
         expr = None
         if inlined_body and inlined_body[-1] in A(astlib.Return):
@@ -318,10 +302,7 @@ class Inlining(layers.Layer):
             if expr.callabletype == astlib.CallableT.struct_func:
                 if not expr.args:
                     errors.fatal_error("self is undefined")
-                # try:
                 return inference.infer_type(expr.args[0])
-                # except:
-                #     print("STATE", expr)
             return inference.infer_type(expr)
 
     @layers.register(astlib.While)

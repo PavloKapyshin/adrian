@@ -36,7 +36,7 @@ if (((struct u52d71aSome*)(u52d71ab->f0))->type_tag == 51) {
 IntFast8__deinit__(((struct u52d71aSome*)(u52d71ab->f0))->u52d71adata);
 free(u52d71ab->f0);
 }
-else if (((struct u52d71aSome*)(u52d71ab->f1))->type_tag == 52) {
+else if (((struct u52d71aNone*)(u52d71ab->f1))->type_tag == 52) {
 u52d71aNone__deinit__(u52d71ab->f1);
 }
 free(u52d71ab);
@@ -53,7 +53,7 @@ i10_new->u52d71adata = IntFast8__copy__(((struct u52d71aSome*)(u52d71ab->f0))->u
 i10_new->type_tag = 51;
 i9_new->f0 = i10_new;
 }
-else if (((struct u52d71aSome*)(u52d71ab->f1))->type_tag == 52) {
+else if (((struct u52d71aNone*)(u52d71ab->f1))->type_tag == 52) {
 i9_new->f1 = u52d71aNone__copy__(u52d71ab->f1);
 }
 union u52d71aMaybe* u52d71ac = i9_new;
@@ -63,15 +63,15 @@ if (((struct u52d71aSome*)(u52d71ab->f0))->type_tag == 51) {
 IntFast8__deinit__(((struct u52d71aSome*)(u52d71ab->f0))->u52d71adata);
 free(u52d71ab->f0);
 }
-else if (((struct u52d71aSome*)(u52d71ab->f1))->type_tag == 52) {
+else if (((struct u52d71aNone*)(u52d71ab->f1))->type_tag == 52) {
 u52d71aNone__deinit__(u52d71ab->f1);
 }
 free(u52d71ab);
-if (u52d71ac->f0->type_tag == 51) {
+if (((struct u52d71aSome*)(u52d71ac->f0))->type_tag == 51) {
 IntFast8__deinit__(((struct u52d71aSome*)(u52d71ac->f0))->u52d71adata);
 free(u52d71ac->f0);
 }
-else if (u52d71ac->f1->type_tag == 52) {
+else if (((struct u52d71aNone*)(u52d71ac->f1))->type_tag == 52) {
 u52d71aNone__deinit__(u52d71ac->f1);
 }
 free(u52d71ac);
