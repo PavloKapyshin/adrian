@@ -137,7 +137,7 @@ class _CoreInlining(layers.Layer):
             parent = self.e(expr.parent)
             print("HERERERER    ", parent, "\nmember=", expr.member)
             # if expr.parent in A(astlib.DataMember):
-            if parent in A(astlib.DataMember):
+            if expr.parent in A(astlib.DataMember) or parent in A(astlib.DataMember):
                 parent = astlib.Cast(
                     parent, self.t(inference.infer_type(parent)))
             return astlib.DataMember(expr.datatype, parent, expr.member)
@@ -232,10 +232,6 @@ class Inlining(layers.Layer):
             Inlining, inliner=self.inliner, mapping=self.mapping)
 
     def fix_cast(self, args):
-        #
-        # parent = astlib.Cast(
-        #             parent, self.t(inference.infer_type(parent)))
-        #     return astlib.DataMember(expr.datatype, parent, expr.member)
         def _fix(arg):
             if arg in A(astlib.DataMember):
                 if arg.parent in A(astlib.DataMember):
@@ -244,6 +240,10 @@ class Inlining(layers.Layer):
                         astlib.Cast(
                             arg.parent, inference.infer_type(arg.parent)),
                         arg.member)
+            elif arg in A(astlib.Callable):
+                return astlib.Callable(
+                    arg.callabletype, arg.parent, arg.name,
+                    [fix_cast(a) for a in arg.args])
             return arg
         return [_fix(arg) for arg in args]
 
@@ -318,7 +318,10 @@ class Inlining(layers.Layer):
             if expr.callabletype == astlib.CallableT.struct_func:
                 if not expr.args:
                     errors.fatal_error("self is undefined")
+                # try:
                 return inference.infer_type(expr.args[0])
+                # except:
+                #     print("STATE", expr)
             return inference.infer_type(expr)
 
     @layers.register(astlib.While)

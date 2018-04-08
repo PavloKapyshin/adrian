@@ -33,7 +33,7 @@ i4_self->u52d71adata = IntFast8__copy__(t0);
 i4_self->type_tag = 51;
 u52d71ab->f0 = i4_self;
 if (((struct u52d71aSome*)(u52d71ab->f0))->type_tag == 51) {
-IntFast8__deinit__(u52d71ab->f0->u52d71adata);
+IntFast8__deinit__(((struct u52d71aSome*)(u52d71ab->f0))->u52d71adata);
 free(u52d71ab->f0);
 }
 else if (((struct u52d71aSome*)(u52d71ab->f1))->type_tag == 52) {
@@ -49,7 +49,7 @@ u52d71ab->f0 = i8_self;
 union u52d71aMaybe* i9_new = malloc(sizeof(union u52d71aMaybe));
 if (((struct u52d71aSome*)(u52d71ab->f0))->type_tag == 51) {
 struct u52d71aSome* i10_new = malloc(sizeof(struct u52d71aSome));
-i10_new->u52d71adata = IntFast8__copy__(u52d71ab->f0->u52d71adata);
+i10_new->u52d71adata = IntFast8__copy__(((struct u52d71aSome*)(u52d71ab->f0))->u52d71adata);
 i10_new->type_tag = 51;
 i9_new->f0 = i10_new;
 }
@@ -60,7 +60,7 @@ union u52d71aMaybe* u52d71ac = i9_new;
 IntFast8__deinit__(t0);
 IntFast8__deinit__(t1);
 if (((struct u52d71aSome*)(u52d71ab->f0))->type_tag == 51) {
-IntFast8__deinit__(u52d71ab->f0->u52d71adata);
+IntFast8__deinit__(((struct u52d71aSome*)(u52d71ab->f0))->u52d71adata);
 free(u52d71ab->f0);
 }
 else if (((struct u52d71aSome*)(u52d71ab->f1))->type_tag == 52) {
@@ -68,7 +68,7 @@ u52d71aNone__deinit__(u52d71ab->f1);
 }
 free(u52d71ab);
 if (u52d71ac->f0->type_tag == 51) {
-IntFast8__deinit__(u52d71ac->f0->u52d71adata);
+IntFast8__deinit__(((struct u52d71aSome*)(u52d71ac->f0))->u52d71adata);
 free(u52d71ac->f0);
 }
 else if (u52d71ac->f1->type_tag == 52) {

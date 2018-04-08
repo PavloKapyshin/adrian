@@ -77,14 +77,16 @@ def method_and_struct_info(struct, method_name):
 def field_info(parent, member):
     if parent in A(astlib.DataMember):
         parent_info_ = field_info(parent.parent, parent.member)
+        parent_type = parent_info_["type_"]
     elif parent in A(astlib.Cast):
-        parent_info_ = parent_info(parent.expr)
+        parent_type = parent.to
     else:
         parent_info_ = parent_info(parent)
-    struct_info_ = type_info(parent_info_["type_"])
+        parent_type = parent_info_["type_"]
+    struct_info_ = type_info(parent_type)
     field_info_ = struct_info_["fields"].get(member)
     if field_info_ is None:
-        errors.no_such_field(parent_info_["type_"], member)
+        errors.no_such_field(parent_type, member)
     return field_info_
 
 

@@ -33,7 +33,6 @@ def _infer_type_from_struct_func_call(struct_func_call):
         params, method_info["args"], struct_func_call.args)
     if mapping:
         return apply_(mapping, for_=method_info["type_"])
-    # HOTFIX:
     return method_info["type_"]
 
 
@@ -48,6 +47,7 @@ def apply_(mapping, for_):
 
 
 def _infer_type_from_data_member(expr):
+    print("last Expr", expr)
     parent_info = env_api.parent_info(expr.parent)
     field_info = env_api.field_info(expr.parent, expr.member)
     mapping = parent_info["mapping"]
