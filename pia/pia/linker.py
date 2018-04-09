@@ -281,7 +281,6 @@ class Linker(layers.Layer):
     @layers.register(astlib.Decl)
     def decl(self, stmt):
         type_, stmts1 = self.t(stmt.type_)
-        env_api.register(stmt, type_=type_)
         expr, stmts2 = self.e(stmt.expr)
         context.inlining.extend(stmts1 + stmts2)
         yield astlib.Decl(stmt.decltype, self.n(stmt.name), type_, expr)

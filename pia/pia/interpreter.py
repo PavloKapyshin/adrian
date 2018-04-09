@@ -31,6 +31,8 @@ class Main(layers.Layer):
             return expr.expr
         elif expr in A(astlib.Callable):
             return self.callable(expr)
+        elif expr in A(astlib.Alloc):
+            return {}
 
     def register_args_for_eval(self, decl_args, args):
         for (arg_name, arg_type), arg_expr in zip(decl_args, args):
@@ -254,6 +256,12 @@ class Main(layers.Layer):
     def callable_decl(self, stmt):
         env_api.register(stmt)
 
+    def register_body(self, body):
+        for stmt in body:
+            env_api.register(stmt)
+
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
         env_api.register(stmt)
+        context.parent = stmt.name
+        self.register_body(stmt.body)
