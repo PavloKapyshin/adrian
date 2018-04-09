@@ -36,6 +36,7 @@ _TOKENS = {
 
 tokens = (
              "INTEGER",
+             "STRING",
              "NAME",
          ) + tuple(_TOKENS.values()) + tuple(_RESERVED_WORDS.values())
 
@@ -61,6 +62,18 @@ def t_INTEGER(token):
     r"""[-]?\d*[\.]?\d+"""
     token.value = [
         parser_astlib.LITERAL, astlib.LiteralT.integer, token.value]
+    return token
+
+
+def cut_quotes(string):
+    return string[1:-1]
+
+
+def t_STRING(token):
+    r'''\".*\"'''
+    token.value = [
+        parser_astlib.LITERAL, astlib.LiteralT.string,
+        cut_quotes(token.value)]
     return token
 
 
@@ -603,6 +616,7 @@ def p_factor_3(content):
 def p_atom_1(content):
     """
     atom : INTEGER
+         | STRING
          | module_member
     """
     content[0] = content[1]
