@@ -37,7 +37,7 @@ class Main(layers.Layer):
             context.env[arg_name] = {
                 "node_type": astlib.NodeT.arg,
                 "type_": arg_type,
-                "expr": arg_expr
+                "expr": deepcopy(self.eval_e(arg_expr))
             }
 
     def python_to_adrian(self, expr):
@@ -103,11 +103,21 @@ class Main(layers.Layer):
     def py_list_append(self, append_call):
         dest = append_call.args[0]
         element = append_call.args[1]
+        while dest in A(astlib.Ref):
+            dest = dest.expr
         if dest in A(astlib.Name):
             expr = context.env[dest]["expr"]
             if expr in A(astlib.PyTypeCall):
+                if element in A(astlib.Ref):
+                    element = element.expr
+                elif element in A(astlib.Name):
+                    element = context.env[element]["expr"]
                 expr.args[0].literal.append(element)
-            context.env[dest]["expr"] = expr
+                context.env[dest]["expr"] = expr
+            elif expr in A(astlib.Name):
+                dest = expr
+                context.env[dest]["expr"].args[0].literal.append(
+                    context.env[element]["expr"])
 
     def eval_for_python(self, expr):
         if expr in A(astlib.Name):
@@ -131,6 +141,8 @@ class Main(layers.Layer):
             if expr.callabletype == astlib.CallableT.struct_func:
                 if expr.parent in A(astlib.PyType):
                     return self.eval_for_python_std_method(expr)
+        elif expr in A(astlib.Ref):
+            return self.eval_for_python(expr.expr)
 
     def py_print(self, args):
         """Interpret py#print"""
