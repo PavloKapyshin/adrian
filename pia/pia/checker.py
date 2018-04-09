@@ -100,7 +100,8 @@ def _check_expr(name, expr):
         _check_expr(name, expr.expr)
     elif expr in A(
             astlib.StructScalar, astlib.Literal,
-            astlib.Empty, astlib.Alloc, astlib.PyObject):
+            astlib.Empty, astlib.Alloc, astlib.PyObject,
+            astlib.AdtMember):
         pass
     else:
         errors.bad_expr(expr)

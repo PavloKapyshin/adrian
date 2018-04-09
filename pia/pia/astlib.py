@@ -406,3 +406,11 @@ class PyFuncCall(PyCall):
 
 class PyTypeCall(PyCall):
     pass
+
+
+class AdtMember(Node):
+
+    def __init__(self, base, member):
+        self.base = base
+        self.member = member
+        self._keys = ("base", "member")

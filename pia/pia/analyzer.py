@@ -63,6 +63,10 @@ def _e_callable(expr: astlib.Callable):
 
 def _e_data_member(expr: astlib.DataMember):
     if expr.datatype == astlib.DataT.struct:
+        if expr.parent in A(astlib.Name):
+            if utils.is_adt(expr.parent):
+                return astlib.AdtMember(
+                    base=expr.parent, member=_e(expr.member))
         if expr.member in A(astlib.Callable):
             parent = _e(expr.parent)
             return astlib.Callable(

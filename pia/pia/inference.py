@@ -93,6 +93,8 @@ def infer_type(expr):
         return astlib.LiteralType(expr.type_)
     elif expr in A(astlib.PyTypeCall):
         return astlib.PyType(expr.name)
+    elif expr in A(astlib.AdtMember):
+        return expr.base
     errors.cannot_infer_type(expr)
 
 
@@ -119,6 +121,8 @@ def infer_general_type(expr):
         return astlib.Empty()
     elif expr in A(astlib.PyTypeCall):
         return astlib.PyType(expr.name)
+    elif expr in A(astlib.AdtMember):
+        return expr.base
     errors.cannot_infer_type(expr)
 
 
