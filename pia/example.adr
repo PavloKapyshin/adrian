@@ -1,7 +1,17 @@
-struct Vector {
-    inner: py#List
-    length: py#Int
+fun myPrint(n: py#Int): Void {
+    if n > py#Int(0) {
+        py#print(py#Str("Pos"), n)
+    }
+    elif n == py#Int(0) {
+        py#print(py#Str("Zero"), n)
+    } else {
+        py#print(py#Str("Neg"), n)
+    }
 }
 
-var a = Vector(py#List([py#Int(1), py#Int(2), py#Int(3)]), py#Int(3))
-py#print(a.inner)
+
+let n = py#Int(10)
+while n > py#Int(-5) {
+    myPrint(n)
+    n = n - py#Int(1)
+}

@@ -148,6 +148,7 @@ class Main(layers.Layer):
         elif expr in A(astlib.Ref):
             return self.eval_for_python(expr.expr)
         elif expr in A(astlib.DataMember):
+            print(expr.parent)
             parent_expr = context.env[expr.parent]["expr"]
             return self.eval_for_python(parent_expr[expr.member])
 

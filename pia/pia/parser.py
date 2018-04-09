@@ -196,7 +196,7 @@ def p_else_if_stmts_3(content):
 
 def p_else_if_stmt(content):
     """else_if_stmt : ELIF bool_expr LBRACE if_body RBRACE"""
-    content[0] = [parser_astlib.ELSEIF, content[3], content[5]]
+    content[0] = [parser_astlib.ELSEIF, content[2], content[4]]
 
 
 def p_else_stmt(content):
