@@ -61,6 +61,8 @@ def parent_info(node):
         return parent_info(node.parent)
     elif node in A(astlib.Name):
         return variable_info(node)
+    elif node in A(astlib.Ref):
+        return parent_info(node.expr)
     errors.cannot_get_info(node, parent_info)
 
 

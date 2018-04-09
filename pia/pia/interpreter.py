@@ -20,6 +20,20 @@ class Main(layers.Layer):
             if value is not None:
                 return value
 
+    def _eval_e_ref(self, expr):
+        if expr in A(
+                astlib.DataMember, astlib.PyTypeCall,
+                astlib.PyConstant, astlib.Name):
+            return expr
+        elif expr in A(astlib.Ref):
+            return self._eval_e_ref(expr.expr)
+        elif expr in A(astlib.Callable):
+            return self.callable(expr)
+        elif expr in A(astlib.Alloc):
+            return {}
+        elif expr in A(dict):
+            return expr
+
     def eval_e(self, expr):
         if expr in A(
                 astlib.DataMember, astlib.PyTypeCall,
@@ -28,7 +42,7 @@ class Main(layers.Layer):
         elif expr in A(astlib.Name):
             return self.eval_e(env_api.variable_info(expr)["expr"])
         elif expr in A(astlib.Ref):
-            return expr.expr
+            return self._eval_e_ref(expr.expr)
         elif expr in A(astlib.Callable):
             return self.callable(expr)
         elif expr in A(astlib.Alloc):
@@ -124,6 +138,23 @@ class Main(layers.Layer):
                     context.env[element]["expr"])
 
     def eval_for_python(self, expr):
+        def _get_info(info):
+            parent = info.parent
+            members = [info.member]
+            while parent in A(astlib.DataMember):
+                members.append(parent.member)
+                parent = parent.parent
+            if parent in A(astlib.Ref):
+                parent = parent.expr
+            info = context.env[parent]["expr"]
+            if info in A(astlib.Name):
+                info = self.eval_e(info)
+            if info in A(astlib.DataMember):
+                info = _get_info(info)
+            for member in reversed(members):
+                info = info[member]
+            return info
+
         if expr in A(astlib.Name):
             info = env_api.variable_info(expr)
             return self.eval_for_python(info["expr"])
@@ -148,9 +179,7 @@ class Main(layers.Layer):
         elif expr in A(astlib.Ref):
             return self.eval_for_python(expr.expr)
         elif expr in A(astlib.DataMember):
-            print(expr.parent)
-            parent_expr = context.env[expr.parent]["expr"]
-            return self.eval_for_python(parent_expr[expr.member])
+            return self.eval_for_python(_get_info(expr))
 
 
     def py_print(self, args):
@@ -180,14 +209,40 @@ class Main(layers.Layer):
         if stmt.parent in A(astlib.PyType):
             new_expr = self.eval_for_python(stmt)
             return self.python_to_adrian(new_expr)
+        method_info = env_api.method_info(stmt.parent, stmt.name)
+        +context.env
+        self.register_args_for_eval(method_info["args"], stmt.args)
+        return_val = self.eval_b(method_info["body"])
+        -context.env
+        return return_val
 
     def register(self, stmt):
         if stmt in A(astlib.Assignment):
             if stmt.left in A(astlib.DataMember):
-                # First parent
-                expr = context.env[stmt.left.parent]["expr"]
-                expr[stmt.left.member] = self.eval_e(stmt.right)
-                context.env[stmt.left.parent]["expr"] = expr
+                def _set_info(info):
+                    parent = info.parent
+                    members = []
+                    while parent in A(astlib.DataMember):
+                        members.append(parent.member)
+                        parent = parent.parent
+                    if parent in A(astlib.Ref):
+                        parent = parent.expr
+                    expr = context.env[parent]["expr"]
+                    info = context.env[parent]["expr"]
+                    if expr in A(astlib.Name):
+                        expr = self.eval_e(expr)
+                        info = self.eval_e(info)
+                    for member in reversed(members):
+                        expr = expr[member]
+                    if expr in A(astlib.DataMember):
+                        expr = _set_info(expr)
+                    expr[stmt.left.member] = self.eval_e(stmt.right)
+                    for member in reversed(members):
+                        info[member] = expr
+                        expr = info
+                    return expr
+                expr = _set_info(stmt.left)
+                context.env[utils.scroll_to_parent(stmt.left.parent)]["expr"] = expr
             else:
                 expr = self.eval_e(stmt.right)
                 context.env[stmt.left]["expr"] = expr

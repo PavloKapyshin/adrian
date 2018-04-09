@@ -4,6 +4,8 @@ from . import astlib, layers, errors, inference, utils, defs, env_api
 
 
 def _check_fields_exist_in_parent(data_member):
+    if data_member.parent in A(astlib.DataMember):
+        return
     def _get_type_of_parent(expr):
         if expr in A(astlib.Name):
             found = env_api.variable_info(expr)
