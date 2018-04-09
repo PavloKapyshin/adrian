@@ -2,4 +2,7 @@ fun printInt(arg: py#Int): Void {
     py#print(arg)
 }
 
-printInt(py#Int(552))
+var a: py#Int = py#Int(20)
+printInt(a)
+a = py#Int(4534534)
+printInt(a)

@@ -48,7 +48,7 @@ class Main(layers.Layer):
         for arg in args:
             print(self.eval_for_python(arg))
 
-    def register_expr(self, name, type_, expr):
+    def register_expr(self, name, expr):
         if expr in A(astlib.Callable):
             if expr.callabletype == astlib.CallableT.struct:
                 env_expr = self.struct_call(expr)
@@ -78,10 +78,15 @@ class Main(layers.Layer):
         elif stmt.callabletype == astlib.CallableT.struct:
             return self.struct_call(stmt)
 
+    @layers.register(astlib.Assignment)
+    def assignment(self, stmt):
+        env_api.register(stmt)
+        self.register_expr(stmt.left, stmt.right)
+
     @layers.register(astlib.Decl)
     def decl(self, stmt):
         env_api.register(stmt)
-        self.register_expr(stmt.name, stmt.type_, stmt.expr)
+        self.register_expr(stmt.name, stmt.expr)
 
     def eval_if(self, stmt):
         conditional = self.eval_for_python(stmt.expr)
