@@ -1,1 +1,13 @@
+let source = py#List([py#Int(1), py#Int(2), py#Int(3)])
+var dest = py#List([])
 
+py#print(py#Str("Source:"), source)
+py#print(py#Str("Dest:"), dest)
+
+var counter = py#Int(0)
+while counter < py#Int(3) {
+    dest.append(py#Int(1))
+    counter = counter + py#Int(1)
+}
+
+py#print(py#Str("Dest:"), dest)

@@ -2,7 +2,7 @@ import hashlib
 import os
 
 from .context import context
-from . import astlib, defs, foreign_parser, layers, parser, errors, inference
+from . import astlib, defs, foreign_parser, layers, parser, errors, env_api
 from .utils import A
 
 
@@ -281,6 +281,7 @@ class Linker(layers.Layer):
     @layers.register(astlib.Decl)
     def decl(self, stmt):
         type_, stmts1 = self.t(stmt.type_)
+        env_api.register(stmt, type_=type_)
         expr, stmts2 = self.e(stmt.expr)
         context.inlining.extend(stmts1 + stmts2)
         yield astlib.Decl(stmt.decltype, self.n(stmt.name), type_, expr)

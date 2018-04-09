@@ -7,6 +7,9 @@ from . import astlib, env
 
 PY_MODULE = "py"
 PRINT = "print"
+
+APPEND = "append"
+
 LEN = "length"
 INT = "Int"
 STR = "Str"

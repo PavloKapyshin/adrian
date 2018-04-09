@@ -47,56 +47,67 @@ class Main(layers.Layer):
                 [astlib.Literal(astlib.LiteralT.number, str(expr))])
 
     def eval_for_python_std_method(self, expr):
-        if expr.name == defs.NOT_METHOD:
+        if expr.name.endswith(defs.NOT_METHOD):
             return not self.eval_for_python(expr.args[0])
-        elif expr.name == defs.OR_METHOD:
+        elif expr.name.endswith(defs.OR_METHOD):
             return (
                 self.eval_for_python(expr.args[0]) or
                 self.eval_for_python(expr.args[1]))
-        elif expr.name == defs.AND_METHOD:
+        elif expr.name.endswith(defs.AND_METHOD):
             return (
                 self.eval_for_python(expr.args[0]) and
                 self.eval_for_python(expr.args[1]))
-        elif expr.name == defs.GTE_METHOD:
+        elif expr.name.endswith(defs.GTE_METHOD):
             return (
                 self.eval_for_python(expr.args[0]) >=
                 self.eval_for_python(expr.args[1]))
-        elif expr.name == defs.LTE_METHOD:
+        elif expr.name.endswith(defs.LTE_METHOD):
             return (
                 self.eval_for_python(expr.args[0]) <=
                 self.eval_for_python(expr.args[1]))
-        elif expr.name == defs.GT_METHOD:
+        elif expr.name.endswith(defs.GT_METHOD):
             return (
                 self.eval_for_python(expr.args[0]) >
                 self.eval_for_python(expr.args[1]))
-        elif expr.name == defs.LT_METHOD:
+        elif expr.name.endswith(defs.LT_METHOD):
             return (
                 self.eval_for_python(expr.args[0]) <
                 self.eval_for_python(expr.args[1]))
-        elif expr.name == defs.EQ_METHOD:
+        elif expr.name.endswith(defs.EQ_METHOD):
             return (
                 self.eval_for_python(expr.args[0]) ==
                 self.eval_for_python(expr.args[1]))
-        elif expr.name == defs.NEQ_METHOD:
+        elif expr.name.endswith(defs.NEQ_METHOD):
             return (
                 self.eval_for_python(expr.args[0]) !=
                 self.eval_for_python(expr.args[1]))
-        elif expr.name == defs.ADD_METHOD:
+        elif expr.name.endswith(defs.ADD_METHOD):
             return (
                 self.eval_for_python(expr.args[0]) +
                 self.eval_for_python(expr.args[1]))
-        elif expr.name == defs.SUB_METHOD:
+        elif expr.name.endswith(defs.SUB_METHOD):
             return (
                 self.eval_for_python(expr.args[0]) -
                 self.eval_for_python(expr.args[1]))
-        elif expr.name == defs.MUL_METHOD:
+        elif expr.name.endswith(defs.MUL_METHOD):
             return (
                 self.eval_for_python(expr.args[0]) *
                 self.eval_for_python(expr.args[1]))
-        elif expr.name == defs.DIV_METHOD:
+        elif expr.name.endswith(defs.DIV_METHOD):
             return (
                 self.eval_for_python(expr.args[0]) /
                 self.eval_for_python(expr.args[1]))
+        elif expr.name.endswith(defs.APPEND):
+            self.py_list_append(expr)
+
+    def py_list_append(self, append_call):
+        dest = append_call.args[0]
+        element = append_call.args[1]
+        if dest in A(astlib.Name):
+            expr = context.env[dest]["expr"]
+            if expr in A(astlib.PyTypeCall):
+                expr.args[0].literal.append(element)
+            context.env[dest]["expr"] = expr
 
     def eval_for_python(self, expr):
         if expr in A(astlib.Name):
@@ -123,8 +134,9 @@ class Main(layers.Layer):
 
     def py_print(self, args):
         """Interpret py#print"""
-        for arg in args:
-            print(self.eval_for_python(arg))
+        for arg in args[:-1]:
+            print(self.eval_for_python(arg), end=" ")
+        print(self.eval_for_python(args[-1]))
 
     def struct_call(self, stmt):
         struct_info = env_api.type_info(stmt.name)

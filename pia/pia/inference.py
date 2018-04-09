@@ -74,6 +74,7 @@ def infer_type(expr):
             return _infer_type_from_struct_func_call(expr)
         elif expr.callabletype == astlib.CallableT.fun:
             return env_api.fun_info(expr.name)["type_"]
+        print(expr)
         return astlib.Empty()
     elif expr in A(astlib.Name):
         var_info = env_api.variable_info(expr)
