@@ -38,18 +38,77 @@ class Main(layers.Layer):
                 "expr": arg_expr
             }
 
+    def python_to_adrian(self, expr):
+        if expr in A(int):
+            return astlib.PyTypeCall(
+                defs.INT,
+                [astlib.Literal(astlib.LiteralT.integer, str(expr))])
+
+    def eval_for_python_std_method(self, expr):
+        if expr.name == defs.NOT_METHOD:
+            return not self.eval_for_python(expr.args[0])
+        elif expr.name == defs.OR_METHOD:
+            return (
+                self.eval_for_python(expr.args[0]) or
+                self.eval_for_python(expr.args[1]))
+        elif expr.name == defs.AND_METHOD:
+            return (
+                self.eval_for_python(expr.args[0]) and
+                self.eval_for_python(expr.args[1]))
+        elif expr.name == defs.GTE_METHOD:
+            return (
+                self.eval_for_python(expr.args[0]) >=
+                self.eval_for_python(expr.args[1]))
+        elif expr.name == defs.LTE_METHOD:
+            return (
+                self.eval_for_python(expr.args[0]) <=
+                self.eval_for_python(expr.args[1]))
+        elif expr.name == defs.GT_METHOD:
+            return (
+                self.eval_for_python(expr.args[0]) >
+                self.eval_for_python(expr.args[1]))
+        elif expr.name == defs.LT_METHOD:
+            return (
+                self.eval_for_python(expr.args[0]) <
+                self.eval_for_python(expr.args[1]))
+        elif expr.name == defs.EQ_METHOD:
+            return (
+                self.eval_for_python(expr.args[0]) ==
+                self.eval_for_python(expr.args[1]))
+        elif expr.name == defs.NEQ_METHOD:
+            return (
+                self.eval_for_python(expr.args[0]) !=
+                self.eval_for_python(expr.args[1]))
+        elif expr.name == defs.ADD_METHOD:
+            return (
+                self.eval_for_python(expr.args[0]) +
+                self.eval_for_python(expr.args[1]))
+        elif expr.name == defs.SUB_METHOD:
+            return (
+                self.eval_for_python(expr.args[0]) -
+                self.eval_for_python(expr.args[1]))
+        elif expr.name == defs.MUL_METHOD:
+            return (
+                self.eval_for_python(expr.args[0]) *
+                self.eval_for_python(expr.args[1]))
+        elif expr.name == defs.DIV_METHOD:
+            return (
+                self.eval_for_python(expr.args[0]) /
+                self.eval_for_python(expr.args[1]))
+
     def eval_for_python(self, expr):
         if expr in A(astlib.Name):
             info = env_api.variable_info(expr)
-            current_expr = info["expr"]
-            return self.eval_for_python(current_expr)
+            return self.eval_for_python(info["expr"])
         elif expr in A(astlib.PyTypeCall):
             if expr.name == defs.INT:
                 return int(expr.args[0].literal)
             elif expr.name == defs.STR:
                 return expr.args[0].literal
-        elif expr in A(astlib.DataMember):
-            return env_api.field_info
+        elif expr in A(astlib.Callable):
+            if expr.callabletype == astlib.CallableT.struct_func:
+                if expr.parent in A(astlib.PyType):
+                    return self.eval_for_python_std_method(expr)
 
     def py_print(self, args):
         """Interpret py#print"""
@@ -73,11 +132,17 @@ class Main(layers.Layer):
         -context.env
         return return_val
 
+    def struct_func(self, stmt):
+        if stmt.parent in A(astlib.PyType):
+            new_expr = self.eval_for_python(stmt)
+            return self.python_to_adrian(new_expr)
+
     def register(self, stmt):
         if stmt in A(astlib.Assignment):
             if stmt.left in A(astlib.DataMember):
                 errors.later(errors.Version.v0m5.value)
-            context.env[stmt.left]["expr"] = self.eval_e(stmt.right)
+            expr = self.eval_e(stmt.right)
+            context.env[stmt.left]["expr"] = expr
         elif stmt in A(astlib.Decl):
             if stmt.decltype == astlib.DeclT.field:
                 env_api.register(stmt)
@@ -94,6 +159,8 @@ class Main(layers.Layer):
             return self.func_call(stmt)
         elif stmt.callabletype == astlib.CallableT.struct:
             return self.struct_call(stmt)
+        elif stmt.callabletype == astlib.CallableT.struct_func:
+            return self.struct_func(stmt)
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
