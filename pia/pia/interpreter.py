@@ -33,6 +33,8 @@ class Main(layers.Layer):
             return self.callable(expr)
         elif expr in A(astlib.Alloc):
             return {}
+        elif expr in A(dict):
+            return expr
 
     def register_args_for_eval(self, decl_args, args):
         for (arg_name, arg_type), arg_expr in zip(decl_args, args):
@@ -145,6 +147,10 @@ class Main(layers.Layer):
                     return self.eval_for_python_std_method(expr)
         elif expr in A(astlib.Ref):
             return self.eval_for_python(expr.expr)
+        elif expr in A(astlib.DataMember):
+            parent_expr = context.env[expr.parent]["expr"]
+            return self.eval_for_python(parent_expr[expr.member])
+
 
     def py_print(self, args):
         """Interpret py#print"""
@@ -177,9 +183,13 @@ class Main(layers.Layer):
     def register(self, stmt):
         if stmt in A(astlib.Assignment):
             if stmt.left in A(astlib.DataMember):
-                errors.later(errors.Version.v0m5.value)
-            expr = self.eval_e(stmt.right)
-            context.env[stmt.left]["expr"] = expr
+                # First parent
+                expr = context.env[stmt.left.parent]["expr"]
+                expr[stmt.left.member] = self.eval_e(stmt.right)
+                context.env[stmt.left.parent]["expr"] = expr
+            else:
+                expr = self.eval_e(stmt.right)
+                context.env[stmt.left]["expr"] = expr
         elif stmt in A(astlib.Decl):
             if stmt.decltype == astlib.DeclT.field:
                 env_api.register(stmt)

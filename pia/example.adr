@@ -1,6 +1,7 @@
-struct Number {
-    inner: py#Int
+struct Vector {
+    inner: py#List
+    length: py#Int
 }
 
-let a = Number(py#Int(23))
-
+var a = Vector(py#List([py#Int(1), py#Int(2), py#Int(3)]), py#Int(3))
+py#print(a.inner)
