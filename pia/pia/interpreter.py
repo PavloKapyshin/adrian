@@ -21,7 +21,9 @@ class Main(layers.Layer):
                 return value
 
     def eval_e(self, expr):
-        if expr in A(astlib.DataMember, astlib.PyTypeCall):
+        if expr in A(
+                astlib.DataMember, astlib.PyTypeCall,
+                astlib.PyConstant):
             return expr
         elif expr in A(astlib.Name):
             return self.eval_e(env_api.variable_info(expr)["expr"])
@@ -109,6 +111,11 @@ class Main(layers.Layer):
                 return [
                     self.eval_for_python(l)
                     for l in expr.args[0].literal]
+        elif expr in A(astlib.PyConstant):
+            if expr.name == defs.TRUE:
+                return True
+            elif expr.name == defs.FALSE:
+                return False
         elif expr in A(astlib.Callable):
             if expr.callabletype == astlib.CallableT.struct_func:
                 if expr.parent in A(astlib.PyType):

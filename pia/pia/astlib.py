@@ -371,6 +371,13 @@ class PyObject(Node):
     pass
 
 
+class PyConstant(PyObject):
+
+    def __init__(self, name):
+        self.name = name
+        self._keys = ("name",)
+
+
 class PyType(PyObject):
 
     def __init__(self, type_):

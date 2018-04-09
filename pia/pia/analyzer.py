@@ -81,9 +81,9 @@ def _e(expr):
             defs.NOT_METHOD, [inner_expr])
     if expr in A(astlib.Name):
         if expr == defs.TRUE:
-            return defs.TRUE_TRANSLATION
+            return astlib.PyConstant(defs.TRUE)
         elif expr == defs.FALSE:
-            return defs.FALSE_TRANSLATION
+            return astlib.PyConstant(defs.FALSE)
         return expr
     elif expr in A(astlib.Callable):
         return _e_callable(expr)
@@ -115,7 +115,7 @@ def _t(type_):
         if type_ == "Void":
             return astlib.Void()
         elif type_ == defs.BOOL:
-            return defs.BOOL_TRANSLATION
+            return astlib.PyType(defs.BOOL)
     elif type_ in A(astlib.GenericType):
         return astlib.GenericType(_t(type_.base), list(map(_t, type_.params)))
     return type_
