@@ -1,4 +1,6 @@
-from . import astlib, layers, env_api, defs
+from copy import deepcopy
+
+from . import astlib, layers, env_api, defs, utils, errors
 from .context import context
 from .utils import A
 
@@ -19,8 +21,14 @@ class Main(layers.Layer):
                 return value
 
     def eval_e(self, expr):
-        if expr in A(astlib.Name, astlib.DataMember):
+        if expr in A(astlib.DataMember, astlib.PyTypeCall):
             return expr
+        elif expr in A(astlib.Name):
+            return self.eval_e(env_api.variable_info(expr)["expr"])
+        elif expr in A(astlib.Ref):
+            return expr.expr
+        elif expr in A(astlib.Callable):
+            return self.callable(expr)
 
     def register_args_for_eval(self, decl_args, args):
         for (arg_name, arg_type), arg_expr in zip(decl_args, args):
@@ -48,12 +56,6 @@ class Main(layers.Layer):
         for arg in args:
             print(self.eval_for_python(arg))
 
-    def register_expr(self, name, expr):
-        if expr in A(astlib.Callable):
-            if expr.callabletype == astlib.CallableT.struct:
-                env_expr = self.struct_call(expr)
-                context.env[name]["expr"] = expr
-
     def struct_call(self, stmt):
         struct_info = env_api.type_info(stmt.name)
         init_info = struct_info["methods"][defs.INIT_METHOD]
@@ -71,6 +73,21 @@ class Main(layers.Layer):
         -context.env
         return return_val
 
+    def register(self, stmt):
+        if stmt in A(astlib.Assignment):
+            if stmt.left in A(astlib.DataMember):
+                errors.later(errors.Version.v0m5.value)
+            context.env[stmt.left]["expr"] = self.eval_e(stmt.right)
+        elif stmt in A(astlib.Decl):
+            if stmt.decltype == astlib.DeclT.field:
+                env_api.register(stmt)
+            else:
+                context.env[stmt.name] = {
+                    "node_type": utils.nodetype_from_decl(stmt.decltype),
+                    "type_": stmt.type_,
+                    "expr": self.eval_e(stmt.expr)
+                }
+
     @layers.register(astlib.Callable)
     def callable(self, stmt):
         if stmt.callabletype == astlib.CallableT.fun:
@@ -80,13 +97,11 @@ class Main(layers.Layer):
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
-        env_api.register(stmt)
-        self.register_expr(stmt.left, stmt.right)
+        self.register(stmt)
 
     @layers.register(astlib.Decl)
     def decl(self, stmt):
-        env_api.register(stmt)
-        self.register_expr(stmt.name, stmt.expr)
+        self.register(stmt)
 
     def eval_if(self, stmt):
         conditional = self.eval_for_python(stmt.expr)
@@ -128,6 +143,10 @@ class Main(layers.Layer):
     def py_func_call(self, stmt):
         if stmt.name == defs.PRINT:
             self.py_print(stmt.args)
+        elif stmt.name == defs.LENGTH:
+            errors.later(errors.Version.v0m5.value)
+        else:
+            errors.no_such_module_member("py", stmt.name)
 
     @layers.register(astlib.CallableDecl)
     def callable_decl(self, stmt):

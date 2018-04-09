@@ -1,8 +1,20 @@
+fun someValue(): py#Int {
+    return py#Int(23234)
+}
+
 fun printInt(arg: py#Int): Void {
     py#print(arg)
 }
 
 var a: py#Int = py#Int(20)
 printInt(a)
-a = py#Int(4534534)
+--a = someValue()
+a = py#Int(2342343)
 printInt(a)
+
+let b: py#Int = a
+printInt(b)
+
+a = py#Int(0)
+printInt(a)
+printInt(b)
