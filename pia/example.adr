@@ -1,0 +1,16 @@
+struct Inner {
+    data: py#Int
+}
+
+struct Number {
+    inner: Inner
+}
+
+var a = Number(Inner(py#Int(1)))
+
+py#print(a.inner.data)
+var b = ref(a.inner.data)
+py#print(b)
+a.inner.data = py#Int(2)
+py#print(a.inner.data)
+py#print(b)

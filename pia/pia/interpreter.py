@@ -36,11 +36,12 @@ class Main(layers.Layer):
 
     def eval_e(self, expr):
         if expr in A(
-                astlib.DataMember, astlib.PyTypeCall,
-                astlib.PyConstant):
+                astlib.PyTypeCall, astlib.PyConstant):
             return expr
         elif expr in A(astlib.Name):
             return self.eval_e(env_api.variable_info(expr)["expr"])
+        elif expr in A(astlib.DataMember):
+            return self.get_info(expr)
         elif expr in A(astlib.Ref):
             return self._eval_e_ref(expr.expr)
         elif expr in A(astlib.Callable):
@@ -137,24 +138,24 @@ class Main(layers.Layer):
                 context.env[dest]["expr"].args[0].literal.append(
                     context.env[element]["expr"])
 
-    def eval_for_python(self, expr):
-        def _get_info(info):
-            parent = info.parent
-            members = [info.member]
-            while parent in A(astlib.DataMember):
-                members.append(parent.member)
-                parent = parent.parent
-            if parent in A(astlib.Ref):
-                parent = parent.expr
-            info = context.env[parent]["expr"]
-            if info in A(astlib.Name):
-                info = self.eval_e(info)
-            if info in A(astlib.DataMember):
-                info = _get_info(info)
-            for member in reversed(members):
-                info = info[member]
-            return info
+    def get_info(self, info):
+        parent = info.parent
+        members = [info.member]
+        while parent in A(astlib.DataMember):
+            members.append(parent.member)
+            parent = parent.parent
+        if parent in A(astlib.Ref):
+            parent = parent.expr
+        info = context.env[parent]["expr"]
+        if info in A(astlib.Name):
+            info = self.eval_e(info)
+        if info in A(astlib.DataMember):
+            info = self.get_info(info)
+        for member in reversed(members):
+            info = info[member]
+        return info
 
+    def eval_for_python(self, expr):
         if expr in A(astlib.Name):
             info = env_api.variable_info(expr)
             return self.eval_for_python(info["expr"])
@@ -179,7 +180,7 @@ class Main(layers.Layer):
         elif expr in A(astlib.Ref):
             return self.eval_for_python(expr.expr)
         elif expr in A(astlib.DataMember):
-            return self.eval_for_python(_get_info(expr))
+            return self.eval_for_python(self.get_info(expr))
 
 
     def py_print(self, args):
@@ -241,8 +242,8 @@ class Main(layers.Layer):
                         info[member] = expr
                         expr = info
                     return expr
-                expr = _set_info(stmt.left)
-                context.env[utils.scroll_to_parent(stmt.left.parent)]["expr"] = expr
+                context.env[utils.scroll_to_parent(
+                    stmt.left.parent)]["expr"] = _set_info(stmt.left)
             else:
                 expr = self.eval_e(stmt.right)
                 context.env[stmt.left]["expr"] = expr
