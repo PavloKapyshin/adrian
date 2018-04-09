@@ -30,12 +30,6 @@ def init(type_, args):
         type_, defs.INIT_METHOD, args)
 
 
-def copy(type_, name):
-    return astlib.Callable(
-        astlib.CallableT.struct_func,
-        type_, defs.COPY_METHOD, [name])
-
-
 def mtosf(method, struct):
     args = method.args
     body = method.body
@@ -52,28 +46,6 @@ class ObjectProtocol(layers.Layer):
     def complete_init_method(self, method, stmt):
         errors.later(errors.Version.v0m9.value)
 
-    def complete_copy_method(self, method, stmt):
-        errors.later(errors.Version.v0m9.value)
-
-    def default_copy_method(self, stmt):
-        new = astlib.Name("new")
-        field_of_new = field_maker(new)
-        new_decl = astlib.Decl(
-            astlib.DeclT.var, new, totype(stmt), astlib.Alloc())
-        field_inits = []
-        for field_decl in only_fields(stmt.body):
-            field_inits.append(astlib.Assignment(
-                field_of_new(field_decl.name), "=",
-                copy(field_decl.type_,
-                    self_field(field_decl.name))))
-        return_new = astlib.Return(new)
-        body = [new_decl] + field_inits + [return_new]
-        return astlib.CallableDecl(
-            astlib.DeclT.method, astlib.Empty(),
-            astlib.Name(defs.COPY_METHOD),
-            [(SELF, totype(stmt))],
-            totype(stmt), body)
-
     def default_init_method(self, stmt):
         self_decl = astlib.Decl(
             astlib.DeclT.var, SELF, totype(stmt), astlib.Alloc())
@@ -83,8 +55,7 @@ class ObjectProtocol(layers.Layer):
             args.append((field_decl.name, field_decl.type_))
             field_inits.append(
                 astlib.Assignment(
-                    self_field(field_decl.name), "=",
-                    copy(field_decl.type_, field_decl.name)))
+                    self_field(field_decl.name), "=", field_decl.name))
         body = [self_decl] + field_inits + [return_self]
         rettype = totype(stmt)
         return astlib.CallableDecl(
@@ -114,31 +85,7 @@ class ObjectProtocol(layers.Layer):
                 astlib.Name(defs.INIT_METHOD),
                 [], adt_as_type, [ret])
 
-        def _copy_adt():
-            new = astlib.Name("new")
-            field_of_new = field_maker(new)
-            new_decl = astlib.Decl(
-                astlib.DeclT.var, new, adt_as_type, init(adt_as_type, []))
-            ret = astlib.Return(new)
-            field = adt_fields[0]
-            if_ = astlib.If(
-                astlib.Is(SELF, field.type_),
-                [astlib.Assignment(field_of_new(field.name), "=",
-                    copy(field.type_, self_field(field.name)))])
-            field_copies = []
-            for field in adt_fields[1:]:
-                field_copies.append(
-                    astlib.Elif(
-                        astlib.Is(SELF, field.type_),
-                        [astlib.Assignment(field_of_new(field.name), "=",
-                            copy(field.type_, self_field(field.name)))]))
-            return astlib.CallableDecl(
-                astlib.DeclT.struct_func, adt_decl.name,
-                astlib.Name(defs.COPY_METHOD),
-                [(SELF, adt_as_type)], adt_as_type,
-                [new_decl] + [astlib.Cond(if_, elifs_=field_copies, else_=[])] + [ret])
-
-        return [_init_adt(), _copy_adt()]
+        return [_init_adt()]
 
     def make_initial_impl_dict(self):
         return OrderedDict(sorted({
@@ -148,7 +95,6 @@ class ObjectProtocol(layers.Layer):
                 getattr(self, "_".join(["default", mname])))
             for i, key, mname in (
                 (1, defs.INIT_METHOD, "init_method"),
-                (2, defs.COPY_METHOD, "copy_method"),
             )
         }.items(), key=lambda x: x[1]))
 
