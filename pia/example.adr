@@ -1,0 +1,3 @@
+var a: py#Int = py#Int(20)
+
+py#print(a)

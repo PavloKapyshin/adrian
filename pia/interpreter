@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+import argparse
+import importlib
+
+
+VENDOR_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "vendor")
+
+
+def main():
+    sys.path.append(VENDOR_PATH)
+    pia = importlib.import_module("pia")
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "in_file", type=argparse.FileType("r", encoding="utf-8"))
+    args = parser.parse_args()
+
+    pia.compile_from_file(args.in_file.name)
+
+
+if __name__ == "__main__":
+    main()
