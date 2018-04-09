@@ -10,6 +10,7 @@ PRINT = "print"
 LEN = "length"
 INT = "Int"
 STR = "Str"
+LIST = "List"
 
 
 RESERVED_WORDS = {

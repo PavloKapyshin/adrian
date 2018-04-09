@@ -94,15 +94,11 @@ def _e(expr):
         right = _e(expr.right)
         return astlib.Callable(
             astlib.CallableT.struct_func, inference.infer_type(left),
-            defs.OP_TO_METHOD[expr.op], [left, right]
-        )
-    elif expr in A(astlib.Is):
-        return astlib.CExpr(
-            astlib.DataMember(
-                astlib.DataT.struct,
-                _get_adt_field_by_type(_e(expr.expr), expr.type_),
-                astlib.Name("type_tag")), "==",
-            context.structs_to_type_tag[str(scroll(expr.type_))])
+            defs.OP_TO_METHOD[expr.op], [left, right])
+    elif expr in A(astlib.Literal):
+        if expr.type_ == astlib.LiteralT.vector:
+            return astlib.Literal(
+                expr.type_, [_e(arg) for arg in expr.literal])
     return expr
 
 

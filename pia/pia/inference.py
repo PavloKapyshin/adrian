@@ -134,8 +134,8 @@ def _infer_expr_from_defined_type(type_):
 
 def infer_expr(type_):
     if type_ in A(astlib.LiteralType):
-        if type_.type_ == astlib.LiteralT.integer:
-            return astlib.Literal(astlib.LiteralT.integer, "0")
+        if type_.type_ == astlib.LiteralT.number:
+            return astlib.Literal(astlib.LiteralT.number, "0")
     elif type_ in A(astlib.Name):
         return _infer_expr_from_defined_type(type_)
     elif type_ in A(astlib.GenericType):

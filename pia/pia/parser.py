@@ -27,6 +27,8 @@ _TOKENS = {
     ")": "RPAREN",
     "{": "LBRACE",
     "}": "RBRACE",
+    "[": "LBRACKET",
+    "]": "RBRACKET",
 
     ":": "COLON",
     ",": "COMMA",
@@ -41,7 +43,7 @@ tokens = (
          ) + tuple(_TOKENS.values()) + tuple(_RESERVED_WORDS.values())
 
 
-def _escape_tok_regex(regex, escape=set("#.{}()*+")):
+def _escape_tok_regex(regex, escape=set("#.{}()[]*+")):
     """Escape chars in regex string if they are in escape set."""
     for char in regex:
         if char in escape:
@@ -61,7 +63,7 @@ for tok_regex, const_name in sorted(
 def t_INTEGER(token):
     r"""[-]?\d*[\.]?\d+"""
     token.value = [
-        parser_astlib.LITERAL, astlib.LiteralT.integer, token.value]
+        parser_astlib.LITERAL, astlib.LiteralT.number, token.value]
     return token
 
 
@@ -613,10 +615,17 @@ def p_factor_3(content):
     content[0] = content[1]
 
 
+def p_vector(content):
+    """vector : LBRACKET arg_list RBRACKET"""
+    content[0] = [
+        parser_astlib.LITERAL, astlib.LiteralT.vector, content[2]]
+
+
 def p_atom_1(content):
     """
     atom : INTEGER
          | STRING
+         | vector
          | module_member
     """
     content[0] = content[1]

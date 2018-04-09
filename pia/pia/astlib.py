@@ -39,8 +39,9 @@ class LLT(enum.Enum):
 
 
 class LiteralT(enum.Enum):
-    integer = 1
+    number = 1
     string = 2
+    vector = 3
 
 
 @enum.unique

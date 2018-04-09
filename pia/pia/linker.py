@@ -200,6 +200,10 @@ class Linker(layers.Layer):
         if expr in A(astlib.Not):
             expr, stmts = self.e(expr.expr)
             return astlib.Not(expr), stmts
+        if expr in A(astlib.Literal):
+            if expr.type_ == astlib.LiteralT.vector:
+                args, stmts = self.a(expr.literal)
+                return astlib.Literal(expr.type_, args), stmts
         return expr, []
 
     def update_b(self):

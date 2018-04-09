@@ -42,7 +42,7 @@ class Main(layers.Layer):
         if expr in A(int):
             return astlib.PyTypeCall(
                 defs.INT,
-                [astlib.Literal(astlib.LiteralT.integer, str(expr))])
+                [astlib.Literal(astlib.LiteralT.number, str(expr))])
 
     def eval_for_python_std_method(self, expr):
         if expr.name == defs.NOT_METHOD:
@@ -105,6 +105,10 @@ class Main(layers.Layer):
                 return int(expr.args[0].literal)
             elif expr.name == defs.STR:
                 return expr.args[0].literal
+            elif expr.name == defs.LIST:
+                return [
+                    self.eval_for_python(l)
+                    for l in expr.args[0].literal]
         elif expr in A(astlib.Callable):
             if expr.callabletype == astlib.CallableT.struct_func:
                 if expr.parent in A(astlib.PyType):

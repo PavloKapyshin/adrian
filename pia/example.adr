@@ -4,3 +4,8 @@ while counter <= py#Int(10) {
     py#print(counter)
     counter = counter + py#Int(1)
 }
+py#print(py#Str("End"))
+
+
+let kukaramba = py#List([py#Int(1), py#Int(2), py#Str("some string")])
+py#print(kukaramba)
