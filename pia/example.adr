@@ -7,5 +7,5 @@ struct String {
 }
 
 
-var a = String(py#Str("._."))
+var a = String(py#Str("|\__/|"))
 a.print()
