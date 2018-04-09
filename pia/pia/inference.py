@@ -45,7 +45,6 @@ def apply_(mapping, for_):
 
 
 def _infer_type_from_data_member(expr):
-    print("last Expr", expr)
     parent_info = env_api.parent_info(expr.parent)
     field_info = env_api.field_info(expr.parent, expr.member)
     mapping = parent_info["mapping"]

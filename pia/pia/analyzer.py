@@ -11,8 +11,8 @@ def scroll(t):
 
 def make_py_call(call):
     if call.name in A(astlib.PyType):
-        return astlib.PyTypeCall(call.name.type_, call.args)
-    return astlib.PyFuncCall(call.name.name, call.args)
+        return astlib.PyTypeCall(call.name.type_, [_e(arg) for arg in call.args])
+    return astlib.PyFuncCall(call.name.name, [_e(arg) for arg in call.args])
 
 
 def _get_adt_field_by_type(parent, type_):

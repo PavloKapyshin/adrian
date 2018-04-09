@@ -183,7 +183,7 @@ class ObjectProtocol(layers.Layer):
                     object_protocol_methods.append(f(stmt))
             yield astlib.DataDecl(
                 stmt.decltype, stmt.name, stmt.params,
-                [
+                fields + [
                     mtosf(method, stmt)
                     for method in object_protocol_methods + new_methods])
         elif stmt.decltype == astlib.DeclT.protocol:

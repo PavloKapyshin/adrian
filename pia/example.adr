@@ -1,3 +1,5 @@
-var a: py#Int = py#Int(20)
+fun printInt(arg: py#Int): Void {
+    py#print(arg)
+}
 
-py#print(a)
+printInt(py#Int(552))
