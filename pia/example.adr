@@ -1,12 +1,11 @@
-struct Vector(a) {
-    inner: py#List
+struct String {
+    data: py#Str
 
-    fun append(elem: a): Void {
-        self.inner.append(elem)
-        py#print(self.inner)
+    fun print(): Void {
+        py#print(self.data)
     }
 }
 
-let a: Vector(py#Int) = Vector(py#List([py#Int(1)]))
-a.append(py#Int(2))
-py#print(a.inner)
+
+var a = String(py#Str("._."))
+a.print()
