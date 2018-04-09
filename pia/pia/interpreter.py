@@ -53,10 +53,13 @@ class Main(layers.Layer):
 
     def register_args_for_eval(self, decl_args, args):
         for (arg_name, arg_type), arg_expr in zip(decl_args, args):
+            expr = self.eval_e(arg_expr)
+            if arg_name != defs.SELF:
+                expr = deepcopy(expr)
             context.env[arg_name] = {
                 "node_type": astlib.NodeT.arg,
                 "type_": arg_type,
-                "expr": deepcopy(self.eval_e(arg_expr))
+                "expr": expr
             }
 
     def python_to_adrian(self, expr):
@@ -120,23 +123,38 @@ class Main(layers.Layer):
             self.py_list_append(expr)
 
     def py_list_append(self, append_call):
-        dest = append_call.args[0]
-        element = append_call.args[1]
-        while dest in A(astlib.Ref):
-            dest = dest.expr
-        if dest in A(astlib.Name):
-            expr = context.env[dest]["expr"]
+        def _append(expr, dest, element):
             if expr in A(astlib.PyTypeCall):
                 if element in A(astlib.Ref):
                     element = element.expr
                 elif element in A(astlib.Name):
                     element = context.env[element]["expr"]
                 expr.args[0].literal.append(element)
-                context.env[dest]["expr"] = expr
+                if dest in A(astlib.Name):
+                    context.env[dest]["expr"] = expr
+                elif dest in A(astlib.DataMember):
+                    context.env[utils.scroll_to_parent(
+                        dest)]["expr"] = self.set_info(dest, expr)
             elif expr in A(astlib.Name):
                 dest = expr
-                context.env[dest]["expr"].args[0].literal.append(
-                    context.env[element]["expr"])
+                if dest in A(astlib.Name):
+                    context.env[dest]["expr"].args[0].literal.append(
+                        context.env[element]["expr"])
+                elif dest in A(astlib.DataMember):
+                    context.env[utils.scroll_to_parent(
+                        dest)]["expr"].args[0].literal.append(
+                        context.env[element]["expr"])
+        dest = append_call.args[0]
+        element = append_call.args[1]
+        print(dest)
+        while dest in A(astlib.Ref):
+            dest = dest.expr
+        if dest in A(astlib.Name):
+            expr = context.env[dest]["expr"]
+            _append(expr, dest, element)
+        elif dest in A(astlib.DataMember):
+            expr = self.get_info(dest)
+            _append(expr, dest, element)
 
     def get_info(self, info):
         parent = info.parent
@@ -217,33 +235,36 @@ class Main(layers.Layer):
         -context.env
         return return_val
 
+    def set_info(self, info, right):
+        first_info = info
+        parent = info.parent
+        members = []
+        while parent in A(astlib.DataMember):
+            members.append(parent.member)
+            parent = parent.parent
+        if parent in A(astlib.Ref):
+            parent = parent.expr
+        expr = context.env[parent]["expr"]
+        info = context.env[parent]["expr"]
+        if expr in A(astlib.Name):
+            expr = self.eval_e(expr)
+            info = self.eval_e(info)
+        for member in reversed(members):
+            expr = expr[member]
+        if expr in A(astlib.DataMember):
+            expr = self.set_info(expr)
+        expr[first_info.member] = self.eval_e(right)
+        for member in reversed(members):
+            info[member] = expr
+            expr = info
+        return expr
+
     def register(self, stmt):
         if stmt in A(astlib.Assignment):
             if stmt.left in A(astlib.DataMember):
-                def _set_info(info):
-                    parent = info.parent
-                    members = []
-                    while parent in A(astlib.DataMember):
-                        members.append(parent.member)
-                        parent = parent.parent
-                    if parent in A(astlib.Ref):
-                        parent = parent.expr
-                    expr = context.env[parent]["expr"]
-                    info = context.env[parent]["expr"]
-                    if expr in A(astlib.Name):
-                        expr = self.eval_e(expr)
-                        info = self.eval_e(info)
-                    for member in reversed(members):
-                        expr = expr[member]
-                    if expr in A(astlib.DataMember):
-                        expr = _set_info(expr)
-                    expr[stmt.left.member] = self.eval_e(stmt.right)
-                    for member in reversed(members):
-                        info[member] = expr
-                        expr = info
-                    return expr
                 context.env[utils.scroll_to_parent(
-                    stmt.left.parent)]["expr"] = _set_info(stmt.left)
+                    stmt.left.parent)]["expr"] = self.set_info(
+                    stmt.left, stmt.right)
             else:
                 expr = self.eval_e(stmt.right)
                 context.env[stmt.left]["expr"] = expr

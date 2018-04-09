@@ -1,16 +1,12 @@
-struct Inner {
-    data: py#Int
+struct Vector(a) {
+    inner: py#List
+
+    fun append(elem: a): Void {
+        self.inner.append(elem)
+        py#print(self.inner)
+    }
 }
 
-struct Number {
-    inner: Inner
-}
-
-var a = Number(Inner(py#Int(1)))
-
-py#print(a.inner.data)
-var b = ref(a.inner.data)
-py#print(b)
-a.inner.data = py#Int(2)
-py#print(a.inner.data)
-py#print(b)
+let a: Vector(py#Int) = Vector(py#List([py#Int(1)]))
+a.append(py#Int(2))
+py#print(a.inner)
