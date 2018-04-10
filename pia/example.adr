@@ -1,19 +1,13 @@
-protocol MyProto {}
-
-struct MyStructure is MyProto {
-    data: py#Int
+struct Some(a) {
+    data: a
 }
 
-struct AnotherStruct is MyProto {
-    field: py#Str
-}
+var a: Some(py#Int) = Some(py#Int(3))
+py#print(a.data)
+a.data = py#Int(45454)
+py#print(a.data)
+let b = a.data
+a.data = py#Int(4)
+py#print(b)
 
-
-var a: MyProto = MyStructure(py#Int(32))
-if a is MyStructure {
-    py#print(a.data)
-}
-a = AnotherStruct(py#Str("Hello, world"))
-py#print(a.field)
-
-
+py#print(a.data)

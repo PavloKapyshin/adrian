@@ -59,6 +59,9 @@ class Main(layers.Layer):
             expr = self.eval_e(arg_expr)
             if arg_name != defs.SELF:
                 expr = deepcopy(expr)
+            if arg_type not in context.env:
+                arg_type = inference.infer_type(expr)
+                #arg_type = self.lookup_mapping(arg_type)
             general_type = arg_type
             type_ = arg_type
             if utils.is_adt(arg_type) or utils.is_protocol(arg_type):
