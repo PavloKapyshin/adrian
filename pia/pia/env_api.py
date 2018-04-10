@@ -92,6 +92,13 @@ def method_info(struct, method_name):
     return method_and_struct_info(struct, method_name)[0]
 
 
+def get_info(expr):
+    if expr in A(astlib.Name):
+        return variable_info(expr)
+    elif expr in A(astlib.DataMember):
+        return field_info(expr.parent, expr.member)
+
+
 # Unsafe API.
 def unsafe_info(request):
     return context.env[request]

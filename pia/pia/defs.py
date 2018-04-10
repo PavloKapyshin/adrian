@@ -22,7 +22,7 @@ RESERVED_WORDS = {
         "var", "let", "struct", "return",
         "fun", "adt", "protocol", "if",
         "else", "elif", "not", "and",
-        "or", "while"
+        "or", "while", "is"
     )
 }
 
@@ -62,6 +62,7 @@ REF = "ref"
 BOOL = "Bool"
 TRUE = "True"
 FALSE = "False"
+IS = "is"
 OP_TO_METHOD = {
     "+": ADD_METHOD,
     "-": SUB_METHOD,

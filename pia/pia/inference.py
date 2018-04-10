@@ -94,7 +94,7 @@ def infer_type(expr):
     elif expr in A(astlib.PyTypeCall):
         return astlib.PyType(expr.name)
     elif expr in A(astlib.AdtMember):
-        return expr.base
+        return infer_type(expr.member)
     errors.cannot_infer_type(expr)
 
 

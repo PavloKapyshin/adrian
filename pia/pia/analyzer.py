@@ -15,35 +15,6 @@ def make_py_call(call):
     return astlib.PyFuncCall(call.name.name, [_e(arg) for arg in call.args])
 
 
-def _get_adt_field_by_type(parent, type_):
-    adt_type = env_api.variable_info(parent)["type_"]
-    adt_type_info = env_api.type_info(adt_type)
-    for field_name, field_info in adt_type_info["fields"].items():
-        if typelib.types_are_equal(field_info["type_"], type_):
-            return astlib.DataMember(
-                astlib.DataT.adt, parent, astlib.Name(field_name))
-    errors.type_mismatch(adt_type, type_)
-
-
-def _get_adt_field_by_name(name, member):
-    return astlib.DataMember(astlib.DataT.adt, name, member)
-
-
-def adt_init(type_):
-    return astlib.Callable(
-        astlib.CallableT.struct_func, scroll(type_),
-        astlib.Name(defs.INIT_METHOD), [])
-
-
-def _split_adt_usage(type_, expr, name=None):
-    expr_type = inference.infer_general_type(expr)
-    if expr_type in A(astlib.Empty) or utils.is_adt(expr_type):
-        return expr, None
-    return adt_init(type_), astlib.Assignment(
-        _get_adt_field_by_type(
-            name, inference.infer_type(expr)), "=", expr)
-
-
 def _e_callable(expr: astlib.Callable):
     if expr.name in A(astlib.PyObject):
         return make_py_call(expr)
@@ -70,7 +41,8 @@ def _e_data_member(expr: astlib.DataMember):
         if expr.member in A(astlib.Callable):
             parent = _e(expr.parent)
             return astlib.Callable(
-                astlib.CallableT.struct_func, inference.infer_type(parent),
+                astlib.CallableT.struct_func,
+                inference.infer_type(parent),
                 expr.member.name, [parent] + _a(expr.member.args)
             )
         return astlib.DataMember(expr.datatype, _e(expr.parent), expr.member)
@@ -95,6 +67,8 @@ def _e(expr):
         return _e_data_member(expr)
     elif expr in A(astlib.Expr):
         left = _e(expr.left)
+        if expr.op == defs.IS:
+            return astlib.Is(left, _t(expr.right))
         right = _e(expr.right)
         return astlib.Callable(
             astlib.CallableT.struct_func, inference.infer_type(left),
@@ -128,7 +102,7 @@ def _t(type_):
 def _infer_unknown(type_, expr):
     if not type_:
         expr = _e(expr)
-        return inference.infer_type(expr), expr
+        return inference.infer_general_type(expr), expr
     elif not expr:
         type_ = _t(type_)
         return type_, inference.infer_expr(type_)
@@ -204,15 +178,7 @@ class Analyzer(layers.Layer):
         else:
             type_, expr = _infer_unknown(stmt.type_, stmt.expr)
             env_api.register(stmt, type_=type_, expr=expr)
-            result = astlib.Decl(stmt.decltype, stmt.name, type_, expr)
-            if utils.is_adt(type_):
-                expr, assignments = _split_adt_usage(
-                    type_, expr, name=stmt.name)
-                yield astlib.Decl(stmt.decltype, stmt.name, type_, expr)
-                if assignments is not None:
-                    yield assignments
-            else:
-                yield result
+            yield astlib.Decl(stmt.decltype, stmt.name, type_, expr)
 
     @layers.register(astlib.CallableDecl)
     def translate_callable_declaration(self, stmt):

@@ -1,6 +1,7 @@
 from copy import deepcopy
 
-from . import astlib, layers, env_api, defs, utils, errors
+from . import (
+    astlib, layers, env_api, defs, utils, errors, typelib, inference)
 from .context import context
 from .utils import A
 
@@ -50,6 +51,8 @@ class Main(layers.Layer):
             return {}
         elif expr in A(dict):
             return expr
+        elif expr in A(astlib.AdtMember):
+            return self.eval_e(expr.member)
 
     def register_args_for_eval(self, decl_args, args):
         for (arg_name, arg_type), arg_expr in zip(decl_args, args):
@@ -146,7 +149,6 @@ class Main(layers.Layer):
                         context.env[element]["expr"])
         dest = append_call.args[0]
         element = append_call.args[1]
-        print(dest)
         while dest in A(astlib.Ref):
             dest = dest.expr
         if dest in A(astlib.Name):
@@ -199,6 +201,10 @@ class Main(layers.Layer):
             return self.eval_for_python(expr.expr)
         elif expr in A(astlib.DataMember):
             return self.eval_for_python(self.get_info(expr))
+        elif expr in A(astlib.Is):
+            type_ = env_api.get_info(expr.expr)["type_"]
+            return (typelib.types_are_equal(type_, expr.type_) or
+                typelib.is_supertype(expr.type_, of=type_))
 
 
     def py_print(self, args):
@@ -272,9 +278,14 @@ class Main(layers.Layer):
             if stmt.decltype == astlib.DeclT.field:
                 env_api.register(stmt)
             else:
+                general_type = stmt.type_
+                type_ = stmt.type_
+                if utils.is_adt(stmt.type_):
+                    type_ = inference.infer_type(stmt.expr)
                 context.env[stmt.name] = {
                     "node_type": utils.nodetype_from_decl(stmt.decltype),
-                    "type_": stmt.type_,
+                    "type_": type_,
+                    "general_type": general_type,
                     "expr": self.eval_e(stmt.expr)
                 }
 

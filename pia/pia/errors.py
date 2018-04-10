@@ -51,6 +51,7 @@ _LATER = "not implemented, wait for v{version}"
 _FATAL = "FATAL ERROR: {message}"
 
 _BAD_EXPR = "bad expr {expr}"
+_SYNTAX_ERROR = "syntax error on {line}"
 
 unknown_name = _error_maker(_UNKNOWN_NAME, "name")
 no_such_method = _error_maker(_NO_SUCH_METHOD, "struct", "method")
@@ -72,3 +73,5 @@ bad_expr = _error_maker(_BAD_EXPR, "expr")
 
 later = _error_maker(_LATER, "version")
 fatal = _error_maker(_FATAL, "message")
+
+syntax_error = _error_maker(_SYNTAX_ERROR, "line")

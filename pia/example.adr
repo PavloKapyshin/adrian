@@ -1,9 +1,14 @@
-struct Red {}
-struct Blue {}
-struct Green {}
+struct Some(a) {
+    field: a
+}
+struct None {}
 
-adt Color {
-    Red, Blue, Green
+adt Maybe(a) {
+    Some(a), None
 }
 
-let a = Color.Red()
+let a = Maybe.Some(py#Int(2))
+
+if a is Some {
+    py#print(a.field)
+}

@@ -561,6 +561,7 @@ def p_boolop(content):
            | GT
            | AND
            | OR
+           | IS
     """
     content[0] = content[1]
 
@@ -576,7 +577,9 @@ def p_bool_expr_2(content):
 
 
 def p_bool_expr_3(content):
-    """bool_expr : expr"""
+    """
+    bool_expr : expr
+    """
     content[0] = content[1]
 
 
