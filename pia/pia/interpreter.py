@@ -59,9 +59,14 @@ class Main(layers.Layer):
             expr = self.eval_e(arg_expr)
             if arg_name != defs.SELF:
                 expr = deepcopy(expr)
+            general_type = arg_type
+            type_ = arg_type
+            if utils.is_adt(arg_type):
+                type_ = inference.infer_type(arg_expr)
             context.env[arg_name] = {
                 "node_type": astlib.NodeT.arg,
-                "type_": arg_type,
+                "general_type": general_type,
+                "type_": type_,
                 "expr": expr
             }
 

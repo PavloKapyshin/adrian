@@ -7,8 +7,19 @@ adt Maybe(a) {
     Some(a), None
 }
 
-let a = Maybe.Some(py#Int(2))
 
-if a is Some {
-    py#print(a.field)
+fun a(arg: Maybe(py#Int)): py#Int {
+    if arg is Some {
+        return arg.field
+    }
+    return py#Int(0)
 }
+
+
+let myArg = Maybe.Some(py#Int(56544564564))
+
+let value = a(myArg)
+if myArg is Some {
+    py#print(myArg.field)
+}
+py#print(value)
