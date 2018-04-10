@@ -1,25 +1,19 @@
-struct Some(a) {
-    field: a
-}
-struct None {}
+protocol MyProto {}
 
-adt Maybe(a) {
-    Some(a), None
+struct MyStructure is MyProto {
+    data: py#Int
 }
 
-
-fun a(arg: Maybe(py#Int)): py#Int {
-    if arg is Some {
-        return arg.field
-    }
-    return py#Int(0)
+struct AnotherStruct is MyProto {
+    field: py#Str
 }
 
 
-let myArg = Maybe.Some(py#Int(56544564564))
-
-let value = a(myArg)
-if myArg is Some {
-    py#print(myArg.field)
+var a: MyProto = MyStructure(py#Int(32))
+if a is MyStructure {
+    py#print(a.data)
 }
-py#print(value)
+a = AnotherStruct(py#Str("Hello, world"))
+py#print(a.field)
+
+

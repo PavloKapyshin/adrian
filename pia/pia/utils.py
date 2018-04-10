@@ -61,6 +61,7 @@ is_type = _is_of_nodetype(
     astlib.NodeT.adt, astlib.NodeT.struct, astlib.NodeT.parameter)
 is_real_type = _is_of_nodetype(astlib.NodeT.adt, astlib.NodeT.struct)
 is_adt = _is_of_nodetype(astlib.NodeT.adt)
+is_protocol = _is_of_nodetype(astlib.NodeT.protocol)
 is_struct = _is_of_nodetype(astlib.NodeT.struct)
 is_fun = _is_of_nodetype(astlib.NodeT.fun)
 is_var = _is_of_nodetype(astlib.NodeT.var)

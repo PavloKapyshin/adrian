@@ -310,6 +310,15 @@ class Linker(layers.Layer):
         context.inlining.extend(stmts)
         yield expr
 
+    @layers.register(astlib.StructDecl)
+    def struct_decl(self, stmt):
+        name = self.n(stmt.name)
+        params = [self.n(param) for param in stmt.params]
+        protocols = [self.n(proto) for proto in stmt.protocols]
+        self.update_b()
+        body = self.b(stmt.body)
+        yield astlib.StructDecl(name, params, protocols, body)
+
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
         if stmt.decltype == astlib.DeclT.adt:
@@ -318,16 +327,14 @@ class Linker(layers.Layer):
             body, stmts = self.adt_body(stmt.body)
             context.inlining.extend(stmts)
             yield astlib.DataDecl(
-                stmt.decltype, name, params, body
-            )
+                stmt.decltype, name, params, body)
         else:
             name = self.n(stmt.name)
             params = [self.n(param) for param in stmt.params]
             self.update_b()
             body = self.b(stmt.body)
             yield astlib.DataDecl(
-                stmt.decltype, name, params, body
-            )
+                stmt.decltype, name, params, body)
 
     @layers.register(astlib.AST)
     def main(self, stmts, registry):

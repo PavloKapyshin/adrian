@@ -133,6 +133,15 @@ class Checker(layers.Layer):
         self.b(stmt.body)
         -context.env
 
+    @layers.register(astlib.StructDecl)
+    def _check_struct_decl(self, stmt):
+        env_api.register(stmt)
+        +context.env
+        context.parent = stmt.name
+        env_api.register_params(stmt.params)
+        self.b(stmt.body)
+        -context.env
+
     @layers.register(astlib.DataDecl)
     def _check_data_declaration(self, stmt):
         env_api.register(stmt)

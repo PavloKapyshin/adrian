@@ -104,8 +104,7 @@ def _infer_unknown(type_, expr):
         expr = _e(expr)
         return inference.infer_general_type(expr), expr
     elif not expr:
-        type_ = _t(type_)
-        return type_, inference.infer_expr(type_)
+        errors.later(errors.Version.v0m9.value)
     return _t(type_), _e(expr)
 
 
@@ -190,6 +189,18 @@ class Analyzer(layers.Layer):
         yield astlib.CallableDecl(
             stmt.decltype, stmt.parent, stmt.name,
             args, type_, self.b(stmt.body))
+        context.env.remove_scope()
+
+    @layers.register(astlib.StructDecl)
+    def struct_decl(self, stmt):
+        env_api.register(stmt)
+        context.env.add_scope()
+        context.parent = stmt.name
+        env_api.register_params(stmt.params)
+        body = stmt.body
+        body = self.b(body)
+        yield astlib.StructDecl(
+            stmt.name, stmt.params, stmt.protocols, body)
         context.env.remove_scope()
 
     @layers.register(astlib.DataDecl)

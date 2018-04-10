@@ -139,6 +139,16 @@ class CallableDecl(Node):
             "args", "rettype", "body")
 
 
+class StructDecl(Node):
+
+    def __init__(self, name, params, protocols, body):
+        self.name = name
+        self.params = params
+        self.protocols = protocols
+        self.body = body
+        self._keys = ("name", "params", "protocols", "body")
+
+
 class DataDecl(Node):
 
     def __init__(self, decltype, name, params, body):

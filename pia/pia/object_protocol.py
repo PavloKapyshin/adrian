@@ -109,31 +109,33 @@ class ObjectProtocol(layers.Layer):
             astlib.Decl(astlib.DeclT.field, self._provide_name_for_adt_field(),
                 type_, astlib.Empty()) for type_ in body]
 
+    @layers.register(astlib.StructDecl)
+    def struct_decl(self, stmt):
+        fields, methods = split_body(stmt.body)
+        implemented_methods = self.make_initial_impl_dict()
+        new_methods = []
+        for method in methods:
+            entry = implemented_methods.get(str(method.name))
+            if entry:
+                implemented_methods.update(
+                    {str(method.name): (True, entry[1], entry[2])})
+                new_methods.append(entry[1](method, stmt))
+            else:
+                new_methods.append(self.method(method, stmt))
+        object_protocol_methods = []
+        for _, (_, exists, _, f) in implemented_methods.items():
+            if not exists:
+                object_protocol_methods.append(f(stmt))
+        yield astlib.StructDecl(
+            stmt.name, stmt.params, stmt.protocols,
+            fields + [
+                mtosf(method, stmt)
+                for method in object_protocol_methods + new_methods])
+
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):
-        if stmt.decltype == astlib.DeclT.struct:
-            fields, methods = split_body(stmt.body)
-            implemented_methods = self.make_initial_impl_dict()
-            new_methods = []
-            for method in methods:
-                entry = implemented_methods.get(str(method.name))
-                if entry:
-                    implemented_methods.update(
-                        {str(method.name): (True, entry[1], entry[2])})
-                    new_methods.append(entry[1](method, stmt))
-                else:
-                    new_methods.append(self.method(method, stmt))
-            object_protocol_methods = []
-            for _, (_, exists, _, f) in implemented_methods.items():
-                if not exists:
-                    object_protocol_methods.append(f(stmt))
-            yield astlib.DataDecl(
-                stmt.decltype, stmt.name, stmt.params,
-                fields + [
-                    mtosf(method, stmt)
-                    for method in object_protocol_methods + new_methods])
-        elif stmt.decltype == astlib.DeclT.protocol:
-            errors.later(errors.Version.v0m5.value)
+        if stmt.decltype == astlib.DeclT.protocol:
+            yield stmt
         else:
             fields = self._make_adt_body(stmt.body)
             yield astlib.DataDecl(

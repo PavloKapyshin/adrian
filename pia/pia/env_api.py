@@ -151,6 +151,14 @@ def register_args(args):
 def register(stmt, **kwds):
     if stmt in A(astlib.Assignment):
         _update_by_assignment(stmt, **kwds)
+    elif stmt in A(astlib.StructDecl):
+        context.env[stmt.name] = {**{
+            "node_type": astlib.NodeT.struct,
+            "params": stmt.params,
+            "protocols": stmt.protocols,
+            "fields": {},
+            "methods": {}
+        }, **kwds}
     elif stmt.decltype in (astlib.DeclT.var, astlib.DeclT.let):
         name = kwds.get("name", stmt.name)
         context.env[name] = {**{
@@ -182,11 +190,12 @@ def register(stmt, **kwds):
         context.env[context.parent]["fields"][stmt.name] = {**{
             "type_": stmt.type_,
         }, **kwds}
-    elif stmt.decltype in (astlib.DeclT.struct, astlib.DeclT.adt):
-        if stmt.decltype == astlib.DeclT.struct:
-            nodetype = astlib.NodeT.struct
-        elif stmt.decltype == astlib.DeclT.adt:
+    elif stmt.decltype in (
+            astlib.DeclT.adt, astlib.DeclT.protocol):
+        if stmt.decltype == astlib.DeclT.adt:
             nodetype = astlib.NodeT.adt
+        else:
+            nodetype = astlib.NodeT.protocol
         context.env[stmt.name] = {**{
             "node_type": nodetype,
             "params": stmt.params,

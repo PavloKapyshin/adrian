@@ -31,11 +31,18 @@ def is_adt_member(adt_info, member_type):
             adt_info["fields"].items())
 
 
+def implements_protocol(type_, protocol):
+    type_info = env_api.type_info(type_)
+    return protocol in type_info["protocols"]
+
+
 def is_supertype(supertype, of) -> bool:
     if supertype in A(astlib.Name):
         supertype_info = env_api.type_info(supertype)
         if env_api.is_adt(supertype_info["node_type"]):
             return is_adt_member(supertype_info, of)
+        elif env_api.is_protocol(supertype_info["node_type"]):
+            return implements_protocol(of, protocol=supertype)
     return False
 
 

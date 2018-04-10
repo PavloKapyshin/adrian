@@ -61,7 +61,7 @@ class Main(layers.Layer):
                 expr = deepcopy(expr)
             general_type = arg_type
             type_ = arg_type
-            if utils.is_adt(arg_type):
+            if utils.is_adt(arg_type) or utils.is_protocol(arg_type):
                 type_ = inference.infer_type(arg_expr)
             context.env[arg_name] = {
                 "node_type": astlib.NodeT.arg,
@@ -207,9 +207,11 @@ class Main(layers.Layer):
         elif expr in A(astlib.DataMember):
             return self.eval_for_python(self.get_info(expr))
         elif expr in A(astlib.Is):
-            type_ = env_api.get_info(expr.expr)["type_"]
+            info = env_api.get_info(expr.expr)
+            type_ = info["type_"]
             return (typelib.types_are_equal(type_, expr.type_) or
-                typelib.is_supertype(expr.type_, of=type_))
+                typelib.is_supertype(expr.type_, of=type_) or
+                typelib.is_subtype(expr.type_, of=type_))
 
 
     def py_print(self, args):
@@ -285,7 +287,7 @@ class Main(layers.Layer):
             else:
                 general_type = stmt.type_
                 type_ = stmt.type_
-                if utils.is_adt(stmt.type_):
+                if utils.is_adt(stmt.type_) or utils.is_protocol(stmt.type_):
                     type_ = inference.infer_type(stmt.expr)
                 context.env[stmt.name] = {
                     "node_type": utils.nodetype_from_decl(stmt.decltype),
@@ -363,6 +365,12 @@ class Main(layers.Layer):
     def register_body(self, body):
         for stmt in body:
             env_api.register(stmt)
+
+    @layers.register(astlib.StructDecl)
+    def struct_decl(self, stmt):
+        env_api.register(stmt)
+        context.parent = stmt.name
+        self.register_body(stmt.body)
 
     @layers.register(astlib.DataDecl)
     def data_decl(self, stmt):

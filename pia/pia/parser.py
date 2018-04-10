@@ -280,21 +280,35 @@ def p_fun_decl(content):
 
 def p_struct_decl_1(content):
     """
-    struct_decl : STRUCT NAME LBRACE struct_body RBRACE
+    struct_decl : STRUCT NAME protocol_impls LBRACE struct_body RBRACE
     """
     content[0] = [
-        parser_astlib.DATA_DECL, astlib.DeclT.struct,
-        [parser_astlib.NAME, content[2]], None, content[4]]
+        parser_astlib.STRUCT_DECL, [parser_astlib.NAME, content[2]],
+        None, content[3], content[5]]
 
 
 def p_struct_decl_2(content):
     """
-    struct_decl : STRUCT NAME LPAREN params RPAREN LBRACE struct_body RBRACE
+    struct_decl : STRUCT NAME LPAREN params RPAREN protocol_impls LBRACE struct_body RBRACE
     """
     content[0] = [
-        parser_astlib.DATA_DECL, astlib.DeclT.struct,
-        [parser_astlib.NAME, content[2]], content[4], content[7]]
+        parser_astlib.STRUCT_DECL, [parser_astlib.NAME, content[2]],
+        content[4], content[6], content[8]]
 
+
+def p_protocol_impls_1(content):
+    """protocol_impls : IS arg_list"""
+    content[0] = content[2]
+
+
+def p_protocol_impls_2(content):
+    """protocol_impls : IS LPAREN arg_list RPAREN"""
+    content[0] = content[3]
+
+
+def p_protocol_impls_3(content):
+    """protocol_impls : empty"""
+    content[0] = None
 
 def p_adt_decl_1(content):
     """

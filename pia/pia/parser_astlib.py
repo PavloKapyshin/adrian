@@ -1,6 +1,7 @@
 DECL = "Decl"
 CALLABLE_DECL = "CallableDecl"
 DATA_DECL = "DataDecl"
+STRUCT_DECL = "StructDecl"
 ASSIGNMENT = "Assignment"
 RETURN = "Return"
 
