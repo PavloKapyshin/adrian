@@ -1,13 +1,16 @@
-struct Some(a) {
-    data: a
+struct Vector(a) {
+    inner: py#List
+
+    fun append(elem: a): Void {
+        self.inner.append(elem)
+    }
+
+    fun print(): Void {
+        py#print(self.inner)
+    }
 }
 
-var a: Some(py#Int) = Some(py#Int(3))
-py#print(a.data)
-a.data = py#Int(45454)
-py#print(a.data)
-let b = a.data
-a.data = py#Int(4)
-py#print(b)
-
-py#print(a.data)
+var v = Vector(py#List([]))
+v.print()
+v.append(py#Int(1))
+v.print()
