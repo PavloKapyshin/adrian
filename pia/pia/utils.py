@@ -53,6 +53,8 @@ def _is_of_nodetype(*nodetypes):
     def helper(request):
         if request in A(astlib.PyObject):
             return False
+        if request in A(astlib.GenericType):
+            return helper(request.base)
         return nodetype(request) in nodetypes
     return helper
 

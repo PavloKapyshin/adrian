@@ -5,3 +5,11 @@ struct Number {
 struct String {
     data: py#Str
 }
+
+struct Vector(a) {
+    data: py#List
+
+    fun append(element: a): Void {
+        self.data.append(element)
+    }
+}

@@ -27,7 +27,7 @@ def types_are_equal(type1, type2) -> bool:
 
 def is_adt_member(adt_info, member_type):
     return any(
-        types_are_equal(member_type, type_) for _, type_ in
+        types_are_equal(member_type, info["type_"]) for _, info in
             adt_info["fields"].items())
 
 
@@ -37,6 +37,8 @@ def implements_protocol(type_, protocol):
 
 
 def is_supertype(supertype, of) -> bool:
+    while supertype in A(astlib.GenericType):
+        supertype = supertype.base
     if supertype in A(astlib.Name):
         supertype_info = env_api.type_info(supertype)
         if env_api.is_adt(supertype_info["node_type"]):

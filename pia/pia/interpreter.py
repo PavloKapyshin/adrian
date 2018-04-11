@@ -69,6 +69,7 @@ class Main(layers.Layer):
             context.env[arg_name] = {
                 "node_type": astlib.NodeT.arg,
                 "general_type": general_type,
+                "mapping": env_api.create_type_mapping(general_type),
                 "type_": type_,
                 "expr": expr
             }
@@ -145,7 +146,7 @@ class Main(layers.Layer):
                     context.env[dest]["expr"] = expr
                 elif dest in A(astlib.DataMember):
                     context.env[utils.scroll_to_parent(
-                        dest)]["expr"] = self.set_info(dest, expr)
+                        dest)]["expr"] = self.set_expr(dest, expr)
             elif expr in A(astlib.Name):
                 dest = expr
                 if dest in A(astlib.Name):
@@ -251,7 +252,7 @@ class Main(layers.Layer):
         -context.env
         return return_val
 
-    def set_info(self, info, right):
+    def set_expr(self, info, right):
         first_info = info
         parent = info.parent
         members = []
@@ -268,7 +269,7 @@ class Main(layers.Layer):
         for member in reversed(members):
             expr = expr[member]
         if expr in A(astlib.DataMember):
-            expr = self.set_info(expr)
+            expr = self.set_expr(expr)
         expr[first_info.member] = self.eval_e(right)
         for member in reversed(members):
             info[member] = expr
@@ -278,12 +279,14 @@ class Main(layers.Layer):
     def register(self, stmt):
         if stmt in A(astlib.Assignment):
             if stmt.left in A(astlib.DataMember):
-                context.env[utils.scroll_to_parent(
-                    stmt.left.parent)]["expr"] = self.set_info(
+                root = utils.scroll_to_parent(stmt.left.parent)
+                context.env[root]["expr"] = self.set_expr(
                     stmt.left, stmt.right)
             else:
                 expr = self.eval_e(stmt.right)
                 context.env[stmt.left]["expr"] = expr
+                context.env[stmt.left]["type_"] = inference.infer_type(
+                    stmt.right)
         elif stmt in A(astlib.Decl):
             if stmt.decltype == astlib.DeclT.field:
                 env_api.register(stmt)
@@ -296,6 +299,7 @@ class Main(layers.Layer):
                     "node_type": utils.nodetype_from_decl(stmt.decltype),
                     "type_": type_,
                     "general_type": general_type,
+                    "mapping": env_api.create_type_mapping(general_type),
                     "expr": self.eval_e(stmt.expr)
                 }
 
