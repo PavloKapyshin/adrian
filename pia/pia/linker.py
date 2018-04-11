@@ -47,7 +47,8 @@ class Linker(layers.Layer):
         if name.is_mangled or name == "self":
             return name
         return astlib.Name(
-            "".join([defs.U_STRING, hash_[:6], str(name)]),
+            "".join([
+                defs.U_STRING, hash_[:defs.MANGLING_PREFIX_LEN], str(name)]),
             is_user_name=True,
             is_mangled=True
         )

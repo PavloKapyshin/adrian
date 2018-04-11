@@ -5,6 +5,9 @@ from functools import partial
 from . import astlib, env
 
 
+MANGLING_PREFIX_LEN = 6
+
+
 PY_MODULE = "py"
 PRINT = "print"
 
