@@ -13,14 +13,19 @@ struct Vector(a) is Object, Appendable {
 fun print(source: Object): Void {
     if source is Vector {
         py#print(source.data)
+    } else {
+        py#print(source)
     }
 }
 
 
 
-let a: Appendable = Vector(py#List([py#Int(1)]), py#Int(2))
+var a: Appendable = Vector(py#List([py#Int(1)]), py#Int(2))
 
 print(a)
 
 a.append(py#Int(23))
+print(a)
+
+a = py#List([py#Int(45434534666)])
 print(a)
