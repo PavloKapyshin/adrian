@@ -116,7 +116,6 @@ class Main(layers.Layer):
     def _expr_for_setting(self, dest, expr):
         parent, members, root_expr = self._for_setting_prefix(dest)
         for member in reversed(members):
-            # FIXED here root_expr[member] -> root_expr[member]["expr"]
             root_expr = root_expr[member]["expr"]
         if root_expr in A(astlib.DataMember):
             root_expr = self._expr_for_setting(root_expr)
@@ -290,6 +289,8 @@ class Main(layers.Layer):
         if stmt.parent in A(astlib.PyType):
             new_expr = self.eval_(stmt)
             return self.py_to_adr(new_expr)
+        if utils.is_protocol(stmt.parent):
+            stmt.parent = inference.infer_type(stmt.args[0])
         method_info = env_api.method_info(stmt.parent, stmt.name)
         +context.env
         self.register_args(method_info["args"], stmt.args)
@@ -315,7 +316,6 @@ class Main(layers.Layer):
         else:
             general_type = stmt.type_
             type_ = stmt.type_
-            # TODO: maybe `var some: a` does not work
             if utils.is_adt(stmt.type_) or utils.is_protocol(stmt.type_):
                 type_ = inference.infer_type(stmt.expr)
             context.env[stmt.name] = {
