@@ -6,210 +6,262 @@ from .context import context
 from .utils import A
 
 
+def value_from_ref(ref):
+    while ref in A(astlib.Ref):
+        ref = ref.expr
+    return ref
+
+
+def value_from_name(name):
+    if name in A(astlib.Name):
+        return context.env[name]["expr"]
+    return name
+
+
 def transform_node(node, *, registry):
     node_func = registry.get(type(node))
-    if node_func:
+    if node_func is not None:
         return node_func(node)
+
+
+_dict = {
+    defs.OR_METHOD: lambda x, y: x or y,
+    defs.AND_METHOD: lambda x, y: x and y,
+    defs.GTE_METHOD: lambda x, y: x >= y,
+    defs.LTE_METHOD: lambda x, y: x <= y,
+    defs.GT_METHOD: lambda x, y: x > y,
+    defs.LT_METHOD: lambda x, y: x < y,
+    defs.EQ_METHOD: lambda x, y: x == y,
+    defs.NEQ_METHOD: lambda x, y: x != y,
+    defs.ADD_METHOD: lambda x, y: x + y,
+    defs.SUB_METHOD: lambda x, y: x - y,
+    defs.MUL_METHOD: lambda x, y: x * y,
+    defs.DIV_METHOD: lambda x, y: x / y,
+}
+
+
+def _eval_py_method_2arg(method_name, arg1, arg2):
+    method_name = method_name[
+        (defs.MANGLING_PREFIX_LEN+len(defs.U_STRING)):]
+    return _dict[method_name](arg1, arg2)
 
 
 class Main(layers.Layer):
 
-    def eval_b(self, body):
+    def get_field_expr(self, expr):
+        parent = expr.parent
+        members = [expr.member]
+        while parent in A(astlib.DataMember):
+            members.append(parent.member)
+            parent = parent.parent
+        root_expr = context.env[parent]["expr"]
+        if root_expr in A(astlib.Name):
+            root_expr = self.e(root_expr)
+        if root_expr in A(astlib.DataMember):
+            root_expr = self.get_field_expr(expr)
+        for member in reversed(members):
+            root_expr = root_expr[member]["expr"]
+        return root_expr
+
+    def init_member_info(self, expr=None, type_=None):
+        return {
+            "type_": type_ or inference.infer_type(expr),
+            "expr": expr,
+        }
+
+    def py_to_adr(self, expr):
+        if expr in A(int):
+            return astlib.PyTypeCall(
+                defs.INT,
+                [astlib.Literal(astlib.LiteralT.number, str(expr))])
+        elif expr in A(str):
+            return astlib.PyTypeCall(
+                defs.STR,
+                [astlib.Literal(astlib.LiteralT.string, expr)])
+
+    def value_from_data_member(self, struct_member):
+        if struct_member in A(astlib.DataMember):
+            return self.e_data_member(struct_member)
+        return struct_member
+
+    def _get_root_expr(self, parent):
+        root_expr = context.env[parent]["expr"]
+        if root_expr in A(astlib.Name):
+            root_expr = self.e(root_expr)
+        return root_expr
+
+    def _for_setting_prefix(self, dest):
+        parent = dest.parent
+        members = []
+        while parent in A(astlib.DataMember):
+            members.append(parent.member)
+            parent = value_from_ref(parent.parent)
+        root_expr = self._get_root_expr(parent)
+        return parent, members, root_expr
+
+    def _type_for_setting(self, dest, expr):
+        parent, members, root_expr = self._for_setting_prefix(dest)
+        for member in reversed(members):
+            root_expr = root_expr[member]["expr"]
+        if root_expr in A(astlib.DataMember):
+            root_expr = self._expr_for_setting(root_expr)
+        root_expr[dest.member] = self.init_member_info(expr=expr)
+        # Applying transformation (building new transformed info).
+        info = self._get_root_expr(parent)
+        for member in reversed(members):
+            info[member]["expr"] = root_expr
+            root_expr = info
+        return root_expr
+
+    def _expr_for_setting(self, dest, expr):
+        parent, members, root_expr = self._for_setting_prefix(dest)
+        for member in reversed(members):
+            # FIXED here root_expr[member] -> root_expr[member]["expr"]
+            root_expr = root_expr[member]["expr"]
+        if root_expr in A(astlib.DataMember):
+            root_expr = self._expr_for_setting(root_expr)
+        root_expr[dest.member] = self.init_member_info(expr=self.e(expr))
+        # Applying transformation (building new transformed info).
+        info = self._get_root_expr(parent)
+        for member in reversed(members):
+            info[member]["expr"] = root_expr
+            root_expr = info
+        return root_expr
+
+    def set_data_member_expr(self, dest, expr):
+        root = utils.scroll_to_parent(dest)
+        context.env[root]["expr"] = self._expr_for_setting(dest, expr)
+
+    def e_data_member(self, expr):
+        parent = expr.parent
+        members = [expr.member]
+        while parent in A(astlib.DataMember):
+            members.append(parent.member)
+            parent = value_from_ref(parent.parent)
+        root_expr = self._get_root_expr(parent)
+        for member in reversed(members):
+            # FIXED here root_expr[member] -> root_expr[member]["expr"]
+            root_expr = root_expr[member]["expr"]
+        return root_expr
+
+    def py_print(self, args):
+        """Interpret py#print"""
+        for arg in args[:-1]:
+            print(self.eval_(arg), end=" ")
+        print(self.eval_(args[-1]))
+
+    def py_list_append(self, append_call):
+        def _append_validate(dest, element):
+            dest = value_from_ref(dest)
+            expr = self.value_from_data_member(value_from_name(dest))
+            element = self.value_from_data_member(
+                value_from_name(
+                    value_from_ref(element)))
+            return dest, expr, element
+
+        dest, expr, element = _append_validate(
+            append_call.args[0], append_call.args[1])
+        if expr in A(astlib.PyTypeCall):
+            expr.args[0].literal.append(element)
+            if dest in A(astlib.Name):
+                context.env[dest]["expr"] = expr
+            else:
+                self.set_data_member_expr(dest, expr)
+        elif expr in A(astlib.Name):
+            context.env[expr]["expr"].args[0].literal.append(
+                context.env[element]["expr"])
+
+    def register_args(self, decl_args, args):
+        for (name, type_), expr in zip(decl_args, args):
+            first_expr = expr
+            expr = self.e(expr)
+            if name != defs.SELF:
+                expr = deepcopy(expr)
+            if type_ not in context.env:
+                type_ = inference.infer_type(expr)
+            general_type = type_
+            if utils.is_adt(type_) or utils.is_protocol(type_):
+                type_ = inference.infer_type(first_expr)
+            context.env[name] = {
+                "node_type": astlib.NodeT.arg,
+                "general_type": general_type,
+                "type_": type_,
+                "mapping": env_api.create_type_mapping(general_type),
+                "expr": expr
+            }
+
+    def b(self, body):
         reg = Main().get_registry()
         for stmt in body:
             value = transform_node(stmt, registry=reg)
             if value is not None:
                 return value
 
-    def _eval_e_ref(self, expr):
-        if expr in A(
-                astlib.DataMember, astlib.PyTypeCall,
-                astlib.PyConstant, astlib.Name):
+    def _e_ref(self, expr):
+        if expr in A(astlib.DataMember, astlib.Name):
             return expr
-        elif expr in A(astlib.Ref):
-            return self._eval_e_ref(expr.expr)
-        elif expr in A(astlib.Callable):
-            return self.callable(expr)
+        return self.e(expr)
+
+    def e(self, expr):
+        """Use for interpreting expression."""
+        if expr in A(astlib.PyTypeCall, astlib.PyConstant):
+            return expr
+        elif expr in A(dict):
+            if "expr" in expr:
+                return {**expr, **{"expr": self.e(expr["expr"])}}
+            else:
+                return {key: self.e(val) for key, val in expr.items()}
         elif expr in A(astlib.Alloc):
             return {}
-        elif expr in A(dict):
-            return expr
-
-    def eval_e(self, expr):
-        if expr in A(
-                astlib.PyTypeCall, astlib.PyConstant):
-            return expr
-        elif expr in A(astlib.Name):
-            return self.eval_e(env_api.variable_info(expr)["expr"])
+        elif expr in A(astlib.Callable):
+            return self.callable(expr)
+        elif expr in A(astlib.Ref):
+            return self._e_ref(expr.expr)
         elif expr in A(astlib.DataMember):
-            return self.get_info(expr)
-        elif expr in A(astlib.Ref):
-            return self._eval_e_ref(expr.expr)
-        elif expr in A(astlib.Callable):
-            return self.callable(expr)
-        elif expr in A(astlib.Alloc):
-            return {}
-        elif expr in A(dict):
-            return expr
+            return self.e_data_member(expr)
+        elif expr in A(astlib.Name):
+            return self.e(env_api.variable_info(expr))["expr"]
         elif expr in A(astlib.AdtMember):
-            return self.eval_e(expr.member)
+            return self.e(expr.member)
 
-    def register_args_for_eval(self, decl_args, args):
-        for (arg_name, arg_type), arg_expr in zip(decl_args, args):
-            expr = self.eval_e(arg_expr)
-            if arg_name != defs.SELF:
-                expr = deepcopy(expr)
-            if arg_type not in context.env:
-                arg_type = inference.infer_type(expr)
-                #arg_type = self.lookup_mapping(arg_type)
-            general_type = arg_type
-            type_ = arg_type
-            if utils.is_adt(arg_type) or utils.is_protocol(arg_type):
-                type_ = inference.infer_type(arg_expr)
-            context.env[arg_name] = {
-                "node_type": astlib.NodeT.arg,
-                "general_type": general_type,
-                "mapping": env_api.create_type_mapping(general_type),
-                "type_": type_,
-                "expr": expr
-            }
-
-    def python_to_adrian(self, expr):
-        if expr in A(int):
-            return astlib.PyTypeCall(
-                defs.INT,
-                [astlib.Literal(astlib.LiteralT.number, str(expr))])
-
-    def eval_for_python_std_method(self, expr):
+    def _eval_py_methods(self, expr):
         if expr.name.endswith(defs.NOT_METHOD):
-            return not self.eval_for_python(expr.args[0])
-        elif expr.name.endswith(defs.OR_METHOD):
-            return (
-                self.eval_for_python(expr.args[0]) or
-                self.eval_for_python(expr.args[1]))
-        elif expr.name.endswith(defs.AND_METHOD):
-            return (
-                self.eval_for_python(expr.args[0]) and
-                self.eval_for_python(expr.args[1]))
-        elif expr.name.endswith(defs.GTE_METHOD):
-            return (
-                self.eval_for_python(expr.args[0]) >=
-                self.eval_for_python(expr.args[1]))
-        elif expr.name.endswith(defs.LTE_METHOD):
-            return (
-                self.eval_for_python(expr.args[0]) <=
-                self.eval_for_python(expr.args[1]))
-        elif expr.name.endswith(defs.GT_METHOD):
-            return (
-                self.eval_for_python(expr.args[0]) >
-                self.eval_for_python(expr.args[1]))
-        elif expr.name.endswith(defs.LT_METHOD):
-            return (
-                self.eval_for_python(expr.args[0]) <
-                self.eval_for_python(expr.args[1]))
-        elif expr.name.endswith(defs.EQ_METHOD):
-            return (
-                self.eval_for_python(expr.args[0]) ==
-                self.eval_for_python(expr.args[1]))
-        elif expr.name.endswith(defs.NEQ_METHOD):
-            return (
-                self.eval_for_python(expr.args[0]) !=
-                self.eval_for_python(expr.args[1]))
-        elif expr.name.endswith(defs.ADD_METHOD):
-            return (
-                self.eval_for_python(expr.args[0]) +
-                self.eval_for_python(expr.args[1]))
-        elif expr.name.endswith(defs.SUB_METHOD):
-            return (
-                self.eval_for_python(expr.args[0]) -
-                self.eval_for_python(expr.args[1]))
-        elif expr.name.endswith(defs.MUL_METHOD):
-            return (
-                self.eval_for_python(expr.args[0]) *
-                self.eval_for_python(expr.args[1]))
-        elif expr.name.endswith(defs.DIV_METHOD):
-            return (
-                self.eval_for_python(expr.args[0]) /
-                self.eval_for_python(expr.args[1]))
+            return not self.eval_(expr.args[0])
         elif expr.name.endswith(defs.APPEND):
             self.py_list_append(expr)
+        else:
+            return _eval_py_method_2arg(
+                expr.name, self.eval_(expr.args[0]), self.eval_(expr.args[1]))
 
-    def py_list_append(self, append_call):
-        def _append(expr, dest, element):
-            if expr in A(astlib.PyTypeCall):
-                if element in A(astlib.Ref):
-                    element = element.expr
-                elif element in A(astlib.Name):
-                    element = context.env[element]["expr"]
-                expr.args[0].literal.append(element)
-                if dest in A(astlib.Name):
-                    context.env[dest]["expr"] = expr
-                elif dest in A(astlib.DataMember):
-                    context.env[utils.scroll_to_parent(
-                        dest)]["expr"] = self.set_expr(dest, expr)
-            elif expr in A(astlib.Name):
-                dest = expr
-                if dest in A(astlib.Name):
-                    context.env[dest]["expr"].args[0].literal.append(
-                        context.env[element]["expr"])
-                elif dest in A(astlib.DataMember):
-                    context.env[utils.scroll_to_parent(
-                        dest)]["expr"].args[0].literal.append(
-                        context.env[element]["expr"])
-        dest = append_call.args[0]
-        element = append_call.args[1]
-        while dest in A(astlib.Ref):
-            dest = dest.expr
-        if dest in A(astlib.Name):
-            expr = context.env[dest]["expr"]
-            _append(expr, dest, element)
-        elif dest in A(astlib.DataMember):
-            expr = self.get_info(dest)
-            _append(expr, dest, element)
+    def _eval_py_type(self, expr):
+        if expr.name == defs.INT:
+            return int(expr.args[0].literal)
+        elif expr.name == defs.STR:
+            return expr.args[0].literal
+        elif expr.name == defs.LIST:
+            return [self.eval_(elem) for elem in expr.args[0].literal]
 
-    def get_info(self, info):
-        parent = info.parent
-        members = [info.member]
-        while parent in A(astlib.DataMember):
-            members.append(parent.member)
-            parent = parent.parent
-        if parent in A(astlib.Ref):
-            parent = parent.expr
-        info = context.env[parent]["expr"]
-        if info in A(astlib.Name):
-            info = self.eval_e(info)
-        if info in A(astlib.DataMember):
-            info = self.get_info(info)
-        for member in reversed(members):
-            info = info[member]
-        return info
+    def _eval_py_constant(self, expr):
+        if expr.name == defs.TRUE:
+            return True
+        elif expr.name == defs.FALSE:
+            return False
 
-    def eval_for_python(self, expr):
+    def eval_(self, expr):
         if expr in A(astlib.Name):
-            info = env_api.variable_info(expr)
-            return self.eval_for_python(info["expr"])
+            return self.eval_(env_api.variable_info(expr)["expr"])
         elif expr in A(astlib.PyTypeCall):
-            if expr.name == defs.INT:
-                return int(expr.args[0].literal)
-            elif expr.name == defs.STR:
-                return expr.args[0].literal
-            elif expr.name == defs.LIST:
-                return [
-                    self.eval_for_python(l)
-                    for l in expr.args[0].literal]
+            return self._eval_py_type(expr)
         elif expr in A(astlib.PyConstant):
-            if expr.name == defs.TRUE:
-                return True
-            elif expr.name == defs.FALSE:
-                return False
+            return self._eval_py_constant(expr)
         elif expr in A(astlib.Callable):
             if expr.callabletype == astlib.CallableT.struct_func:
                 if expr.parent in A(astlib.PyType):
-                    return self.eval_for_python_std_method(expr)
+                    return self._eval_py_methods(expr)
         elif expr in A(astlib.Ref):
-            return self.eval_for_python(expr.expr)
+            return self.eval_(expr.expr)
         elif expr in A(astlib.DataMember):
-            return self.eval_for_python(self.get_info(expr))
+            return self.eval_(self.get_field_expr(expr))
         elif expr in A(astlib.Is):
             info = env_api.get_info(expr.expr)
             type_ = info["type_"]
@@ -217,91 +269,62 @@ class Main(layers.Layer):
                 typelib.is_supertype(expr.type_, of=type_) or
                 typelib.is_subtype(expr.type_, of=type_))
 
-
-    def py_print(self, args):
-        """Interpret py#print"""
-        for arg in args[:-1]:
-            print(self.eval_for_python(arg), end=" ")
-        print(self.eval_for_python(args[-1]))
-
     def struct_call(self, stmt):
         struct_info = env_api.type_info(stmt.name)
         init_info = struct_info["methods"][defs.INIT_METHOD]
         +context.env
-        self.register_args_for_eval(init_info["args"], stmt.args)
-        return_val = self.eval_b(init_info["body"])
+        self.register_args(init_info["args"], stmt.args)
+        return_val = self.b(init_info["body"])
         -context.env
         return return_val
 
     def func_call(self, stmt):
         func_info = env_api.fun_info(stmt.name)
         +context.env
-        self.register_args_for_eval(func_info["args"], stmt.args)
-        return_val = self.eval_b(func_info["body"])
+        self.register_args(func_info["args"], stmt.args)
+        return_val = self.b(func_info["body"])
         -context.env
         return return_val
 
     def struct_func(self, stmt):
         if stmt.parent in A(astlib.PyType):
-            new_expr = self.eval_for_python(stmt)
-            return self.python_to_adrian(new_expr)
+            new_expr = self.eval_(stmt)
+            return self.py_to_adr(new_expr)
         method_info = env_api.method_info(stmt.parent, stmt.name)
         +context.env
-        self.register_args_for_eval(method_info["args"], stmt.args)
-        return_val = self.eval_b(method_info["body"])
+        self.register_args(method_info["args"], stmt.args)
+        return_val = self.b(method_info["body"])
         -context.env
         return return_val
 
-    def set_expr(self, info, right):
-        first_info = info
-        parent = info.parent
-        members = []
-        while parent in A(astlib.DataMember):
-            members.append(parent.member)
-            parent = parent.parent
-        if parent in A(astlib.Ref):
-            parent = parent.expr
-        expr = context.env[parent]["expr"]
-        info = context.env[parent]["expr"]
-        if expr in A(astlib.Name):
-            expr = self.eval_e(expr)
-            info = self.eval_e(info)
-        for member in reversed(members):
-            expr = expr[member]
-        if expr in A(astlib.DataMember):
-            expr = self.set_expr(expr)
-        expr[first_info.member] = self.eval_e(right)
-        for member in reversed(members):
-            info[member] = expr
-            expr = info
-        return expr
+    def register_assignment(self, stmt):
+        if stmt.left in A(astlib.DataMember):
+            root = utils.scroll_to_parent(stmt.left.parent)
+            context.env[root]["expr"] = self._expr_for_setting(
+                stmt.left, stmt.right)
+            context.env[root]["type_"] = self._type_for_setting(
+                stmt.left, stmt.right)
+        else:
+            context.env[stmt.left]["expr"] = self.e(stmt.right)
+            context.env[stmt.left]["type_"] = inference.infer_type(
+                stmt.right)
 
-    def register(self, stmt):
-        if stmt in A(astlib.Assignment):
-            if stmt.left in A(astlib.DataMember):
-                root = utils.scroll_to_parent(stmt.left.parent)
-                context.env[root]["expr"] = self.set_expr(
-                    stmt.left, stmt.right)
-            else:
-                expr = self.eval_e(stmt.right)
-                context.env[stmt.left]["expr"] = expr
-                context.env[stmt.left]["type_"] = inference.infer_type(
-                    stmt.right)
-        elif stmt in A(astlib.Decl):
-            if stmt.decltype == astlib.DeclT.field:
-                env_api.register(stmt)
-            else:
-                general_type = stmt.type_
-                type_ = stmt.type_
-                if utils.is_adt(stmt.type_) or utils.is_protocol(stmt.type_):
-                    type_ = inference.infer_type(stmt.expr)
-                context.env[stmt.name] = {
-                    "node_type": utils.nodetype_from_decl(stmt.decltype),
-                    "type_": type_,
-                    "general_type": general_type,
-                    "mapping": env_api.create_type_mapping(general_type),
-                    "expr": self.eval_e(stmt.expr)
-                }
+    def register_decl(self, stmt):
+        if stmt.decltype == astlib.DeclT.field:
+            env_api.register(stmt)
+        else:
+            general_type = stmt.type_
+            type_ = stmt.type_
+            # TODO: maybe `var some: a` does not work
+            if utils.is_adt(stmt.type_) or utils.is_protocol(stmt.type_):
+                type_ = inference.infer_type(stmt.expr)
+            context.env[stmt.name] = {
+                "node_type": utils.nodetype_from_decl(stmt.decltype),
+                "type_": type_,
+                "general_type": general_type,
+                "mapping": env_api.create_type_mapping(general_type),
+                "expr": self.e(stmt.expr)
+            }
 
     @layers.register(astlib.Callable)
     def callable(self, stmt):
@@ -309,52 +332,46 @@ class Main(layers.Layer):
             return self.func_call(stmt)
         elif stmt.callabletype == astlib.CallableT.struct:
             return self.struct_call(stmt)
-        elif stmt.callabletype == astlib.CallableT.struct_func:
-            return self.struct_func(stmt)
+        return self.struct_func(stmt)
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
-        self.register(stmt)
+        self.register_assignment(stmt)
 
     @layers.register(astlib.Decl)
     def decl(self, stmt):
-        self.register(stmt)
+        self.register_decl(stmt)
 
-    def eval_if(self, stmt):
-        conditional = self.eval_for_python(stmt.expr)
+    def if_(self, stmt):
+        conditional = self.eval_(stmt.expr)
         if conditional:
-            value = self.eval_b(stmt.body)
-            if value is not None:
-                return True, value
-            return True, None
+            return True, self.b(stmt.body)
         return False, None
 
-    def eval_else(self, stmt):
-        value = self.eval_b(stmt.body)
-        if value is not None:
-            return value
+    def else_(self, stmt):
+        return self.b(stmt.body)
 
     @layers.register(astlib.Cond)
     def cond(self, stmt):
         ifs = [stmt.if_] + stmt.elifs_
-        else_case = stmt.else_
+        else_ = stmt.else_
         for if_ in ifs:
-            evaluated, value = self.eval_if(if_)
+            evaluated, value = self.if_(if_)
             if evaluated:
                 return value
-        if else_case is not None:
-            return self.eval_else(else_case)
+        if else_ is not None:
+            return self.else_(else_)
 
     @layers.register(astlib.While)
     def while_(self, stmt):
-        while self.eval_for_python(stmt.expr):
-            value = self.eval_b(stmt.body)
+        while self.eval_(stmt.expr):
+            value = self.b(stmt.body)
             if value is not None:
                 return value
 
     @layers.register(astlib.Return)
     def return_(self, stmt):
-        return self.eval_e(stmt.expr)
+        return self.e(stmt.expr)
 
     @layers.register(astlib.PyFuncCall)
     def py_func_call(self, stmt):

@@ -95,6 +95,10 @@ def infer_type(expr):
         return astlib.PyType(expr.name)
     elif expr in A(astlib.AdtMember):
         return infer_type(expr.member)
+    elif expr in A(dict):
+        if "type_" in expr:
+            return expr["type_"]
+    print("WHIE", expr)
     errors.cannot_infer_type(expr)
 
 
