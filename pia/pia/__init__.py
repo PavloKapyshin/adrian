@@ -3,12 +3,12 @@ from copy import deepcopy
 
 from . import (
     analyzer, context, defs, foreign_parser, layers, object_protocol, parser,
-    linker, checker, interpreter)
+    linker, interpreter, type_inference)
 
 LAYERS = (
     (object_protocol.ObjectProtocol, "transform_ast"),
     (analyzer.Analyzer, "transform_ast"),
-    (checker.Checker, "proceed"),
+    (type_inference.TypeInference, "transform_ast"),
     (interpreter.Main, "proceed")
 )
 
