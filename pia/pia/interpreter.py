@@ -257,6 +257,8 @@ class Main(layers.Layer):
             if expr.callabletype == astlib.CallableT.struct_func:
                 if expr.parent in A(astlib.PyType):
                     return self._eval_py_methods(expr)
+                else:
+                    return self.eval_(self.e(expr))
         elif expr in A(astlib.Ref):
             return self.eval_(expr.expr)
         elif expr in A(astlib.DataMember):
