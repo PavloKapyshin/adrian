@@ -424,3 +424,20 @@ class AdtMember(Node):
         self.base = base
         self.member = member
         self._keys = ("base", "member")
+
+
+class AnnotatedName(Node):
+
+    def __init__(self, name, type_):
+        self.name = name
+        self.type_ = type_
+        self._keys = ("name", "type_")
+
+    def __eq__(self, other):
+        if isinstance(other, str):
+            return self.name == other
+        elif isinstance(other, Name):
+            return other == self.name
+        elif isinstance(other, AnnotatedName):
+            return self.name == other.name
+        return False
