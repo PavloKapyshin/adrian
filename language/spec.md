@@ -1,160 +1,130 @@
-# Naming rules
-
-Names must be named according to this rules.
-
-Private names must start with an underscore `_`.
-
-## Variables
-
-Regular expression for matching variable names: `[a-z_][a-zA-Z0-9]*`.
-Variable name cannot be a reserved name.
-
-Variables are named using camel case.
-
-```adrian
--- Good names:
-myVeryLongName
-_myPrivateName
-short
-_var1
-
--- Bad names:
-my_bad_name
-_my_bad_private_name
+## Reserved names
+These names are reserved:
+```
 var
+let
+fun
+adt
+ref
+protocol
+struct
+return
 ```
 
-## Functions
 
-Regular expression for matching function names: `[a-z_][a-zA-Z0-9]*`.
-Function name cannot be a reserved name.
 
-Functions are named using camel case.
+## Naming rules
+#### Variables, Constants and Functions
+CamelCase starting with lowercase letter.
+Regular expression for matching: `[a-z][a-zA-Z0-9]*`.
 
+#### Methods
+CamelCase starting with lowercase letter.
+Special method's name is surrounded by two underscores (\_\_).
+Regular expression for matching: `((__)[a-z][a-zA-Z0-9]*(__))|([a-z][a-zA-Z0-9]*)`.
+
+#### Modules
+Underscore based naming.
+Regular expression for matching: `[a-z][a-z_0-9]*`.
+
+#### Structs, ADTs and Protocols
+CamelCase starting with uppercase letter.
+Regular expression for matching: `[A-Z][a-zA-Z0-9]*`.
+
+
+
+## Statements
+#### Constant declaration
 ```adrian
--- Good names:
-_privateFunc()
-publicFunc()
-_func12()
-
--- Bad names:
-_bad_func()
-bad_Func()
+let n: T = v
+let n = v
 ```
+`n` is a variable name, `T` is an optional type name and `v` is a value.
 
-## Modules
-
-Regular expression for matching module names: `[a-z_][a-z_0-9]*`.
-
-Module names are named using underscore case.
-
-```adrian
--- Good names:
-_special_module#member
-c#member
-collections#member
-
--- Bad names:
-_specialModule#member
-C#member
-
--- Very bad names:
-co_L_L_ections#member
-```
-
-## Types
-
-Regular expression for matching type names: `[A-Z_][a-zA-Z0-9]`
-
-Type names are named using camel case.
-
-```adrian
--- Good names:
-_Integer
-HtmlTag
-Context
-
--- Bad names:
-integer
-HTMLTag
-__Integer
-Int_32
-```
-
-# Variable declaration
-
+#### Variable declaration
 ```adrian
 var n: T = v
+var n = v
 var n: T
 ```
+`n` is a variable name, `T` is an optional type name and `v` is an optional value.
 
-Where `n` is a variable name, `T` is a type name and `v` is an optional value.
-
-Type of name and type of value must be equal. When `v` is not provided variable will be initialized using default value.
-
-```adrian
-var n = v
-```
-
-Type inference is also provided.
-
-
-# Variable assignment
-
+#### Variable assignment
 ```adrian
 n = v
 ```
+`n` is a variable name, `v` is a value.
+Type of name and type of value must be equal.
+Variable must be declarated before assignment.
 
-Where `n` is a variable name, `v` is a value.
-
-Type of name and type of value must be equal. Variable must be declarated before assignment.
-
-
-# Function declaration
-
+#### Function declaration
 ```adrian
-fun n(args): T {
-	stmts
+fun n(arguments): T {
+    statements
 }
 
-fun n(args) {
-	stmts
+fun n(arguments) {
+    statements
 }
 ```
 
-Where `n` is a function name, `T` is an optional return type, `args` is a list of arguments,
-`stmts` is a list of statements. Function return's type and type `T` must be equal.
+`n` is a function name, `T` is an optional return type, `arguments` is a list of arguments,
+`statements` is a list of statements. Function return's type and type `T` must be equal.
 
-## args
-
-`args` can be empty:
-
+##### arguments
+`arguments` can be empty:
 ```adrian
 fun n() {}
 ```
-
+or not empty:
 ```adrian
 fun n(arg1: T1, arg2: T2, ...) {}
 ```
-
-Where `arg1` has type `T1`, `arg2` have type `T2`. Arguments must be separated by
+`arg1` has type `T1`, `arg2` has type `T2`. Arguments must be separated by
 comma. The passed function arguments must be in the order in which arguments in
 the function declaration are written.
 
-## stmts
-
-`stmts` can be empty:
-
+##### statements
+`statements` can be empty:
 ```adrian
 fun n() {}
 ```
+Or `statements` can consist of any statement exclude struct, adt, protocol and function declaration and include return statement.
 
-Or `stmts` can consists of any statement exclude constant decalaration and include return statement.
-
-# Struct declaration
-
+#### Struct declaration
 ```adrian
-struct MyStruct {
-    stmts
+struct N {
+    statements
+}
+
+struct N(ts) {
+    statements
 }
 ```
+
+##### statements
+`statements` can be empty or `statements` can consist of method declaration and field declaration.
+
+##### ts
+```adrian
+t1, t2, ...
+```
+`t1`, `t2` are variables that point to types and can be used in statements as types.
+
+##### Field declaration
+```adrian
+n: T
+```
+`n` is a name, `T` is a type.
+
+##### Method declaration
+Same as function, but `statements` may include use of `self`.
+
+
+#### Adt declaration
+```adrian
+adt N {
+    T1, T2, ...
+}
+```
+`N` is a name for adt, `T1` and `T2` are types.

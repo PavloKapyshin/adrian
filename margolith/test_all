@@ -1,1 +1,0 @@
-./test/check-lang-to-c.py ./compiler test/adrian_tests/ test/c_tests/

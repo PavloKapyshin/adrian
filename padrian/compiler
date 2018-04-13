@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+import argparse
+import importlib
+
+
+VENDOR_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "vendor")
+
+
+def main():
+    sys.path.append(VENDOR_PATH)
+    padr = importlib.import_module("padr")
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "in_file", type=argparse.FileType("r", encoding="utf-8"))
+    parser.add_argument(
+        "-o", "--out", default="-",
+        type=argparse.FileType("w", encoding="utf-8"))
+    args = parser.parse_args()
+
+    print(
+        padr.compile_from_file(args.in_file.name, out_file=args.out),
+        file=args.out)
+
+
+if __name__ == "__main__":
+    main()

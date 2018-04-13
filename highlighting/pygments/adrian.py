@@ -12,10 +12,10 @@ class AdrianLexer(RegexLexer):
 
     tokens = {
         "root": [
-            (r"(if|else|return|for|while|in|is)", Keyword.Reserved),
+            (r"(if|else|elif|return|for|while|in|is)", Keyword.Reserved),
             (r"(var|let|fun|struct|adt|protocol)", Keyword.Declaration),
             (r"[a-zA-Z0-9_]+", Name),
-            (r"[-]?\d+", Number.Integer),
+            (r"[-]?\d*[\.]?\d+", Number.Integer),
             (r"--.+", Comment),
             (r"(\+|\*|/|%|-|\+=|-=|\*=|/=)", Operator),
             (r'"', Literal.String, "string"),

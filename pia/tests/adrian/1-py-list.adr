@@ -1,0 +1,2 @@
+let a = py#List([py#Int(1), py#Int(2), py#Int(3)])
+py#print(a)
