@@ -41,8 +41,8 @@ _dict = {
 
 
 def _eval_py_method_2arg(method_name, arg1, arg2):
-    method_name = method_name[
-        (defs.MANGLING_PREFIX_LEN+len(defs.U_STRING)):]
+    # method_name = method_name[
+    #     (defs.MANGLING_PREFIX_LEN+len(defs.U_STRING)):]
     return _dict[method_name](arg1, arg2)
 
 
