@@ -9,7 +9,7 @@ LAYERS = (
     (object_protocol.ObjectProtocol, "transform_ast"),
     (analyzer.Analyzer, "transform_ast"),
     (type_inference.TypeInference, "transform_ast"),
-    (interpreter.Main, "proceed")
+    #(interpreter.Main, "proceed")
 )
 
 
@@ -24,6 +24,7 @@ def compile_(current_ast, layers_, default_context_args):
             if got is not None:
                 current_ast = list(got)
         context_arguments = _update_context_args()
+    print(current_ast)
 
 
 def _update_context_args():

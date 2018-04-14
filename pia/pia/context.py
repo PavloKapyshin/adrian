@@ -13,12 +13,12 @@ def new_context(*, env, exit_on_error, module_paths):
     context.module_paths = module_paths
     context.func = None
     context.parent = None
-    context.inlining = []
+    context.loaded_lines = []
     yield
 
 
 def modified_context_args():
     return {
         key: getattr(context, key)
-        for key in ("env", "exit_on_error", "module_paths")
+        for key in ("env", "exit_on_error", "module_paths", "loaded_lines")
     }
