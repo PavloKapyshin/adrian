@@ -11,18 +11,20 @@ def _e(expr):
 
 def _literal_to_struct_call(adr_type, py_type_name, args):
     return astlib.FuncCall(
-        astlib.ModuleMember(defs.PRELUDE, adr_type),
+        astlib.ModuleMember(astlib.Name(defs.PRELUDE), adr_type),
         [astlib.PyTypeCall(py_type_name, args)])
 
 
 def unsugar_literal(literal):
     if literal.type_ == astlib.LiteralT.number:
-        return _literal_to_struct_call(defs.NUMBER, defs.INT, [literal])
+        return _literal_to_struct_call(
+            astlib.Name(defs.NUMBER), astlib.Name(defs.INT), [literal])
     elif literal.type_ == astlib.LiteralT.string:
-        return _literal_to_struct_call(defs.STRING, defs.STR, [literal])
+        return _literal_to_struct_call(
+            astlib.Name(defs.STRING), astlib.Name(defs.STR), [literal])
     elif literal.type_ == astlib.LiteralT.vector:
         return _literal_to_struct_call(
-            defs.VECTOR, defs.LIST, [astlib.Literal(
+            astlib.Name(defs.VECTOR), astlib.Name(defs.LIST), [astlib.Literal(
                 literal.type_, [e(lit) for lit in literal.literal])])
     return literal
 
@@ -38,9 +40,16 @@ class SyntaxSugar(layers.Layer):
     def __init__(self):
         self.b = layers.b(SyntaxSugar)
 
-    @layers.register(astlib.Decl)
     def decl(self, stmt):
-        yield astlib.Decl(stmt.decltype, stmt.name, stmt.type_, e(stmt.expr))
+        yield type(stmt)(stmt.name, stmt.type_, e(stmt.expr))
+
+    @layers.register(astlib.VarDecl)
+    def var_decl(self, stmt):
+        yield from self.decl(stmt)
+
+    @layers.register(astlib.LetDecl)
+    def let_decl(self, stmt):
+        yield from self.decl(stmt)
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
@@ -50,22 +59,38 @@ class SyntaxSugar(layers.Layer):
     def return_(self, stmt):
         yield astlib.Return(e(stmt.expr))
 
-    @layers.register(astlib.Callable)
-    def callable_(self, stmt):
+    @layers.register(astlib.FuncCall)
+    def func_call(self, stmt):
         yield e(stmt)
 
-    @layers.register(astlib.CallableDecl)
+    @layers.register(astlib.StructFuncCall)
+    def struct_func_call(self, stmt):
+        yield e(stmt)
+
     def callable_decl(self, stmt):
-        yield astlib.CallableDecl(
-            stmt.decltype, stmt.parent, stmt.name, stmt.args, stmt.rettype,
-            self.b(stmt.body))
+        yield type(stmt)(
+            stmt.name, stmt.args, stmt.rettype, self.b(stmt.body))
+
+    @layers.register(astlib.FuncDecl)
+    def func_decl(self, stmt):
+        yield from self.callable_decl(stmt)
+
+    @layers.register(astlib.StructFuncDecl)
+    def struct_func_decl(self, stmt):
+        yield from self.callable_decl(stmt)
+
+    def data_decl(self, stmt):
+        yield type(stmt)(
+            stmt.name, stmt.parameters, stmt.protocols, self.b(stmt.body))
 
     @layers.register(astlib.StructDecl)
     def struct_decl(self, stmt):
-        yield astlib.StructDecl(
-            stmt.name, stmt.parameters, stmt.protocols, self.b(stmt.body))
+        yield from self.data_decl(stmt)
 
-    @layers.register(astlib.DataDecl)
-    def data_decl(self, stmt):
-        yield astlib.DataDecl(
-            stmt.decltype, stmt.name, stmt.parameters, self.b(stmt.body))
+    @layers.register(astlib.AdtDecl)
+    def adt_decl(self, stmt):
+        yield from self.data_decl(stmt)
+
+    @layers.register(astlib.ProtocolDecl)
+    def protocol_decl(self, stmt):
+        yield from self.data_decl(stmt)

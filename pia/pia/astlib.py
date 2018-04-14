@@ -16,7 +16,7 @@ class NodeT(enum.Enum):
 
 
 @enum.unique
-class LT(enum.Enum):
+class LiteralT(enum.Enum):
     number = 1
     string = 2
     vector = 3
@@ -167,11 +167,11 @@ class StructField(Node):
         self._keys = ("struct", "field")
 
 
-class NameCall(Node):
+class Call(Node):
     pass
 
 
-class StructFuncCall(NameCall):
+class StructFuncCall(Call):
 
     def __init__(self, parent, name, args):
         self.parent = parent
@@ -180,7 +180,7 @@ class StructFuncCall(NameCall):
         self._keys = ("parent", "name", "args")
 
 
-class FuncCall(NameCall):
+class FuncCall(Call):
 
     def __init__(self, name, args):
         self.name = name

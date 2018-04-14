@@ -62,7 +62,7 @@ for tok_regex, const_name in sorted(
 
 def t_INTEGER(token):
     r"""[-]?\d*[\.]?\d+"""
-    token.value = astlib.Literal(astlib.LT.number, token.value)
+    token.value = astlib.Literal(astlib.LiteralT.number, token.value)
     return token
 
 
@@ -72,7 +72,7 @@ def cut_quotes(string):
 
 def t_STRING(token):
     r'''\"([^\\\n]|(\\.))*?\"'''
-    token.value = astlib.Literal(astlib.LT.string, cut_quotes(token.value))
+    token.value = astlib.Literal(astlib.LiteralT.string, cut_quotes(token.value))
     return token
 
 
@@ -552,7 +552,7 @@ def p_factor_3(content):
 
 def p_vector(content):
     """vector : LBRACKET arg_list RBRACKET"""
-    content[0] = astlib.Literal(astlib.LT.vector, content[2])
+    content[0] = astlib.Literal(astlib.LiteralT.vector, content[2])
 
 
 def p_atom_1(content):

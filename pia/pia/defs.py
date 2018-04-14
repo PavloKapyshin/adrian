@@ -91,4 +91,5 @@ DEFAULT_CONTEXT_ARGUMENTS = {
     "env": copy.deepcopy(ENV),
     "exit_on_error": False,
     "module_paths": DEFAULT_MODULE_PATHS,
+    "loaded_lines": [],
 }

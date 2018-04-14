@@ -13,13 +13,25 @@ VENDOR_PATH = os.path.join(
 def main():
     sys.path.append(VENDOR_PATH)
     pia = importlib.import_module("pia")
+    def to_obj(string):
+        return {
+            "loader": pia.loader.Loader,
+            "syntax-sugar": pia.syntax_sugar.SyntaxSugar,
+            "parser": pia.parser.Parser,
+            # "analyzer": pia.analyzer.Analyzer,
+            # "object-protocol": pia.object_protocol.ObjectProtocol,
+            # "type-inference": pia.type_inference.TypeInference,
+            # "interpreter": pia.interpreter.Main,
+        }.get(string, None)
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "in_file", type=argparse.FileType("r", encoding="utf-8"))
+    parser.add_argument(
+        "--stop-before", type=str, help="stop before layer")
     args = parser.parse_args()
-
-    pia.compile_from_file(args.in_file.name)
+    pia.compile_from_file(
+        args.in_file.name, stop_before=to_obj(args.stop_before))
 
 
 if __name__ == "__main__":

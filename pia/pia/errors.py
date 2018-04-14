@@ -15,6 +15,7 @@ class Version(enum.Enum):
     v0m9 = "0.9"
     v1m0 = "1.0"
     unknown = "unknown"
+    never = "never"
 
 
 def _error(msg, **keywords):
