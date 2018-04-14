@@ -72,7 +72,7 @@ def cut_quotes(string):
 
 
 def t_STRING(token):
-    r'''\".*\"'''
+    r'''\"([^\\\n]|(\\.))*?\"'''
     token.value = [
         parser_astlib.LITERAL, astlib.LiteralT.string,
         cut_quotes(token.value)]

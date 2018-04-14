@@ -2,7 +2,7 @@ import hashlib
 import os
 
 from .context import context
-from . import astlib, defs, foreign_parser, layers, parser, errors, env_api
+from . import astlib, defs, foreign_parser, layers, parser, errors, env_api, syntax_sugar
 from .utils import A
 
 
@@ -125,6 +125,9 @@ class Linker(layers.Layer):
                     parser_ = parser.Parser()
                     current_ast = foreign_parser.main(
                         parser_.parse(file_contents))
+                    current_ast = list(layers.transform_ast(
+                        current_ast,
+                        registry=syntax_sugar.SyntaxSugar().get_registry()))
                     linker = Linker(file_hash, self.inlined_modules)
                     stmts = list(layers.transform_ast(current_ast,
                         registry=linker.get_registry()))
@@ -183,6 +186,10 @@ class Linker(layers.Layer):
                         parser_ = parser.Parser()
                         current_ast = foreign_parser.main(
                             parser_.parse(file_contents))
+                        current_ast = list(layers.transform_ast(
+                            current_ast,
+                            registry=syntax_sugar.SyntaxSugar(
+                                ).get_registry()))
                         linker = Linker(file_hash, self.inlined_modules)
                         new_expr = self.inner_e(expr.member, file_hash)
                         stmts = list(layers.transform_ast(current_ast,
@@ -350,6 +357,8 @@ def unwrap_module_usage(input_code):
     main_file_hash = hash_.hexdigest()
     parser_ = parser.Parser()
     current_ast = foreign_parser.main(parser_.parse(input_code))
+    current_ast = list(layers.transform_ast(
+        current_ast, registry=syntax_sugar.SyntaxSugar().get_registry()))
     linker = Linker(main_file_hash)
     return list(
         layers.expand_ast(current_ast, registry=linker.get_registry()))

@@ -1,0 +1,2 @@
+let a = py#Str("Hello, py world!")
+py#print(a)

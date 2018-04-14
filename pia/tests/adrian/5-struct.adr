@@ -1,0 +1,21 @@
+struct Person {
+    firstName: py#Str
+    secondName: py#Str
+
+    fun toPyStr(): py#Str {
+        return self.firstName + py#Str(" ") + self.secondName
+    }
+
+    fun print(): Void {
+        py#print(self.toPyStr())
+    }
+}
+
+let john = Person(py#Str("John"), py#Str("Noob"))
+py#print(john.firstName, john.secondName)
+
+let mike = Person(py#Str("Mike"), py#Str("Noob"))
+py#print(mike.toPyStr())
+
+let bob = Person(py#Str("Bob"), py#Str("Pro"))
+bob.print()

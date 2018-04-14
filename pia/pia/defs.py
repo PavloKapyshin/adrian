@@ -7,12 +7,15 @@ from . import astlib, env
 
 MANGLING_PREFIX_LEN = 6
 
+PRELUDE = "prelude"
+NUMBER = "Number"
+STRING = "String"
+VECTOR = "Vector"
+
 
 PY_MODULE = "py"
 PRINT = "print"
-
 APPEND = "append"
-
 LEN = "length"
 INT = "Int"
 STR = "Str"

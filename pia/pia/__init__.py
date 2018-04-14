@@ -3,13 +3,13 @@ from copy import deepcopy
 
 from . import (
     analyzer, context, defs, foreign_parser, layers, object_protocol, parser,
-    linker, checker, interpreter)
+    linker, interpreter, type_inference)
 
 LAYERS = (
     (object_protocol.ObjectProtocol, "transform_ast"),
     (analyzer.Analyzer, "transform_ast"),
-    (checker.Checker, "proceed"),
-    (interpreter.Main, "proceed")
+    (type_inference.TypeInference, "transform_ast"),
+    #(interpreter.Main, "proceed")
 )
 
 
@@ -24,6 +24,7 @@ def compile_(current_ast, layers_, default_context_args):
             if got is not None:
                 current_ast = list(got)
         context_arguments = _update_context_args()
+    print(current_ast)
 
 
 def _update_context_args():

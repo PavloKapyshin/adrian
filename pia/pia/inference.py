@@ -18,6 +18,8 @@ def make_mapping(params, decl_args, call_args):
 
 
 def _infer_type_from_struct_func_call(struct_func_call):
+    if struct_func_call.parent in A(astlib.PyType):
+        return struct_func_call.parent
     parent_info = env_api.type_info(struct_func_call.parent)
     if env_api.is_parameter(parent_info["node_type"]):
         if struct_func_call.name in (defs.INIT_METHOD, defs.COPY_METHOD):

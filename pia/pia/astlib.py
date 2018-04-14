@@ -441,3 +441,12 @@ class AnnotatedName(Node):
         elif isinstance(other, AnnotatedName):
             return self.name == other.name
         return False
+
+
+class AnnotatedStructField(Node):
+
+    def __init__(self, struct, field, type_):
+        self.struct = struct
+        self.field = field
+        self.type_ = type_
+        self._keys = ("struct", "field", "type_")
