@@ -3,17 +3,15 @@ from .utils import A
 
 
 def _e(expr):
-    if expr in A(astlib.Callable):
-        return astlib.Callable(
-            expr.callabletype, expr.parent, expr.name,
-            [e(arg) for arg in expr.args])
+    if expr in A(astlib.NameCall):
+        expr.args = [e(arg) for arg in expr.args]
+        return expr
     return expr
 
 
 def _literal_to_struct_call(adr_type, py_type_name, args):
-    return astlib.Callable(
-        astlib.CallableT.struct, astlib.Empty(),
-        astlib.DataMember(astlib.DataT.module, defs.PRELUDE, adr_type),
+    return astlib.FuncCall(
+        astlib.ModuleMember(defs.PRELUDE, adr_type),
         [astlib.PyTypeCall(py_type_name, args)])
 
 
