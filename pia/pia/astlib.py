@@ -16,46 +16,10 @@ class NodeT(enum.Enum):
 
 
 @enum.unique
-class DataT(enum.Enum):
-    module = 1
-    struct = 2
-    adt = 3
-
-
-@enum.unique
-class CallableT(enum.Enum):
-    struct = 1
-    fun = 2
-    struct_func = 4
-
-
-@enum.unique
-class LLT(enum.Enum):
-    body = 1
-    call_args = 2
-    args = 3
-    params = 4
-    elseif = 5
-
-
-class LiteralT(enum.Enum):
+class LT(enum.Enum):
     number = 1
     string = 2
     vector = 3
-
-
-@enum.unique
-class DeclT(enum.Enum):
-    var = 1
-    let = 2
-    fun = 3
-    struct = 4
-    struct_func = 5
-    method = 6
-    field = 7
-    protocol = 8
-    protocol_func = 9
-    adt = 10
 
 
 AST = object()
@@ -116,30 +80,56 @@ class Name(_Name):
 
 class Decl(Node):
 
-    def __init__(self, decltype, name, type_, expr):
-        self.decltype = decltype
+    def __init__(self, name, type_, expr):
         self.name = name
         self.type_ = type_
         self.expr = expr
-        self._keys = ("decltype", "name", "type_", "expr")
+        self._keys = ("name", "type_", "expr")
+
+class VarDecl(Decl):
+    pass
+
+
+class LetDecl(Decl):
+    pass
+
+
+class FieldDecl(Node):
+
+    def __init__(self, name, type_):
+        self.name = name
+        self.type_ = type_
+        self._keys = ("name", "type_")
+
+
+class FuncPrototype(Node):
+
+    def __init__(self, name, args, rettype):
+        self.name = name
+        self.args = args
+        self.rettype = rettype
+        self._keys = ("name", "args", "rettype")
 
 
 class CallableDecl(Node):
 
-    def __init__(
-            self, decltype, parent, name, args, rettype, body):
-        self.decltype = decltype
-        self.parent = parent
+    def __init__(self, name, args, rettype, body):
         self.name = name
         self.args = args
         self.rettype = rettype
         self.body = body
-        self._keys = (
-            "decltype", "parent", "name",
-            "args", "rettype", "body")
+        self._keys = ("name", "args", "rettype", "body")
 
 
-class StructDecl(Node):
+class FuncDecl(CallableDecl):
+    pass
+
+
+class StructFuncDecl(CallableDecl):
+    pass
+
+
+class DataDecl(Node):
 
     def __init__(self, name, params, protocols, body):
         self.name = name
@@ -149,33 +139,53 @@ class StructDecl(Node):
         self._keys = ("name", "params", "protocols", "body")
 
 
-class DataDecl(Node):
-
-    def __init__(self, decltype, name, params, body):
-        self.decltype = decltype
-        self.name = name
-        self.params = params
-        self.body = body
-        self._keys = ("decltype", "name", "params", "body")
+class StructDecl(DataDecl):
+    pass
 
 
-class DataMember(Node):
+class AdtDecl(DataDecl):
+    pass
 
-    def __init__(self, datatype, parent, member):
-        self.datatype = datatype
-        self.parent = parent
+
+class ProtocolDecl(DataDecl):
+    pass
+
+
+class ModuleMember(Node):
+
+    def __init__(self, module, member):
+        self.module = module
         self.member = member
-        self._keys = ("datatype", "parent", "member")
+        self._keys = ("module", "member")
 
 
-class Callable(Node):
+class StructField(Node):
 
-    def __init__(self, callabletype, parent, name, args):
-        self.callabletype = callabletype
+    def __init__(self, struct, field):
+        self.struct = struct
+        self.field = field
+        self._keys = ("struct", "field")
+
+
+class NameCall(Node):
+    pass
+
+
+class StructFuncCall(NameCall):
+
+    def __init__(self, parent, name, args):
         self.parent = parent
         self.name = name
         self.args = args
-        self._keys = ("callabletype", "parent", "name", "args")
+        self._keys = ("parent", "name", "args")
+
+
+class FuncCall(NameCall):
+
+    def __init__(self, name, args):
+        self.name = name
+        self.args = args
+        self._keys = ("name", "args")
 
 
 class Arg(Node):
@@ -195,38 +205,6 @@ class Empty(BaseNode):
         return False
 
     __repr__ = __str__
-
-
-class LinkedList:
-
-    def __init__(self, value, rest=None):
-        self.value = value
-        self.rest = rest or None
-
-    def __iter__(self):
-        current = self
-        rest = current.rest
-        if current.value is not None:
-            if rest is None:
-                yield [current.value]
-            else:
-                yield [current.value] + rest
-        else:
-            yield from []
-
-
-class LinkedListNode(LinkedList, Node):
-
-    def __init__(self, lltype, value, rest=None):
-        super().__init__(value, rest)
-        self.lltype = lltype
-        self._keys = ("lltype", "value", "rest")
-
-
-class Args(LinkedListNode):
-
-    def __init__(self, name, type_, rest=None):
-        super().__init__(LLT.args, (name, type_), rest)
 
 
 class ComplexExpr(Node):
@@ -279,17 +257,6 @@ class Void(BaseNode):
 
     def __str__(self):
         return "Void"
-
-    def __hash__(self):
-        return hash(self.__str__())
-
-    __repr__ = __str__
-
-
-class Object(BaseNode):
-
-    def __str__(self):
-        return "Object"
 
     def __hash__(self):
         return hash(self.__str__())
@@ -357,6 +324,7 @@ class Else(Node):
     def __init__(self, body):
         self.body = body
         self._keys = ("body",)
+
 
 class Is(Node):
 
