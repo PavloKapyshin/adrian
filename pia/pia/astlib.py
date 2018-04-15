@@ -130,12 +130,12 @@ class StructFuncDecl(CallableDecl):
 
 class DataDecl(Node):
 
-    def __init__(self, name, params, protocols, body):
+    def __init__(self, name, parameters, protocols, body):
         self.name = name
-        self.params = params
+        self.parameters = parameters
         self.protocols = protocols
         self.body = body
-        self._keys = ("name", "params", "protocols", "body")
+        self._keys = ("name", "parameters", "protocols", "body")
 
 
 class StructDecl(DataDecl):
@@ -194,14 +194,6 @@ class MethodCall(Call):
         self.name = name
         self.args = args
         self._keys = ("base", "name", "args")
-
-
-class Arg(Node):
-
-    def __init__(self, name, type_):
-        self.name = name
-        self.type_ = type_
-        self._keys = ("name", "type_")
 
 
 class Empty(BaseNode):

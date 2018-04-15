@@ -68,6 +68,7 @@ NOT_METHOD = "__not__"
 SELF = "self"
 REF = "ref"
 BOOL = "Bool"
+VOID = "Void"
 TRUE = "True"
 FALSE = "False"
 IS = "is"
@@ -94,4 +95,5 @@ DEFAULT_CONTEXT_ARGUMENTS = {
     "exit_on_error": False,
     "module_paths": DEFAULT_MODULE_PATHS,
     "loaded_lines": [],
+    "loaded_modules": {},
 }

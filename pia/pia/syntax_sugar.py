@@ -10,9 +10,10 @@ def _e(expr):
 
 
 def _literal_to_struct_call(adr_type, py_type_name, args):
-    return astlib.FuncCall(
-        astlib.ModuleMember(astlib.Name(defs.PRELUDE), adr_type),
-        [astlib.PyTypeCall(py_type_name, args)])
+    return astlib.ModuleMember(
+        astlib.Name(defs.PRELUDE),
+        astlib.FuncCall(
+            adr_type, [astlib.PyTypeCall(py_type_name, args)]))
 
 
 def unsugar_literal(literal):

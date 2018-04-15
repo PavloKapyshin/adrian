@@ -20,14 +20,13 @@ def _update_context_args():
     return {**context.modified_context_args(), **{"env": defs.ENV}}
 
 
-def compile_from_string(input_code, *, stop_before):
+def compile_from_string(input_code, *, stop_before, stop_after):
     context_args = defs.DEFAULT_CONTEXT_ARGUMENTS
     context_args["main_file_hash"] = utils.get_hash(input_code)
     current_ast = input_code
     for layer_cls, method_name in LAYERS:
         if stop_before == layer_cls:
-            print(current_ast)
-            break
+            return current_ast
         with context.new_context(**context_args):
             layer = layer_cls()
             if method_name == "parse":
@@ -37,7 +36,10 @@ def compile_from_string(input_code, *, stop_before):
                     current_ast, registry=layer.get_registry())
                 if got is not None:
                     current_ast = list(got)
+        if stop_after == layer_cls:
+            return current_ast
         context_args = _update_context_args()
+    print(current_ast)
 
 
 def _read_file(file_name):
@@ -46,5 +48,6 @@ def _read_file(file_name):
     return contents
 
 
-def compile_from_file(in_file, *, stop_before):
-    compile_from_string(_read_file(in_file), stop_before=stop_before)
+def compile_from_file(in_file, *, stop_before=None, stop_after=None):
+    return compile_from_string(
+        _read_file(in_file), stop_before=stop_before, stop_after=stop_after)
