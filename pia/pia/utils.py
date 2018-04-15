@@ -1,4 +1,5 @@
 import itertools
+import hashlib
 
 from . import astlib, errors
 from .context import context
@@ -68,3 +69,9 @@ is_struct = _is_of_nodetype(astlib.NodeT.struct)
 is_fun = _is_of_nodetype(astlib.NodeT.fun)
 is_var = _is_of_nodetype(astlib.NodeT.var)
 is_let = _is_of_nodetype(astlib.NodeT.let)
+
+
+def get_hash(data):
+    hash_ = hashlib.new("md5")
+    hash_.update(bytes(data, "utf-8"))
+    return hash_.hexdigest()

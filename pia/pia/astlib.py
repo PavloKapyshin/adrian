@@ -1,5 +1,4 @@
 import enum
-
 import collections
 
 
@@ -186,6 +185,15 @@ class FuncCall(Call):
         self.name = name
         self.args = args
         self._keys = ("name", "args")
+
+
+class MethodCall(Call):
+
+    def __init__(self, base, name, args):
+        self.base = base
+        self.name = name
+        self.args = args
+        self._keys = ("base", "name", "args")
 
 
 class Arg(Node):

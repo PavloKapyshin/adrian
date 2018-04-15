@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 from . import (
     context, defs, layers, #object_protocol, analyzer,
     parser, syntax_sugar, loader) #interpreter, type_inference, loader)
@@ -24,6 +22,7 @@ def _update_context_args():
 
 def compile_from_string(input_code, *, stop_before):
     context_args = defs.DEFAULT_CONTEXT_ARGUMENTS
+    context_args["main_file_hash"] = utils.get_hash(input_code)
     current_ast = input_code
     for layer_cls, method_name in LAYERS:
         if stop_before == layer_cls:

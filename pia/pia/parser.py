@@ -542,7 +542,11 @@ def p_factor_1(content):
 
 def p_factor_2(content):
     """factor : factor DOT factor"""
-    content[0] = astlib.StructField(content[1], content[3])
+    if isinstance(content[3], astlib.Call):
+        content[0] = astlib.MethodCall(
+            content[1], content[3].name, content[3].args)
+    else:
+        content[0] = astlib.StructField(content[1], content[3])
 
 
 def p_factor_3(content):

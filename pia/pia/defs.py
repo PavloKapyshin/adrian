@@ -7,6 +7,8 @@ from . import astlib, env
 
 MANGLING_PREFIX_LEN = 6
 
+ADRIAN_FILE_EXTENSION = "adr"
+
 PRELUDE = "prelude"
 NUMBER = "Number"
 STRING = "String"

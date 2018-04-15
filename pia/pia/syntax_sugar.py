@@ -3,7 +3,7 @@ from .utils import A
 
 
 def _e(expr):
-    if expr in A(astlib.NameCall):
+    if expr in A(astlib.Call):
         expr.args = [e(arg) for arg in expr.args]
         return expr
     return expr
@@ -63,8 +63,8 @@ class SyntaxSugar(layers.Layer):
     def func_call(self, stmt):
         yield e(stmt)
 
-    @layers.register(astlib.StructFuncCall)
-    def struct_func_call(self, stmt):
+    @layers.register(astlib.MethodCall)
+    def method_call(self, stmt):
         yield e(stmt)
 
     def callable_decl(self, stmt):
