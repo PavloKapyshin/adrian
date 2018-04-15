@@ -1,5 +1,5 @@
 from . import (
-    context, defs, layers, #object_protocol, analyzer,
+    context, defs, layers, object_protocol, # analyzer,
     parser, syntax_sugar, loader) #interpreter, type_inference, loader)
 
 
@@ -7,7 +7,7 @@ LAYERS = (
     (parser.Parser, "parse"),
     (syntax_sugar.SyntaxSugar, "transform_ast"),
     (loader.Loader, "expand_ast"),
-    # (object_protocol.ObjectProtocol, "transform_ast"),
+    (object_protocol.ObjectProtocol, "transform_ast"),
     # (analyzer.Analyzer, "transform_ast"),
     # (type_inference.TypeInference, "transform_ast"),
     # (interpreter.Main, "proceed")
@@ -39,7 +39,6 @@ def compile_from_string(input_code, *, stop_before, stop_after):
         if stop_after == layer_cls:
             return current_ast
         context_args = _update_context_args()
-    print(current_ast)
 
 
 def _read_file(file_name):

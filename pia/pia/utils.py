@@ -19,8 +19,7 @@ def partition(pred, iterable):
     return list(filter(pred, t1)), list(itertools.filterfalse(pred, t2))
 
 
-_is_field_stmt = lambda stmt: (
-    stmt in A(astlib.Decl) and stmt.decltype == astlib.DeclT.field)
+_is_field_stmt = lambda stmt: stmt in A(astlib.FieldDecl)
 
 
 def split_body(body):
@@ -38,8 +37,8 @@ def nodetype_from_decl(declt):
 
 
 def scroll_to_parent(node):
-    if node in A(astlib.DataMember):
-        return scroll_to_parent(node.parent)
+    if node in A(astlib.StructField):
+        return scroll_to_parent(node.struct)
     return node
 
 

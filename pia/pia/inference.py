@@ -65,9 +65,9 @@ def _infer_general_type_from_adt_member(expr):
     return variable_info["type_"]
 
 
-def infer_type(expr):
+def infer_specific_type(expr):
     if expr in A(astlib.Ref):
-        return infer_type(expr.expr)
+        return infer_specific_type(expr.expr)
     elif expr in A(astlib.Callable):
         if expr.callabletype == astlib.CallableT.struct:
             return _infer_type_from_struct_func_call(
@@ -82,7 +82,7 @@ def infer_type(expr):
         var_info = env_api.variable_info(expr)
         type_ = var_info["type_"]
         if utils.is_adt(type_):
-            return infer_type(var_info["expr"])
+            return infer_specific_type(var_info["expr"])
         return type_
     elif expr in A(astlib.DataMember):
         if expr.datatype == astlib.DataT.struct:
@@ -96,7 +96,7 @@ def infer_type(expr):
     elif expr in A(astlib.PyTypeCall):
         return astlib.PyType(expr.name)
     elif expr in A(astlib.AdtMember):
-        return infer_type(expr.member)
+        return infer_specific_type(expr.member)
     elif expr in A(dict):
         if "type_" in expr:
             return expr["type_"]
@@ -104,9 +104,9 @@ def infer_type(expr):
     errors.cannot_infer_type(expr)
 
 
-def infer_general_type(expr):
+def infer_type(expr):
     if expr in A(astlib.Ref):
-        return infer_general_type(expr.expr)
+        return infer_type(expr.expr)
     elif expr in A(astlib.Callable):
         if expr.callabletype == astlib.CallableT.struct:
             return _infer_type_from_struct_func_call(

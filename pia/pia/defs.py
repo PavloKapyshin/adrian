@@ -46,9 +46,6 @@ COMMON_REGEX = "".join([
         for regex in (NAME_REGEX, FUNC_REGEX,
         TYPE_REGEX, MODULE_REGEX, METHOD_REGEX)]),
     ")"])
-T_STRING = "t"
-F_STRING = "f"
-U_STRING = "u"
 
 INIT_METHOD = "__init__"
 COPY_METHOD = "__copy__"
