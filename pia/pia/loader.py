@@ -32,8 +32,10 @@ def load_module(module_name):
     hash_ = context.loaded_modules.get(module_name, None)
     if hash_ is None:
         file_path = find_file(module_name)
+        prev_main_file_hash = context.main_file_hash
         pia = importlib.import_module("pia")
         nodes = pia.compile_from_file(str(file_path), stop_after=Loader)
+        context.main_file_hash = prev_main_file_hash
         context.loaded_lines.extend(nodes)
         hash_ = get_file_hash(file_path)
         context.loaded_modules[module_name] = hash_
@@ -83,10 +85,10 @@ def e(expr, hash_=None):
             hash_ = load_module(expr.module)
             return e(expr.member, hash_=hash_)
     elif expr in A(astlib.Name):
-        if expr not in (defs.TRUE, defs.FALSE, defs.REF):
+        if expr not in (defs.TRUE, defs.FALSE, defs.REF, defs.SELF):
             return n(expr, hash_=hash_)
     elif expr in A(astlib.FuncCall):
-        return astlib.FuncCall(n(expr.name, hash_=hash_), a(expr.args, hash_))
+        return astlib.FuncCall(e(expr.name, hash_=hash_), a(expr.args, hash_))
     elif expr in A(astlib.MethodCall):
         return astlib.MethodCall(
             e(expr.base, hash_=hash_), expr.name, a(expr.args))

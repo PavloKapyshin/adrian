@@ -1,6 +1,6 @@
 from . import (
-    context, defs, layers, object_protocol, # analyzer,
-    parser, syntax_sugar, loader) #interpreter, type_inference, loader)
+    context, defs, layers, object_protocol, analyzer,
+    parser, syntax_sugar, loader, interpreter)
 
 
 LAYERS = (
@@ -8,9 +8,8 @@ LAYERS = (
     (syntax_sugar.SyntaxSugar, "transform_ast"),
     (loader.Loader, "expand_ast"),
     (object_protocol.ObjectProtocol, "transform_ast"),
-    # (analyzer.Analyzer, "transform_ast"),
-    # (type_inference.TypeInference, "transform_ast"),
-    # (interpreter.Main, "proceed")
+    (analyzer.Analyzer, "transform_ast"),
+    (interpreter.Main, "proceed")
 )
 
 

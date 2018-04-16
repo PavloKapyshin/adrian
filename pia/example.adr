@@ -1,1 +1,2 @@
 let a = 1
+py#print(a.data)

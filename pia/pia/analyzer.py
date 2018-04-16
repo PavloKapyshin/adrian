@@ -1,8 +1,42 @@
 """Performs type inference and context-sensitive analysis."""
 
-from . import astlib, layers, inference, env_api
+from . import astlib, layers, inference, env_api, utils, defs
 from .context import context
 from .utils import A
+
+
+def make_py_call(call):
+    if call.name in A(astlib.PyType):
+        return astlib.PyTypeCall(call.name.type_, a(call.args))
+    return astlib.PyFuncCall(call.name.name, a(call.args))
+
+
+def e_call(expr):
+    if expr.name in A(astlib.PyObject):
+        result = make_py_call(expr)
+        return result
+    call_args = a(expr.args)
+    if expr in A(astlib.FuncCall):
+        if expr.name == defs.REF:
+            return astlib.Ref(call_args[0])
+        elif utils.is_type(expr.name):
+            return astlib.StructFuncCall(
+                expr.name, defs.INIT_METHOD, call_args)
+        return astlib.FuncCall(expr.name, call_args)
+    return astlib.StructFuncCall(
+        inference.infer_type(expr.base), expr.name, [expr.base] + expr.args)
+
+
+def e_struct_field(expr):
+    if expr.struct in A(astlib.Name):
+        if utils.is_adt(expr.struct):
+            return astlib.AdtMember(expr.struct, e(expr.field))
+    elif expr.struct in A(astlib.Call):
+        struct = e(expr.struct)
+        return astlib.StructFuncCall(
+            inference.infer_type(struct), expr.field.name,
+            [struct] + a(expr.field.args))
+    return astlib.StructField(e(expr.struct), expr.field)
 
 
 def t(type_):
@@ -22,8 +56,39 @@ def e(expr):
         expr_ = e(expr.expr)
         return astlib.StructFuncCall(
             inference.infer_type(expr_), defs.NOT_METHOD, [expr_])
-    # TODO
-    pass
+    elif expr in A(astlib.Name):
+        if expr in (defs.TRUE, defs.FALSE):
+            return astlib.PyConstant(str(expr))
+    elif expr in A(astlib.Call):
+        return e_call(expr)
+    elif expr in A(astlib.StructField):
+        return e_struct_field(expr)
+    elif expr in A(astlib.Expr):
+        left = e(expr.left)
+        if expr.op == defs.IS:
+            return astlib.Is(left, t(expr.right))
+        right = e(expr.right)
+        return astlib.StructFuncCall(
+            inference.infer_type(left), defs.OP_TO_METHOD[expr.op],
+            [left, right])
+    elif expr in A(astlib.Literal):
+        if expr.type_ == astlib.LiteralT.vector:
+            return astlib.Literal(expr.type_, a(expr.literal))
+    return expr
+
+
+def a(args):
+    return [e(arg) for arg in args]
+
+
+def decl_a(args):
+    return [(name, t(type_)) for name, type_ in args]
+
+
+def infer(type_, expr):
+    if type_ in A(astlib.Empty):
+        return inference.infer_type(expr)
+    return t(type_)
 
 
 class Analyzer(layers.Layer):
@@ -85,7 +150,8 @@ class Analyzer(layers.Layer):
         yield astlib.Cond(if_stmt, elifs_, else_stmt)
 
     def decl(self, stmt):
-        type_, expr = t(stmt.type_), e(stmt.expr)
+        expr = e(stmt.expr)
+        type_ = infer(stmt.type_, expr)
         env_api.register(stmt, type_=type_, expr=expr)
         yield type(stmt)(stmt.name, type_, expr)
 

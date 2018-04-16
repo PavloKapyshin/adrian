@@ -44,8 +44,7 @@ _NO_SUCH_MODULE_MEMBER = "no member {member} in module {module_name}"
 _WRONG_NODETYPE = (
     "found name {name}, but it has non acceptable nodetype {nodetype}")
 _CANNOT_GET_INFO = "cannot find info for {node} ({func})"
-_CANNOT_INFER_TYPE = "cannot infer type"
-_CANNOT_INFER_EXPR = "cannot infer expression"
+_CANNOT_INFER_TYPE = "cannot infer type from {expr}"
 _CANNOT_FIND_FILE = "cannot find file {file_name}"
 _CANNOT_REASSIGN_NAME = "cannot reassign {name}"
 _LATER = "not implemented, wait for v{version}"
@@ -64,8 +63,7 @@ args_number_mismatch = _error_maker(_ARGS_NUMBER_MISMATCH, "got", "expected")
 
 wrong_nodetype = _error_maker(_WRONG_NODETYPE, "name", "nodetype")
 cannot_get_info = _error_maker(_CANNOT_GET_INFO, "node", "func")
-cannot_infer_type = _error_maker(_CANNOT_INFER_TYPE)
-cannot_infer_expr = _error_maker(_CANNOT_INFER_EXPR)
+cannot_infer_type = _error_maker(_CANNOT_INFER_TYPE, "expr")
 
 cannot_reassign_name = _error_maker(_CANNOT_REASSIGN_NAME, "name")
 cannot_find_file = _error_maker(_CANNOT_FIND_FILE, "file_name")
