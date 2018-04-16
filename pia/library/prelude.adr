@@ -1,9 +1,15 @@
-struct Number {
-    data: py#Int
-}
-
 struct String {
     data: py#Str
+}
+
+
+protocol ConvertibleToString {
+    fun __toString__(): String
+}
+
+
+struct Number {
+    data: py#Int
 }
 
 struct Vector(a) {

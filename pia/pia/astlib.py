@@ -71,10 +71,8 @@ class _Name(collections.UserString):
 
 class Name(_Name):
 
-    def __init__(self, data, is_user_name=True, is_mangled=False):
+    def __init__(self, data):
         super().__init__(data)
-        self.is_user_name = is_user_name
-        self.is_mangled = is_mangled
 
 
 class Decl(Node):

@@ -5,6 +5,18 @@ from .context import context
 from .utils import A
 
 
+def value_from_ref(ref):
+    while ref in A(astlib.Ref):
+        ref = ref.expr
+    return ref
+
+
+def value_from_name(name):
+    if name in A(astlib.Name):
+        return context.env[name]["expr"]
+    return name
+
+
 _dict = {
     defs.OR_METHOD: lambda x, y: x or y,
     defs.AND_METHOD: lambda x, y: x and y,
@@ -46,9 +58,31 @@ class Main(layers.Layer):
             if value is not None:
                 return value
 
+    def value_from_struct_field(self, struct_field):
+        if struct_field in A(astlib.StructField):
+            return self.e_struct_field(struct_field)
+        return struct_field
+
     def py_list_append(self, append_call):
-        pass
-        # TODO
+        def _append_validate(dest, element):
+            dest = value_from_ref(dest)
+            expr = self.value_from_struct_field(value_from_name(dest))
+            element = self.value_from_struct_field(
+                value_from_name(
+                    value_from_ref(element)))
+            return dest, expr, element
+        dest, expr, element = _append_validate(
+            append_call.args[0], append_call.args[1])
+        if expr in A(astlib.PyTypeCall):
+            expr.args[0].literal.append(element)
+            if dest in A(astlib.Name):
+                context.env[dest]["expr"] = expr
+            else:
+                self.update_(
+                    utils.scroll_to_parent(dest), dest, expr)
+        elif expr in A(astlib.Name):
+            context.env[expr]["expr"].args[0].literal.append(
+                context.env[element]["expr"])
 
     def adr_to_py_py_method(self, struct_func_call):
         if expr.name == defs.NOT_METHOD:
@@ -85,6 +119,7 @@ class Main(layers.Layer):
             elif expr.name == defs.STR:
                 return expr.args[0].literal
             elif expr.name == defs.LIST:
+                print(expr)
                 return [self.adr_to_py(elem) for elem in expr.args[0].literal]
         elif expr in A(astlib.PyConstant):
             if expr.name == defs.TRUE:
@@ -108,8 +143,15 @@ class Main(layers.Layer):
             return self.adr_to_py(self.e(expr))
 
     def e_struct_field(self, expr):
-        pass
-        # TODO
+        struct = expr.struct
+        members = [expr.field]
+        while struct in A(astlib.StructField):
+            members.append(struct.field)
+            struct = struct.struct
+        root_expr = self.get_root_expr(struct)
+        for member in reversed(members):
+            root_expr = root_expr[member]["expr"]
+        return root_expr
 
     def e_ref(self, expr):
         if expr in A(astlib.StructField, astlib.Name):

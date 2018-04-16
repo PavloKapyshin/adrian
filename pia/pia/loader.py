@@ -50,7 +50,8 @@ def translate_to_py_object(node):
 
 def n(name, hash_=None):
     hash_ = hash_ or context.main_file_hash
-    return "_".join([hash_[:defs.MANGLING_PREFIX_LEN], str(name)])
+    return astlib.Name(
+        "_".join([hash_[:defs.MANGLING_PREFIX_LEN], str(name)]))
 
 
 def a(args, hash_=None):
