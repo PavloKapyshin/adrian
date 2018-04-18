@@ -4,7 +4,11 @@ from .utils import A
 
 def _e(expr):
     if expr in A(astlib.Call):
-        expr.args = [e(arg) for arg in expr.args]
+        if (expr.name in A(astlib.ModuleMember) and
+                expr.name.module in (defs.PY_MODULE, defs.PRELUDE)):
+            expr.args = [_e(arg) for arg in expr.args]
+        else:
+            expr.args = [e(arg) for arg in expr.args]
         return expr
     return expr
 
