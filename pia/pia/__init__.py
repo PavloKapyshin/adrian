@@ -46,6 +46,10 @@ def _read_file(file_name):
     return contents
 
 
-def compile_from_file(in_file, *, stop_before=None, stop_after=None):
-    return compile_from_string(
+def compile_from_file(
+        in_file, *, stop_before=None, stop_after=None, print_ast=False):
+    result = compile_from_string(
         _read_file(in_file), stop_before=stop_before, stop_after=stop_after)
+    if print_ast:
+        print(result)
+    return result

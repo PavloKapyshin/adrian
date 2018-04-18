@@ -18,10 +18,9 @@ def main():
             "loader": pia.loader.Loader,
             "syntax-sugar": pia.syntax_sugar.SyntaxSugar,
             "parser": pia.parser.Parser,
-            # "analyzer": pia.analyzer.Analyzer,
-            # "object-protocol": pia.object_protocol.ObjectProtocol,
-            # "type-inference": pia.type_inference.TypeInference,
-            # "interpreter": pia.interpreter.Main,
+            "analyzer": pia.analyzer.Analyzer,
+            "object-protocol": pia.object_protocol.ObjectProtocol,
+            "interpreter": pia.interpreter.Main,
         }.get(string, None)
 
     parser = argparse.ArgumentParser()
@@ -31,10 +30,13 @@ def main():
         "--stop-before", type=str, help="stop before layer")
     parser.add_argument(
         "--stop-after", type=str, help="stop after layer")
+    parser.add_argument(
+        "--print-ast", help="print ast after translation", action="store_true")
+
     args = parser.parse_args()
     pia.compile_from_file(
         args.in_file.name, stop_before=to_obj(args.stop_before),
-        stop_after=to_obj(args.stop_after))
+        stop_after=to_obj(args.stop_after), print_ast=args.print_ast)
 
 
 if __name__ == "__main__":

@@ -47,6 +47,9 @@ def py_to_adr(expr):
     if expr in A(int):
         return astlib.PyTypeCall(
             defs.INT, [astlib.Literal(astlib.LiteralT.number, str(expr))])
+    elif expr in A(str):
+        return astlib.PyTypeCall(
+            defs.STR, [astlib.Literal(astlib.LiteralT.string, expr)])
 
 
 class Main(layers.Layer):
@@ -84,7 +87,7 @@ class Main(layers.Layer):
             context.env[expr]["expr"].args[0].literal.append(
                 context.env[element]["expr"])
 
-    def adr_to_py_py_method(self, struct_func_call):
+    def adr_to_py_py_method(self, expr):
         if expr.name == defs.NOT_METHOD:
             return not self.adr_to_py(expr.args[0])
         elif expr.name == defs.APPEND:
@@ -119,7 +122,6 @@ class Main(layers.Layer):
             elif expr.name == defs.STR:
                 return expr.args[0].literal
             elif expr.name == defs.LIST:
-                print(expr)
                 return [self.adr_to_py(elem) for elem in expr.args[0].literal]
         elif expr in A(astlib.PyConstant):
             if expr.name == defs.TRUE:
@@ -139,7 +141,7 @@ class Main(layers.Layer):
             return self.adr_to_py(self.e(expr))
         elif expr in A(astlib.StructFuncCall):
             if expr.parent in A(astlib.PyType):
-                return adr_to_py_py_method(expr)
+                return self.adr_to_py_py_method(expr)
             return self.adr_to_py(self.e(expr))
 
     def e_struct_field(self, expr):
