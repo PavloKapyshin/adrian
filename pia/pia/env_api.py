@@ -7,8 +7,8 @@ def _check_info(info, request, nodetype_checker):
     if info is None:
         errors.unknown_name(request)
     nodetype = info["node_type"]
-    if not nodetype_checker(nodetype):
-        errors.wrong_nodetype(request, nodetype)
+    # if not nodetype_checker(nodetype):
+    #     errors.wrong_nodetype(request, nodetype)
 
 
 def _get_info_maker(nodetype_checker):

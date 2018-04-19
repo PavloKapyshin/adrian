@@ -1,29 +1,18 @@
-struct Vector(a) {
+struct LOL(a) {
     data: py#List
 
-    fun append(element: a): Void {
-        if element is py#Str {
-            py#print(py#Str("Added str"), element)
-        } elif element is py#Int {
-            py#print(py#Str("Added int"), element)
-        } else {
-            py#print(py#Str("I dont know"))
-        }
-        self.data.append(element)
-    }
-
-    fun __add__(other: Vector(a)): Vector(a) {
-        return Vector(self.data + other.data)
-    }
-
-    fun sameObj(): py#List {
-        return self.data
+    fun get(): a {
+        return py#Int(2)
     }
 }
 
-let a: Vector(py#Int) = Vector(py#List([py#Int(1)]))
-py#print(a.data)
-a.append(py#Int(2))
-py#print(a.data)
-a.append(py#Str("STRING"))
-py#print(a.data)
+
+let l: LOL(py#Int) = LOL(py#List([]))
+
+let a = l.get()
+if a is py#Int {
+    py#print(py#Str("OK"))
+} else {
+    py#print(py#Str("FAIL"))
+}
+py#print(a)
