@@ -103,7 +103,10 @@ class Main(layers.Layer):
         while struct in A(astlib.StructField):
             fields.append(struct.field)
             struct = struct.struct
-        root_expr = context.env[struct]["expr"]
+        if struct not in A(astlib.Name):
+            root_expr = self.e(struct)
+        else:
+            root_expr = context.env[struct]["expr"]
 
         if root_expr in A(astlib.Name):
             root_expr = self.e(root_expr)

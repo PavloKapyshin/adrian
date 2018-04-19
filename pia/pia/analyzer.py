@@ -31,11 +31,6 @@ def e_struct_field(expr):
     if expr.struct in A(astlib.Name):
         if utils.is_adt(expr.struct):
             return astlib.AdtMember(expr.struct, e(expr.field))
-    elif expr.struct in A(astlib.Call):
-        struct = e(expr.struct)
-        return astlib.StructFuncCall(
-            inference.infer_type(struct), expr.field.name,
-            [struct] + a(expr.field.args))
     return astlib.StructField(e(expr.struct), expr.field)
 
 
