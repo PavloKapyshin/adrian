@@ -13,8 +13,7 @@ def make_py_call(call):
 
 def e_call(expr):
     if expr.name in A(astlib.PyObject):
-        result = make_py_call(expr)
-        return result
+        return make_py_call(expr)
     call_args = a(expr.args)
     if expr in A(astlib.FuncCall):
         if expr.name == defs.REF:
@@ -24,7 +23,7 @@ def e_call(expr):
                 expr.name, defs.INIT_METHOD, call_args)
         return astlib.FuncCall(expr.name, call_args)
     return astlib.StructFuncCall(
-        inference.infer_type(expr.base), expr.name, [expr.base] + expr.args)
+        inference.infer_type(expr.base), expr.name, [expr.base] + call_args)
 
 
 def e_struct_field(expr):

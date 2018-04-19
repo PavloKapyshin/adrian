@@ -1,5 +1,16 @@
 struct Vector(a) {
     data: py#List
+
+    fun append(element: a): Void {
+        self.data.append(element)
+    }
 }
 
-py#print(Vector(py#List([py#Int(1)])).data)
+var listOfInts = Vector(
+    py#List([]))
+
+py#print(listOfInts.data)
+
+listOfInts.append(py#Int(1))
+
+py#print(listOfInts.data)
