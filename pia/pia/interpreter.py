@@ -50,6 +50,11 @@ def py_to_adr(expr):
     elif expr in A(str):
         return astlib.PyTypeCall(
             defs.STR, [astlib.Literal(astlib.LiteralT.string, expr)])
+    elif expr in A(list):
+        return astlib.PyTypeCall(
+            defs.LIST,
+            [astlib.Literal(
+                astlib.LiteralT.vector, [py_to_adr(elem) for elem in expr])])
 
 
 class Main(layers.Layer):

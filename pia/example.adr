@@ -6,11 +6,10 @@ struct Vector(a) {
     }
 }
 
-var listOfInts = Vector(
-    py#List([]))
+let a = py#List([py#Int(1)])
+let b = py#List([py#Int(2)])
+let c = a + b
 
-py#print(listOfInts.data)
-
-listOfInts.append(py#Int(1))
-
-py#print(listOfInts.data)
+py#print(a)
+py#print(b)
+py#print(c)
