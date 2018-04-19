@@ -4,12 +4,20 @@ struct Vector(a) {
     fun append(element: a): Void {
         self.data.append(element)
     }
+
+    fun __add__(other: Vector(a)): Vector(a) {
+        return Vector(self.data + other.data)
+    }
 }
 
-let a = py#List([py#Int(1)])
-let b = py#List([py#Int(2)])
+let a = Vector(py#List([py#Int(1)]))
+
+py#print(a.data)
+
+let b = Vector(py#List([py#Int(2)]))
+
+py#print(b.data)
+
 let c = a + b
 
-py#print(a)
-py#print(b)
-py#print(c)
+py#print(c.data)

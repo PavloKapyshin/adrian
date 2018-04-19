@@ -69,11 +69,11 @@ def t(type_, hash_=None):
             return t(type_.member, hash_=hash_)
     elif type_ in A(astlib.Name):
         if type_ not in (defs.VOID, defs.BOOL):
-            return n(type_, hash_=hash_), []
+            return n(type_, hash_=hash_)
     elif type_ in A(astlib.GenericType):
         return astlib.GenericType(
             t(type_.base, hash_=hash_),
-            [t(param, hash_=hash_) for param in type_.parameters])
+            [t(param, hash_=hash_) for param in type_.params])
     return type_
 
 
