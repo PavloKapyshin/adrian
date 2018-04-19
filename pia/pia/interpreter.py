@@ -142,9 +142,9 @@ class Main(layers.Layer):
         elif expr in A(astlib.Is):
             info = env_api.get_info(expr.expr)
             spec_type = info["spec_type"]
-            return (typelib.types_are_equal(type_, expr.type_) or
-                typelib.is_supertype(expr.type_, of=type_) or
-                typelib.is_subtype(expr.type_, of=type_))
+            return (typelib.types_are_equal(spec_type, expr.type_) or
+                typelib.is_supertype(expr.type_, of=spec_type) or
+                typelib.is_subtype(expr.type_, of=spec_type))
         elif expr in A(astlib.FuncCall):
             return self.adr_to_py(self.e(expr))
         elif expr in A(astlib.StructFuncCall):

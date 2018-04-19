@@ -119,13 +119,13 @@ class Loader(layers.Layer):
         self.b = layers.b(Loader)
 
     def if_stmt(self, stmt):
-        yield astlib.If(e(stmt.expr), self.b(stmt.body))
+        return astlib.If(e(stmt.expr), self.b(stmt.body))
 
     def elif_stmt(self, stmt):
-        yield astlib.Elif(e(stmt.expr), self.b(stmt.body))
+        return astlib.Elif(e(stmt.expr), self.b(stmt.body))
 
     def else_stmt(self, stmt):
-        yield astlib.Else(self.b(stmt.body))
+        return astlib.Else(self.b(stmt.body))
 
     @layers.register(astlib.Cond)
     def cond(self, stmt):

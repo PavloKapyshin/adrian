@@ -2,22 +2,28 @@ struct Vector(a) {
     data: py#List
 
     fun append(element: a): Void {
+        if element is py#Str {
+            py#print(py#Str("Added str"), element)
+        } elif element is py#Int {
+            py#print(py#Str("Added int"), element)
+        } else {
+            py#print(py#Str("I dont know"))
+        }
         self.data.append(element)
     }
 
     fun __add__(other: Vector(a)): Vector(a) {
         return Vector(self.data + other.data)
     }
+
+    fun sameObj(): py#List {
+        return self.data
+    }
 }
 
-let a = Vector(py#List([py#Int(1)]))
-
+let a: Vector(py#Int) = Vector(py#List([py#Int(1)]))
 py#print(a.data)
-
-let b = Vector(py#List([py#Int(2)]))
-
-py#print(b.data)
-
-let c = a + b
-
-py#print(c.data)
+a.append(py#Int(2))
+py#print(a.data)
+a.append(py#Str("STRING"))
+py#print(a.data)

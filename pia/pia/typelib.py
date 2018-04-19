@@ -8,7 +8,7 @@ def _types_are_equal_mismatch(type1, type2) -> bool:
         if type2 in A(astlib.GenericType):
             return types_are_equal(type1, type2.base)
         return False
-    elif type1 in A(astlib.LiteralType, astlib.Empty):
+    elif type1 in A(astlib.LiteralType, astlib.Empty, astlib.PyType):
         return False
     return _types_are_equal_mismatch(type2, type1)
 
@@ -21,6 +21,8 @@ def types_are_equal(type1, type2) -> bool:
             type1.base,
             type2.base)
     elif type1 in A(astlib.LiteralType) and type2 in A(astlib.LiteralType):
+        return type1.type_ == type2.type_
+    elif type1 in A(astlib.PyType) and type2 in A(astlib.PyType):
         return type1.type_ == type2.type_
     return _types_are_equal_mismatch(type1, type2)
 
