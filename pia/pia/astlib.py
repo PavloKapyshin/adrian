@@ -75,6 +75,14 @@ class Name(_Name):
         super().__init__(data)
 
 
+class StructValue(Node):
+
+    def __init__(self, type_, value):
+        self.type_ = type_
+        self.value = value
+        self._keys = ("type_", "value")
+
+
 class Decl(Node):
 
     def __init__(self, name, type_, expr):
@@ -332,15 +340,11 @@ class Is(Node):
         self._keys = ("expr", "type_")
 
 
-class Alloc(BaseNode):
+class Alloc(Node):
 
-    def __init__(self):
-        pass
-
-    def __str__(self):
-        return "Allocation"
-
-    __repr__ = __str__
+    def __init__(self, type_):
+        self.type_ = type_
+        self._keys = ("type_", )
 
 
 class PyObject(Node):

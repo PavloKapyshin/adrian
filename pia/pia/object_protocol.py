@@ -21,7 +21,7 @@ def complete_init_method(struct_decl, method_decl):
     rettype = to_type(struct_decl)
     return astlib.StructFuncDecl(
         method_decl.name, method_decl.args, rettype,
-        ([astlib.VarDecl(SELF, rettype, astlib.Alloc())] +
+        ([astlib.VarDecl(SELF, rettype, astlib.Alloc(rettype))] +
             method_decl.body + [astlib.Return(SELF)]))
 
 
@@ -35,7 +35,7 @@ def default_init_method(struct_decl):
         args.append((field.name, field.type_))
     return astlib.StructFuncDecl(
         astlib.Name(defs.INIT_METHOD), args, rettype,
-        ([astlib.VarDecl(SELF, rettype, astlib.Alloc())] +
+        ([astlib.VarDecl(SELF, rettype, astlib.Alloc(rettype))] +
             field_inits + [astlib.Return(SELF)]))
 
 

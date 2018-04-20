@@ -111,14 +111,16 @@ class Main(layers.Layer):
         if struct not in A(astlib.Name):
             root_expr = self.e(struct)
         else:
-            root_expr = context.env[struct]["expr"]
+            root_expr = context.env[struct]["expr"].value
 
         if root_expr in A(astlib.Name):
             root_expr = self.e(root_expr)
         if root_expr in A(astlib.StructField):
             root_expr = self.get_field_expr(root_expr)
         for field in reversed(fields):
-            root_expr = root_expr[field]["expr"]
+            if root_expr[field] in A(dict):
+                print(root_expr)
+            root_expr = root_expr[field].value
         return root_expr
 
     def adr_to_py(self, expr):
@@ -158,9 +160,9 @@ class Main(layers.Layer):
         while struct in A(astlib.StructField):
             members.append(struct.field)
             struct = struct.struct
-        root_expr = self.get_root_expr(struct)
+        root_expr = self.get_root_expr(struct).value
         for member in reversed(members):
-            root_expr = root_expr[member]["expr"]
+            root_expr = root_expr[member].value
         return root_expr
 
     def e_ref(self, expr):
@@ -169,12 +171,12 @@ class Main(layers.Layer):
         return self.e(expr)
 
     def e(self, expr):
-        if expr in A(dict):
-            if "expr" in expr:
-                return {**expr, **{"expr": self.e(expr["expr"])}}
+        if expr in A(astlib.StructValue):
+            return astlib.StructValue(expr.type_, self.e(expr.value))
+        elif expr in A(dict):
             return {key: self.e(val) for key, val in expr.items()}
         elif expr in A(astlib.Alloc):
-            return {}
+            return astlib.StructValue(expr.type_, {})
         elif expr in A(astlib.FuncCall):
             return self.func_call(expr)
         elif expr in A(astlib.StructFuncCall):
@@ -190,10 +192,8 @@ class Main(layers.Layer):
         return expr
 
     def init_member_info(self, expr=None, type_=None):
-        return {
-            "spec_type": type_ or inference.infer_spec_type(expr),
-            "expr": expr,
-        }
+        return astlib.StructValue(
+            type_ or inference.infer_spec_type(expr), expr)
 
     def get_root_expr(self, parent):
         root_expr = context.env[parent]["expr"]
@@ -213,14 +213,14 @@ class Main(layers.Layer):
     def prepare_for_setting(self, dest, expr):
         parent, members, root_expr = self.for_setting_prefix(dest)
         for member in reversed(members):
-            root_expr = root_expr[member]["expr"]
+            root_expr = root_expr[member].value
         if root_expr in A(astlib.StructField):
             root_expr = self.prepare_expr_for_setting(root_expr)
-        root_expr[dest.field] = self.init_member_info(
+        root_expr.value[dest.field] = self.init_member_info(
             expr=self.e(expr), type_=inference.infer_spec_type(expr))
         info = self.get_root_expr(parent)
         for member in reversed(members):
-            info[member]["expr"] = root_expr
+            info[member].value = root_expr
             root_expr = info
         return root_expr
 
@@ -251,15 +251,14 @@ class Main(layers.Layer):
 
     def register_decl(self, stmt):
         type_ = stmt.type_
-        spec_type = type_
-        if utils.is_adt(type_) or utils.is_protocol(type_):
-            spec_type = inference.infer_spec_type(stmt.expr)
+        expr = self.e(stmt.expr)
+        spec_type = inference.infer_spec_type(expr)
         context.env[stmt.name] = {
             "node_type": (astlib.NodeT.var
                 if stmt in A(astlib.VarDecl) else astlib.NodeT.let),
             "type_": type_,
             "spec_type": spec_type,
-            "expr": self.e(stmt.expr)
+            "expr": expr
         }
 
     @layers.register(astlib.FuncCall)
