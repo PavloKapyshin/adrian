@@ -1,18 +1,16 @@
-struct LOL(a) {
-    data: py#List
-
-    fun get(): a {
-        return py#Int(2)
-    }
+struct Some(a) {
+    field: a
+}
+struct None {}
+adt Maybe(a) {
+    Some(a), None
 }
 
-
-let l: LOL(py#Int) = LOL(py#List([]))
-
-let a = l.get()
-if a is py#Int {
-    py#print(py#Str("OK"))
-} else {
-    py#print(py#Str("FAIL"))
+struct LLNode(a) {
+    data: a
+    next: Maybe(LLNode(a))
 }
-py#print(a)
+
+let a = LLNode(py#Int(1), Maybe.None())
+
+py#print(a.data)

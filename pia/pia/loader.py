@@ -104,6 +104,8 @@ def e(expr, hash_=None):
         if expr.type_ == astlib.LiteralT.vector:
             return astlib.Literal(
                 expr.type_, a(expr.literal, hash_=hash_))
+    elif expr in A(astlib.AdtMember):
+        return astlib.AdtMember(e(expr.base), e(expr.member))
     return expr
 
 
@@ -148,7 +150,7 @@ class Loader(layers.Layer):
 
     @layers.register(astlib.AdtMember)
     def adt_member(self, stmt):
-        # TODO
+        print("YSE", stmt)
         yield stmt
 
     def decl(self, stmt):

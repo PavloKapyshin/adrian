@@ -17,7 +17,6 @@ def _infer_same(expr):
         return env_api.method_info(expr.parent, expr.name)["type_"]
     elif expr in A(astlib.StructValue):
         return expr.type_
-    print(type(expr))
     errors.cannot_infer_type(expr)
 
 

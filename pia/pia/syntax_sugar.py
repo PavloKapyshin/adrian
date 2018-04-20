@@ -1,8 +1,13 @@
-from . import astlib, layers, defs
+from . import astlib, layers, defs, utils, env_api
+from .context import context
 from .utils import A
 
 
 def _e(expr):
+    if expr in A(astlib.MethodCall):
+        if expr.base not in (defs.SELF,) and utils.is_adt(expr.base):
+            return astlib.AdtMember(
+                expr.base, astlib.FuncCall(expr.name, expr.args))
     if expr in A(astlib.Call):
         if (expr.name in A(astlib.ModuleMember) and
                 expr.name.module in (defs.PY_MODULE, defs.PRELUDE)):
@@ -46,6 +51,7 @@ class SyntaxSugar(layers.Layer):
         self.b = layers.b(SyntaxSugar)
 
     def decl(self, stmt):
+        env_api.register(stmt)
         yield type(stmt)(stmt.name, stmt.type_, e(stmt.expr))
 
     @layers.register(astlib.VarDecl)
@@ -73,8 +79,12 @@ class SyntaxSugar(layers.Layer):
         yield e(stmt)
 
     def callable_decl(self, stmt):
+        env_api.register(stmt)
+        +context.env
+        env_api.register_args(stmt.args)
         yield type(stmt)(
             stmt.name, stmt.args, stmt.rettype, self.b(stmt.body))
+        +context.env
 
     @layers.register(astlib.FuncDecl)
     def func_decl(self, stmt):
@@ -85,6 +95,8 @@ class SyntaxSugar(layers.Layer):
         yield from self.callable_decl(stmt)
 
     def data_decl(self, stmt):
+        env_api.register(stmt)
+        context.parent = stmt.name
         yield type(stmt)(
             stmt.name, stmt.parameters, stmt.protocols, self.b(stmt.body))
 
