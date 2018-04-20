@@ -118,8 +118,6 @@ class Main(layers.Layer):
         if root_expr in A(astlib.StructField):
             root_expr = self.get_field_expr(root_expr)
         for field in reversed(fields):
-            if root_expr[field] in A(dict):
-                print(root_expr)
             root_expr = root_expr[field].value
         return root_expr
 

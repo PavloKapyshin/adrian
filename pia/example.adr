@@ -6,11 +6,19 @@ adt Maybe(a) {
     Some(a), None
 }
 
-struct LLNode(a) {
-    data: a
-    next: Maybe(LLNode(a))
+struct LOL {
+    data: py#Int
+
+    fun ret(): Maybe(py#Int) {
+        if self.data == py#Int(0) {
+            return Maybe.None()
+        }
+        return Maybe.Some(self.data)
+    }
 }
 
-let a = LLNode(py#Int(1), Maybe.Some(LLNode(py#Int(2), Maybe.None())))
-
-py#print(a.data)
+let a = LOL(py#Int(0))
+let b = a.ret()
+if b is Some {
+    py#print(b.field)
+}

@@ -79,6 +79,30 @@ class SyntaxSugar(layers.Layer):
     def method_call(self, stmt):
         yield e(stmt)
 
+    @layers.register(astlib.While)
+    def while_(self, stmt):
+        yield astlib.While(e(stmt.expr), self.b(stmt.body))
+
+    def if_(self, stmt):
+        return astlib.If(e(stmt.expr), self.b(stmt.body))
+
+    def elif_(self, stmt):
+        return astlib.Elif(e(stmt.expr), self.b(stmt.body))
+
+    def else_(self, stmt):
+        return astlib.Else(self.b(stmt.body))
+
+    @layers.register(astlib.Cond)
+    def cond(self, stmt):
+        if_ = self.if_(stmt.if_)
+        elifs_ = []
+        for elif_ in stmt.elifs_:
+            elifs_.append(self.elif_(elif_))
+        else_ = stmt.else_
+        if else_ is not None:
+            else_ = self.else_(else_)
+        yield astlib.Cond(if_, elifs_, else_)
+
     def callable_decl(self, stmt):
         env_api.register(stmt)
         +context.env

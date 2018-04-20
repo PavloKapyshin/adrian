@@ -21,8 +21,12 @@ def _infer_same(expr):
 
 
 def infer_spec_type(expr):
+    if expr in A(astlib.AdtMember):
+        return infer_spec_type(expr.member)
     return _infer_same(expr)
 
 
 def infer_type(expr):
+    if expr in A(astlib.AdtMember):
+        return expr.base
     return _infer_same(expr)
