@@ -232,7 +232,7 @@ class Main(layers.Layer):
             expr = self.e(expr_)
             if name != defs.SELF:
                 expr = deepcopy(expr)
-            spec_type = inference.infer_spec_type(expr_)
+            spec_type = inference.infer_spec_type(expr)
             context.env[name] = {
                 "node_type": astlib.NodeT.arg,
                 "type_": type_,
