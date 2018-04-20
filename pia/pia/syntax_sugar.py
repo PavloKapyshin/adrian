@@ -7,7 +7,8 @@ def _e(expr):
     if expr in A(astlib.MethodCall):
         if expr.base not in (defs.SELF,) and utils.is_adt(expr.base):
             return astlib.AdtMember(
-                expr.base, astlib.FuncCall(expr.name, expr.args))
+                expr.base,
+                astlib.FuncCall(expr.name, [e(arg) for arg in expr.args]))
     if expr in A(astlib.Call):
         if (expr.name in A(astlib.ModuleMember) and
                 expr.name.module in (defs.PY_MODULE, defs.PRELUDE)):

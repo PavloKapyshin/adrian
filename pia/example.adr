@@ -11,6 +11,6 @@ struct LLNode(a) {
     next: Maybe(LLNode(a))
 }
 
-let a = LLNode(py#Int(1), Maybe.None())
+let a = LLNode(py#Int(1), Maybe.Some(LLNode(py#Int(2), Maybe.None())))
 
 py#print(a.data)
