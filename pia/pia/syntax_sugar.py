@@ -3,9 +3,17 @@ from .context import context
 from .utils import A
 
 
+def depends_on_self(expr):
+    if expr in A(astlib.Name):
+        return expr == defs.SELF
+    elif expr in A(astlib.StructField):
+        return depends_on_self(expr.struct)
+    return False
+
+
 def _e(expr):
     if expr in A(astlib.MethodCall):
-        if expr.base not in (defs.SELF,) and utils.is_adt(expr.base):
+        if not depends_on_self(expr.base) and utils.is_adt(expr.base):
             return astlib.AdtMember(
                 expr.base,
                 astlib.FuncCall(expr.name, [e(arg) for arg in expr.args]))

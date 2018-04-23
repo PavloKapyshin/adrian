@@ -15,11 +15,11 @@ def main():
     pia = importlib.import_module("pia")
     def to_obj(string):
         return {
-            "loader": pia.loader.Loader,
-            "syntax-sugar": pia.syntax_sugar.SyntaxSugar,
             "parser": pia.parser.Parser,
-            "analyzer": pia.analyzer.Analyzer,
+            "syntax-sugar": pia.syntax_sugar.SyntaxSugar,
+            "loader": pia.loader.Loader,
             "object-protocol": pia.object_protocol.ObjectProtocol,
+            "analyzer": pia.analyzer.Analyzer,
             "interpreter": pia.interpreter.Main,
         }.get(string, None)
 

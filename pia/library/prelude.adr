@@ -8,6 +8,11 @@ protocol ConvertibleToString {
 }
 
 
+fun print(source: ConvertibleToString): Void {
+    py#print(source.__toString__().data)
+}
+
+
 struct Number {
     data: py#Int
 }
