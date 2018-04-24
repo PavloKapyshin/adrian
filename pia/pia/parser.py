@@ -564,6 +564,11 @@ def p_dict(content):
     content[0] = astlib.Literal(astlib.LiteralT.dict_, content[2])
 
 
+def p_set(content):
+    """set : LBRACE arg_list RBRACE"""
+    content[0] = astlib.Literal(astlib.LiteralT.set_, set(content[2]))
+
+
 def p_inner_dict_1(content):
     """inner_dict : inner_dict_elem COMMA inner_dict"""
     content[0] = {**content[1], **content[3]}
@@ -590,6 +595,7 @@ def p_atom_1(content):
          | STRING
          | vector
          | dict
+         | set
          | module_member
     """
     content[0] = content[1]
