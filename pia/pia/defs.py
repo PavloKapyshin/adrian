@@ -17,6 +17,8 @@ VECTOR = "Vector"
 
 PY_MODULE = "py"
 PRINT = "print"
+TO_INT = "toInt"
+TO_STR = "toStr"
 APPEND = "append"
 LEN = "length"
 INT = "Int"

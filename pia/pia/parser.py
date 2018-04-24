@@ -559,11 +559,37 @@ def p_vector(content):
     content[0] = astlib.Literal(astlib.LiteralT.vector, content[2])
 
 
+def p_dict(content):
+    """dict : LBRACE inner_dict RBRACE"""
+    content[0] = astlib.Literal(astlib.LiteralT.dict_, content[2])
+
+
+def p_inner_dict_1(content):
+    """inner_dict : inner_dict_elem COMMA inner_dict"""
+    content[0] = {**content[1], **content[3]}
+
+
+def p_inner_dict_2(content):
+    """inner_dict : inner_dict_elem"""
+    content[0] = content[1]
+
+
+def p_inner_dict_3(content):
+    """inner_dict : empty"""
+    content[0] = dict()
+
+
+def p_inner_dict_elem(content):
+    """inner_dict_elem : bool_expr EQ bool_expr"""
+    content[0] = {content[1]: content[3]}
+
+
 def p_atom_1(content):
     """
     atom : INTEGER
          | STRING
          | vector
+         | dict
          | module_member
     """
     content[0] = content[1]

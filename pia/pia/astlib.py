@@ -19,6 +19,8 @@ class LiteralT(enum.Enum):
     number = 1
     string = 2
     vector = 3
+    dict_ = 4
+    set_ = 5
 
 
 AST = object()

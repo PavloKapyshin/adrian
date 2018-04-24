@@ -59,6 +59,22 @@ def py_to_adr(expr):
 
 class Main(layers.Layer):
 
+    def py_to_int(self, stmt):
+        argument = stmt.args[0]
+        while argument in A(astlib.Name, astlib.StructField, astlib.FuncCall):
+            argument = self.e(argument)
+        return astlib.PyTypeCall(
+            defs.INT,
+            [astlib.Literal(astlib.LiteralT.number, argument.args[0].literal)])
+
+    def py_to_str(self, stmt):
+        argument = stmt.args[0]
+        while argument in A(astlib.Name, astlib.StructField, astlib.FuncCall):
+            argument = self.e(argument)
+        return astlib.PyTypeCall(
+            defs.STR,
+            [astlib.Literal(astlib.LiteralT.string, argument.args[0].literal)])
+
     def b(self, body):
         reg = Main().get_registry()
         for stmt in body:
@@ -187,6 +203,8 @@ class Main(layers.Layer):
             return self.e_struct_field(expr)
         elif expr in A(astlib.AdtMember):
             return self.e(expr.member)
+        elif expr in A(astlib.PyFuncCall):
+            return self.py_func_call(expr)
         return expr
 
     def init_member_info(self, expr=None, type_=None):
@@ -334,6 +352,10 @@ class Main(layers.Layer):
             for arg in stmt.args[:-1]:
                 print(self.adr_to_py(arg), end=" ")
             print(self.adr_to_py(stmt.args[-1]))
+        elif stmt.name == defs.TO_INT:
+            return self.py_to_int(stmt)
+        elif stmt.name == defs.TO_STR:
+            return self.py_to_str(stmt)
         else:
             errors.later(errors.Version.v0m5.value)
 
