@@ -45,6 +45,16 @@ def unsugar_literal(literal):
         return _literal_to_struct_call(
             astlib.Name(defs.VECTOR), astlib.Name(defs.LIST), [astlib.Literal(
                 literal.type_, [e(lit) for lit in literal.literal])])
+    elif literal.type_ == astlib.LiteralT.dict_:
+        return _literal_to_struct_call(
+            astlib.Name(defs.DICT), astlib.Name(defs.DICT), [astlib.Literal(
+                literal.type_,
+                {e(key): e(val) for key, val in literal.literal.items()})])
+    elif literal.type_ == astlib.LiteralT.set_:
+        return _literal_to_struct_call(
+            astlib.Name(defs.SET), astlib.Name(defs.SET), [astlib.Literal(
+                literal.type_,
+                {e(key): e(val) for key, val in literal.literal.items()})])
     return literal
 
 

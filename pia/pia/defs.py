@@ -14,16 +14,19 @@ NUMBER = "Number"
 STRING = "String"
 VECTOR = "Vector"
 
+DICT = "Dict"
+SET = "Set"
 
 PY_MODULE = "py"
+INT = "Int"
+STR = "Str"
+LIST = "List"
+
 PRINT = "print"
 TO_INT = "toInt"
 TO_STR = "toStr"
 APPEND = "append"
 LEN = "length"
-INT = "Int"
-STR = "Str"
-LIST = "List"
 
 
 RESERVED_WORDS = {

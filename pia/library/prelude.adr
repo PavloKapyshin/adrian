@@ -1,3 +1,5 @@
+-- Core library. Don't use syntax sugar here.
+
 struct String {
     data: py#Str
 }

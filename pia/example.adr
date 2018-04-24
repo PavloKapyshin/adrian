@@ -1,3 +1,6 @@
-let a = {
-    "Hi", 2, [1, 2, 3], {1 = 2}
-}
+let a = py#Dict({
+    py#Str("Hi") = py#Int(2),
+    py#Int(3) = py#List([]),
+})
+
+py#print(a)

@@ -68,6 +68,11 @@ def e(expr):
     elif expr in A(astlib.Literal):
         if expr.type_ == astlib.LiteralT.vector:
             return astlib.Literal(expr.type_, a(expr.literal))
+        elif expr.type_ == astlib.LiteralT.set_:
+            return astlib.Literal(expr.type_, {e(elem) for elem in expr.literal})
+        elif expr.type_ == astlib.LiteralT.dict_:
+            return astlib.Literal(
+                expr.type_, {e(key): e(val) for key, val in expr.literal.items()})
     elif expr in A(astlib.AdtMember):
         return astlib.AdtMember(e(expr.base), e(expr.member))
     return expr

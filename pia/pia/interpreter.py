@@ -55,6 +55,16 @@ def py_to_adr(expr):
             defs.LIST,
             [astlib.Literal(
                 astlib.LiteralT.vector, [py_to_adr(elem) for elem in expr])])
+    elif expr in A(dict):
+        return astlib.PyTypeCall(
+            defs.DICT,
+            [astlib.Literal(
+                astlib.LiteralT.dict_, {py_to_adr(key): py_to_adr(val)
+                    for key, val in expr.items()})])
+    elif expr in A(set):
+        return astlib.PyTypeCall(
+            defs.SET,
+            [astlib.Literal(astlib.LiteralT.set_, map(py_to_adr, expr))])
 
 
 class Main(layers.Layer):
@@ -147,6 +157,12 @@ class Main(layers.Layer):
                 return expr.args[0].literal
             elif expr.name == defs.LIST:
                 return [self.adr_to_py(elem) for elem in expr.args[0].literal]
+            elif expr.name == defs.DICT:
+                return {
+                    self.adr_to_py(key): self.adr_to_py(val)
+                    for key, val in expr.args[0].literal.items()}
+            elif expr.name == defs.SET:
+                return {self.adr_to_py(elem) for elem in expr.args[0].literal}
         elif expr in A(astlib.PyConstant):
             if expr.name == defs.TRUE:
                 return True
