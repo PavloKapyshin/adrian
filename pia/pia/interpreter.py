@@ -1,4 +1,5 @@
 from copy import deepcopy
+import sys
 
 from . import astlib, layers, env_api, inference, errors, typelib, defs, utils
 from .context import context
@@ -166,6 +167,8 @@ class Main(layers.Layer):
         elif expr in A(astlib.PyConstant):
             if expr.name == defs.TRUE:
                 return True
+            elif expr.name == defs.ARGV:
+                return sys.argv
             return False
         elif expr in A(astlib.Ref):
             return self.adr_to_py(expr.expr)

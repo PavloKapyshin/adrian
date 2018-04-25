@@ -1,4 +1,4 @@
-from . import astlib, utils, env_api, errors
+from . import astlib, utils, env_api, errors, defs
 from .utils import A
 
 
@@ -11,6 +11,9 @@ def _infer_same(expr):
         return env_api.field_info(expr.struct, expr.field)["type_"]
     elif expr in A(astlib.PyTypeCall):
         return astlib.PyType(expr.name)
+    elif expr in A(astlib.PyConstant):
+        if expr.name == defs.ARGV:
+            return astlib.PyType(defs.LIST)
     elif expr in A(astlib.StructFuncCall):
         if expr.parent in A(astlib.PyObject):
             return expr.parent

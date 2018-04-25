@@ -59,6 +59,7 @@ def unsugar_literal(literal):
 
 
 def e(expr):
+    # TODO: support print
     if expr in A(astlib.Literal):
         return unsugar_literal(expr)
     return _e(expr)

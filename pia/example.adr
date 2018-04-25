@@ -1,6 +1,3 @@
-let a = py#Dict({
-    py#Str("Hi") = py#Int(2),
-    py#Int(3) = py#List([]),
-})
+let a = py#argv
 
 py#print(a)

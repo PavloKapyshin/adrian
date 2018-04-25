@@ -45,6 +45,8 @@ def load_module(module_name):
 def translate_to_py_object(node):
     if node in (defs.PRINT, defs.LEN, defs.TO_INT, defs.TO_STR):
         return astlib.PyFunc(node)
+    elif node in (defs.ARGV,):
+        return astlib.PyConstant(node)
     return astlib.PyType(node)
 
 

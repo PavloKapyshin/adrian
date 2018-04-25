@@ -15,8 +15,12 @@ fun print(source: ConvertibleToString): Void {
 }
 
 
-struct Number {
+struct Number is ConvertibleToString {
     data: py#Int
+
+    fun __toString__(): Void {
+        return String(py#toStr(self.data))
+    }
 }
 
 struct Vector(a) {

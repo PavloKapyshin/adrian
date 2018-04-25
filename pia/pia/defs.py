@@ -26,7 +26,10 @@ PRINT = "print"
 TO_INT = "toInt"
 TO_STR = "toStr"
 APPEND = "append"
-LEN = "length"
+LEN = "len"
+ARGV = "argv"
+READ_FILE = "readFile"
+WRITE_FILE = "writeFile"
 
 
 RESERVED_WORDS = {
