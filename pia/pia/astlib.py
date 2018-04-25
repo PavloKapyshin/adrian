@@ -398,10 +398,9 @@ class AdtMember(Node):
         self._keys = ("base", "member")
 
 
-class AnnotatedStructField(Node):
+class Subscript(Node):
 
-    def __init__(self, struct, field, type_):
-        self.struct = struct
-        self.field = field
-        self.type_ = type_
-        self._keys = ("struct", "field", "type_")
+    def __init__(self, base, sub):
+        self.base = base
+        self.sub = sub
+        self._keys = ("base", "sub")

@@ -1,3 +1,0 @@
-let string = py#Str("Hello, cruel world!")
-let val = string + py#Str("LOL")
-py#print(val)

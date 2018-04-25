@@ -550,7 +550,17 @@ def p_factor_2(content):
 
 
 def p_factor_3(content):
+    """factor : atom LBRACKET subscription RBRACKET"""
+    content[0] = astlib.Subscript(content[1], content[3])
+
+
+def p_factor_4(content):
     """factor : atom"""
+    content[0] = content[1]
+
+
+def p_subscription_1(content):
+    """subscription : atom"""
     content[0] = content[1]
 
 
