@@ -70,6 +70,27 @@ def py_to_adr(expr):
 
 class Main(layers.Layer):
 
+    def py_read_file(self, stmt):
+        file_name = stmt.args[0]
+        while file_name in A(astlib.Name, astlib.StructField, astlib.FuncCall):
+            file_name = self.e(file_name)
+        file_name = self.adr_to_py(file_name)
+        with open(file_name, "r") as file:
+            contents = file.read()
+        return py_to_adr(contents)
+
+    def py_write_file(self, stmt):
+        file_name = stmt.args[0]
+        while file_name in A(astlib.Name, astlib.StructField, astlib.FuncCall):
+            file_name = self.e(file_name)
+        file_name = self.adr_to_py(file_name)
+        contents = stmt.args[1]
+        while contents in A(astlib.Name, astlib.StructField, astlib.FuncCall):
+            contents = self.e(contents)
+        contents = self.adr_to_py(contents)
+        with open(file_name, "w") as file:
+            file.write(contents)
+
     def py_to_int(self, stmt):
         argument = stmt.args[0]
         while argument in A(astlib.Name, astlib.StructField, astlib.FuncCall):
@@ -377,6 +398,10 @@ class Main(layers.Layer):
             return self.py_to_str(stmt)
         elif stmt.name == defs.LEN:
             return py_to_adr(len(self.adr_to_py(stmt.args[0])))
+        elif stmt.name == defs.READ_FILE:
+            return self.py_read_file(stmt)
+        elif stmt.name == defs.WRITE_FILE:
+            self.py_write_file(stmt)
         else:
             errors.later(errors.Version.v0m5.value)
 

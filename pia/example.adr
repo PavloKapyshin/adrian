@@ -1,4 +1,2 @@
-let string = py#Str("Hello")
-let len = py#len(string)
-
-py#print(string, len)
+let contents = py#readFile(py#Str("file.txt"))
+py#print(py#Str("Contents:"), contents)

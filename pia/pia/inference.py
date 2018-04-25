@@ -14,6 +14,8 @@ def _infer_same(expr):
     elif expr in A(astlib.PyFuncCall):
         if expr.name == defs.LEN:
             return astlib.PyType(defs.INT)
+        elif expr.name == defs.READ_FILE:
+            return astlib.PyType(defs.STR)
     elif expr in A(astlib.PyConstant):
         if expr.name == defs.ARGV:
             return astlib.PyType(defs.LIST)
