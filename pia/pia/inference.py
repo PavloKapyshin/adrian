@@ -25,6 +25,8 @@ def _infer_same(expr):
         return env_api.method_info(expr.parent, expr.name)["type_"]
     elif expr in A(astlib.StructValue):
         return expr.type_
+    elif expr in A(astlib.FuncCall):
+        return env_api.fun_info(expr.name)["type_"]
     errors.cannot_infer_type(expr)
 
 

@@ -140,11 +140,35 @@ class Main(layers.Layer):
             context.env[expr]["expr"].args[0].literal.append(
                 context.env[element]["expr"])
 
+    def py_list_extend(self, extend_call):
+        def _append_validate(dest, elements):
+            dest = value_from_ref(dest)
+            expr = self.value_from_struct_field(value_from_name(dest))
+            elements = self.value_from_struct_field(
+                value_from_name(
+                    value_from_ref(elements)))
+            return dest, expr, elements
+        dest, expr, elements = _append_validate(
+            extend_call.args[0], extend_call.args[1])
+        elements = self.e(elements)
+        if expr in A(astlib.PyTypeCall):
+            expr.args[0].literal.extend(elements.args[0].literal)
+            if dest in A(astlib.Name):
+                context.env[dest]["expr"] = expr
+            else:
+                self.update_(
+                    utils.scroll_to_parent(dest), dest, expr)
+        elif expr in A(astlib.Name):
+            context.env[expr]["expr"].args[0].literal.extend(
+                context.env[elements]["expr"])
+
     def adr_to_py_py_method(self, expr):
         if expr.name == defs.NOT_METHOD:
             return not self.adr_to_py(expr.args[0])
         elif expr.name == defs.APPEND:
             self.py_list_append(expr)
+        elif expr.name == defs.EXTEND:
+            self.py_list_extend(expr)
         else:
             return _py_method_2arg(
                 expr.name, self.adr_to_py(expr.args[0]),
