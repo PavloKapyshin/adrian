@@ -11,6 +11,9 @@ def _infer_same(expr):
         return env_api.field_info(expr.struct, expr.field)["type_"]
     elif expr in A(astlib.PyTypeCall):
         return astlib.PyType(expr.name)
+    elif expr in A(astlib.PyFuncCall):
+        if expr.name == defs.LEN:
+            return astlib.PyType(defs.INT)
     elif expr in A(astlib.PyConstant):
         if expr.name == defs.ARGV:
             return astlib.PyType(defs.LIST)

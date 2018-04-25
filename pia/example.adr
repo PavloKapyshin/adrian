@@ -1,3 +1,4 @@
-let a = py#argv
+let string = py#Str("Hello")
+let len = py#len(string)
 
-py#print(a)
+py#print(string, len)

@@ -375,6 +375,8 @@ class Main(layers.Layer):
             return self.py_to_int(stmt)
         elif stmt.name == defs.TO_STR:
             return self.py_to_str(stmt)
+        elif stmt.name == defs.LEN:
+            return py_to_adr(len(self.adr_to_py(stmt.args[0])))
         else:
             errors.later(errors.Version.v0m5.value)
 
