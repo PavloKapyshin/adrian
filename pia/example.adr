@@ -1,0 +1,3 @@
+let string = py#Str("Hello, cruel world!")
+let val = string.split(py#Str(" "))
+py#print(val)

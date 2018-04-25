@@ -71,38 +71,25 @@ def py_to_adr(expr):
 class Main(layers.Layer):
 
     def py_read_file(self, stmt):
-        file_name = stmt.args[0]
-        while file_name in A(astlib.Name, astlib.StructField, astlib.FuncCall):
-            file_name = self.e(file_name)
-        file_name = self.adr_to_py(file_name)
+        file_name = self.adr_to_py(self.unsugar(stmt.args[0]))
         with open(file_name, "r") as file:
             contents = file.read()
         return py_to_adr(contents)
 
     def py_write_file(self, stmt):
-        file_name = stmt.args[0]
-        while file_name in A(astlib.Name, astlib.StructField, astlib.FuncCall):
-            file_name = self.e(file_name)
-        file_name = self.adr_to_py(file_name)
-        contents = stmt.args[1]
-        while contents in A(astlib.Name, astlib.StructField, astlib.FuncCall):
-            contents = self.e(contents)
-        contents = self.adr_to_py(contents)
+        file_name = self.adr_to_py(self.unsugar(stmt.args[0]))
+        contents = self.adr_to_py(self.unsugar(stmt.args[1]))
         with open(file_name, "w") as file:
             file.write(contents)
 
     def py_to_int(self, stmt):
-        argument = stmt.args[0]
-        while argument in A(astlib.Name, astlib.StructField, astlib.FuncCall):
-            argument = self.e(argument)
+        argument = self.unsugar(stmt.args[0])
         return astlib.PyTypeCall(
             defs.INT,
             [astlib.Literal(astlib.LiteralT.number, argument.args[0].literal)])
 
     def py_to_str(self, stmt):
-        argument = stmt.args[0]
-        while argument in A(astlib.Name, astlib.StructField, astlib.FuncCall):
-            argument = self.e(argument)
+        argument = self.unsugar(stmt.args[0])
         return astlib.PyTypeCall(
             defs.STR,
             [astlib.Literal(astlib.LiteralT.string, argument.args[0].literal)])
@@ -162,6 +149,16 @@ class Main(layers.Layer):
             context.env[expr]["expr"].args[0].literal.extend(
                 context.env[elements]["expr"])
 
+    def py_str_split(self, stmt):
+        source = self.adr_to_py(self.unsugar(stmt.args[0]))
+        by = self.adr_to_py(self.unsugar(stmt.args[1]))
+        return source.split(by)
+
+    def unsugar(self, arg):
+        while arg in A(astlib.Name, astlib.StructField, astlib.FuncCall):
+            arg = self.e(arg)
+        return arg
+
     def adr_to_py_py_method(self, expr):
         if expr.name == defs.NOT_METHOD:
             return not self.adr_to_py(expr.args[0])
@@ -169,6 +166,8 @@ class Main(layers.Layer):
             self.py_list_append(expr)
         elif expr.name == defs.EXTEND:
             self.py_list_extend(expr)
+        elif expr.name == defs.SPLIT:
+            return self.py_str_split(expr)
         else:
             return _py_method_2arg(
                 expr.name, self.adr_to_py(expr.args[0]),
