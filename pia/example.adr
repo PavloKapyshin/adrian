@@ -1,0 +1,3 @@
+let a = py#List([py#Int(1)])
+let elem: py#Int = a[0]
+py#print(a, elem)

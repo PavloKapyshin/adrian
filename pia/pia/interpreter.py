@@ -247,6 +247,9 @@ class Main(layers.Layer):
             return expr
         return self.e(expr)
 
+    def adr_to_py_index(self, idx):
+        return int(idx.literal)
+
     def e(self, expr):
         if expr in A(astlib.StructValue):
             return astlib.StructValue(expr.type_, self.e(expr.value))
@@ -268,6 +271,9 @@ class Main(layers.Layer):
             return self.e(expr.member)
         elif expr in A(astlib.PyFuncCall):
             return self.py_func_call(expr)
+        elif expr in A(astlib.Subscript):
+            return self.e(expr.base).args[0].literal[
+                self.adr_to_py_index(expr.sub)]
         return expr
 
     def init_member_info(self, expr=None, type_=None):
@@ -319,10 +325,20 @@ class Main(layers.Layer):
                 "expr": expr
             }
 
+    def update_subscript(self, subs, expr):
+        # TODO: support StructField in subs.base
+        expr_ = self.unsugar(context.env[subs.base]["expr"])
+        expr_ = self.adr_to_py(expr_)
+        sub = self.adr_to_py_index(subs.sub)
+        expr_[sub] = self.adr_to_py(expr)
+        context.env[subs.base]["expr"] = py_to_adr(expr_)
+
     def register_assignment(self, stmt):
         if stmt.left in A(astlib.StructField):
             root = utils.scroll_to_parent(stmt.left.struct)
             self.update_(root, stmt.left, self.e(stmt.right))
+        elif stmt.left in A(astlib.Subscript):
+            self.update_subscript(stmt.left, stmt.right)
         else:
             context.env[stmt.left]["expr"] = self.e(stmt.right)
             context.env[stmt.left]["spec_type"] = inference.infer_spec_type(
