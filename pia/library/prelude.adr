@@ -20,8 +20,17 @@ protocol ConvertibleToString {
 }
 
 
-fun print(source: ConvertibleToString): Void {
-    py#print(source.__toString__().data)
+adt InternalString {
+    String, ConvertibleToString
+}
+
+
+fun print(source: InternalString): Void {
+    if source is String {
+        py#print(source.data)
+    } else {
+        py#print(source.__toString__().data)
+    }
 }
 
 

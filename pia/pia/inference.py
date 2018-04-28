@@ -35,6 +35,10 @@ def _infer_same(expr):
 def infer_spec_type(expr):
     if expr in A(astlib.AdtMember):
         return infer_spec_type(expr.member)
+    elif expr in A(astlib.Name):
+        return env_api.variable_info(expr)["spec_type"]
+    elif expr in A(astlib.StructField):
+        return env_api.field_info(expr.struct, expr.field)["spec_type"]
     return _infer_same(expr)
 
 

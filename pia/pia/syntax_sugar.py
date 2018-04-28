@@ -62,6 +62,11 @@ def e(expr):
     # TODO: support print
     if expr in A(astlib.Literal):
         return unsugar_literal(expr)
+    elif expr in A(astlib.FuncCall):
+        if expr.name in A(astlib.Name) and expr.name == defs.PRINT:
+            return astlib.FuncCall(
+                astlib.ModuleMember(defs.PRELUDE, expr.name),
+                list(map(e, expr.args)))
     return _e(expr)
 
 
