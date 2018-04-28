@@ -7,19 +7,32 @@ from . import astlib, env
 
 MANGLING_PREFIX_LEN = 6
 
+ADRIAN_FILE_EXTENSION = "adr"
+
 PRELUDE = "prelude"
 NUMBER = "Number"
 STRING = "String"
 VECTOR = "Vector"
 
+DICT = "Dict"
+SET = "Set"
 
 PY_MODULE = "py"
-PRINT = "print"
-APPEND = "append"
-LEN = "length"
 INT = "Int"
 STR = "Str"
 LIST = "List"
+MAYBE = "Maybe"
+
+PRINT = "print"
+TO_INT = "toInt"
+TO_STR = "toStr"
+APPEND = "append"
+EXTEND = "extend"
+SPLIT = "split"
+LEN = "len"
+ARGV = "argv"
+READ_FILE = "readFile"
+WRITE_FILE = "writeFile"
 
 
 RESERVED_WORDS = {
@@ -44,10 +57,9 @@ COMMON_REGEX = "".join([
         for regex in (NAME_REGEX, FUNC_REGEX,
         TYPE_REGEX, MODULE_REGEX, METHOD_REGEX)]),
     ")"])
-T_STRING = "t"
-F_STRING = "f"
-U_STRING = "u"
 
+GETITEM = "__getitem__"
+SETITEM = "__setitem__"
 INIT_METHOD = "__init__"
 COPY_METHOD = "__copy__"
 ADD_METHOD = "__add__"
@@ -66,6 +78,7 @@ NOT_METHOD = "__not__"
 SELF = "self"
 REF = "ref"
 BOOL = "Bool"
+VOID = "Void"
 TRUE = "True"
 FALSE = "False"
 IS = "is"
@@ -91,4 +104,6 @@ DEFAULT_CONTEXT_ARGUMENTS = {
     "env": copy.deepcopy(ENV),
     "exit_on_error": False,
     "module_paths": DEFAULT_MODULE_PATHS,
+    "loaded_lines": [],
+    "loaded_modules": {},
 }

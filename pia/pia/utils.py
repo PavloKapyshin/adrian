@@ -1,4 +1,5 @@
 import itertools
+import hashlib
 
 from . import astlib, errors
 from .context import context
@@ -18,8 +19,7 @@ def partition(pred, iterable):
     return list(filter(pred, t1)), list(itertools.filterfalse(pred, t2))
 
 
-_is_field_stmt = lambda stmt: (
-    stmt in A(astlib.Decl) and stmt.decltype == astlib.DeclT.field)
+_is_field_stmt = lambda stmt: stmt in A(astlib.FieldDecl)
 
 
 def split_body(body):
@@ -37,8 +37,8 @@ def nodetype_from_decl(declt):
 
 
 def scroll_to_parent(node):
-    if node in A(astlib.DataMember):
-        return scroll_to_parent(node.parent)
+    if node in A(astlib.StructField):
+        return scroll_to_parent(node.struct)
     return node
 
 
@@ -68,3 +68,9 @@ is_struct = _is_of_nodetype(astlib.NodeT.struct)
 is_fun = _is_of_nodetype(astlib.NodeT.fun)
 is_var = _is_of_nodetype(astlib.NodeT.var)
 is_let = _is_of_nodetype(astlib.NodeT.let)
+
+
+def get_hash(data):
+    hash_ = hashlib.new("md5")
+    hash_.update(bytes(data, "utf-8"))
+    return hash_.hexdigest()

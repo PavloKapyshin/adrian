@@ -1,5 +1,4 @@
 import enum
-
 import collections
 
 
@@ -16,10 +15,12 @@ class NodeT(enum.Enum):
 
 
 @enum.unique
-class LT(enum.Enum):
+class LiteralT(enum.Enum):
     number = 1
     string = 2
     vector = 3
+    dict_ = 4
+    set_ = 5
 
 
 AST = object()
@@ -42,6 +43,14 @@ class Node(BaseNode):
 
     def __hash__(self):
         return hash(str(self))
+
+    def __eq__(self, other):
+        if isinstance(self, type(other)):
+            for member in self._keys:
+                if getattr(self, member) != getattr(other, member):
+                    return False
+            return True
+        return False
 
     __repr__ = __str__
 
@@ -72,10 +81,16 @@ class _Name(collections.UserString):
 
 class Name(_Name):
 
-    def __init__(self, data, is_user_name=True, is_mangled=False):
+    def __init__(self, data):
         super().__init__(data)
-        self.is_user_name = is_user_name
-        self.is_mangled = is_mangled
+
+
+class StructValue(Node):
+
+    def __init__(self, type_, value):
+        self.type_ = type_
+        self.value = value
+        self._keys = ("type_", "value")
 
 
 class Decl(Node):
@@ -131,12 +146,12 @@ class StructFuncDecl(CallableDecl):
 
 class DataDecl(Node):
 
-    def __init__(self, name, params, protocols, body):
+    def __init__(self, name, parameters, protocols, body):
         self.name = name
-        self.params = params
+        self.parameters = parameters
         self.protocols = protocols
         self.body = body
-        self._keys = ("name", "params", "protocols", "body")
+        self._keys = ("name", "parameters", "protocols", "body")
 
 
 class StructDecl(DataDecl):
@@ -167,11 +182,11 @@ class StructField(Node):
         self._keys = ("struct", "field")
 
 
-class NameCall(Node):
+class Call(Node):
     pass
 
 
-class StructFuncCall(NameCall):
+class StructFuncCall(Call):
 
     def __init__(self, parent, name, args):
         self.parent = parent
@@ -180,7 +195,7 @@ class StructFuncCall(NameCall):
         self._keys = ("parent", "name", "args")
 
 
-class FuncCall(NameCall):
+class FuncCall(Call):
 
     def __init__(self, name, args):
         self.name = name
@@ -188,12 +203,13 @@ class FuncCall(NameCall):
         self._keys = ("name", "args")
 
 
-class Arg(Node):
+class MethodCall(Call):
 
-    def __init__(self, name, type_):
+    def __init__(self, base, name, args):
+        self.base = base
         self.name = name
-        self.type_ = type_
-        self._keys = ("name", "type_")
+        self.args = args
+        self._keys = ("base", "name", "args")
 
 
 class Empty(BaseNode):
@@ -334,15 +350,11 @@ class Is(Node):
         self._keys = ("expr", "type_")
 
 
-class Alloc(BaseNode):
+class Alloc(Node):
 
-    def __init__(self):
-        pass
-
-    def __str__(self):
-        return "Allocation"
-
-    __repr__ = __str__
+    def __init__(self, type_):
+        self.type_ = type_
+        self._keys = ("type_", )
 
 
 class PyObject(Node):
@@ -394,27 +406,9 @@ class AdtMember(Node):
         self._keys = ("base", "member")
 
 
-class AnnotatedName(Node):
+class Subscript(Node):
 
-    def __init__(self, name, type_):
-        self.name = name
-        self.type_ = type_
-        self._keys = ("name", "type_")
-
-    def __eq__(self, other):
-        if isinstance(other, str):
-            return self.name == other
-        elif isinstance(other, Name):
-            return other == self.name
-        elif isinstance(other, AnnotatedName):
-            return self.name == other.name
-        return False
-
-
-class AnnotatedStructField(Node):
-
-    def __init__(self, struct, field, type_):
-        self.struct = struct
-        self.field = field
-        self.type_ = type_
-        self._keys = ("struct", "field", "type_")
+    def __init__(self, base, sub):
+        self.base = base
+        self.sub = sub
+        self._keys = ("base", "sub")

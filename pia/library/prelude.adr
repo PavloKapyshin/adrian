@@ -1,9 +1,45 @@
-struct Number {
-    data: py#Int
+-- Core library. Don't use syntax sugar here.
+
+struct Some(a) {
+    data: a
 }
+
+struct None {}
+
+adt Maybe(a) {
+    Some(a), None
+}
+
 
 struct String {
     data: py#Str
+}
+
+protocol ConvertibleToString {
+    fun __toString__(): String
+}
+
+
+adt InternalString {
+    String, ConvertibleToString
+}
+
+
+fun print(source: InternalString): Void {
+    if source is String {
+        py#print(source.data)
+    } else {
+        py#print(source.__toString__().data)
+    }
+}
+
+
+struct Number is ConvertibleToString {
+    data: py#Int
+
+    fun __toString__(): Void {
+        return String(py#toStr(self.data))
+    }
 }
 
 struct Vector(a) {
@@ -11,5 +47,13 @@ struct Vector(a) {
 
     fun append(element: a): Void {
         self.data.append(element)
+    }
+
+    fun __getitem__(index: Number): Maybe(a) {
+        let got: py#Maybe = self.data[index]
+        if got is py#None {
+            return Maybe.None()
+        }
+        return Maybe.Some(got)
     }
 }

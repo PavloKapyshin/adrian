@@ -7,8 +7,8 @@ def _check_info(info, request, nodetype_checker):
     if info is None:
         errors.unknown_name(request)
     nodetype = info["node_type"]
-    if not nodetype_checker(nodetype):
-        errors.wrong_nodetype(request, nodetype)
+    # if not nodetype_checker(nodetype):
+    #     errors.wrong_nodetype(request, nodetype)
 
 
 def _get_info_maker(nodetype_checker):
@@ -57,8 +57,8 @@ variable_info = _get_info_maker(is_variable)
 type_info = _get_info_maker(is_type)
 
 def parent_info(node):
-    if node in A(astlib.DataMember):
-        return parent_info(node.parent)
+    if node in A(astlib.StructField):
+        return parent_info(node.struct)
     elif node in A(astlib.Name):
         return variable_info(node)
     elif node in A(astlib.Ref):
@@ -75,8 +75,8 @@ def method_and_struct_info(struct, method_name):
 
 
 def field_info(parent, member):
-    if parent in A(astlib.DataMember):
-        parent_info_ = field_info(parent.parent, parent.member)
+    if parent in A(astlib.StructField):
+        parent_info_ = field_info(parent.struct, parent.field)
         parent_type = parent_info_["type_"]
     else:
         parent_info_ = parent_info(parent)
@@ -95,8 +95,8 @@ def method_info(struct, method_name):
 def get_info(expr):
     if expr in A(astlib.Name):
         return variable_info(expr)
-    elif expr in A(astlib.DataMember):
-        return field_info(expr.parent, expr.member)
+    elif expr in A(astlib.StructField):
+        return field_info(expr.struct, expr.field)
 
 
 # Unsafe API.
@@ -112,11 +112,10 @@ def _update_by_assignment(assignment, **kwds):
         # Just for checking.
         _ = variable_info(left)
         context.env[left]["expr"] = right
-    elif left in A(astlib.DataMember):
-        if left.datatype == astlib.DataT.adt:
-            context.env[left.parent]["expr"] = right
-        elif left.datatype == astlib.DataT.struct:
-            context.env[left] = right
+    elif left in A(astlib.StructField):
+        context.env[left] = right
+    elif left in A(astlib.AdtMember):
+        context.env[left.base]["expr"] = right
 
 
 def create_type_mapping(type_):
@@ -151,32 +150,38 @@ def register_args(args):
 def register(stmt, **kwds):
     if stmt in A(astlib.Assignment):
         _update_by_assignment(stmt, **kwds)
-    elif stmt in A(astlib.StructDecl):
+    elif stmt in A(astlib.DataDecl):
+        if stmt in A(astlib.StructDecl):
+            nodetype = astlib.NodeT.struct
+        elif stmt in A(astlib.AdtDecl):
+            nodetype = astlib.NodeT.adt
+        else:
+            nodetype = astlib.NodeT.protocol
         context.env[stmt.name] = {**{
-            "node_type": astlib.NodeT.struct,
-            "params": stmt.params,
+            "node_type": nodetype,
+            "params": stmt.parameters,
             "protocols": stmt.protocols,
             "fields": {},
             "methods": {}
         }, **kwds}
-    elif stmt.decltype in (astlib.DeclT.var, astlib.DeclT.let):
+    elif stmt in A(astlib.VarDecl, astlib.LetDecl):
         name = kwds.get("name", stmt.name)
         context.env[name] = {**{
             "node_type": (astlib.NodeT.var
-                if stmt.decltype == astlib.DeclT.var
+                if stmt in A(astlib.VarDecl)
                 else astlib.NodeT.let),
             "type_": stmt.type_,
             "mapping": create_type_mapping(stmt.type_),
             "expr": stmt.expr
         }, **kwds}
-    elif stmt.decltype in (astlib.DeclT.fun,):
+    elif stmt in A(astlib.FuncDecl):
         context.env[stmt.name] = {**{
             "node_type": astlib.NodeT.fun,
             "type_": stmt.rettype,
             "args": stmt.args,
             "body": stmt.body
         }, **kwds}
-    elif stmt.decltype in (astlib.DeclT.struct_func,):
+    elif stmt in A(astlib.StructFuncDecl):
         # Just for checking.
         _ = type_info(context.parent)
         context.env[context.parent]["methods"][stmt.name] = {**{
@@ -184,21 +189,9 @@ def register(stmt, **kwds):
             "args": stmt.args,
             "body": stmt.body
         }, **kwds}
-    elif stmt.decltype in (astlib.DeclT.field,):
+    elif stmt in A(astlib.FieldDecl):
         # Just for checking.
         _ = type_info(context.parent)
         context.env[context.parent]["fields"][stmt.name] = {**{
             "type_": stmt.type_,
-        }, **kwds}
-    elif stmt.decltype in (
-            astlib.DeclT.adt, astlib.DeclT.protocol):
-        if stmt.decltype == astlib.DeclT.adt:
-            nodetype = astlib.NodeT.adt
-        else:
-            nodetype = astlib.NodeT.protocol
-        context.env[stmt.name] = {**{
-            "node_type": nodetype,
-            "params": stmt.params,
-            "fields": {},
-            "methods": {}
         }, **kwds}

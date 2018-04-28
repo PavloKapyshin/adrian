@@ -1,23 +1,31 @@
-from copy import deepcopy
-
 from . import (
-    analyzer, context, defs, foreing_parser, layers, object_protocol,
-    parser, interpreter, type_inference)
+    context, defs, layers, object_protocol, analyzer,
+    parser, syntax_sugar, loader, interpreter)
 
 
 LAYERS = (
-    (parser.Parse, "parse"),
+    (parser.Parser, "parse"),
     (syntax_sugar.SyntaxSugar, "transform_ast"),
+    (loader.Loader, "expand_ast"),
     (object_protocol.ObjectProtocol, "transform_ast"),
     (analyzer.Analyzer, "transform_ast"),
-    (type_inference.TypeInference, "transform_ast"),
     (interpreter.Main, "proceed")
 )
 
 
-def compile_(current_ast, layers_, default_context_args):
-    context_args = default_context_args
-    for layer_cls, method_name in layers_:
+def _update_context_args():
+    # You should always pass default environment to
+    # layer to avoid possible bugs.
+    return {**context.modified_context_args(), **{"env": defs.ENV}}
+
+
+def compile_from_string(input_code, *, stop_before, stop_after):
+    context_args = defs.DEFAULT_CONTEXT_ARGUMENTS
+    context_args["main_file_hash"] = utils.get_hash(input_code)
+    current_ast = input_code
+    for layer_cls, method_name in LAYERS:
+        if stop_before == layer_cls:
+            return current_ast
         with context.new_context(**context_args):
             layer = layer_cls()
             if method_name == "parse":
@@ -27,19 +35,9 @@ def compile_(current_ast, layers_, default_context_args):
                     current_ast, registry=layer.get_registry())
                 if got is not None:
                     current_ast = list(got)
+        if stop_after == layer_cls:
+            return current_ast
         context_args = _update_context_args()
-
-
-def _update_context_args():
-    # You should always pass default environment to
-    # layer to avoid possible bugs.
-    return {
-        **context.modified_context_args(),
-        **{"env": deepcopy(defs.ENV)}}
-
-
-def compile_from_string(input_code):
-    compile_(input_code, LAYERS, defs.DEFAULT_CONTEXT_ARGUMENTS)
 
 
 def _read_file(file_name):
@@ -48,5 +46,10 @@ def _read_file(file_name):
     return contents
 
 
-def compile_from_file(in_file):
-    compile_from_string(_read_file(in_file))
+def compile_from_file(
+        in_file, *, stop_before=None, stop_after=None, print_ast=False):
+    result = compile_from_string(
+        _read_file(in_file), stop_before=stop_before, stop_after=stop_after)
+    if print_ast:
+        print(result)
+    return result

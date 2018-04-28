@@ -62,7 +62,7 @@ for tok_regex, const_name in sorted(
 
 def t_INTEGER(token):
     r"""[-]?\d*[\.]?\d+"""
-    token.value = astlib.Literal(astlib.LT.number, token.value)
+    token.value = astlib.Literal(astlib.LiteralT.number, token.value)
     return token
 
 
@@ -72,7 +72,7 @@ def cut_quotes(string):
 
 def t_STRING(token):
     r'''\"([^\\\n]|(\\.))*?\"'''
-    token.value = astlib.Literal(astlib.LT.string, cut_quotes(token.value))
+    token.value = astlib.Literal(astlib.LiteralT.string, cut_quotes(token.value))
     return token
 
 
@@ -542,17 +542,61 @@ def p_factor_1(content):
 
 def p_factor_2(content):
     """factor : factor DOT factor"""
-    content[0] = astlib.StructField(content[1], content[3])
+    if isinstance(content[3], astlib.Call):
+        content[0] = astlib.MethodCall(
+            content[1], content[3].name, content[3].args)
+    else:
+        content[0] = astlib.StructField(content[1], content[3])
 
 
 def p_factor_3(content):
+    """factor : atom LBRACKET subscription RBRACKET"""
+    content[0] = astlib.Subscript(content[1], content[3])
+
+
+def p_factor_4(content):
     """factor : atom"""
+    content[0] = content[1]
+
+
+def p_subscription_1(content):
+    """subscription : atom"""
     content[0] = content[1]
 
 
 def p_vector(content):
     """vector : LBRACKET arg_list RBRACKET"""
-    content[0] = astlib.Literal(astlib.LT.vector, content[2])
+    content[0] = astlib.Literal(astlib.LiteralT.vector, content[2])
+
+
+def p_dict(content):
+    """dict : LBRACE inner_dict RBRACE"""
+    content[0] = astlib.Literal(astlib.LiteralT.dict_, content[2])
+
+
+def p_set(content):
+    """set : LBRACE arg_list RBRACE"""
+    content[0] = astlib.Literal(astlib.LiteralT.set_, set(content[2]))
+
+
+def p_inner_dict_1(content):
+    """inner_dict : inner_dict_elem COMMA inner_dict"""
+    content[0] = {**content[1], **content[3]}
+
+
+def p_inner_dict_2(content):
+    """inner_dict : inner_dict_elem"""
+    content[0] = content[1]
+
+
+def p_inner_dict_3(content):
+    """inner_dict : empty"""
+    content[0] = dict()
+
+
+def p_inner_dict_elem(content):
+    """inner_dict_elem : bool_expr EQ bool_expr"""
+    content[0] = {content[1]: content[3]}
 
 
 def p_atom_1(content):
@@ -560,6 +604,8 @@ def p_atom_1(content):
     atom : INTEGER
          | STRING
          | vector
+         | dict
+         | set
          | module_member
     """
     content[0] = content[1]
