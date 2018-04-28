@@ -44,6 +44,14 @@ class Node(BaseNode):
     def __hash__(self):
         return hash(str(self))
 
+    def __eq__(self, other):
+        if isinstance(self, type(other)):
+            for member in self._keys:
+                if getattr(self, member) != getattr(other, member):
+                    return False
+            return True
+        return False
+
     __repr__ = __str__
 
 

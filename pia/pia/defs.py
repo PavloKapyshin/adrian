@@ -58,6 +58,8 @@ COMMON_REGEX = "".join([
         TYPE_REGEX, MODULE_REGEX, METHOD_REGEX)]),
     ")"])
 
+GETITEM = "__getitem__"
+SETITEM = "__setitem__"
 INIT_METHOD = "__init__"
 COPY_METHOD = "__copy__"
 ADD_METHOD = "__add__"

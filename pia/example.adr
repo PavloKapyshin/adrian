@@ -1,7 +1,0 @@
-let dict = py#Dict({
-    py#Str("john") = py#Int(1),
-    py#Str("mike") = py#Int(2),
-    py#Str("victor") = py#Int(3)
-})
-let value: py#Maybe = dict["j"]
-py#print(value)

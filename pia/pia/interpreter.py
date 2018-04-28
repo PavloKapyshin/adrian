@@ -230,6 +230,8 @@ class Main(layers.Layer):
             if expr.parent in A(astlib.PyType):
                 return self.adr_to_py_py_method(expr)
             return self.adr_to_py(self.e(expr))
+        elif expr in A(astlib.Subscript):
+            return self.adr_to_py(self.e(expr))
 
     def e_struct_field(self, expr):
         struct = expr.struct
@@ -280,9 +282,13 @@ class Main(layers.Layer):
         elif expr in A(astlib.PyFuncCall):
             return self.py_func_call(expr)
         elif expr in A(astlib.Subscript):
-            return py_to_adr(self.subscript(
-                self.adr_to_py(self.e(expr.base)),
-                self.adr_to_py_index(expr.sub)))
+            simplified = self.e(expr.base)
+            if simplified.name == defs.LIST:
+                return self.subscript(
+                    simplified.args[0].literal,
+                    self.adr_to_py_index(expr.sub))
+            return self.subscript(
+                simplified.args[0].literal, expr.sub)
         return expr
 
     def init_member_info(self, expr=None, type_=None):
