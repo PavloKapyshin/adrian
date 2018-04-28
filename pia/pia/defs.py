@@ -21,6 +21,7 @@ PY_MODULE = "py"
 INT = "Int"
 STR = "Str"
 LIST = "List"
+MAYBE = "Maybe"
 
 PRINT = "print"
 TO_INT = "toInt"

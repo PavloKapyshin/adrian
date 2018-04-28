@@ -248,7 +248,15 @@ class Main(layers.Layer):
         return self.e(expr)
 
     def adr_to_py_index(self, idx):
+        if idx.type_ == astlib.LiteralT.string:
+            return idx.literal
         return int(idx.literal)
+
+    def subscript(self, container, idx):
+        try:
+            return container[idx]
+        except:
+            return None
 
     def e(self, expr):
         if expr in A(astlib.StructValue):
@@ -272,8 +280,9 @@ class Main(layers.Layer):
         elif expr in A(astlib.PyFuncCall):
             return self.py_func_call(expr)
         elif expr in A(astlib.Subscript):
-            return self.e(expr.base).args[0].literal[
-                self.adr_to_py_index(expr.sub)]
+            return py_to_adr(self.subscript(
+                self.adr_to_py(self.e(expr.base)),
+                self.adr_to_py_index(expr.sub)))
         return expr
 
     def init_member_info(self, expr=None, type_=None):

@@ -27,6 +27,8 @@ def _infer_same(expr):
         return expr.type_
     elif expr in A(astlib.FuncCall):
         return env_api.fun_info(expr.name)["type_"]
+    elif expr is None:
+        return astlib.PyType(defs.MAYBE)
     errors.cannot_infer_type(expr)
 
 
