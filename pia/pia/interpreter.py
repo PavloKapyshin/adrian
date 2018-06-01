@@ -208,6 +208,8 @@ class Main(layers.Layer):
                     for key, val in expr.args[0].literal.items()}
             elif expr.name == defs.SET:
                 return {self.adr_to_py(elem) for elem in expr.args[0].literal}
+        elif expr in A(astlib.PyFuncCall):
+            return self.adr_to_py(self.e(expr))
         elif expr in A(astlib.PyConstant):
             if expr.name == defs.TRUE:
                 return True

@@ -37,10 +37,24 @@ fun print(source: InternalString): Void {
 struct Number is ConvertibleToString {
     data: py#Int
 
-    fun __toString__(): Void {
+    fun __toString__(): String {
         return String(py#toStr(self.data))
     }
 }
+
+protocol ConvertibleToNumber {
+    fun __toNumber__(): Number
+}
+
+
+fun toString(object: ConvertibleToString): String {
+    return object.__toString__()
+}
+
+fun toNumber(object: ConvertibleToNumber): Number {
+    return object.__toNumber__()
+}
+
 
 struct Vector(a) {
     data: py#List
