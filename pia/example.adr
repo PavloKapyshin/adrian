@@ -1,2 +1,3 @@
-var a = "Hello"
-print(a)
+let persons = ["John", "Mike", "Noob"]
+print(length(persons))
+print(length("John"))

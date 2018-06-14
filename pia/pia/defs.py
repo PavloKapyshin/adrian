@@ -13,16 +13,14 @@ PRELUDE = "prelude"
 NUMBER = "Number"
 STRING = "String"
 VECTOR = "Vector"
-
+LENGTH = "length"
 DICT = "Dict"
 SET = "Set"
-
 PY_MODULE = "py"
 INT = "Int"
 STR = "Str"
 LIST = "List"
 MAYBE = "Maybe"
-
 PRINT = "print"
 TO_INT = "toInt"
 TO_STR = "toStr"

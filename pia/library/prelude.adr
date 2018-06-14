@@ -34,12 +34,17 @@ struct Vector(a) {
     }
 }
 
+
 protocol ConvertibleToString {
     fun __toString__(): String
 }
 
 protocol ConvertibleToNumber {
     fun __toNumber__(): Number
+}
+
+protocol Lengthable {
+    fun __length__(): Number
 }
 
 
@@ -61,6 +66,18 @@ extension String is ConvertibleToString {
     }
 }
 
+extension String is Lengthable {
+    fun __length__(): Number {
+        return Number(py#len(self.data))
+    }
+}
+
+extension Vector(a) is Lengthable {
+    fun __length__(): Number {
+        return Number(py#len(self.data))
+    }
+}
+
 
 fun toString(object: ConvertibleToString): String {
     return object.__toString__()
@@ -74,4 +91,9 @@ fun toNumber(object: ConvertibleToNumber): Number {
 fun print(data: ConvertibleToString): Void {
     let converted = toString(data)
     py#print(converted.data)
+}
+
+
+fun length(data: Lengthable): Number {
+    return data.__length__()
 }
