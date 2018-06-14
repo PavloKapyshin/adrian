@@ -212,6 +212,10 @@ class Analyzer(layers.Layer):
             stmt.name, stmt.parameters, stmt.protocols, self.b(stmt.body))
         -context.env
 
+    @layers.register(astlib.ExtensionDecl)
+    def extension_decl(self, stmt):
+        yield from self.data_decl(stmt)
+
     @layers.register(astlib.StructDecl)
     def struct_decl(self, stmt):
         yield from self.data_decl(stmt)

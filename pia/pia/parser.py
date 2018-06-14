@@ -134,6 +134,7 @@ def p_stmt(content):
          | var_decl
          | fun_decl
          | struct_decl
+         | extension_decl
          | assignment
          | factor
          | adt_decl
@@ -280,6 +281,12 @@ def p_struct_decl(content):
         astlib.Name(content[2]), content[3], content[4], content[6])
 
 
+def p_extension_decl(content):
+    """extension_decl : EXTENSION module_member parameters protocol_impls LBRACE extension_body RBRACE"""
+    content[0] = astlib.ExtensionDecl(
+        content[2], content[3], content[4], content[6])
+
+
 def p_adt_decl(content):
     """adt_decl : ADT NAME parameters protocol_impls LBRACE adt_body RBRACE"""
     content[0] = astlib.AdtDecl(
@@ -353,6 +360,18 @@ def p_fun_body_stmt(content):
                   | while_stmt
     """
     content[0] = content[1]
+
+
+def p_extension_body_1(content):
+    """extension_body : fun_decl extension_body"""
+    content[0] = [astlib.StructFuncDecl(
+        content[1].name, content[1].args, content[1].rettype,
+        content[1].body)] + content[2]
+
+
+def p_extension_body_2(content):
+    """extension_body : empty"""
+    content[0] = []
 
 
 def p_struct_body_1(content):

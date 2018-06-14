@@ -1,7 +1,2 @@
-let a = py#Str("1")
-py#print(a)
-let b = py#toInt(a)
-py#print(b)
-
-let c = py#Str("2")
-py#print(py#toInt(c))
+var a = "Hello"
+print(a)

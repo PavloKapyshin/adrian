@@ -41,7 +41,7 @@ RESERVED_WORDS = {
         "var", "let", "struct", "return",
         "fun", "adt", "protocol", "if",
         "else", "elif", "not", "and",
-        "or", "while", "is"
+        "or", "while", "is", "extension"
     )
 }
 

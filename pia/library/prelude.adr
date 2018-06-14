@@ -1,5 +1,4 @@
 -- Core library. Don't use syntax sugar here.
-
 struct Some(a) {
     data: a
 }
@@ -15,46 +14,9 @@ struct String {
     data: py#Str
 }
 
-protocol ConvertibleToString {
-    fun __toString__(): String
-}
-
-
-adt InternalString {
-    String, ConvertibleToString
-}
-
-
-fun print(source: InternalString): Void {
-    if source is String {
-        py#print(source.data)
-    } else {
-        py#print(source.__toString__().data)
-    }
-}
-
-
-struct Number is ConvertibleToString {
+struct Number {
     data: py#Int
-
-    fun __toString__(): String {
-        return String(py#toStr(self.data))
-    }
 }
-
-protocol ConvertibleToNumber {
-    fun __toNumber__(): Number
-}
-
-
-fun toString(object: ConvertibleToString): String {
-    return object.__toString__()
-}
-
-fun toNumber(object: ConvertibleToNumber): Number {
-    return object.__toNumber__()
-}
-
 
 struct Vector(a) {
     data: py#List
@@ -70,4 +32,46 @@ struct Vector(a) {
         }
         return Maybe.Some(got)
     }
+}
+
+protocol ConvertibleToString {
+    fun __toString__(): String
+}
+
+protocol ConvertibleToNumber {
+    fun __toNumber__(): Number
+}
+
+
+extension String is ConvertibleToNumber {
+    fun __toNumber__(): Number {
+        return Number(py#toInt(self.data))
+    }
+}
+
+extension Number is ConvertibleToString {
+    fun __toString__(): String {
+        return String(py#toStr(self.data))
+    }
+}
+
+extension String is ConvertibleToString {
+    fun __toString__(): String {
+        return self
+    }
+}
+
+
+fun toString(object: ConvertibleToString): String {
+    return object.__toString__()
+}
+
+fun toNumber(object: ConvertibleToNumber): Number {
+    return object.__toNumber__()
+}
+
+
+fun print(data: ConvertibleToString): Void {
+    let converted = toString(data)
+    py#print(converted.data)
 }

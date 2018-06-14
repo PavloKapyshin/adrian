@@ -47,6 +47,12 @@ def translate_method(struct_decl, method_decl):
 
 class ObjectProtocol(layers.Layer):
 
+    @layers.register(astlib.ExtensionDecl)
+    def extension_decl(self, stmt):
+        yield astlib.ExtensionDecl(
+            stmt.name, stmt.parameters, stmt.protocols,
+            [translate_method(stmt, method) for method in stmt.body])
+
     @layers.register(astlib.StructDecl)
     def struct_decl(self, stmt):
         fields, methods = utils.split_body(stmt.body)

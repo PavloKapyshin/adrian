@@ -477,6 +477,11 @@ class Main(layers.Layer):
         env_api.register(stmt)
         context.parent = stmt.name
         self.register_body(stmt.body)
+        context.parent = None
+
+    @layers.register(astlib.ExtensionDecl)
+    def extension_decl(self, stmt):
+        self.data_decl(stmt)
 
     @layers.register(astlib.StructDecl)
     def struct_decl(self, stmt):

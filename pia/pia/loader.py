@@ -215,6 +215,10 @@ class Loader(layers.Layer):
         yield type(stmt)(
             n(stmt.name), stmt.parameters, protocols, self.b(stmt.body))
 
+    @layers.register(astlib.ExtensionDecl)
+    def extension_decl(self, stmt):
+        yield from self.data_decl(stmt)
+
     @layers.register(astlib.StructDecl)
     def struct_decl(self, stmt):
         yield from self.data_decl(stmt)

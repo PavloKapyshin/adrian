@@ -150,6 +150,8 @@ def register_args(args):
 def register(stmt, **kwds):
     if stmt in A(astlib.Assignment):
         _update_by_assignment(stmt, **kwds)
+    elif stmt in A(astlib.ExtensionDecl):
+        context.env[stmt.name]["protocols"].extend(stmt.protocols)
     elif stmt in A(astlib.DataDecl):
         if stmt in A(astlib.StructDecl):
             nodetype = astlib.NodeT.struct

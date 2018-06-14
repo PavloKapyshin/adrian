@@ -149,6 +149,13 @@ class SyntaxSugar(layers.Layer):
         yield type(stmt)(
             stmt.name, stmt.parameters, stmt.protocols, self.b(stmt.body))
 
+    @layers.register(astlib.ExtensionDecl)
+    def extension_decl(self, stmt):
+        # TODO: support extensions for module structs.
+        if stmt.name in A(astlib.ModuleMember):
+            errors.later(errors.Version.unknown)
+        yield from self.data_decl(stmt)
+
     @layers.register(astlib.StructDecl)
     def struct_decl(self, stmt):
         yield from self.data_decl(stmt)

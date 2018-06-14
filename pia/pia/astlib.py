@@ -154,6 +154,10 @@ class DataDecl(Node):
         self._keys = ("name", "parameters", "protocols", "body")
 
 
+class ExtensionDecl(DataDecl):
+    pass
+
+
 class StructDecl(DataDecl):
     pass
 
