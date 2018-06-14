@@ -28,5 +28,5 @@ contexts:
         - match: (?=\n)
           pop: true
 
-    - match: \b(if|else|elif|for|while|fun|struct|adt|return|var|let|in|not|and|or|is|protocol)\b
+    - match: \b(if|else|elif|for|while|fun|struct|adt|return|var|let|in|not|and|or|is|protocol|extension)\b
       scope: keyword.control.adrian
