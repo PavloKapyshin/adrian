@@ -59,7 +59,6 @@ def unsugar_literal(literal):
 
 
 def e(expr):
-    # TODO: support print
     if expr in A(astlib.Literal):
         return unsugar_literal(expr)
     elif expr in A(astlib.FuncCall):
@@ -68,6 +67,8 @@ def e(expr):
             return astlib.FuncCall(
                 astlib.ModuleMember(defs.PRELUDE, expr.name),
                 list(map(e, expr.args)))
+    elif expr in A(astlib.Subscript):
+        return e(astlib.MethodCall(expr.base, defs.GETITEM, [expr.sub]))
     return _e(expr)
 
 
@@ -152,7 +153,6 @@ class SyntaxSugar(layers.Layer):
 
     @layers.register(astlib.ExtensionDecl)
     def extension_decl(self, stmt):
-        # TODO: support extensions for module structs.
         if stmt.name in A(astlib.ModuleMember):
             errors.later(errors.Version.unknown)
         yield from self.data_decl(stmt)

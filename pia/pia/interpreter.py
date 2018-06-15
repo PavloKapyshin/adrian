@@ -343,7 +343,6 @@ class Main(layers.Layer):
             }
 
     def update_subscript(self, subs, expr):
-        # TODO: support StructField in subs.base
         expr_ = self.unsugar(context.env[subs.base]["expr"])
         expr_ = self.adr_to_py(expr_)
         sub = self.adr_to_py_index(subs.sub)

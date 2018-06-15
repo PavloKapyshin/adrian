@@ -1,3 +1,1 @@
-let persons = ["John", "Mike", "Noob"]
-print(length(persons))
-print(length("John"))
+

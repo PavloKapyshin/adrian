@@ -47,6 +47,10 @@ protocol Lengthable {
     fun __length__(): Number
 }
 
+protocol Iterable(elementType) {
+    fun __next__(): Maybe(elementType)
+}
+
 
 extension String is ConvertibleToNumber {
     fun __toNumber__(): Number {
@@ -89,6 +93,7 @@ fun toNumber(object: ConvertibleToNumber): Number {
 
 
 fun print(data: ConvertibleToString): Void {
+    -- py#print(toString(data).data)
     let converted = toString(data)
     py#print(converted.data)
 }
