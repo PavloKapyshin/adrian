@@ -85,13 +85,6 @@ def e(expr):
                 expr.type_, {e(key): e(val) for key, val in expr.literal.items()})
     elif expr in A(astlib.AdtMember):
         return astlib.AdtMember(e(expr.base), e(expr.member))
-    elif expr in A(astlib.Subscript):
-        base = e(expr.base)
-        sub = e(expr.sub)
-        type_ = inference.infer_type_in_decl(base)
-        if type_ in A(astlib.PyObject):
-            return expr
-        return astlib.StructFuncCall(type_, defs.GETITEM, [base, sub])
     return expr
 
 

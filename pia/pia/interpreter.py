@@ -239,8 +239,6 @@ class Main(layers.Layer):
             if expr.parent in A(astlib.PyType):
                 return self.adr_to_py_py_method(expr)
             return self.adr_to_py(self.e(expr))
-        elif expr in A(astlib.Subscript):
-            return self.adr_to_py(self.e(expr))
 
     def e_struct_field(self, expr):
         struct = expr.struct
@@ -290,14 +288,6 @@ class Main(layers.Layer):
             return self.e(expr.member)
         elif expr in A(astlib.PyFuncCall):
             return self.py_func_call(expr)
-        elif expr in A(astlib.Subscript):
-            simplified = self.e(expr.base)
-            if simplified.name == defs.LIST:
-                return self.subscript(
-                    simplified.args[0].literal,
-                    self.adr_to_py_index(expr.sub))
-            return self.subscript(
-                simplified.args[0].literal, expr.sub)
         return expr
 
     def init_member_info(self, expr=None, type_=None):
@@ -360,8 +350,6 @@ class Main(layers.Layer):
         if stmt.left in A(astlib.StructField):
             root = utils.scroll_to_parent(stmt.left.struct)
             self.update_(root, stmt.left, self.e(stmt.right))
-        elif stmt.left in A(astlib.Subscript):
-            self.update_subscript(stmt.left, stmt.right)
         else:
             context.env[stmt.left]["expr"] = self.e(stmt.right)
             context.env[stmt.left]["spec_type"] = inference.infer_type_in_usage(

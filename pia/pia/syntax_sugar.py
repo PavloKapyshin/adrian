@@ -24,6 +24,8 @@ def _e(expr):
         else:
             expr.args = [e(arg) for arg in expr.args]
         return expr
+    if expr in A(astlib.Subscript):
+        return _e(astlib.MethodCall(expr.base, defs.GETITEM, [expr.sub]))
     return expr
 
 

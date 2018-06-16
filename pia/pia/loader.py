@@ -118,8 +118,6 @@ def e(expr, hash_=None):
                     for key, val in expr.literal.items()})
     elif expr in A(astlib.AdtMember):
         return astlib.AdtMember(e(expr.base), e(expr.member))
-    elif expr in A(astlib.Subscript):
-        return astlib.Subscript(e(expr.base, hash_=hash_), expr.sub)
     return expr
 
 
