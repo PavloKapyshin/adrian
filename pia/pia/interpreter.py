@@ -346,10 +346,24 @@ class Main(layers.Layer):
         expr_[sub] = self.adr_to_py(expr)
         context.env[subs.base]["expr"] = py_to_adr(expr_)
 
+    def register_setitem(self, left, right):
+        container_name, index = left.args[0], left.args[1]
+        expr = self.adr_to_py(context.env[container_name]["expr"])
+        expr[self.adr_to_py(index)] = self.adr_to_py(self.e(right))
+        context.env[container_name]["expr"] = py_to_adr(expr)
+
     def register_assignment(self, stmt):
         if stmt.left in A(astlib.StructField):
             root = utils.scroll_to_parent(stmt.left.struct)
             self.update_(root, stmt.left, self.e(stmt.right))
+        elif stmt.left in A(astlib.StructFuncCall):
+            left = stmt.left
+            if left.name == defs.SETITEM:
+                if left.parent in A(astlib.PyType):
+                    self.register_setitem(stmt.left, stmt.right)
+                else:
+                    left.args.append(stmt.right)
+                    self.adr_to_py(left)
         else:
             context.env[stmt.left]["expr"] = self.e(stmt.right)
             context.env[stmt.left]["spec_type"] = inference.infer_type_in_usage(

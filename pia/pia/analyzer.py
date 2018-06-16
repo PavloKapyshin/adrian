@@ -45,16 +45,6 @@ def t(type_):
     return type_
 
 
-def ass_e(expr):
-    if expr in A(astlib.Subscript):
-        base = e(expr.base)
-        sub = e(expr.sub)
-        type_ = inference.infer_type_in_decl(base)
-        if type_ in A(astlib.PyObject):
-            return expr
-        return astlib.StructFuncCall(type_, defs.SETITEM, [base, sub])
-    return e(expr)
-
 def e(expr):
     if expr in A(astlib.Not):
         expr_ = e(expr.expr)
@@ -109,7 +99,7 @@ class Analyzer(layers.Layer):
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
-        left, right = ass_e(stmt.left), e(stmt.right)
+        left, right = e(stmt.left), e(stmt.right)
         env_api.register(stmt, right=right)
         yield astlib.Assignment(left, stmt.op, right)
 

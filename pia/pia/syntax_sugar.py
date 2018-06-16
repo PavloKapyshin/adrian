@@ -1,4 +1,4 @@
-from . import astlib, layers, defs, utils, env_api
+from . import astlib, layers, defs, utils, env_api, inference
 from .context import context
 from .utils import A
 
@@ -74,6 +74,12 @@ def e(expr):
     return _e(expr)
 
 
+def assignment_unsugar(expr):
+    if expr in A(astlib.Subscript):
+        return astlib.MethodCall(e(expr.base), defs.SETITEM, [e(expr.sub)])
+    return e(expr)
+
+
 class SyntaxSugar(layers.Layer):
 
     def __init__(self):
@@ -93,7 +99,8 @@ class SyntaxSugar(layers.Layer):
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
-        yield astlib.Assignment(stmt.left, stmt.op, e(stmt.right))
+        left, right =  assignment_unsugar(stmt.left), e(stmt.right)
+        yield astlib.Assignment(left, stmt.op, right)
 
     @layers.register(astlib.Return)
     def return_(self, stmt):
