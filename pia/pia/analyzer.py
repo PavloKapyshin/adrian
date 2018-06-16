@@ -23,7 +23,7 @@ def e_call(expr):
                 expr.name, defs.INIT_METHOD, call_args)
         return astlib.FuncCall(expr.name, call_args)
     return astlib.StructFuncCall(
-        inference.infer_type(expr.base), expr.name, [expr.base] + call_args)
+        inference.infer_type_in_decl(expr.base), expr.name, [expr.base] + call_args)
 
 
 def e_struct_field(expr):
@@ -49,7 +49,7 @@ def ass_e(expr):
     if expr in A(astlib.Subscript):
         base = e(expr.base)
         sub = e(expr.sub)
-        type_ = inference.infer_type(base)
+        type_ = inference.infer_type_in_decl(base)
         if type_ in A(astlib.PyObject):
             return expr
         return astlib.StructFuncCall(type_, defs.SETITEM, [base, sub])
@@ -59,7 +59,7 @@ def e(expr):
     if expr in A(astlib.Not):
         expr_ = e(expr.expr)
         return astlib.StructFuncCall(
-            inference.infer_type(expr_), defs.NOT_METHOD, [expr_])
+            inference.infer_type_in_decl(expr_), defs.NOT_METHOD, [expr_])
     elif expr in A(astlib.Name):
         if expr in (defs.TRUE, defs.FALSE):
             return astlib.PyConstant(str(expr))
@@ -73,7 +73,7 @@ def e(expr):
             return astlib.Is(left, t(expr.right))
         right = e(expr.right)
         return astlib.StructFuncCall(
-            inference.infer_type(left), defs.OP_TO_METHOD[expr.op],
+            inference.infer_type_in_decl(left), defs.OP_TO_METHOD[expr.op],
             [left, right])
     elif expr in A(astlib.Literal):
         if expr.type_ == astlib.LiteralT.vector:
@@ -88,7 +88,7 @@ def e(expr):
     elif expr in A(astlib.Subscript):
         base = e(expr.base)
         sub = e(expr.sub)
-        type_ = inference.infer_type(base)
+        type_ = inference.infer_type_in_decl(base)
         if type_ in A(astlib.PyObject):
             return expr
         return astlib.StructFuncCall(type_, defs.GETITEM, [base, sub])
@@ -105,7 +105,7 @@ def decl_a(args):
 
 def infer(type_, expr):
     if type_ in A(astlib.Empty):
-        return inference.infer_type(expr)
+        return inference.infer_type_in_decl(expr)
     return t(type_)
 
 

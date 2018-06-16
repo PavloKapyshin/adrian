@@ -295,7 +295,7 @@ class Main(layers.Layer):
 
     def init_member_info(self, expr=None, type_=None):
         return astlib.StructValue(
-            type_ or inference.infer_spec_type(expr), expr)
+            type_ or inference.infer_type_in_usage(expr), expr)
 
     def get_root_expr(self, parent):
         root_expr = context.env[parent]["expr"]
@@ -319,7 +319,7 @@ class Main(layers.Layer):
         if root_expr in A(astlib.StructField):
             root_expr = self.prepare_expr_for_setting(root_expr)
         root_expr.value[dest.field] = self.init_member_info(
-            expr=self.e(expr), type_=inference.infer_spec_type(expr))
+            expr=self.e(expr), type_=inference.infer_type_in_usage(expr))
         info = self.get_root_expr(parent)
         for member in reversed(members):
             info[member].value = root_expr
@@ -334,7 +334,7 @@ class Main(layers.Layer):
             expr = self.e(expr_)
             if name != defs.SELF:
                 expr = deepcopy(expr)
-            spec_type = inference.infer_spec_type(expr)
+            spec_type = inference.infer_type_in_usage(expr)
             context.env[name] = {
                 "node_type": astlib.NodeT.arg,
                 "type_": type_,
@@ -357,13 +357,13 @@ class Main(layers.Layer):
             self.update_subscript(stmt.left, stmt.right)
         else:
             context.env[stmt.left]["expr"] = self.e(stmt.right)
-            context.env[stmt.left]["spec_type"] = inference.infer_spec_type(
+            context.env[stmt.left]["spec_type"] = inference.infer_type_in_usage(
                 stmt.right)
 
     def register_decl(self, stmt):
         type_ = stmt.type_
         expr = self.e(stmt.expr)
-        spec_type = inference.infer_spec_type(expr)
+        spec_type = inference.infer_type_in_usage(expr)
         context.env[stmt.name] = {
             "node_type": (astlib.NodeT.var
                 if stmt in A(astlib.VarDecl) else astlib.NodeT.let),
@@ -386,7 +386,7 @@ class Main(layers.Layer):
         if stmt.parent in A(astlib.PyType):
             return py_to_adr(self.adr_to_py(stmt))
         if utils.is_protocol(stmt.parent):
-            stmt.parent = inference.infer_spec_type(stmt.args[0])
+            stmt.parent = inference.infer_type_in_usage(stmt.args[0])
         method_info = env_api.method_info(stmt.parent, stmt.name)
         +context.env
         self.register_args(method_info["args"], stmt.args)

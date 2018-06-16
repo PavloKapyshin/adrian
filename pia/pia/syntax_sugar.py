@@ -67,8 +67,8 @@ def e(expr):
             return astlib.FuncCall(
                 astlib.ModuleMember(defs.PRELUDE, expr.name),
                 list(map(e, expr.args)))
-    elif expr in A(astlib.Subscript):
-        return e(astlib.MethodCall(expr.base, defs.GETITEM, [expr.sub]))
+    # elif expr in A(astlib.Subscript):
+    #     return e(astlib.MethodCall(expr.base, defs.GETITEM, [expr.sub]))
     return _e(expr)
 
 

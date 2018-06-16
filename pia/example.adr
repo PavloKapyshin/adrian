@@ -1,1 +1,2 @@
-
+let names = py#List([py#Str("john")])
+let name = names[0]
