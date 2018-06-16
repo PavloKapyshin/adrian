@@ -1,2 +1,3 @@
 let names = py#List([py#Str("john")])
-let name = names[0]
+let name = names[py#Int(0)]
+py#print(name)

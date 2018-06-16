@@ -154,6 +154,11 @@ class Main(layers.Layer):
         by = self.adr_to_py(self.unsugar(stmt.args[1]))
         return source.split(by)
 
+    def py_getitem(self, stmt):
+        self_, index = (self.adr_to_py(self.unsugar(stmt.args[0])),
+            self.adr_to_py(self.unsugar(stmt.args[1])))
+        return self_[index]
+
     def unsugar(self, arg):
         while arg in A(astlib.Name, astlib.StructField, astlib.FuncCall):
             arg = self.e(arg)
@@ -168,6 +173,8 @@ class Main(layers.Layer):
             self.py_list_extend(expr)
         elif expr.name == defs.SPLIT:
             return self.py_str_split(expr)
+        elif expr.name == defs.GETITEM:
+            return self.py_getitem(expr)
         else:
             return _py_method_2arg(
                 expr.name, self.adr_to_py(expr.args[0]),

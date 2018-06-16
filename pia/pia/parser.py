@@ -579,7 +579,7 @@ def p_factor_4(content):
 
 
 def p_subscription_1(content):
-    """subscription : atom"""
+    """subscription : bool_expr"""
     content[0] = content[1]
 
 
