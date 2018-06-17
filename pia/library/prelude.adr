@@ -93,9 +93,7 @@ fun toNumber(object: ConvertibleToNumber): Number {
 
 
 fun print(data: ConvertibleToString): Void {
-    -- py#print(toString(data).data)
-    let converted = toString(data)
-    py#print(converted.data)
+    py#print(toString(data).data)
 }
 
 
