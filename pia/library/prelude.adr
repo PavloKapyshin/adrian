@@ -24,14 +24,6 @@ struct Vector(a) {
     fun append(element: a): Void {
         self.data.append(element)
     }
-
-    fun __getitem__(index: Number): Maybe(a) {
-        let got: py#Maybe = self.data[index]
-        if got is py#None {
-            return Maybe.None()
-        }
-        return Maybe.Some(got)
-    }
 }
 
 
@@ -79,6 +71,26 @@ extension String is Lengthable {
 extension Vector(a) is Lengthable {
     fun __length__(): Number {
         return Number(py#len(self.data))
+    }
+}
+
+extension String {
+    fun __getitem__(index: Number): Maybe(String) {
+        let got: py#Maybe = self.data[index.data]
+        if got is py#None {
+            return Maybe.None()
+        }
+        return Maybe.Some(got)
+    }
+}
+
+extension Vector(a) {
+    fun __getitem__(index: Number): Maybe(a) {
+        let got: py#Maybe = self.data[index.data]
+        if got is py#None {
+            return Maybe.None()
+        }
+        return Maybe.Some(got)
     }
 }
 

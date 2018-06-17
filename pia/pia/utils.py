@@ -55,6 +55,8 @@ def _is_of_nodetype(*nodetypes):
             return False
         if request in A(astlib.GenericType):
             return helper(request.base)
+        if request in A(astlib.StructField):
+            return helper(request.struct)
         return nodetype(request) in nodetypes
     return helper
 

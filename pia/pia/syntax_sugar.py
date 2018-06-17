@@ -26,6 +26,11 @@ def _e(expr):
         return expr
     if expr in A(astlib.Subscript):
         return _e(astlib.MethodCall(expr.base, defs.GETITEM, [expr.sub]))
+    if expr in A(astlib.StructField):
+        if expr.field in A(astlib.Subscript):
+            return _e(astlib.Subscript(
+                astlib.StructField(expr.struct, expr.field.base),
+                expr.field.sub))
     return expr
 
 
