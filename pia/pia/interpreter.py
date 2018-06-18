@@ -1,7 +1,8 @@
 from copy import deepcopy
 import sys
 
-from . import astlib, layers, env_api, inference, errors, typelib, defs, utils
+from . import (
+    astlib, layers, env_api, inference, errors, typelib, defs, utils)
 from .context import context
 from .utils import A
 
@@ -18,7 +19,7 @@ def value_from_name(name):
     return name
 
 
-_dict = {
+_method_name_to_action = {
     defs.OR_METHOD: lambda x, y: x or y,
     defs.AND_METHOD: lambda x, y: x and y,
     defs.GTE_METHOD: lambda x, y: x >= y,
@@ -41,7 +42,7 @@ def transform_node(node, *, registry):
 
 
 def _py_method_2arg(method_name, arg1, arg2):
-    return _dict[method_name](arg1, arg2)
+    return _method_name_to_action[method_name](arg1, arg2)
 
 
 def py_to_adr(expr):
@@ -190,7 +191,6 @@ class Main(layers.Layer):
             root_expr = self.e(struct)
         else:
             root_expr = context.env[struct]["expr"].value
-
         if root_expr in A(astlib.Name):
             root_expr = self.e(root_expr)
         if root_expr in A(astlib.StructField):

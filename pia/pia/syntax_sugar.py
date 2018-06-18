@@ -76,6 +76,9 @@ def e(expr):
                 list(map(e, expr.args)))
     elif expr in A(astlib.Subscript):
         return e(astlib.MethodCall(expr.base, defs.GETITEM, [expr.sub]))
+    elif expr in A(astlib.Expr):
+        return e(astlib.MethodCall(
+            expr.left, defs.OP_TO_METHOD[expr.op], [expr.right]))
     return _e(expr)
 
 

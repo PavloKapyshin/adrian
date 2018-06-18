@@ -5,11 +5,11 @@ from . import (
 
 LAYERS = (
     (parser.Parser, "parse"),
-    (syntax_sugar.SyntaxSugar, "transform_ast"),
-    (loader.Loader, "expand_ast"),
-    (object_protocol.ObjectProtocol, "transform_ast"),
-    (analyzer.Analyzer, "transform_ast"),
-    (interpreter.Main, "proceed")
+    # (syntax_sugar.SyntaxSugar, "transform_ast"),
+    # (loader.Loader, "expand_ast"),
+    # (object_protocol.ObjectProtocol, "transform_ast"),
+    # (analyzer.Analyzer, "transform_ast"),
+    # (interpreter.Main, "proceed")
 )
 
 

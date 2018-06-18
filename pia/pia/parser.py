@@ -4,6 +4,7 @@ import re
 
 from ply import lex, yacc
 from . import astlib, defs, errors
+from .utils import A
 
 
 _RESERVED_WORDS = defs.RESERVED_WORDS
@@ -108,7 +109,7 @@ precedence = (
     ("left", "EQEQ", "NEQ"),
     ("left", "PLUS", "MINUS"),
     ("left", "TIMES", "DIVIDE"),
-    ("left", "DOT"),
+    ("right", "DOT"),
 )
 
 
@@ -561,11 +562,7 @@ def p_factor_1(content):
 
 def p_factor_2(content):
     """factor : factor DOT factor"""
-    if isinstance(content[3], astlib.Call):
-        content[0] = astlib.MethodCall(
-            content[1], content[3].name, content[3].args)
-    else:
-        content[0] = astlib.StructField(content[1], content[3])
+    content[0] = astlib.StructField(content[1], content[3])
 
 
 def p_factor_3(content):
@@ -578,7 +575,7 @@ def p_factor_4(content):
     content[0] = content[1]
 
 
-def p_subscription_1(content):
+def p_subscription(content):
     """subscription : bool_expr"""
     content[0] = content[1]
 

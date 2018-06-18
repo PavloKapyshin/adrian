@@ -1,10 +1,1 @@
-struct Container {
-    data: py#Str
-
-    fun __init__(): Container {
-        self.data = py#Str("Hello, world!")
-    }
-}
-
-let container = Container()
-py#print(container.data[py#Int(0)])
+let a = self.data.add.lol.joke().noob()
