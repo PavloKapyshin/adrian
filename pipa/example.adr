@@ -1,3 +1,4 @@
 py#print(py#Int(0))
 py#print(py#Str("Hello, world!"))
 py#print(py#List([py#Int(0)]))
+py#print(py#Set({py#Int(0), py#Int(1), py#Int(0)}))
