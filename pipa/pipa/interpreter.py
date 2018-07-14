@@ -52,7 +52,7 @@ class Interpreter(layers.Layer):
         elif func_call.name == defs.TYPE_DICT:
             literal = func_call.args[0].literal
             if literal in A(set):
-                # Parser parses {} as a set, and not as a dictionary, so...
+                # Parser parses `{}` as a set, and not as a dictionary, so...
                 return {}
             return {
                 self.adr_to_py(key): self.adr_to_py(val)
