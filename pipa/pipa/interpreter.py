@@ -36,27 +36,34 @@ class Interpreter(layers.Layer):
             errors.later()
 
     def py_func_call(self, func_call):
+        def translate_iterable(iterable):
+            return [self.adr_to_py(element) for element in iterable]
+
         if func_call.name == defs.TYPE_INT:
             return int(func_call.args[0].literal)
         elif func_call.name == defs.TYPE_STR:
             return func_call.args[0].literal
         elif func_call.name == defs.TYPE_LIST:
-            return self._translate_adr_to_py_iterable(
+            return translate_iterable(
                 func_call.args[0].literal)
         elif func_call.name == defs.TYPE_SET:
-            return set(self._translate_adr_to_py_iterable(
+            return set(translate_iterable(
                 func_call.args[0].literal))
+        elif func_call.name == defs.TYPE_DICT:
+            literal = func_call.args[0].literal
+            if literal in A(set):
+                return {}
+            return {
+                self.adr_to_py(key): self.adr_to_py(val)
+                for key, val in literal.items()}
         elif func_call.name == defs.FUNC_PRINT:
             for arg in func_call.args:
                 arg = self.adr_to_py(arg)
                 if arg in A(set) and len(arg) == 0:
-                    # I just don't like `set()` be printed.
+                    # I just don't like `set()` to be printed.
                     print("{}")
                 else:
                     print(arg)
         else:
             # support other funcs
             errors.later()
-
-    def _translate_adr_to_py_iterable(self, iterable):
-        return [self.adr_to_py(element) for element in iterable]

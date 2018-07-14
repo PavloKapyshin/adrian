@@ -7,3 +7,14 @@ py#print(py#List([py#Int(1)]))
 
 py#print(py#Set({}))
 py#print(py#Set({py#Int(1)}))
+
+py#print(py#Dict({}))
+py#print(py#Dict({py#Str("Hello") = py#Int(0)}))
+
+py#print(py#List([py#Int(1), py#Int(2)]))
+py#print(py#List([py#Int(1), py#Str("Hello"), py#List([py#Int(1)])]))
+
+py#print(
+    py#Set({py#Int(1), py#Int(2), py#Int(3), py#Int(1)}))
+py#print(
+    py#Set({py#Int(1), py#Int(2), py#Str("Hello")}))
