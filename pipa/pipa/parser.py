@@ -74,7 +74,7 @@ def without_quotes(string):
 def t_STRING(token):
     r'''\"([^\\\n]|(\\.))*?\"'''
     token.value = astlib.Literal(
-        stlib.LiteralT.string, without_quotes(token.value))
+        astlib.LiteralT.string, without_quotes(token.value))
     return token
 
 

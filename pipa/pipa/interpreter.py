@@ -38,6 +38,8 @@ class Interpreter(layers.Layer):
     def py_func_call(self, func_call):
         if func_call.name == defs.TYPE_INT:
             return int(func_call.args[0].literal)
+        elif func_call.name == defs.TYPE_STR:
+            return func_call.args[0].literal
         elif func_call.name == defs.FUNC_PRINT:
             for arg in func_call.args:
                 print(self.adr_to_py(arg))
