@@ -40,6 +40,10 @@ class Interpreter(layers.Layer):
             return int(func_call.args[0].literal)
         elif func_call.name == defs.TYPE_STR:
             return func_call.args[0].literal
+        elif func_call.name == defs.TYPE_LIST:
+            return [
+                self.adr_to_py(element)
+                for element in func_call.args[0].literal]
         elif func_call.name == defs.FUNC_PRINT:
             for arg in func_call.args:
                 print(self.adr_to_py(arg))

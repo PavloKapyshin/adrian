@@ -2,4 +2,5 @@ py#print(py#Int(0))
 
 py#print(py#Str("Hello, world!"))
 
-
+py#print(py#List([]))
+py#print(py#List([py#Int(1)]))
