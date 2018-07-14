@@ -1,0 +1,135 @@
+-- Core library. Don't use syntax sugar here, because you can't. :)
+struct Some(elementType) {
+    data: elementType
+}
+
+struct None {}
+
+adt Maybe(elementType) {
+    Some(elementType), None
+}
+
+
+struct String {
+    data: py#Str
+}
+
+struct Number {
+    data: py#Int
+}
+
+struct Vector(elementType) {
+    data: py#List
+
+    fun append(element: elementType): Void {
+        self.data.append(element)
+    }
+}
+
+struct Set(elementType) {
+    data: py#Set
+}
+
+struct Dict(keyType, valueType) {
+    data: py#Dict
+}
+
+
+protocol ConvertibleToString {
+    fun __toString__(): String
+}
+
+protocol ConvertibleToNumber {
+    fun __toNumber__(): Number
+}
+
+protocol ConvertibleToVector(elementType) {
+    fun __toVector__(): Vector(elementType)
+}
+
+protocol ConvertibleToSet(elementType) {
+    fun __toSet__(): Set(elementType)
+}
+
+protocol ConvertibleToDict(keyType, valueType) {
+    fun __toDict__(): Dict(keyType, valueType)
+}
+
+
+protocol Lengthable {
+    fun __length__(): Number
+}
+
+protocol Iterable(elementType) {
+    fun __next__(): Maybe(elementType)
+}
+
+
+extension String is ConvertibleToNumber {
+    fun __toNumber__(): Number {
+        return Number(py#toInt(self.data))
+    }
+}
+
+extension Number is ConvertibleToString {
+    fun __toString__(): String {
+        return String(py#toStr(self.data))
+    }
+}
+
+extension String is ConvertibleToString {
+    fun __toString__(): String {
+        return self
+    }
+}
+
+extension String is Lengthable {
+    fun __length__(): Number {
+        return Number(py#len(self.data))
+    }
+}
+
+extension Vector(a) is Lengthable {
+    fun __length__(): Number {
+        return Number(py#len(self.data))
+    }
+}
+
+extension String {
+    fun __getitem__(index: Number): Maybe(String) {
+        let got: py#Maybe = self.data[index.data]
+        if got is py#None {
+            return Maybe.None()
+        }
+        return Maybe.Some(got)
+    }
+}
+
+extension Vector(a) {
+    fun __getitem__(index: Number): Maybe(a) {
+        let got: py#Maybe = self.data[index.data]
+        if got is py#None {
+            return Maybe.None()
+        }
+        return Maybe.Some(got)
+    }
+}
+
+
+fun toString(object: ConvertibleToString): String {
+    return object.__toString__()
+}
+
+fun toNumber(object: ConvertibleToNumber): Number {
+    return object.__toNumber__()
+}
+
+
+fun print(data: ConvertibleToString): Void {
+    py#print(toString(data).data)
+}
+
+
+fun length(data: Lengthable): Number {
+    return data.__length__()
+}

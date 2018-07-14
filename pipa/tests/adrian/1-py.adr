@@ -1,0 +1,4 @@
+let a: py#Int = py#Int(0)
+
+py#print(a)
+py#print(py#Int(0))
