@@ -13,3 +13,5 @@ py#print(py#Dict({py#Str("Hello") = py#Int(0)}))
 
 py#print(py#List([py#Int(1), py#Int(2)]))
 py#print(py#List([py#Int(1), py#Str("Hello"), py#List([py#Int(1)])]))
+
+py#print(py#Str("Hello, John").split(py#Str(", ")))

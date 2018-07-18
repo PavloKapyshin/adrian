@@ -8,3 +8,4 @@ Hello, world!
 {'Hello': 0}
 [1, 2]
 [1, 'Hello', [1]]
+['Hello', 'John']
