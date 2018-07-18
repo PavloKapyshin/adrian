@@ -16,11 +16,11 @@ class Interpreter(layers.Layer):
         elif expr in A(astlib.Name):
             return self.adr_to_py(context.env[expr]["expr"])
         elif expr in A(list):
-            if len(expr) > 2 or expr[0] not in A(astlib.Name):
+            if len(expr) > 2:
                 errors.later()
-            info = context.env[expr[0]]
+            type_ = infer_type(expr[0])
             if expr[1] in A(astlib.FuncCall):
-                if is_py_type(info["type"]):
+                if is_py_type(type_):
                     return self.py_method_call(expr[0], expr[1])
                 else:
                     # TODO: think about methods
