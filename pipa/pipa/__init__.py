@@ -1,8 +1,9 @@
-from . import context, defs, layers, parser, interpreter
+from . import context, defs, layers, utils, parser, loader, interpreter
 
 
 LAYERS = (
     (parser.Parser, "parse"),
+    (loader.Loader, "expand_ast"),
     (interpreter.Interpreter, "proceed")
 )
 
@@ -15,6 +16,7 @@ def _update_context_args():
 
 def compile_from_string(input_code, *, stop_before, stop_after):
     context_args = defs.DEFAULT_CONTEXT_ARGUMENTS
+    context_args["main_file_hash"] = utils.get_hash(input_code)
     current_ast = input_code
     for layer_cls, method_name in LAYERS:
         if stop_before == layer_cls:

@@ -1,4 +1,5 @@
 import sys
+from itertools import chain
 
 import re
 
@@ -196,9 +197,40 @@ def p_factor_1(content):
     content[0] = astlib.FuncCall(content[1], content[3])
 
 
+def p_factor_3(content):
+    """factor : factor DOT factor"""
+    def merge(acc, elem):
+        if elem in A(list):
+            acc.extend(elem)
+        else:
+            acc.append(elem)
+        return acc
+
+    content[0] = []
+    content[0] = merge(content[0], content[1])
+    content[0] = merge(content[0], content[3])
+
+
 def p_factor_2(content):
     """factor : atom"""
     content[0] = content[1]
+
+
+def p_atom_1(content):
+    """
+    atom : INTEGER
+         | STRING
+         | vector
+         | dict
+         | set
+         | module_member
+    """
+    content[0] = content[1]
+
+
+def p_atom_2(content):
+    """atom : LPAREN expr RPAREN"""
+    content[0] = content[2]
 
 
 def p_vector(content):
@@ -234,23 +266,6 @@ def p_inner_dict_3(content):
 def p_inner_dict_elem(content):
     """inner_dict_elem : expr EQ expr"""
     content[0] = {content[1]: content[3]}
-
-
-def p_atom_1(content):
-    """
-    atom : INTEGER
-         | STRING
-         | vector
-         | dict
-         | set
-         | module_member
-    """
-    content[0] = content[1]
-
-
-def p_atom_2(content):
-    """atom : LPAREN expr RPAREN"""
-    content[0] = content[2]
 
 
 def p_empty(content):

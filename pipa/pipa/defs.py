@@ -5,6 +5,9 @@ from functools import partial
 from . import astlib, env
 
 
+MANGLING_LENGTH = 6
+
+
 MODULE_PRELUDE = "prelude"
 TYPE_NUMBER = "Number"
 TYPE_STRING = "String"
@@ -30,6 +33,7 @@ TYPE_LIST = "List"
 FUNC_TO_INT = "toInt"
 FUNC_TO_STR = "toStr"
 FUNC_LEN = "len"
+METHOD_SPLIT = "split"
 
 
 RESERVED_WORDS = {

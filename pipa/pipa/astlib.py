@@ -140,9 +140,16 @@ class PyObject(Node):
 
 class PyType(PyObject):
 
-    def __init__(self, type_):
-        self.type_ = type_
-        self._keys = ("type_", )
+    def __init__(self, name):
+        self.name = name
+        self._keys = ("name", )
+
+
+class PyFunc(PyObject):
+
+    def __init__(self, name):
+        self.name = name
+        self._keys = ("name", )
 
 
 class PyCall(PyObject):
