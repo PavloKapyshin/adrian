@@ -60,15 +60,15 @@ COMMON_REGEX = "".join([
     ")"])
 
 INIT_METHOD = "__init__"
-ADD_METHOD = "__add__"
-SUB_METHOD = "__sub__"
-MUL_METHOD = "__mul__"
-DIV_METHOD = "__div__"
+METHOD_ADD = "__add__"
+METHOD_SUB = "__sub__"
+METHOD_MUL = "__mul__"
+METHOD_DIV = "__div__"
 OPERATOR_TO_METHOD = {
-    "+": ADD_METHOD,
-    "-": SUB_METHOD,
-    "*": MUL_METHOD,
-    "/": DIV_METHOD,
+    "+": METHOD_ADD,
+    "-": METHOD_SUB,
+    "*": METHOD_MUL,
+    "/": METHOD_DIV,
 }
 
 

@@ -1,5 +1,2 @@
-let a = py#Str("Hello, John")
-let splitted: py#List = a.split(py#Str(", "))
-
+let a = py#Int(1) + py#Int(1)
 py#print(a)
-py#print(splitted)

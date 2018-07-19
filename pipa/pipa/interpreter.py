@@ -30,6 +30,24 @@ class Interpreter(layers.Layer):
                 errors.later()
         elif expr in A(astlib.PyFuncCall, astlib.PyTypeCall):
             return self.py_call(expr)
+        elif expr in A(astlib.Expr):
+            method_name = defs.OPERATOR_TO_METHOD[expr.op]
+            return self.py_method_call(
+                expr.left, astlib.FuncCall(method_name, [expr.right]))
+        elif expr in A(astlib.Literal):
+            # Already translated, nothing to do.
+            # Just checking in containers...
+            if expr.type_ == astlib.LiteralT.number:
+                return int(expr.literal)
+            elif expr.type_ == astlib.LiteralT.vector:
+                return [self.adr_to_py(elem) for elem in expr.literal]
+            elif expr.type_ == astlib.LiteralT.set_:
+                return {self.adr_to_py(elem) for elem in expr.literal}
+            elif expr.type_ == astlib.LiteralT.dict_:
+                return {
+                    self.adr_to_py(key): self.adr_to_py(val)
+                    for key, val in expr.literal.items()}
+            return expr.literal
         else:
             # support other exprs
             errors.later()
@@ -72,6 +90,8 @@ class Interpreter(layers.Layer):
                 self.adr_to_py(key): self.adr_to_py(val)
                 for key, val in literal.items()}
         elif func_call.name == defs.FUNC_PRINT:
+            if len(func_call.args) == 0:
+                print()
             for arg in func_call.args:
                 arg = self.adr_to_py(arg)
                 if arg in A(set) and len(arg) == 0:
@@ -84,9 +104,30 @@ class Interpreter(layers.Layer):
             errors.later()
 
     def py_method_call(self, base, func_call):
+        type_ = infer_type(base)
+        base = self.adr_to_py(base)
+        args = [self.adr_to_py(arg) for arg in func_call.args]
         if func_call.name == defs.METHOD_SPLIT:
-            expr = self.adr_to_py(base)
-            return expr.split(self.adr_to_py(func_call.args[0]))
+            return base.split(args[0])
+        elif func_call.name == defs.METHOD_ADD:
+            if type_.name == defs.TYPE_SET:
+                return base.union(args[0])
+            elif type_.name == defs.TYPE_DICT:
+                result = base
+                for key, val in args[0].items():
+                    result[key] = val
+                return result
+            return base + args[0]
+        elif func_call.name == defs.METHOD_SUB:
+            return base - args[0]
+        elif func_call.name == defs.METHOD_MUL:
+            return base * args[0]
+        elif func_call.name == defs.METHOD_DIV:
+            result = base / args[0]
+            up, down = result.as_integer_ratio()
+            if down == 1:
+                return up
+            return result
         else:
             # support other methods
             errors.later()

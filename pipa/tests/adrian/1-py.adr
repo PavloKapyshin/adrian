@@ -1,17 +1,36 @@
 py#print(py#Int(0))
+py#print()
 
 py#print(py#Str("Hello, world!"))
+py#print()
 
 py#print(py#List([]))
 py#print(py#List([py#Int(1)]))
+py#print()
 
 py#print(py#Set({}))
 py#print(py#Set({py#Int(1)}))
+py#print()
 
 py#print(py#Dict({}))
 py#print(py#Dict({py#Str("Hello") = py#Int(0)}))
+py#print()
 
 py#print(py#List([py#Int(1), py#Int(2)]))
 py#print(py#List([py#Int(1), py#Str("Hello"), py#List([py#Int(1)])]))
+py#print()
 
 py#print(py#Str("Hello, John").split(py#Str(", ")))
+py#print()
+
+py#print(py#Int(1) + py#Int(2))
+py#print(py#Int(1) - py#Int(2))
+py#print(py#Int(3) * py#Int(2))
+py#print(py#Int(4) / py#Int(2))
+py#print((py#Int(6) + py#Int(3) * py#Int(2)) / 2)
+py#print(py#Str("Hello, ") + py#Str("Mike"))
+py#print(py#List([py#Int(1)]) + py#List([py#Int(2), py#Int(3)]))
+py#print(py#Set(
+    {py#Int(1), py#Int(2)}) + py#Set({py#Int(2), py#Int(3)}))
+py#print(py#Dict(
+    {py#Str("Hi") = py#Int(1)}) + py#Dict({}))

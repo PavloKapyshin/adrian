@@ -58,6 +58,10 @@ def e(expr, hash_=None):
                     e(key, hash_=hash_): e(val, hash_=hash_)
                     for key, val in expr.literal.items()})
         return expr
+    elif expr in A(astlib.Expr):
+        return astlib.Expr(
+            e(expr.left, hash_=hash_), expr.op,
+            e(expr.right, hash_=hash_))
     else:
         errors.later()
 
