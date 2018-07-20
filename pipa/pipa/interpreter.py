@@ -99,6 +99,14 @@ class Interpreter(layers.Layer):
                     print("{}")
                 else:
                     print(arg)
+        elif func_call.name == defs.FUNC_TO_STR:
+            return str(self.adr_to_py(func_call.args[0]))
+        elif func_call.name == defs.FUNC_TO_INT:
+            return int(self.adr_to_py(func_call.args[0]))
+        elif func_call.name == defs.FUNC_TO_SET:
+            return set(self.adr_to_py(func_call.args[0]))
+        elif func_call.name == defs.FUNC_TO_LIST:
+            return list(self.adr_to_py(func_call.args[0]))
         else:
             # support other funcs
             errors.later()
@@ -129,6 +137,7 @@ class Interpreter(layers.Layer):
         elif func_call.name == defs.METHOD_DIV:
             result = base / args[0]
             up, down = result.as_integer_ratio()
+            # When result is an integer we don't need .0 printed at the end.
             if down == 1:
                 return up
             return result
