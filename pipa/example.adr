@@ -1,2 +1,0 @@
-let a = py#Int(1) + py#Int(1)
-py#print(py#toStr(a))

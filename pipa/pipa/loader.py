@@ -34,9 +34,10 @@ def e(expr, hash_=None):
             return make_py_object(expr.member)
         else:
             errors.later()
-    elif expr in A(list):
-        return [e(expr[0], hash_=hash_)] + [
-            only_args(elem, hash_=hash_) for elem in expr[1:]]
+    elif expr in A(astlib.StructPath):
+        expr = expr.path
+        return astlib.StructPath([e(expr[0], hash_=hash_)] + [
+            only_args(elem, hash_=hash_) for elem in expr[1:]])
     elif expr in A(astlib.FuncCall):
         name = e(expr.name, hash_=hash_)
         args = a(expr.args, hash_=hash_)
@@ -88,10 +89,19 @@ def make_py_object(node):
 
 class Loader(layers.Layer):
 
+    def __init__(self):
+        self.b = layers.b(Loader)
+
     @layers.register(astlib.LetDecl)
     def let_declaration(self, declaration):
         yield astlib.LetDecl(
             n(declaration.name), t(declaration.type_), e(declaration.expr))
+
+    @layers.register(astlib.For)
+    def for_stmt(self, stmt):
+        yield astlib.For(
+            [n(name) for name in stmt.names], e(stmt.container),
+            self.b(stmt.body))
 
     @layers.register(astlib.FuncCall)
     def func_call(self, call):

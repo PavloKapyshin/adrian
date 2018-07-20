@@ -126,19 +126,26 @@ def p_stmt(content):
     """
     stmt : let_decl
          | factor
+         | for_stmt
     """
     content[0] = content[1]
 
 
 def p_let_decl_1(content):
     """let_decl : LET NAME COLON type EQ expr"""
-    content[0] = astlib.LetDecl(astlib.Name(content[2]), content[4], content[6])
+    content[0] = astlib.LetDecl(
+        astlib.Name(content[2]), content[4], content[6])
 
 
 def p_let_decl_2(content):
     """let_decl : LET NAME EQ expr"""
     content[0] = astlib.LetDecl(
         astlib.Name(content[2]), astlib.Empty(), content[4])
+
+
+def p_for_stmt(content):
+    """for_stmt : FOR arg_list IN expr LBRACE ast RBRACE"""
+    content[0] = astlib.For(content[2], content[4], content[6])
 
 
 def p_type(content):
@@ -209,6 +216,7 @@ def p_factor_3(content):
     content[0] = []
     content[0] = merge(content[0], content[1])
     content[0] = merge(content[0], content[3])
+    content[0] = astlib.StructPath(content[0])
 
 
 def p_factor_2(content):

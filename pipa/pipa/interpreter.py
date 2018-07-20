@@ -15,7 +15,8 @@ class Interpreter(layers.Layer):
             return self.func_call(expr)
         elif expr in A(astlib.Name):
             return self.adr_to_py(context.env[expr]["expr"])
-        elif expr in A(list):
+        elif expr in A(astlib.StructPath):
+            expr = expr.path
             if len(expr) > 2:
                 errors.later()
             type_ = infer_type(expr[0])
@@ -48,6 +49,8 @@ class Interpreter(layers.Layer):
                     self.adr_to_py(key): self.adr_to_py(val)
                     for key, val in expr.literal.items()}
             return expr.literal
+        elif expr in A(int, str, list, set, dict):
+            return expr
         else:
             # support other exprs
             errors.later()
@@ -61,6 +64,25 @@ class Interpreter(layers.Layer):
                 else infer_type(declaration.expr)),
             "expr": declaration.expr
         }
+
+    @layers.register(astlib.For)
+    def for_stmt(self, stmt):
+        if len(stmt.names) > 1:
+            errors.later()
+
+        def register_name(name, expr):
+            context.env[name] = {
+                "node_type": astlib.NodeT.var,
+                "type": infer_type(expr),
+                "expr": expr
+            }
+        container = self.adr_to_py(stmt.container)
+        name = stmt.names[0]
+        for elem in container:
+            register_name(name, elem)
+            result = self.b(stmt.body)
+            if result is not None:
+                return result
 
     @layers.register(astlib.FuncCall)
     def func_call(self, func_call):
@@ -90,15 +112,10 @@ class Interpreter(layers.Layer):
                 self.adr_to_py(key): self.adr_to_py(val)
                 for key, val in literal.items()}
         elif func_call.name == defs.FUNC_PRINT:
-            if len(func_call.args) == 0:
-                print()
             for arg in func_call.args:
                 arg = self.adr_to_py(arg)
-                if arg in A(set) and len(arg) == 0:
-                    # I just don't like `set()` to be printed.
-                    print("{}")
-                else:
-                    print(arg)
+                print(arg, end="")
+            print()
         elif func_call.name == defs.FUNC_TO_STR:
             return str(self.adr_to_py(func_call.args[0]))
         elif func_call.name == defs.FUNC_TO_INT:
@@ -144,3 +161,15 @@ class Interpreter(layers.Layer):
         else:
             # support other methods
             errors.later()
+
+    def b(self, body):
+        def transform_node(node, *, registry):
+            node_func = registry.get(type(node))
+            if node_func is not None:
+                return node_func(node)
+
+        reg = Interpreter().get_registry()
+        for stmt in body:
+            value = transform_node(stmt, registry=reg)
+            if value is not None:
+                return value

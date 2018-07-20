@@ -5,6 +5,7 @@ import collections
 @enum.unique
 class NodeT(enum.Enum):
     let = 1
+    var = 2
 
 
 @enum.unique
@@ -47,6 +48,68 @@ class Node(BaseNode):
     __repr__ = __str__
 
 
+class Decl(Node):
+
+    def __init__(self, name, type_, expr):
+        self.name = name
+        self.type_ = type_
+        self.expr = expr
+        self._keys = ("name", "type_", "expr")
+
+
+class LetDecl(Decl):
+    pass
+
+
+class For(Node):
+
+    def __init__(self, names, container, body):
+        self.names = names
+        self.container = container
+        self.body = body
+        self._keys = ("names", "container", "body")
+
+
+class FuncCall(Node):
+
+    def __init__(self, name, args):
+        self.name = name
+        self.args = args
+        self._keys = ("name", "args")
+
+
+class ModuleMember(Node):
+
+    def __init__(self, module, member):
+        self.module = module
+        self.member = member
+        self._keys = ("module", "member")
+
+
+class Expr(Node):
+
+    def __init__(self, left, op, right):
+        self.left = left
+        self.op = op
+        self.right = right
+        self._keys = ("left", "op", "right")
+
+
+class StructPath(Node):
+
+    def __init__(self, path):
+        self.path = path
+        self._keys = ("path", )
+
+
+class Literal(Node):
+
+    def __init__(self, type_, literal):
+        self.type_ = type_
+        self.literal = literal
+        self._keys = ("type_", "literal")
+
+
 class _Name(collections.UserString):
     """Name concept.
 
@@ -75,63 +138,6 @@ class Name(_Name):
 
     def __init__(self, data):
         super().__init__(data)
-
-
-class Decl(Node):
-
-    def __init__(self, name, type_, expr):
-        self.name = name
-        self.type_ = type_
-        self.expr = expr
-        self._keys = ("name", "type_", "expr")
-
-
-class LetDecl(Decl):
-    pass
-
-
-class FuncCall(Node):
-
-    def __init__(self, name, args):
-        self.name = name
-        self.args = args
-        self._keys = ("name", "args")
-
-
-class ModuleMember(Node):
-
-    def __init__(self, module, member):
-        self.module = module
-        self.member = member
-        self._keys = ("module", "member")
-
-
-class Empty(BaseNode):
-
-    def __str__(self):
-        return "EMPTY"
-
-    def __bool__(self):
-        return False
-
-    __repr__ = __str__
-
-
-class Expr(Node):
-
-    def __init__(self, left, op, right):
-        self.left = left
-        self.op = op
-        self.right = right
-        self._keys = ("left", "op", "right")
-
-
-class Literal(Node):
-
-    def __init__(self, type_, literal):
-        self.type_ = type_
-        self.literal = literal
-        self._keys = ("type_", "literal")
 
 
 class PyObject(Node):
@@ -166,3 +172,14 @@ class PyFuncCall(PyCall):
 
 class PyTypeCall(PyCall):
     pass
+
+
+class Empty(BaseNode):
+
+    def __str__(self):
+        return "EMPTY"
+
+    def __bool__(self):
+        return False
+
+    __repr__ = __str__
