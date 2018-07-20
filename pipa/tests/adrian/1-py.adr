@@ -34,3 +34,7 @@ py#print(py#Set(
     {py#Int(1), py#Int(2)}) + py#Set({py#Int(2), py#Int(3)}))
 py#print(py#Dict(
     {py#Str("Hi") = py#Int(1)}) + py#Dict({}))
+py#print()
+
+py#print(py#Dict({py#Str("Hello") = py#Int(1)}).values())
+py#print(py#Dict({py#Str("Hello") = py#Int(1)}).keys())

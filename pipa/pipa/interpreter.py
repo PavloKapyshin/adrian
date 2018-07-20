@@ -109,6 +109,10 @@ class Interpreter(layers.Layer):
         args = [self.adr_to_py(arg) for arg in func_call.args]
         if func_call.name == defs.METHOD_SPLIT:
             return base.split(args[0])
+        elif func_call.name == defs.METHOD_VALUES:
+            return list(base.values())
+        elif func_call.name == defs.METHOD_KEYS:
+            return list(base.keys())
         elif func_call.name == defs.METHOD_ADD:
             if type_.name == defs.TYPE_SET:
                 return base.union(args[0])

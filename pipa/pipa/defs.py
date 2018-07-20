@@ -34,6 +34,8 @@ FUNC_TO_INT = "toInt"
 FUNC_TO_STR = "toStr"
 FUNC_LEN = "len"
 METHOD_SPLIT = "split"
+METHOD_VALUES = "values"
+METHOD_KEYS = "keys"
 
 
 RESERVED_WORDS = {
