@@ -126,6 +126,10 @@ class Interpreter(layers.Layer):
             return list(self.adr_to_py(func_call.args[0]))
         elif func_call.name == defs.FUNC_LEN:
             return len(self.adr_to_py(func_call.args[0]))
+        elif func_call.name == defs.FUNC_READ_FILE:
+            pass
+        elif func_call.name == defs.FUNC_WRITE_FILE:
+            pass
         else:
             # support other funcs
             errors.later()
