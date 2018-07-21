@@ -66,3 +66,6 @@ py#print()
 for key in py#Dict({py#Str("Hello") = py#Int(1)}) {
     py#print(key)
 }
+py#print()
+
+py#print(py#len(py#List([py#Int(1), py#Int(2), py#Int(3)])))
