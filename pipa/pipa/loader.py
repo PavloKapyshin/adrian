@@ -82,7 +82,8 @@ def only_args(node, hash_=None):
 def make_py_object(node):
     if node in (
             defs.FUNC_PRINT, defs.FUNC_LEN, defs.FUNC_TO_INT,
-            defs.FUNC_TO_STR, defs.FUNC_TO_SET, defs.FUNC_TO_LIST):
+            defs.FUNC_TO_STR, defs.FUNC_TO_SET, defs.FUNC_TO_LIST,
+            defs.FUNC_READ_FILE, defs.FUNC_WRITE_FILE):
         return astlib.PyFunc(node)
     return astlib.PyType(node)
 
