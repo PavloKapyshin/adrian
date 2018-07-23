@@ -1,4 +1,0 @@
-let names = py#Set({py#Str("John")})
-names.add(py#Str("Mike"))
-
-py#print(names)
