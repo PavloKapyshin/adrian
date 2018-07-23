@@ -41,6 +41,9 @@ METHOD_SPLIT = "split"
 METHOD_VALUES = "values"
 METHOD_KEYS = "keys"
 METHOD_ITEMS = "items"
+METHOD_ADD = "add"
+METHOD_APPEND = "append"
+METHOD_EXTEND = "extend"
 
 
 RESERVED_WORDS = {
@@ -67,16 +70,16 @@ COMMON_REGEX = "".join([
         TYPE_REGEX, MODULE_REGEX, METHOD_REGEX)]),
     ")"])
 
-INIT_METHOD = "__init__"
-METHOD_ADD = "__add__"
-METHOD_SUB = "__sub__"
-METHOD_MUL = "__mul__"
-METHOD_DIV = "__div__"
+
+SPEC_METHOD_ADD = "__add__"
+SPEC_METHOD_SUB = "__sub__"
+SPEC_METHOD_MUL = "__mul__"
+SPEC_METHOD_DIV = "__div__"
 OPERATOR_TO_METHOD = {
-    "+": METHOD_ADD,
-    "-": METHOD_SUB,
-    "*": METHOD_MUL,
-    "/": METHOD_DIV,
+    "+": SPEC_METHOD_ADD,
+    "-": SPEC_METHOD_SUB,
+    "*": SPEC_METHOD_MUL,
+    "/": SPEC_METHOD_DIV,
 }
 
 

@@ -89,6 +89,10 @@ class Interpreter(layers.Layer):
     def func_call(self, func_call):
         errors.later()
 
+    @layers.register(astlib.StructPath)
+    def struct_path(self, struct_path):
+        return self.adr_to_py(struct_path)
+
     @layers.register(astlib.PyFuncCall)
     def py_call(self, func_call):
         def translate_iterable(iterable):
@@ -142,32 +146,48 @@ class Interpreter(layers.Layer):
             errors.later()
 
     def py_method_call(self, base, func_call):
+        def update_expr(base, args, expr_translator):
+            if base not in A(astlib.Name):
+                errors.later()
+            expr = expr_translator(
+                self.adr_to_py(context.env[base]["expr"]), args)
+            context.env[base]["expr"] = expr
+
         type_ = infer_type(base)
-        base = self.adr_to_py(base)
+        converted_base = self.adr_to_py(base)
         args = [self.adr_to_py(arg) for arg in func_call.args]
         if func_call.name == defs.METHOD_SPLIT:
-            return base.split(args[0])
-        elif func_call.name == defs.METHOD_VALUES:
-            return list(base.values())
-        elif func_call.name == defs.METHOD_KEYS:
-            return list(base.keys())
-        elif func_call.name == defs.METHOD_ITEMS:
-            return base.items()
+            return converted_base.split(args[0])
+        elif func_call.name == defs.METHOD_APPEND:
+            update_expr(
+                base, args, lambda before, args: before + [args[0]])
+        elif func_call.name == defs.METHOD_EXTEND:
+            update_expr(
+                base, args, lambda before, args: before + args[0])
         elif func_call.name == defs.METHOD_ADD:
+            update_expr(
+                base, args, lambda before, args: before.union({args[0]}))
+        elif func_call.name == defs.METHOD_VALUES:
+            return list(converted_base.values())
+        elif func_call.name == defs.METHOD_KEYS:
+            return list(converted_base.keys())
+        elif func_call.name == defs.METHOD_ITEMS:
+            return converted_base.items()
+        elif func_call.name == defs.SPEC_METHOD_ADD:
             if type_.name == defs.TYPE_SET:
-                return base.union(args[0])
+                return converted_base.union(args[0])
             elif type_.name == defs.TYPE_DICT:
-                result = base
+                result = converted_base
                 for key, val in args[0].items():
                     result[key] = val
                 return result
-            return base + args[0]
-        elif func_call.name == defs.METHOD_SUB:
-            return base - args[0]
-        elif func_call.name == defs.METHOD_MUL:
-            return base * args[0]
-        elif func_call.name == defs.METHOD_DIV:
-            result = base / args[0]
+            return converted_base + args[0]
+        elif func_call.name == defs.SPEC_METHOD_SUB:
+            return converted_base - args[0]
+        elif func_call.name == defs.SPEC_METHOD_MUL:
+            return converted_base * args[0]
+        elif func_call.name == defs.SPEC_METHOD_DIV:
+            result = converted_base / args[0]
             up, down = result.as_integer_ratio()
             # When result is an integer we don't need .0 printed at the end.
             if down == 1:

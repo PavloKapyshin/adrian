@@ -108,6 +108,10 @@ class Loader(layers.Layer):
     def func_call(self, call):
         yield e(call)
 
+    @layers.register(astlib.StructPath)
+    def struct_path(self, struct_path):
+        yield e(struct_path)
+
     @layers.register(astlib.AST)
     def main(self, nodes, registry):
         translated_nodes = []

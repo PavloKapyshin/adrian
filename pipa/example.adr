@@ -1,3 +1,4 @@
-for key, val in py#Dict({py#Str("Hello") = py#Int(1)}).items() {
-    py#print(key, py#Str(" = "), val)
-}
+let names = py#Set({py#Str("John")})
+names.add(py#Str("Mike"))
+
+py#print(names)
