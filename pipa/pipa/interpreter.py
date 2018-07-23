@@ -67,9 +67,6 @@ class Interpreter(layers.Layer):
 
     @layers.register(astlib.For)
     def for_stmt(self, stmt):
-        if len(stmt.names) > 1:
-            errors.later()
-
         def register_name(name, expr):
             context.env[name] = {
                 "node_type": astlib.NodeT.var,
@@ -77,9 +74,13 @@ class Interpreter(layers.Layer):
                 "expr": expr
             }
         container = self.adr_to_py(stmt.container)
-        name = stmt.names[0]
+        names = stmt.names
         for elem in container:
-            register_name(name, elem)
+            if len(names) > 1:
+                for name, pair_elem in zip(names, elem):
+                    register_name(name, pair_elem)
+            else:
+                register_name(names[0], elem)
             result = self.b(stmt.body)
             if result is not None:
                 return result
@@ -150,6 +151,8 @@ class Interpreter(layers.Layer):
             return list(base.values())
         elif func_call.name == defs.METHOD_KEYS:
             return list(base.keys())
+        elif func_call.name == defs.METHOD_ITEMS:
+            return base.items()
         elif func_call.name == defs.METHOD_ADD:
             if type_.name == defs.TYPE_SET:
                 return base.union(args[0])

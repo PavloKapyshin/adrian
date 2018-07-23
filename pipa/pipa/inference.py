@@ -15,6 +15,8 @@ def infer_type(expr):
             return astlib.PyType(defs.TYPE_SET)
         elif expr.name == defs.FUNC_TO_LIST:
             return astlib.PyType(defs.TYPE_LIST)
+        elif expr.name == defs.FUNC_READ_FILE:
+            return astlib.PyType(defs.TYPE_STR)
         else:
             errors.later()
     elif expr in A(astlib.Name):

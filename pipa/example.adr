@@ -1,4 +1,3 @@
-py#writeFile(py#Str("test_file.txt"), py#Str("Just a test..."))
-let contents: py#Str = py#readFile(py#Str("test_file.txt"))
-py#print(py#Str("Got:"))
-py#print(contents)
+for key, val in py#Dict({py#Str("Hello") = py#Int(1)}).items() {
+    py#print(key, py#Str(" = "), val)
+}

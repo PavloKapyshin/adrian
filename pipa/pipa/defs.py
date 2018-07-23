@@ -40,6 +40,7 @@ FUNC_WRITE_FILE = "writeFile"
 METHOD_SPLIT = "split"
 METHOD_VALUES = "values"
 METHOD_KEYS = "keys"
+METHOD_ITEMS = "items"
 
 
 RESERVED_WORDS = {
