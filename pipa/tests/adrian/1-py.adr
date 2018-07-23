@@ -49,19 +49,6 @@ py#print()
 py#print(py#len(py#List([py#Int(1), py#Int(2), py#Int(3)])))
 py#print()
 
-let namesList1 = py#List([py#Str("John"), py#Str("Mike")])
-namesList1.append(py#Str("Gal"))
-py#print(namesList1)
-
-let namesList2 = py#List([py#Str("Chris"), py#Str("Robert")])
-namesList2.extend(py#List([py#Str("Noob")]))
-py#print(namesList2)
-
-let namesSet = py#Set({py#Str("Gal")})
-namesSet.add(py#Str("Gal"))
-py#print(namesSet)
-py#print()
-
 -- Iteration
 for char in py#Str("NOOB") {
     py#print(char)

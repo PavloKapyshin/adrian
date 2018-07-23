@@ -41,9 +41,6 @@ METHOD_SPLIT = "split"
 METHOD_VALUES = "values"
 METHOD_KEYS = "keys"
 METHOD_ITEMS = "items"
-METHOD_ADD = "add"
-METHOD_APPEND = "append"
-METHOD_EXTEND = "extend"
 
 
 RESERVED_WORDS = {

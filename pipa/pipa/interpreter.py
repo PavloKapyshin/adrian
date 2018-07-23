@@ -146,27 +146,11 @@ class Interpreter(layers.Layer):
             errors.later()
 
     def py_method_call(self, base, func_call):
-        def update_expr(base, args, expr_translator):
-            if base not in A(astlib.Name):
-                errors.later()
-            expr = expr_translator(
-                self.adr_to_py(context.env[base]["expr"]), args)
-            context.env[base]["expr"] = expr
-
         type_ = infer_type(base)
         converted_base = self.adr_to_py(base)
         args = [self.adr_to_py(arg) for arg in func_call.args]
         if func_call.name == defs.METHOD_SPLIT:
             return converted_base.split(args[0])
-        elif func_call.name == defs.METHOD_APPEND:
-            update_expr(
-                base, args, lambda before, args: before + [args[0]])
-        elif func_call.name == defs.METHOD_EXTEND:
-            update_expr(
-                base, args, lambda before, args: before + args[0])
-        elif func_call.name == defs.METHOD_ADD:
-            update_expr(
-                base, args, lambda before, args: before.union({args[0]}))
         elif func_call.name == defs.METHOD_VALUES:
             return list(converted_base.values())
         elif func_call.name == defs.METHOD_KEYS:
