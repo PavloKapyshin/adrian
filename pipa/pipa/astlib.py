@@ -6,6 +6,7 @@ import collections
 class NodeT(enum.Enum):
     let = 1
     var = 2
+    func = 3
 
 
 @enum.unique
@@ -63,6 +64,16 @@ class VarDecl(Decl):
     pass
 
 
+class FuncDecl(Node):
+
+    def __init__(self, name, args, rettype, body):
+        self.name = name
+        self.args = args
+        self.rettype = rettype
+        self.body = body
+        self._keys = ("name", "args", "rettype", "body")
+
+
 class Assignment(Node):
 
     def __init__(self, left, op, right):
@@ -70,6 +81,13 @@ class Assignment(Node):
         self.op = op
         self.right = right
         self._keys = ("left", "op", "right")
+
+
+class Return(Node):
+
+    def __init__(self, expr):
+        self.expr = expr
+        self._keys = ("expr", )
 
 
 class For(Node):

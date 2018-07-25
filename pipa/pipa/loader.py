@@ -19,6 +19,10 @@ def t(type_, hash_=None):
             return make_py_object(type_.member)
         else:
             errors.later()
+    elif type_ in A(astlib.Name):
+        if type_ == defs.TYPE_VOID:
+            return type_
+        return n(type_, hash_)
     elif type_ in A(astlib.Empty):
         return type_
     else:
@@ -99,12 +103,18 @@ class Loader(layers.Layer):
         return type(decl)(n(decl.name), t(decl.type_), e(decl.expr))
 
     @layers.register(astlib.LetDecl)
-    def let_declaration(self, declaration):
-        yield self.declaration(declaration)
+    def let_declaration(self, decl):
+        yield self.declaration(decl)
 
     @layers.register(astlib.VarDecl)
-    def var_declaration(self, declaration):
-        yield self.declaration(declaration)
+    def var_declaration(self, decl):
+        yield self.declaration(decl)
+
+    @layers.register(astlib.FuncDecl)
+    def func_declaration(self, decl):
+        args = [(n(name), t(type_)) for name, type_ in decl.args]
+        yield astlib.FuncDecl(
+            n(decl.name), args, t(decl.rettype), self.b(decl.body))
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
@@ -116,6 +126,10 @@ class Loader(layers.Layer):
         yield astlib.For(
             [n(name) for name in stmt.names], e(stmt.container),
             self.b(stmt.body))
+
+    @layers.register(astlib.Return)
+    def return_stmt(self, stmt):
+        yield astlib.Return(e(stmt.expr))
 
     @layers.register(astlib.FuncCall)
     def func_call(self, call):

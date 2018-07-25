@@ -1,3 +1,4 @@
+-- assignments
 var name = py#Str("John")
 py#print(name)
 name = py#Str("Mike")
@@ -24,3 +25,18 @@ name = py#Str("Nick")
 var greeting = py#Str("Hello")
 greeting += separator + name + end
 py#print(greeting)
+
+py#print()
+
+-- functions
+fun aliasForPrint(src: py#Str): Void {
+    py#print(src)
+}
+
+fun returnTheSame(src: py#Int): py#Int {
+    return src
+}
+
+aliasForPrint(py#Str("Hello, functions!"))
+let same = returnTheSame(py#Int(1))
+py#print(same)

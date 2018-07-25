@@ -56,14 +56,23 @@ class Interpreter(layers.Layer):
             errors.later()
 
     @layers.register(astlib.LetDecl)
-    def let_declaration(self, declaration):
-        self.declaration(declaration)
+    def let_declaration(self, decl):
+        self.declaration(decl)
 
     @layers.register(astlib.VarDecl)
-    def var_declaration(self, declaration):
-        if declaration.expr in A(astlib.Empty):
+    def var_declaration(self, decl):
+        if decl.expr in A(astlib.Empty):
             errors.later()
-        self.declaration(declaration)
+        self.declaration(decl)
+
+    @layers.register(astlib.FuncDecl)
+    def func_declaration(self, decl):
+        context.env[decl.name] = {
+            "node_type": astlib.NodeT.func,
+            "args": decl.args,
+            "rettype": decl.rettype,
+            "body": decl.body
+        }
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
@@ -115,9 +124,23 @@ class Interpreter(layers.Layer):
                 return result
         context.env.remove_scope()
 
+    @layers.register(astlib.Return)
+    def return_stmt(self, stmt):
+        return self.adr_to_py(stmt.expr)
+
     @layers.register(astlib.FuncCall)
     def func_call(self, func_call):
-        errors.later()
+        info = context.env[func_call.name]
+        context.env.add_scope()
+        for (name, type_), expr in zip(info["args"], func_call.args):
+            context.env[name] = {
+                "node_type": astlib.NodeT.var,
+                "type": type_,
+                "expr": expr
+            }
+        return_val = self.b(info["body"])
+        context.env.remove_scope()
+        return return_val
 
     @layers.register(astlib.StructPath)
     def struct_path(self, struct_path):

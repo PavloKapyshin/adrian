@@ -117,19 +117,20 @@ precedence = (
 
 
 def p_ast_1(content):
-    """ast : ast stmt"""
-    content[0] = content[1] + [content[2]]
+    """ast : stmt ast"""
+    content[0] = [content[1]] + content[2]
 
 
 def p_ast_2(content):
-    """ast : stmt"""
-    content[0] = [content[1]]
+    """ast : empty"""
+    content[0] = []
 
 
 def p_stmt(content):
     """
     stmt : let_decl
          | var_decl
+         | func_decl
          | assignment
          | factor
          | for_stmt
@@ -167,6 +168,12 @@ def p_var_decl_3(content):
         astlib.Name(content[2]), content[4], astlib.Empty())
 
 
+def p_func_decl(content):
+    """func_decl : FUN NAME LPAREN func_parameters RPAREN COLON type LBRACE func_body RBRACE"""
+    content[0] = astlib.FuncDecl(
+        content[2], content[4], content[7], content[9])
+
+
 def p_assignment(content):
     """assignment : expr assignment_operator expr"""
     content[0] = astlib.Assignment(content[1], content[2], content[3])
@@ -175,6 +182,11 @@ def p_assignment(content):
 def p_for_stmt(content):
     """for_stmt : FOR arg_list IN expr LBRACE ast RBRACE"""
     content[0] = astlib.For(content[2], content[4], content[6])
+
+
+def p_return_stmt(content):
+    """return_stmt : RETURN expr"""
+    content[0] = astlib.Return(content[2])
 
 
 def p_assignment_operator(content):
@@ -188,9 +200,46 @@ def p_assignment_operator(content):
     content[0] = content[1]
 
 
-def p_type(content):
+def p_func_parameters_1(content):
+    """func_parameters : NAME COLON type COMMA func_parameters"""
+    content[0] = [(content[1], content[3])] + content[5]
+
+def p_func_parameters_2(content):
+    """func_parameters : NAME COLON type"""
+    content[0] = [(content[1], content[3])]
+
+def p_func_parameters_3(content):
+    """func_parameters : empty"""
+    content[0] = []
+
+
+def p_func_body_1(content):
+    """func_body : func_body_stmt func_body"""
+    content[0] = [content[1]] + content[2]
+
+def p_func_body_2(content):
+    """func_body : empty"""
+    content[0] = []
+
+def p_func_body_stmt(content):
+    """
+    func_body_stmt : var_decl
+                   | let_decl
+                   | assignment
+                   | factor
+                   | for_stmt
+                   | return_stmt
+    """
+    content[0] = content[1]
+
+
+def p_type_1(content):
     """type : module_member"""
     content[0] = content[1]
+
+def p_type_2(content):
+    """type : NAME"""
+    content[0] = astlib.Name(content[1])
 
 
 def p_arg_list_1(content):
