@@ -11,6 +11,10 @@ from .utils import A
 _RESERVED_WORDS = defs.RESERVED_WORDS
 
 _TOKENS = {
+    "+=": "PLUSEQ",
+    "-=": "MINUSEQ",
+    "*=": "TIMESEQ",
+    "/=": "DIVIDEEQ",
     # "==": "EQEQ",
     # "<=": "LTEQ",
     # ">=": "GTEQ",
@@ -126,6 +130,7 @@ def p_stmt(content):
     """
     stmt : let_decl
          | var_decl
+         | assignment
          | factor
          | for_stmt
     """
@@ -162,9 +167,25 @@ def p_var_decl_3(content):
         astlib.Name(content[2]), content[4], astlib.Empty())
 
 
+def p_assignment(content):
+    """assignment : expr assignment_operator expr"""
+    content[0] = astlib.Assignment(content[1], content[2], content[3])
+
+
 def p_for_stmt(content):
     """for_stmt : FOR arg_list IN expr LBRACE ast RBRACE"""
     content[0] = astlib.For(content[2], content[4], content[6])
+
+
+def p_assignment_operator(content):
+    """
+    assignment_operator : EQ
+                        | PLUSEQ
+                        | MINUSEQ
+                        | TIMESEQ
+                        | DIVIDEEQ
+    """
+    content[0] = content[1]
 
 
 def p_type(content):

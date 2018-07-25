@@ -43,6 +43,13 @@ METHOD_KEYS = "keys"
 METHOD_ITEMS = "items"
 
 
+EQ = "="
+ASSIGNMENT_OP_TO_EXPR_OP = {
+    "+=": "+",
+    "-=": "-",
+    "*=": "*",
+    "/=": "/"
+}
 RESERVED_WORDS = {
     keyword: keyword.upper()
     for keyword in (

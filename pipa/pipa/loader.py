@@ -106,6 +106,11 @@ class Loader(layers.Layer):
     def var_declaration(self, declaration):
         yield self.declaration(declaration)
 
+    @layers.register(astlib.Assignment)
+    def assignment(self, stmt):
+        yield astlib.Assignment(
+            e(stmt.left), stmt.op, e(stmt.right))
+
     @layers.register(astlib.For)
     def for_stmt(self, stmt):
         yield astlib.For(

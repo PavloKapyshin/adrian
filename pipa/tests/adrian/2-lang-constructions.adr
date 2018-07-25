@@ -1,0 +1,26 @@
+var name = py#Str("John")
+py#print(name)
+name = py#Str("Mike")
+py#print(name)
+
+py#print()
+
+var number = py#Int(10)
+py#print(number)
+number += py#Int(1)
+py#print(number)
+number -= py#Int(6)
+py#print(number)
+number *= py#Int(2)
+py#print(number)
+number /= py#Int(2)
+py#print(number)
+
+py#print()
+
+let separator = py#Str(", ")
+let end = py#Str("!")
+name = py#Str("Nick")
+var greeting = py#Str("Hello")
+greeting += separator + name + end
+py#print(greeting)

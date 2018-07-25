@@ -69,8 +69,28 @@ class Interpreter(layers.Layer):
     def assignment(self, stmt):
         if stmt.left not in A(astlib.Name):
             errors.later()
+        def unlazy(expr, name):
+            if expr in A(astlib.Name):
+                return (context.env[expr]["expr"] if expr == name else expr)
+            elif expr in A(astlib.Expr):
+                return astlib.Expr(
+                    unlazy(expr.left, name), expr.op, unlazy(expr.right, name))
+            elif expr in A(astlib.PyTypeCall):
+                return expr
+            else:
+                errors.later()
+
         # left must be declarated as variable
         # type of right must be equal to type of left
+        if stmt.op == defs.EQ:
+            expr = unlazy(stmt.right, stmt.left)
+        else:
+            expr = unlazy(
+                astlib.Expr(
+                    stmt.left, defs.ASSIGNMENT_OP_TO_EXPR_OP[stmt.op],
+                    stmt.right),
+                stmt.left)
+        context.env[stmt.left]["expr"] = expr
 
     @layers.register(astlib.For)
     def for_stmt(self, stmt):
@@ -80,6 +100,7 @@ class Interpreter(layers.Layer):
                 "type": infer_type(expr),
                 "expr": expr
             }
+        context.env.add_scope()
         container = self.adr_to_py(stmt.container)
         names = stmt.names
         for elem in container:
@@ -90,7 +111,9 @@ class Interpreter(layers.Layer):
                 register_name(names[0], elem)
             result = self.b(stmt.body)
             if result is not None:
+                context.env.remove_scope()
                 return result
+        context.env.remove_scope()
 
     @layers.register(astlib.FuncCall)
     def func_call(self, func_call):
