@@ -63,6 +63,8 @@ def e(expr, hash_=None):
         return astlib.Expr(
             e(expr.left, hash_=hash_), expr.op,
             e(expr.right, hash_=hash_))
+    elif expr in A(astlib.Empty):
+        return expr
     else:
         errors.later()
 
@@ -93,10 +95,16 @@ class Loader(layers.Layer):
     def __init__(self):
         self.b = layers.b(Loader)
 
+    def declaration(self, decl):
+        return type(decl)(n(decl.name), t(decl.type_), e(decl.expr))
+
     @layers.register(astlib.LetDecl)
     def let_declaration(self, declaration):
-        yield astlib.LetDecl(
-            n(declaration.name), t(declaration.type_), e(declaration.expr))
+        yield self.declaration(declaration)
+
+    @layers.register(astlib.VarDecl)
+    def var_declaration(self, declaration):
+        yield self.declaration(declaration)
 
     @layers.register(astlib.For)
     def for_stmt(self, stmt):

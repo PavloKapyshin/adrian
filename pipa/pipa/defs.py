@@ -46,11 +46,7 @@ METHOD_ITEMS = "items"
 RESERVED_WORDS = {
     keyword: keyword.upper()
     for keyword in (
-        "var", "let", "struct", "return",
-        "fun", "adt", "protocol", "if",
-        "else", "elif", "not", "and",
-        "or", "while", "is", "extension",
-        "for", "in"
+        "var", "let", "for", "in"
     )
 }
 

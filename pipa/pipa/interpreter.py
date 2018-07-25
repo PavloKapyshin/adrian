@@ -57,13 +57,20 @@ class Interpreter(layers.Layer):
 
     @layers.register(astlib.LetDecl)
     def let_declaration(self, declaration):
-        context.env[declaration.name] = {
-            "node_type": astlib.NodeT.let,
-            "type": (declaration.type_
-                if declaration.type_ not in A(astlib.Empty)
-                else infer_type(declaration.expr)),
-            "expr": declaration.expr
-        }
+        self.declaration(declaration)
+
+    @layers.register(astlib.VarDecl)
+    def var_declaration(self, declaration):
+        if declaration.expr in A(astlib.Empty):
+            errors.later()
+        self.declaration(declaration)
+
+    @layers.register(astlib.Assignment)
+    def assignment(self, stmt):
+        if stmt.left not in A(astlib.Name):
+            errors.later()
+        # left must be declarated as variable
+        # type of right must be equal to type of left
 
     @layers.register(astlib.For)
     def for_stmt(self, stmt):
@@ -192,3 +199,14 @@ class Interpreter(layers.Layer):
             value = transform_node(stmt, registry=reg)
             if value is not None:
                 return value
+
+    def declaration(self, decl):
+        context.env[decl.name] = {
+            "node_type": (astlib.NodeT.var
+                    if decl in A(astlib.VarDecl)
+                    else astlib.NodeT.let),
+            "type": (decl.type_
+                if decl.type_ not in A(astlib.Empty)
+                else infer_type(decl.expr)),
+            "expr": decl.expr
+        }

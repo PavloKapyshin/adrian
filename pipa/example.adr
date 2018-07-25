@@ -1,0 +1,2 @@
+var john = py#Int(1)
+py#print(john)

@@ -11,14 +11,14 @@ from .utils import A
 _RESERVED_WORDS = defs.RESERVED_WORDS
 
 _TOKENS = {
-    "==": "EQEQ",
-    "<=": "LTEQ",
-    ">=": "GTEQ",
-    "!=": "NEQ",
+    # "==": "EQEQ",
+    # "<=": "LTEQ",
+    # ">=": "GTEQ",
+    # "!=": "NEQ",
 
     "=": "EQ",
-    "<": "LT",
-    ">": "GT",
+    # "<": "LT",
+    # ">": "GT",
 
     "+": "PLUS",
     "-": "MINUS",
@@ -125,6 +125,7 @@ def p_ast_2(content):
 def p_stmt(content):
     """
     stmt : let_decl
+         | var_decl
          | factor
          | for_stmt
     """
@@ -141,6 +142,24 @@ def p_let_decl_2(content):
     """let_decl : LET NAME EQ expr"""
     content[0] = astlib.LetDecl(
         astlib.Name(content[2]), astlib.Empty(), content[4])
+
+
+def p_var_decl_1(content):
+    """var_decl : VAR NAME COLON type EQ expr"""
+    content[0] = astlib.VarDecl(
+        astlib.Name(content[2]), content[4], content[6])
+
+
+def p_var_decl_2(content):
+    """var_decl : VAR NAME EQ expr"""
+    content[0] = astlib.VarDecl(
+        astlib.Name(content[2]), astlib.Empty(), content[4])
+
+
+def p_var_decl_3(content):
+    """var_decl : VAR NAME COLON type"""
+    content[0] = astlib.VarDecl(
+        astlib.Name(content[2]), content[4], astlib.Empty())
 
 
 def p_for_stmt(content):
