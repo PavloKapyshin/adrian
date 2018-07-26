@@ -107,7 +107,7 @@ class Interpreter(layers.Layer):
             context.env[name] = {
                 "node_type": astlib.NodeT.var,
                 "type": infer_type(expr),
-                "expr": expr
+                "expr": self.eval(expr)
             }
         context.env.add_scope()
         container = self.eval(stmt.container)
@@ -136,7 +136,7 @@ class Interpreter(layers.Layer):
             context.env[name] = {
                 "node_type": astlib.NodeT.var,
                 "type": type_,
-                "expr": expr
+                "expr": self.eval(expr)
             }
         return_val = self.b(info["body"])
         context.env.remove_scope()
@@ -254,5 +254,5 @@ class Interpreter(layers.Layer):
             "type": (decl.type_
                 if decl.type_ not in A(astlib.Empty)
                 else infer_type(decl.expr)),
-            "expr": decl.expr
+            "expr": self.eval(decl.expr)
         }
