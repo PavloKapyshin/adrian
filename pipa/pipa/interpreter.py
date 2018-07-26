@@ -10,11 +10,11 @@ def is_py_type(type_):
 
 class Interpreter(layers.Layer):
 
-    def adr_to_py(self, expr):
+    def eval(self, expr):
         if expr in A(astlib.FuncCall):
             return self.func_call(expr)
         elif expr in A(astlib.Name):
-            return self.adr_to_py(context.env[expr]["expr"])
+            return self.eval(context.env[expr]["expr"])
         elif expr in A(astlib.StructPath):
             expr = expr.path
             if len(expr) > 2:
@@ -41,12 +41,12 @@ class Interpreter(layers.Layer):
             if expr.type_ == astlib.LiteralT.number:
                 return int(expr.literal)
             elif expr.type_ == astlib.LiteralT.vector:
-                return [self.adr_to_py(elem) for elem in expr.literal]
+                return [self.eval(elem) for elem in expr.literal]
             elif expr.type_ == astlib.LiteralT.set_:
-                return {self.adr_to_py(elem) for elem in expr.literal}
+                return {self.eval(elem) for elem in expr.literal}
             elif expr.type_ == astlib.LiteralT.dict_:
                 return {
-                    self.adr_to_py(key): self.adr_to_py(val)
+                    self.eval(key): self.eval(val)
                     for key, val in expr.literal.items()}
             return expr.literal
         elif expr in A(int, str, list, set, dict):
@@ -99,7 +99,7 @@ class Interpreter(layers.Layer):
                     stmt.left, defs.ASSIGNMENT_OP_TO_EXPR_OP[stmt.op],
                     stmt.right),
                 stmt.left)
-        context.env[stmt.left]["expr"] = expr
+        context.env[stmt.left]["expr"] = self.eval(expr)
 
     @layers.register(astlib.For)
     def for_stmt(self, stmt):
@@ -110,7 +110,7 @@ class Interpreter(layers.Layer):
                 "expr": expr
             }
         context.env.add_scope()
-        container = self.adr_to_py(stmt.container)
+        container = self.eval(stmt.container)
         names = stmt.names
         for elem in container:
             if len(names) > 1:
@@ -126,7 +126,7 @@ class Interpreter(layers.Layer):
 
     @layers.register(astlib.Return)
     def return_stmt(self, stmt):
-        return self.adr_to_py(stmt.expr)
+        return self.eval(stmt.expr)
 
     @layers.register(astlib.FuncCall)
     def func_call(self, func_call):
@@ -144,12 +144,12 @@ class Interpreter(layers.Layer):
 
     @layers.register(astlib.StructPath)
     def struct_path(self, struct_path):
-        return self.adr_to_py(struct_path)
+        return self.eval(struct_path)
 
     @layers.register(astlib.PyFuncCall)
     def py_call(self, func_call):
         def translate_iterable(iterable):
-            return [self.adr_to_py(element) for element in iterable]
+            return [self.eval(element) for element in iterable]
 
         if func_call.name == defs.TYPE_INT:
             return int(func_call.args[0].literal)
@@ -167,31 +167,31 @@ class Interpreter(layers.Layer):
                 # Parser parses `{}` as a set, and not as a dictionary, so...
                 return {}
             return {
-                self.adr_to_py(key): self.adr_to_py(val)
+                self.eval(key): self.eval(val)
                 for key, val in literal.items()}
         elif func_call.name == defs.FUNC_PRINT:
             for arg in func_call.args:
-                arg = self.adr_to_py(arg)
+                arg = self.eval(arg)
                 print(arg, end="")
             print()
         elif func_call.name == defs.FUNC_TO_STR:
-            return str(self.adr_to_py(func_call.args[0]))
+            return str(self.eval(func_call.args[0]))
         elif func_call.name == defs.FUNC_TO_INT:
-            return int(self.adr_to_py(func_call.args[0]))
+            return int(self.eval(func_call.args[0]))
         elif func_call.name == defs.FUNC_TO_SET:
-            return set(self.adr_to_py(func_call.args[0]))
+            return set(self.eval(func_call.args[0]))
         elif func_call.name == defs.FUNC_TO_LIST:
-            return list(self.adr_to_py(func_call.args[0]))
+            return list(self.eval(func_call.args[0]))
         elif func_call.name == defs.FUNC_LEN:
-            return len(self.adr_to_py(func_call.args[0]))
+            return len(self.eval(func_call.args[0]))
         elif func_call.name == defs.FUNC_READ_FILE:
-            file_path = self.adr_to_py(func_call.args[0])
+            file_path = self.eval(func_call.args[0])
             with open(file_path, "r") as file:
                 contents = file.read()
             return contents
         elif func_call.name == defs.FUNC_WRITE_FILE:
-            file_path = self.adr_to_py(func_call.args[0])
-            contents = self.adr_to_py(func_call.args[1])
+            file_path = self.eval(func_call.args[0])
+            contents = self.eval(func_call.args[1])
             with open(file_path, "w") as file:
                 file.write(contents)
         else:
@@ -200,8 +200,8 @@ class Interpreter(layers.Layer):
 
     def py_method_call(self, base, func_call):
         type_ = infer_type(base)
-        converted_base = self.adr_to_py(base)
-        args = [self.adr_to_py(arg) for arg in func_call.args]
+        converted_base = self.eval(base)
+        args = [self.eval(arg) for arg in func_call.args]
         if func_call.name == defs.METHOD_SPLIT:
             return converted_base.split(args[0])
         elif func_call.name == defs.METHOD_VALUES:

@@ -1,3 +1,16 @@
-var john = py#Int(1)
-john += py#Int(2)
-py#print(john)
+fun addOne(src: py#Int): py#Int {
+    return src + py#Int(1)
+}
+
+fun addOneList(src: py#List): py#List {
+    var result = py#List([])
+    for element in src {
+        result += py#List([element + py#Int(1)])
+    }
+    return result
+}
+
+let initialList = py#List([py#Int(0), py#Int(1), py#Int(2)])
+py#print(initialList)
+let newList = addOneList(initialList)
+py#print(newList)
