@@ -57,6 +57,14 @@ fun returnFirstInt(src: py#List): py#Int {
     return py#Int(0)
 }
 
+fun myLength(src: py#List): py#Int {
+    var len = py#Int(0)
+    for element in src {
+        len += py#Int(1)
+    }
+    return len
+}
+
 -- function usage
 aliasForPrint(py#Str("Hello, functions!"))
 let same = returnTheSame(py#Int(1))
@@ -72,3 +80,6 @@ py#print(newList)
 py#print()
 py#print(returnFirstInt(py#List([py#Int(1)])))
 py#print(returnFirstInt(py#List([])))
+
+py#print()
+py#print(myLength(py#List([py#Int(1), py#Int(2), py#Str("Hi")])))
