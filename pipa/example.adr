@@ -1,13 +1,8 @@
-fun addOne(src: py#Int): py#Int {
-    return src + py#Int(1)
-}
-
-fun addOneList(src: py#List): py#List {
-    var result = py#List([])
+fun addOneList(src: py#List): py#Int {
     for element in src {
-        result += py#List([element + py#Int(1)])
+        return element
     }
-    return result
+    return py#Int(0)
 }
 
 let initialList = py#List([py#Int(0), py#Int(1), py#Int(2)])

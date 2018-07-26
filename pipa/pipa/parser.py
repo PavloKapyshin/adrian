@@ -134,6 +134,7 @@ def p_stmt(content):
          | assignment
          | factor
          | for_stmt
+         | return_stmt
     """
     content[0] = content[1]
 
@@ -169,7 +170,7 @@ def p_var_decl_3(content):
 
 
 def p_func_decl(content):
-    """func_decl : FUN NAME LPAREN func_parameters RPAREN COLON type LBRACE func_body RBRACE"""
+    """func_decl : FUN NAME LPAREN func_parameters RPAREN COLON type LBRACE ast RBRACE"""
     content[0] = astlib.FuncDecl(
         content[2], content[4], content[7], content[9])
 
@@ -211,26 +212,6 @@ def p_func_parameters_2(content):
 def p_func_parameters_3(content):
     """func_parameters : empty"""
     content[0] = []
-
-
-def p_func_body_1(content):
-    """func_body : func_body_stmt func_body"""
-    content[0] = [content[1]] + content[2]
-
-def p_func_body_2(content):
-    """func_body : empty"""
-    content[0] = []
-
-def p_func_body_stmt(content):
-    """
-    func_body_stmt : var_decl
-                   | let_decl
-                   | assignment
-                   | factor
-                   | for_stmt
-                   | return_stmt
-    """
-    content[0] = content[1]
 
 
 def p_type_1(content):
