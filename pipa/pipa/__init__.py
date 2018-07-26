@@ -10,7 +10,7 @@ LAYERS = (
 
 def _update_context_args():
     # You should always pass default environment to
-    # layer to avoid possible bugs.
+    # a layer to avoid possible bugs.
     return {**context.modified_context_args(), **{"env": defs.ENV}}
 
 

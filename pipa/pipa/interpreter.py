@@ -4,56 +4,42 @@ from .inference import infer_type
 from .utils import A
 
 
-def is_py_type(type_):
-    return type_ in A(astlib.PyType)
+def inline_references_of_name(expr, name):
+    if expr in A(astlib.Name):
+        return context.env[expr]["expr"] if expr == name else expr
+    elif expr in A(astlib.Expr):
+        return astlib.Expr(
+            inline_references_of_name(expr.left, name), expr.op,
+            inline_references_of_name(expr.right, name))
+    elif expr in A(astlib.PyTypeCall):
+        return expr
+    else:
+        # support other exprs
+        errors.later()
+
+
+def default_init_method(struct_decl):
+    self_decl = astlib.VarDecl(
+        astlib.Name(defs.SELF), struct_decl.name, astlib.Allocation())
+    field_decls = filter(
+        lambda x: x is not None,
+        [stmt if stmt in A(astlib.FieldDecl) else None
+        for stmt in struct_decl.body])
+    field_inits = []
+    args = []
+    for field_decl in field_decls:
+        args.append((field_decl.name, field_decl.type_))
+        field_inits.append(
+            astlib.Assignment(
+                astlib.StructPath([astlib.Name(defs.SELF), field_decl.name]),
+                "=", field_decl.name))
+    return_self = astlib.Return(astlib.Name(defs.SELF))
+    return astlib.MethodDecl(
+        astlib.Name(defs.SPEC_METHOD_INIT), args, struct_decl.name,
+        [self_decl] + field_inits + [return_self])
 
 
 class Interpreter(layers.Layer):
-
-    def eval(self, expr):
-        if expr in A(astlib.FuncCall):
-            return self.func_call(expr)
-        elif expr in A(astlib.Name):
-            return self.eval(context.env[expr]["expr"])
-        elif expr in A(astlib.StructPath):
-            expr = expr.path
-            if len(expr) > 2:
-                errors.later()
-            type_ = infer_type(expr[0])
-            if expr[1] in A(astlib.FuncCall):
-                if is_py_type(type_):
-                    return self.py_method_call(expr[0], expr[1])
-                else:
-                    # TODO: think about methods
-                    errors.later()
-            else:
-                # TODO: think about struct fields
-                errors.later()
-        elif expr in A(astlib.PyFuncCall, astlib.PyTypeCall):
-            return self.py_call(expr)
-        elif expr in A(astlib.Expr):
-            method_name = defs.OPERATOR_TO_METHOD[expr.op]
-            return self.py_method_call(
-                expr.left, astlib.FuncCall(method_name, [expr.right]))
-        elif expr in A(astlib.Literal):
-            # Already translated, nothing to do.
-            # Just checking in containers...
-            if expr.type_ == astlib.LiteralT.number:
-                return int(expr.literal)
-            elif expr.type_ == astlib.LiteralT.vector:
-                return [self.eval(elem) for elem in expr.literal]
-            elif expr.type_ == astlib.LiteralT.set_:
-                return {self.eval(elem) for elem in expr.literal}
-            elif expr.type_ == astlib.LiteralT.dict_:
-                return {
-                    self.eval(key): self.eval(val)
-                    for key, val in expr.literal.items()}
-            return expr.literal
-        elif expr in A(int, str, list, set, dict):
-            return expr
-        else:
-            # support other exprs
-            errors.later()
 
     @layers.register(astlib.LetDecl)
     def let_declaration(self, decl):
@@ -74,27 +60,54 @@ class Interpreter(layers.Layer):
             "body": decl.body
         }
 
+    @layers.register(astlib.MethodDecl)
+    def method_declaration(self, decl):
+        assert(context.parent_struct is not None)
+        context.env[context.parent_struct]["methods"][decl.name] = {
+            "args": decl.args,
+            "rettype": decl.rettype,
+            "body": decl.body
+        }
+
+    @layers.register(astlib.StructDecl)
+    def struct_declaration(self, decl):
+        context.env[decl.name] = {
+            "node_type": astlib.NodeT.struct,
+            "fields": {},
+            "methods": {}
+        }
+        context.env.add_scope()
+        context.parent_struct = decl.name
+        body = decl.body
+        has_init = False
+        for stmt in body:
+            if stmt in A(astlib.MethodDecl):
+                has_init = (stmt.name == defs.SPEC_METHOD_INIT)
+        if not has_init:
+            body = [default_init_method(decl)] + body
+        self.b(body)
+        context.parent_struct = None
+        context.env.remove_scope()
+        print(context.env.space)
+
+    @layers.register(astlib.FieldDecl)
+    def field_declaration(self, decl):
+        assert(context.parent_struct is not None)
+        context.env[context.parent_struct]["fields"][decl.name] = {
+            "type": decl.type_
+        }
+
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
         if stmt.left not in A(astlib.Name):
             errors.later()
-        def unlazy(expr, name):
-            if expr in A(astlib.Name):
-                return (context.env[expr]["expr"] if expr == name else expr)
-            elif expr in A(astlib.Expr):
-                return astlib.Expr(
-                    unlazy(expr.left, name), expr.op, unlazy(expr.right, name))
-            elif expr in A(astlib.PyTypeCall):
-                return expr
-            else:
-                errors.later()
-
-        # left must be declarated as variable
-        # type of right must be equal to type of left
+        # TODO:
+        # Left must be declarated only as variable.
+        # Type of right must be equal to type of left.
         if stmt.op == defs.EQ:
-            expr = unlazy(stmt.right, stmt.left)
+            expr = inline_references_of_name(stmt.right, stmt.left)
         else:
-            expr = unlazy(
+            expr = inline_references_of_name(
                 astlib.Expr(
                     stmt.left, defs.ASSIGNMENT_OP_TO_EXPR_OP[stmt.op],
                     stmt.right),
@@ -245,6 +258,49 @@ class Interpreter(layers.Layer):
             value = transform_node(stmt, registry=reg)
             if value is not None:
                 return value
+
+    def eval(self, expr):
+        if expr in A(astlib.Name):
+            return self.eval(context.env[expr]["expr"])
+        elif expr in A(astlib.FuncCall):
+            return self.func_call(expr)
+        elif expr in A(astlib.PyFuncCall, astlib.PyTypeCall):
+            return self.py_call(expr)
+        elif expr in A(astlib.StructPath):
+            path = expr.path
+            if len(path) > 2:
+                errors.later()
+            root_type = infer_type(path[0])
+            if path[1] in A(astlib.FuncCall):
+                if root_type in A(astlib.PyType):
+                    return self.py_method_call(path[0], path[1])
+                else:
+                    # TODO: think about methods
+                    errors.later()
+            else:
+                # TODO: think about struct fields
+                errors.later()
+        elif expr in A(astlib.Expr):
+            method_name = defs.OPERATOR_TO_METHOD[expr.op]
+            return self.py_method_call(
+                expr.left, astlib.FuncCall(method_name, [expr.right]))
+        elif expr in A(astlib.Literal):
+            if expr.type_ == astlib.LiteralT.number:
+                return int(expr.literal)
+            elif expr.type_ == astlib.LiteralT.vector:
+                return [self.eval(elem) for elem in expr.literal]
+            elif expr.type_ == astlib.LiteralT.set_:
+                return {self.eval(elem) for elem in expr.literal}
+            elif expr.type_ == astlib.LiteralT.dict_:
+                return {
+                    self.eval(key): self.eval(val)
+                    for key, val in expr.literal.items()}
+            return expr.literal
+        elif expr in A(int, str, list, set, dict):
+            return expr
+        else:
+            # support other exprs
+            errors.later()
 
     def declaration(self, decl):
         context.env[decl.name] = {

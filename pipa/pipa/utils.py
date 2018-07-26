@@ -1,5 +1,6 @@
 import hashlib
 
+
 class A:
 
     def __init__(self, *types):

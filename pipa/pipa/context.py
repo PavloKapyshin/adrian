@@ -11,6 +11,7 @@ def new_context(*, env, exit_on_error, main_file_hash):
     context.exit_on_error = exit_on_error
     context.main_file_hash = main_file_hash
     context.loaded = []
+    context.parent_struct = None
     yield
 
 

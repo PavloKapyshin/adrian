@@ -131,6 +131,8 @@ def p_stmt(content):
     stmt : let_decl
          | var_decl
          | func_decl
+         | struct_decl
+         | field_decl
          | assignment
          | factor
          | for_stmt
@@ -173,6 +175,16 @@ def p_func_decl(content):
     """func_decl : FUN NAME LPAREN func_parameters RPAREN COLON type LBRACE ast RBRACE"""
     content[0] = astlib.FuncDecl(
         content[2], content[4], content[7], content[9])
+
+
+def p_struct_decl(content):
+    """struct_decl : STRUCT NAME LBRACE ast RBRACE"""
+    content[0] = astlib.StructDecl(content[2], content[4])
+
+
+def p_field_decl(content):
+    """field_decl : NAME COLON type"""
+    content[0] = astlib.FieldDecl(content[1], content[3])
 
 
 def p_assignment(content):

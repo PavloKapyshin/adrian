@@ -54,7 +54,7 @@ ASSIGNMENT_OP_TO_EXPR_OP = {
 RESERVED_WORDS = {
     keyword: keyword.upper()
     for keyword in (
-        "var", "let", "for", "in", "fun", "return"
+        "var", "let", "for", "in", "fun", "return", "struct"
     )
 }
 
@@ -71,7 +71,8 @@ COMMON_REGEX = "".join([
         TYPE_REGEX, MODULE_REGEX, METHOD_REGEX)]),
     ")"])
 
-
+SELF = "self"
+SPEC_METHOD_INIT = "__init__"
 SPEC_METHOD_ADD = "__add__"
 SPEC_METHOD_SUB = "__sub__"
 SPEC_METHOD_MUL = "__mul__"

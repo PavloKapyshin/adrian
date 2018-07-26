@@ -7,6 +7,7 @@ class NodeT(enum.Enum):
     let = 1
     var = 2
     func = 3
+    struct = 4
 
 
 @enum.unique
@@ -64,7 +65,23 @@ class VarDecl(Decl):
     pass
 
 
-class FuncDecl(Node):
+class FieldDecl(Node):
+
+    def __init__(self, name, type_):
+        self.name = name
+        self.type_ = type_
+        self._keys = ("name", "type_")
+
+
+class StructDecl(Node):
+
+    def __init__(self, name, body):
+        self.name = name
+        self.body = body
+        self._keys = ("name", "body")
+
+
+class _FuncDecl(Node):
 
     def __init__(self, name, args, rettype, body):
         self.name = name
@@ -72,6 +89,12 @@ class FuncDecl(Node):
         self.rettype = rettype
         self.body = body
         self._keys = ("name", "args", "rettype", "body")
+
+class MethodDecl(_FuncDecl):
+    pass
+
+class FuncDecl(_FuncDecl):
+    pass
 
 
 class Assignment(Node):
@@ -137,6 +160,12 @@ class Literal(Node):
         self.type_ = type_
         self.literal = literal
         self._keys = ("type_", "literal")
+
+
+class Allocation(Node):
+
+    def __init__(self):
+        self._keys = ()
 
 
 class _Name(collections.UserString):
