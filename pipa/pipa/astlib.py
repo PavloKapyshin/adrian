@@ -75,10 +75,11 @@ class FieldDecl(Node):
 
 class StructDecl(Node):
 
-    def __init__(self, name, body):
+    def __init__(self, name, parameters, body):
         self.name = name
+        self.parameters = parameters
         self.body = body
-        self._keys = ("name", "body")
+        self._keys = ("name", "parameters", "body")
 
 
 class _FuncDecl(Node):

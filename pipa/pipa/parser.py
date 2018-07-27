@@ -178,16 +178,16 @@ def p_func_decl(content):
 
 
 def p_struct_decl(content):
-    """struct_decl : STRUCT NAME LBRACE ast RBRACE"""
+    """struct_decl : STRUCT NAME struct_parameters LBRACE ast RBRACE"""
     body = []
-    for stmt in content[4]:
+    for stmt in content[5]:
         if stmt in A(astlib.FuncDecl):
             body.append(
                 astlib.MethodDecl(
                     stmt.name, stmt.args, stmt.rettype, stmt.body))
         else:
             body.append(stmt)
-    content[0] = astlib.StructDecl(content[2], body)
+    content[0] = astlib.StructDecl(content[2], content[3], body)
 
 
 def p_field_decl(content):
@@ -219,6 +219,15 @@ def p_assignment_operator(content):
                         | DIVIDEEQ
     """
     content[0] = content[1]
+
+
+def p_struct_parameters_1(content):
+    """struct_parameters : LPAREN arg_list RPAREN"""
+    content[0] = content[2]
+
+def p_struct_parameters_2(content):
+    """struct_parameters : empty"""
+    content[0] = []
 
 
 def p_func_parameters_1(content):

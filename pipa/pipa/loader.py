@@ -126,7 +126,8 @@ class Loader(layers.Layer):
 
     @layers.register(astlib.StructDecl)
     def struct_declaration(self, decl):
-        yield astlib.StructDecl(n(decl.name), self.b(decl.body))
+        yield astlib.StructDecl(
+            n(decl.name), decl.parameters, self.b(decl.body))
 
     @layers.register(astlib.FieldDecl)
     def field_declaration(self, decl):

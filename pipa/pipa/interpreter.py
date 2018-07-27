@@ -81,6 +81,7 @@ class Interpreter(layers.Layer):
     def struct_declaration(self, decl):
         context.env[decl.name] = {
             "node_type": astlib.NodeT.struct,
+            "parameters": decl.parameters,
             "fields": {},
             "methods": {}
         }
