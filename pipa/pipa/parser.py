@@ -179,7 +179,15 @@ def p_func_decl(content):
 
 def p_struct_decl(content):
     """struct_decl : STRUCT NAME LBRACE ast RBRACE"""
-    content[0] = astlib.StructDecl(content[2], content[4])
+    body = []
+    for stmt in content[4]:
+        if stmt in A(astlib.FuncDecl):
+            body.append(
+                astlib.MethodDecl(
+                    stmt.name, stmt.args, stmt.rettype, stmt.body))
+        else:
+            body.append(stmt)
+    content[0] = astlib.StructDecl(content[2], body)
 
 
 def p_field_decl(content):

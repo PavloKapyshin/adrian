@@ -88,7 +88,6 @@ class Interpreter(layers.Layer):
         self.b(body)
         context.parent_struct = None
         context.env.remove_scope()
-        print(context.env.space)
 
     @layers.register(astlib.FieldDecl)
     def field_declaration(self, decl):

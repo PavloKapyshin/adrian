@@ -32,6 +32,8 @@ def t(type_, hash_=None):
 def e(expr, hash_=None):
     hash_ = hash_ or context.main_file_hash
     if expr in A(astlib.Name):
+        if expr == defs.SELF:
+            return expr
         return n(expr, hash_=hash_)
     elif expr in A(astlib.ModuleMember):
         if expr.module == defs.MODULE_PY:
@@ -114,6 +116,12 @@ class Loader(layers.Layer):
     def func_declaration(self, decl):
         args = [(n(name), t(type_)) for name, type_ in decl.args]
         yield astlib.FuncDecl(
+            n(decl.name), args, t(decl.rettype), self.b(decl.body))
+
+    @layers.register(astlib.MethodDecl)
+    def method_declaration(self, decl):
+        args = [(n(name), t(type_)) for name, type_ in decl.args]
+        yield astlib.MethodDecl(
             n(decl.name), args, t(decl.rettype), self.b(decl.body))
 
     @layers.register(astlib.StructDecl)
