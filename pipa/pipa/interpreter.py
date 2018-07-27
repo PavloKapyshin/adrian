@@ -23,7 +23,8 @@ def inline_references_of_name(expr, name):
 
 def default_init_method(struct_decl):
     self_decl = astlib.VarDecl(
-        astlib.Name(defs.SELF), struct_decl.name, astlib.InstanceValue({}))
+        astlib.Name(defs.SELF), struct_decl.name,
+        astlib.InstanceValue(struct_decl.name, {}))
     field_decls = filter(
         lambda x: x is not None,
         [stmt if stmt in A(astlib.FieldDecl) else None
@@ -117,9 +118,11 @@ class Interpreter(layers.Layer):
         if stmt.left in A(astlib.Name):
             context.env[stmt.left]["expr"] = self.eval(expr)
         else:
+            # TODO: add support for len(path) > 2
             left = stmt.left.path
             root, other = left[0], left[1:]
-            if root not in A(astlib.Name) or len(other) > 1:
+            assert(root in A(astlib.Name))
+            if len(other) > 1:
                 errors.later()
             root_expr = context.env[root]["expr"]
             assert(root_expr in A(astlib.InstanceValue))
@@ -129,10 +132,11 @@ class Interpreter(layers.Layer):
     @layers.register(astlib.For)
     def for_stmt(self, stmt):
         def register_name(name, expr):
+            evaluated = self.eval(expr)
             context.env[name] = {
                 "node_type": astlib.NodeT.var,
-                "type": infer_type(expr),
-                "expr": self.eval(expr)
+                "type": infer_type(evaluated),
+                "expr": evaluated
             }
         context.env.add_scope()
         container = self.eval(stmt.container)
@@ -226,8 +230,8 @@ class Interpreter(layers.Layer):
             errors.later()
 
     def py_method_call(self, base, func_call):
-        type_ = infer_type(base)
         converted_base = self.eval(base)
+        type_ = infer_type(converted_base)
         args = [self.eval(arg) for arg in func_call.args]
         if func_call.name == defs.METHOD_SPLIT:
             return converted_base.split(args[0])
@@ -236,7 +240,7 @@ class Interpreter(layers.Layer):
         elif func_call.name == defs.METHOD_KEYS:
             return list(converted_base.keys())
         elif func_call.name == defs.METHOD_ITEMS:
-            return converted_base.items()
+            return list(converted_base.items())
         elif func_call.name == defs.SPEC_METHOD_ADD:
             if type_.name == defs.TYPE_SET:
                 return converted_base.union(args[0])
@@ -281,20 +285,22 @@ class Interpreter(layers.Layer):
         elif expr in A(astlib.PyFuncCall, astlib.PyTypeCall):
             return self.py_call(expr)
         elif expr in A(astlib.StructPath):
-            path = expr.path
-            if len(path) > 2:
-                errors.later()
-            root_type = infer_type(path[0])
-            if path[1] in A(astlib.FuncCall):
-                if root_type in A(astlib.PyType):
-                    return self.py_method_call(path[0], path[1])
+            root = expr.path[0]
+            root_expr = self.eval(root)
+            root_type = infer_type(root_expr)
+            for elem in expr.path[1:]:
+                if elem in A(astlib.FuncCall):
+                    if root_type in A(astlib.PyType):
+                        root_expr = self.py_method_call(root_expr, elem)
+                        root_type = infer_type(root_expr)
+                    else:
+                        # add method calls
+                        errors.later()
                 else:
-                    # TODO: think about methods
-                    errors.later()
-            else:
-                root_expr = context.env[path[0]]["expr"]
-                assert(root_expr in A(astlib.InstanceValue))
-                return root_expr.value[path[1]]
+                    assert(root_expr in A(astlib.InstanceValue))
+                    root_expr = root_expr.value[elem]
+                    root_type = infer_type(root_expr)
+            return root_expr
         elif expr in A(astlib.Expr):
             method_name = defs.OPERATOR_TO_METHOD[expr.op]
             return self.py_method_call(
@@ -318,12 +324,13 @@ class Interpreter(layers.Layer):
             errors.later()
 
     def declaration(self, decl):
+        expr = self.eval(decl.expr)
         context.env[decl.name] = {
             "node_type": (astlib.NodeT.var
                     if decl in A(astlib.VarDecl)
                     else astlib.NodeT.let),
             "type": (decl.type_
                 if decl.type_ not in A(astlib.Empty)
-                else infer_type(decl.expr)),
-            "expr": self.eval(decl.expr)
+                else infer_type(expr)),
+            "expr": expr
         }

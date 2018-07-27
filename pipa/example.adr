@@ -1,14 +1,17 @@
-struct Number {
+struct A {
     data: py#Int
 
     fun dummyMethod(): Void {}
 }
 
 
-struct Dummy {}
+struct Container {
+    value: A
+}
 
-let firstTry = Dummy()
-let anotherOne = Number(py#Int(1))
-py#print(anotherOne.data)
-anotherOne.data += py#Int(1)
-py#print(anotherOne.data)
+let a = A(py#Int(1))
+let container = Container(a)
+py#print(a.data)
+py#print(container.value.data)
+let same = container.value.data
+py#print(same)

@@ -299,6 +299,8 @@ def p_factor_3(content):
     def merge(acc, elem):
         if elem in A(list):
             acc.extend(elem)
+        elif elem in A(astlib.StructPath):
+            acc.extend(elem.path)
         else:
             acc.append(elem)
         return acc

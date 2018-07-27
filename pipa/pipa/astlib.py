@@ -164,9 +164,10 @@ class Literal(Node):
 
 class InstanceValue(Node):
 
-    def __init__(self, value):
+    def __init__(self, type_, value):
+        self.type_ = type_
         self.value = value
-        self._keys = ("value",)
+        self._keys = ("type_", "value",)
 
 
 class _Name(collections.UserString):
