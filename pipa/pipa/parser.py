@@ -192,7 +192,7 @@ def p_struct_decl(content):
 
 def p_field_decl(content):
     """field_decl : NAME COLON type"""
-    content[0] = astlib.FieldDecl(content[1], content[3])
+    content[0] = astlib.FieldDecl(astlib.Name(content[1]), content[3])
 
 
 def p_assignment(content):
@@ -223,11 +223,11 @@ def p_assignment_operator(content):
 
 def p_func_parameters_1(content):
     """func_parameters : NAME COLON type COMMA func_parameters"""
-    content[0] = [(content[1], content[3])] + content[5]
+    content[0] = [(astlib.Name(content[1]), content[3])] + content[5]
 
 def p_func_parameters_2(content):
     """func_parameters : NAME COLON type"""
-    content[0] = [(content[1], content[3])]
+    content[0] = [(astlib.Name(content[1]), content[3])]
 
 def p_func_parameters_3(content):
     """func_parameters : empty"""

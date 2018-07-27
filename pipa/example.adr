@@ -1,5 +1,14 @@
 struct Number {
     data: py#Int
+
+    fun dummyMethod(): Void {}
 }
 
-py#print(py#Str("LOL"))
+
+struct Dummy {}
+
+let firstTry = Dummy()
+let anotherOne = Number(py#Int(1))
+py#print(anotherOne.data)
+anotherOne.data += py#Int(1)
+py#print(anotherOne.data)

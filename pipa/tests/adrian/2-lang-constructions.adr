@@ -83,3 +83,19 @@ py#print(returnFirstInt(py#List([])))
 
 py#print()
 py#print(myLength(py#List([py#Int(1), py#Int(2), py#Str("Hi")])))
+
+py#print()
+-- struct declarations
+struct Dummy {}
+struct MyInt {
+    data: py#Int
+}
+
+-- structs, fields and methods usage
+let dummy = Dummy()
+let myInt1 = MyInt(py#Int(1))
+py#print(myInt1.data)
+myInt1.data = py#Int(5)
+py#print(myInt1.data)
+myInt1.data += py#Int(1)
+py#print(myInt1.data)

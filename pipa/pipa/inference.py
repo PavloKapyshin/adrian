@@ -22,7 +22,31 @@ def infer_type(expr):
     elif expr in A(astlib.Name):
         return context.env[expr]["type"]
     elif expr in A(astlib.FuncCall):
-        return context.env[expr.name]["rettype"]
+        info = context.env[expr.name]
+        if info["node_type"] == astlib.NodeT.func:
+            return info["rettype"]
+        elif info["node_type"] == astlib.NodeT.struct:
+            return expr.name
+        else:
+            errors.later()
+    elif expr in A(astlib.StructPath):
+        # TODO: refactor
+        path = expr.path
+        if len(path) > 2 or path[0] not in A(astlib.Name):
+            errors.later()
+        root_info = context.env[path[0]]
+        root_expr = root_info["expr"]
+        root_type = root_info["type"]
+        if root_type not in A(astlib.Name):
+            errors.later()
+        type_info = context.env[root_type]
+        result = None
+        for elem in path[1:]:
+            if elem in A(astlib.FuncCall):
+                errors.later()
+            else:
+                result = type_info["fields"][elem]["type"]
+        return result
     elif expr in A(astlib.Expr):
         return infer_type(expr.left)
     elif expr in A(int):

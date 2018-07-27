@@ -11,6 +11,9 @@ def inline_references_of_name(expr, name):
         return astlib.Expr(
             inline_references_of_name(expr.left, name), expr.op,
             inline_references_of_name(expr.right, name))
+    elif expr in A(astlib.StructPath):
+        return astlib.StructPath(
+            [inline_references_of_name(expr.path[0], name)] + expr.path[1:])
     elif expr in A(astlib.PyTypeCall):
         return expr
     else:
@@ -20,7 +23,7 @@ def inline_references_of_name(expr, name):
 
 def default_init_method(struct_decl):
     self_decl = astlib.VarDecl(
-        astlib.Name(defs.SELF), struct_decl.name, astlib.Allocation())
+        astlib.Name(defs.SELF), struct_decl.name, astlib.InstanceValue({}))
     field_decls = filter(
         lambda x: x is not None,
         [stmt if stmt in A(astlib.FieldDecl) else None
@@ -81,7 +84,7 @@ class Interpreter(layers.Layer):
         body = decl.body
         has_init = False
         for stmt in body:
-            if stmt in A(astlib.MethodDecl):
+            if not has_init and stmt in A(astlib.MethodDecl):
                 has_init = (stmt.name == defs.SPEC_METHOD_INIT)
         if not has_init:
             body = [default_init_method(decl)] + body
@@ -98,7 +101,7 @@ class Interpreter(layers.Layer):
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
-        if stmt.left not in A(astlib.Name):
+        if stmt.left not in A(astlib.Name, astlib.StructPath):
             errors.later()
         # TODO:
         # Left must be declarated only as variable.
@@ -111,7 +114,17 @@ class Interpreter(layers.Layer):
                     stmt.left, defs.ASSIGNMENT_OP_TO_EXPR_OP[stmt.op],
                     stmt.right),
                 stmt.left)
-        context.env[stmt.left]["expr"] = self.eval(expr)
+        if stmt.left in A(astlib.Name):
+            context.env[stmt.left]["expr"] = self.eval(expr)
+        else:
+            left = stmt.left.path
+            root, other = left[0], left[1:]
+            if root not in A(astlib.Name) or len(other) > 1:
+                errors.later()
+            root_expr = context.env[root]["expr"]
+            assert(root_expr in A(astlib.InstanceValue))
+            root_expr.value[other[-1]] = self.eval(expr)
+            context.env[root]["expr"] = root_expr
 
     @layers.register(astlib.For)
     def for_stmt(self, stmt):
@@ -143,6 +156,8 @@ class Interpreter(layers.Layer):
     @layers.register(astlib.FuncCall)
     def func_call(self, func_call):
         info = context.env[func_call.name]
+        if info["node_type"] == astlib.NodeT.struct:
+            info = info["methods"][defs.SPEC_METHOD_INIT]
         context.env.add_scope()
         for (name, type_), expr in zip(info["args"], func_call.args):
             context.env[name] = {
@@ -277,8 +292,9 @@ class Interpreter(layers.Layer):
                     # TODO: think about methods
                     errors.later()
             else:
-                # TODO: think about struct fields
-                errors.later()
+                root_expr = context.env[path[0]]["expr"]
+                assert(root_expr in A(astlib.InstanceValue))
+                return root_expr.value[path[1]]
         elif expr in A(astlib.Expr):
             method_name = defs.OPERATOR_TO_METHOD[expr.op]
             return self.py_method_call(
@@ -295,7 +311,7 @@ class Interpreter(layers.Layer):
                     self.eval(key): self.eval(val)
                     for key, val in expr.literal.items()}
             return expr.literal
-        elif expr in A(int, str, list, set, dict):
+        elif expr in A(int, str, list, set, dict, astlib.InstanceValue):
             return expr
         else:
             # support other exprs

@@ -162,10 +162,11 @@ class Literal(Node):
         self._keys = ("type_", "literal")
 
 
-class Allocation(Node):
+class InstanceValue(Node):
 
-    def __init__(self):
-        self._keys = ()
+    def __init__(self, value):
+        self.value = value
+        self._keys = ("value",)
 
 
 class _Name(collections.UserString):
