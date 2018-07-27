@@ -238,6 +238,7 @@ class Interpreter(layers.Layer):
             errors.later()
 
     def method_call(self, base, func_call):
+        # TODO: add support for changing fields
         converted_base = self.eval(base)
         type_ = infer_type(converted_base)
         args = [converted_base] + [self.eval(arg) for arg in func_call.args]
