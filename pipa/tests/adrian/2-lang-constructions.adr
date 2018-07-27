@@ -91,6 +91,10 @@ struct MyInt {
     data: py#Int
 }
 
+struct ContainerOfMyInt {
+    inner: MyInt
+}
+
 -- structs, fields and methods usage
 let dummy = Dummy()
 let myInt1 = MyInt(py#Int(1))
@@ -99,3 +103,7 @@ myInt1.data = py#Int(5)
 py#print(myInt1.data)
 myInt1.data += py#Int(1)
 py#print(myInt1.data)
+
+py#print()
+let containerOfMyInt = ContainerOfMyInt(myInt1)
+py#print(containerOfMyInt.inner.data)
