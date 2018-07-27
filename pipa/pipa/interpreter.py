@@ -16,6 +16,10 @@ def inline_references_of_name(expr, name):
             [inline_references_of_name(expr.path[0], name)] + expr.path[1:])
     elif expr in A(astlib.PyTypeCall):
         return expr
+    elif expr in A(astlib.FuncCall):
+        return astlib.FuncCall(
+            expr.name,
+            [inline_references_of_name(arg, name) for arg in expr.args])
     else:
         # support other exprs
         errors.later()
