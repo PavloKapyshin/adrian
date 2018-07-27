@@ -293,10 +293,10 @@ class Interpreter(layers.Layer):
         elif expr in A(astlib.PyFuncCall, astlib.PyTypeCall):
             return self.py_call(expr)
         elif expr in A(astlib.StructPath):
-            root = expr.path[0]
+            root, tail = expr.path[0], expr.path[1:]
             root_expr = self.eval(root)
             root_type = infer_type(root_expr)
-            for elem in expr.path[1:]:
+            for elem in tail:
                 if elem in A(astlib.FuncCall):
                     if root_type in A(astlib.PyType):
                         root_expr = self.py_method_call(root_expr, elem)
