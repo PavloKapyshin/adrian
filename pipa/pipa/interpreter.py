@@ -118,16 +118,20 @@ class Interpreter(layers.Layer):
         if stmt.left in A(astlib.Name):
             context.env[stmt.left]["expr"] = self.eval(expr)
         else:
-            # TODO: add support for len(path) > 2
-            left = stmt.left.path
-            root, other = left[0], left[1:]
+            root = stmt.left.path[0]
             assert(root in A(astlib.Name))
-            if len(other) > 1:
-                errors.later()
-            root_expr = context.env[root]["expr"]
-            assert(root_expr in A(astlib.InstanceValue))
-            root_expr.value[other[-1]] = self.eval(expr)
-            context.env[root]["expr"] = root_expr
+            root_expr = self.eval(root)
+            old_dicts = [(root_expr.type_, root_expr.value)]
+            for elem in stmt.left.path[1:-1]:
+                old_dicts.append((root_expr.type_, root_expr.value))
+                root_expr = root_expr.value[elem]
+            new_value = self.eval(expr)
+            for elem, (type_, dict_) in zip(
+                    reversed(stmt.left.path[1:]),
+                    reversed(old_dicts)):
+                new_value = astlib.InstanceValue(
+                    type_, {**dict_, **{elem: new_value}})
+            context.env[root]["expr"] = new_value
 
     @layers.register(astlib.For)
     def for_stmt(self, stmt):

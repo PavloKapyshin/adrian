@@ -4,6 +4,13 @@ py#print(name)
 name = py#Str("Mike")
 py#print(name)
 
+var greeting = py#Str("Hello")
+let separator = py#Str(", ")
+name = py#Str("Nick")
+let end = py#Str("!")
+greeting += separator + name + end
+py#print(greeting)
+
 py#print()
 
 var number = py#Int(10)
@@ -16,15 +23,6 @@ number *= py#Int(2)
 py#print(number)
 number /= py#Int(2)
 py#print(number)
-
-py#print()
-
-let separator = py#Str(", ")
-let end = py#Str("!")
-name = py#Str("Nick")
-var greeting = py#Str("Hello")
-greeting += separator + name + end
-py#print(greeting)
 
 py#print()
 
@@ -106,4 +104,6 @@ py#print(myInt1.data)
 
 py#print()
 let containerOfMyInt = ContainerOfMyInt(myInt1)
+py#print(containerOfMyInt.inner.data)
+containerOfMyInt.inner.data = py#Int(1)
 py#print(containerOfMyInt.inner.data)
