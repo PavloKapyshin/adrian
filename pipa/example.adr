@@ -1,17 +1,21 @@
 struct A {
     data: py#Int
 
-    fun dummyMethod(): Void {}
+    fun dummyMethod(): Void {
+        py#print(py#Str("Hello, methods!"))
+    }
 }
 
 
 struct Container {
     value: A
+
+    fun printMe(): Void {
+        py#print(self.value.data)
+    }
 }
 
 let a = A(py#Int(1))
 let container = Container(a)
-py#print(a.data)
-py#print(container.value.data)
-let same = container.value.data
-py#print(same)
+container.value.dummyMethod()
+container.printMe()

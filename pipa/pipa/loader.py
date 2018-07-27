@@ -122,7 +122,7 @@ class Loader(layers.Layer):
     def method_declaration(self, decl):
         args = [(n(name), t(type_)) for name, type_ in decl.args]
         yield astlib.MethodDecl(
-            n(decl.name), args, t(decl.rettype), self.b(decl.body))
+            decl.name, args, t(decl.rettype), self.b(decl.body))
 
     @layers.register(astlib.StructDecl)
     def struct_declaration(self, decl):

@@ -91,6 +91,14 @@ struct MyInt {
 
 struct ContainerOfMyInt {
     inner: MyInt
+
+    fun printMe(): Void {
+        py#print(self.inner.data)
+    }
+
+    fun getValue(): py#Int {
+        return self.inner.data
+    }
 }
 
 -- structs, fields and methods usage
@@ -109,3 +117,7 @@ containerOfMyInt.inner.data = py#Int(1)
 py#print(containerOfMyInt.inner.data)
 containerOfMyInt.inner = MyInt(py#Int(2))
 py#print(containerOfMyInt.inner.data)
+
+py#print()
+containerOfMyInt.printMe()
+py#print(containerOfMyInt.getValue())

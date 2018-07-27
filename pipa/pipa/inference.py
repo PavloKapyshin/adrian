@@ -43,6 +43,7 @@ def infer_type(expr):
         return astlib.PyType(defs.TYPE_SET)
     elif expr in A(dict):
         return astlib.PyType(defs.TYPE_DICT)
+    elif expr is None:
+        return astlib.Name(defs.TYPE_VOID)
     else:
-        print(expr)
         errors.later()

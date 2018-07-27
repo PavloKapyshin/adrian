@@ -183,7 +183,7 @@ class Interpreter(layers.Layer):
 
     @layers.register(astlib.StructPath)
     def struct_path(self, struct_path):
-        return self.eval(struct_path)
+        self.eval(struct_path)
 
     @layers.register(astlib.PyFuncCall)
     def py_call(self, func_call):
@@ -236,6 +236,25 @@ class Interpreter(layers.Layer):
         else:
             # support other funcs
             errors.later()
+
+    def method_call(self, base, func_call):
+        converted_base = self.eval(base)
+        type_ = infer_type(converted_base)
+        args = [converted_base] + [self.eval(arg) for arg in func_call.args]
+        assert(type_ in A(astlib.Name))
+        method_info = context.env[type_]["methods"][func_call.name]
+        body = method_info["body"]
+        context.env.add_scope()
+        for (name, type_), expr in zip(
+                [(astlib.Name(defs.SELF), type_)] + method_info["args"], args):
+            context.env[name] = {
+                "node_type": astlib.NodeT.var,
+                "type": type_,
+                "expr": expr
+            }
+        result = self.b(body)
+        context.env.remove_scope()
+        return result
 
     def py_method_call(self, base, func_call):
         converted_base = self.eval(base)
@@ -302,8 +321,8 @@ class Interpreter(layers.Layer):
                         root_expr = self.py_method_call(root_expr, elem)
                         root_type = infer_type(root_expr)
                     else:
-                        # add method calls
-                        errors.later()
+                        root_expr = self.method_call(root_expr, elem)
+                        root_type = infer_type(root_expr)
                 else:
                     assert(root_expr in A(astlib.InstanceValue))
                     root_expr = root_expr.value[elem]

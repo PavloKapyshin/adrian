@@ -162,6 +162,13 @@ class Literal(Node):
         self._keys = ("type_", "literal")
 
 
+class Ref(Node):
+
+    def __init__(self, expr):
+        self.expr = expr
+        self._keys = ("expr", )
+
+
 class InstanceValue(Node):
 
     def __init__(self, type_, value):
