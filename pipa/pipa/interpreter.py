@@ -125,6 +125,7 @@ class Interpreter(layers.Layer):
         else:
             root = stmt.left.path[0]
             assert(root in A(astlib.Name))
+            root_expr_raw = context.env[root]["expr"]
             root_expr = self.eval(root)
             old_dicts = [(root_expr.type_, root_expr.value)]
             for elem in stmt.left.path[1:-1]:
@@ -137,6 +138,8 @@ class Interpreter(layers.Layer):
                 new_value = astlib.InstanceValue(
                     type_, {**dict_, **{elem: new_value}})
             context.env[root]["expr"] = new_value
+            if root_expr_raw in A(astlib.Name):
+                context.env[root_expr_raw]["expr"] = new_value
 
     @layers.register(astlib.For)
     def for_stmt(self, stmt):
@@ -242,7 +245,7 @@ class Interpreter(layers.Layer):
         # TODO: add support for changing fields
         converted_base = self.eval(base)
         type_ = infer_type(converted_base)
-        args = [converted_base] + [self.eval(arg) for arg in func_call.args]
+        args = [base] + [self.eval(arg) for arg in func_call.args]
         assert(type_ in A(astlib.Name))
         method_info = context.env[type_]["methods"][func_call.name]
         body = method_info["body"]
@@ -315,19 +318,27 @@ class Interpreter(layers.Layer):
             return self.py_call(expr)
         elif expr in A(astlib.StructPath):
             root, tail = expr.path[0], expr.path[1:]
+            root_expr_raw = root
             root_expr = self.eval(root)
             root_type = infer_type(root_expr)
             for elem in tail:
                 if elem in A(astlib.FuncCall):
                     if root_type in A(astlib.PyType):
                         root_expr = self.py_method_call(root_expr, elem)
+                        root_expr_raw = root_expr
                         root_type = infer_type(root_expr)
                     else:
-                        root_expr = self.method_call(root_expr, elem)
+                        root_expr = self.method_call(root_expr_raw, elem)
+                        root_expr_raw = root_expr
                         root_type = infer_type(root_expr)
                 else:
                     assert(root_expr in A(astlib.InstanceValue))
                     root_expr = root_expr.value[elem]
+                    if root_expr_raw in A(astlib.StructPath):
+                        root_expr_raw.path += [elem]
+                    else:
+                        root_expr_raw = astlib.StructPath(
+                            [root_expr_raw, elem])
                     root_type = infer_type(root_expr)
             return root_expr
         elif expr in A(astlib.Expr):

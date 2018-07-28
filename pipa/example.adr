@@ -13,9 +13,15 @@ struct Container {
     fun printMe(): Void {
         py#print(self.value.data)
     }
+
+    fun setToZero(): Void {
+        self.value.data = py#Int(0)
+    }
 }
 
 let a = A(py#Int(1))
 let container = Container(a)
 container.value.dummyMethod()
+container.printMe()
+container.setToZero()
 container.printMe()
