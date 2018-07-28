@@ -96,6 +96,10 @@ struct ContainerOfMyInt {
         py#print(self.inner.data)
     }
 
+    fun setToZero(): Void {
+        self.inner.data = py#Int(0)
+    }
+
     fun getValue(): py#Int {
         return self.inner.data
     }
@@ -120,4 +124,6 @@ py#print(containerOfMyInt.inner.data)
 
 py#print()
 containerOfMyInt.printMe()
+py#print(containerOfMyInt.getValue())
+containerOfMyInt.setToZero()
 py#print(containerOfMyInt.getValue())
