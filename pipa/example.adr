@@ -1,27 +1,18 @@
-struct A {
+struct MyNumber {
     data: py#Int
 
-    fun dummyMethod(): Void {
-        py#print(py#Str("Hello, methods!"))
+    fun __add__(another: MyNumber): MyNumber {
+        return MyNumber(self.data + another.data)
+    }
+
+    fun print(): Void {
+        py#print(self.data)
     }
 }
 
-
-struct Container {
-    value: A
-
-    fun printMe(): Void {
-        py#print(self.value.data)
-    }
-
-    fun setToZero(): Void {
-        self.value.data = py#Int(0)
-    }
-}
-
-let a = A(py#Int(1))
-let container = Container(a)
-container.value.dummyMethod()
-container.printMe()
-container.setToZero()
-container.printMe()
+let a = MyNumber(py#Int(1))
+a.print()
+let b = MyNumber(py#Int(2))
+b.print()
+let c = a + b
+c.print()

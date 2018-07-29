@@ -343,7 +343,11 @@ class Interpreter(layers.Layer):
             return root_expr
         elif expr in A(astlib.Expr):
             method_name = defs.OPERATOR_TO_METHOD[expr.op]
-            return self.py_method_call(
+            type_ = infer_type(self.eval(expr.left))
+            if type_ in A(astlib.PyType):
+                return self.py_method_call(
+                    expr.left, astlib.FuncCall(method_name, [expr.right]))
+            return self.method_call(
                 expr.left, astlib.FuncCall(method_name, [expr.right]))
         elif expr in A(astlib.Literal):
             if expr.type_ == astlib.LiteralT.number:
