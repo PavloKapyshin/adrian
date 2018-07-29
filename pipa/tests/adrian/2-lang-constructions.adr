@@ -149,3 +149,39 @@ let c = a + b
 c.print()
 c += a
 c.print()
+
+py#print()
+
+-- Conditional stmts
+py#print(py#Str("Conditional stmts:"))
+var n = py#Int(0)
+while n <= py#Int(3) {
+    py#print(n)
+    n += py#Int(1)
+}
+
+py#print()
+if py#Int(5) > py#Int(1) {
+    py#print(py#Str("True"))
+} else {
+    py#print(py#Str("LOL"))
+}
+
+if py#Int(1) > py#Int(5) {
+    py#print(py#Str("LOL1"))
+} elif py#Int(5) == py#Int(5) {
+    py#print(py#Str("True"))
+} else {
+    py#print(py#Str("LOL2"))
+}
+
+
+if py#Int(1) > py#Int(5) {
+    py#print(py#Str("LOL1"))
+} elif py#Int(2) > py#Int(3) {
+    py#print(py#Str("LOL2"))
+} elif py#Int(5) == py#Int(5) {
+    py#print(py#Str("True"))
+} else {
+    py#print(py#Str("LOL3"))
+}

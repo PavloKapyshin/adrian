@@ -139,6 +139,8 @@ def p_stmt(content):
          | factor
          | for_stmt
          | return_stmt
+         | cond_stmt
+         | while_stmt
     """
     content[0] = content[1]
 
@@ -205,6 +207,37 @@ def p_assignment(content):
 def p_for_stmt(content):
     """for_stmt : FOR arg_list IN expr LBRACE ast RBRACE"""
     content[0] = astlib.For(content[2], content[4], content[6])
+
+
+def p_while_stmt(content):
+    """while_stmt : WHILE expr LBRACE ast RBRACE"""
+    content[0] = astlib.While(content[2], content[4])
+
+
+def p_cond_stmt(content):
+    """cond_stmt : IF expr LBRACE ast RBRACE opt_elifs opt_else"""
+    content[0] = astlib.Cond(
+        astlib.If(content[2], content[4]), content[6], content[7])
+
+
+def p_opt_elifs_1(content):
+    """opt_elifs : ELIF expr LBRACE ast RBRACE opt_elifs"""
+    content[0] = [astlib.Elif(content[2], content[4])] + content[6]
+
+
+def p_opt_elifs_2(content):
+    """opt_elifs : empty"""
+    content[0] = []
+
+
+def p_opt_else_1(content):
+    """opt_else : ELSE LBRACE ast RBRACE"""
+    content[0] = astlib.Else(content[3])
+
+
+def p_opt_else_2(content):
+    """opt_else : empty"""
+    content[0] = None
 
 
 def p_return_stmt(content):

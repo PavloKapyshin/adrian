@@ -141,6 +141,35 @@ class Interpreter(layers.Layer):
             if root_expr_raw in A(astlib.Name):
                 context.env[root_expr_raw]["expr"] = new_value
 
+    @layers.register(astlib.Cond)
+    def cond(self, stmt):
+        if_expr = self.eval(stmt.if_stmt.expr)
+        context.env.add_scope()
+        if if_expr:
+            context.env.remove_scope()
+            return self.b(stmt.if_stmt.body)
+        for elif_stmt in stmt.elifs:
+            elif_expr = self.eval(elif_stmt.expr)
+            if elif_expr:
+                context.env.remove_scope()
+                return self.b(elif_stmt.body)
+        if stmt.else_stmt is not None:
+            context.env.remove_scope()
+            return self.b(stmt.else_stmt.body)
+        context.env.remove_scope()
+
+    @layers.register(astlib.While)
+    def while_stmt(self, stmt):
+        expr = self.eval(stmt.expr)
+        context.env.add_scope()
+        while expr:
+            result = self.b(stmt.body)
+            if result is not None:
+                context.env.remove_scope()
+                return result
+            expr = self.eval(stmt.expr)
+        context.env.remove_scope()
+
     @layers.register(astlib.For)
     def for_stmt(self, stmt):
         def register_name(name, expr):

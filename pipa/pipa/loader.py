@@ -138,6 +138,17 @@ class Loader(layers.Layer):
         yield astlib.Assignment(
             e(stmt.left), stmt.op, e(stmt.right))
 
+    @layers.register(astlib.Cond)
+    def cond(self, stmt):
+        yield astlib.Cond(
+            self.if_stmt(stmt.if_stmt),
+            [self.elif_stmt(elif_) for elif_ in stmt.elifs],
+            (None if stmt.else_stmt is None else self.else_stmt(stmt.else_stmt)))
+
+    @layers.register(astlib.While)
+    def while_stmt(self, stmt):
+        yield astlib.While(e(stmt.expr), self.b(stmt.body))
+
     @layers.register(astlib.For)
     def for_stmt(self, stmt):
         yield astlib.For(
@@ -163,3 +174,12 @@ class Loader(layers.Layer):
             translated_nodes.extend(
                 layers.transform_node(node, registry=registry))
         return context.loaded + translated_nodes
+
+    def if_stmt(self, stmt):
+        return astlib.If(e(stmt.expr), self.b(stmt.body))
+
+    def elif_stmt(self, stmt):
+        return astlib.Elif(e(stmt.expr), self.b(stmt.body))
+
+    def else_stmt(self, stmt):
+        return astlib.Else(self.b(stmt.body))

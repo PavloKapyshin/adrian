@@ -123,6 +123,38 @@ class For(Node):
         self._keys = ("names", "container", "body")
 
 
+class Cond(Node):
+
+    def __init__(self, if_stmt, elifs, else_stmt):
+        self.if_stmt = if_stmt
+        self.elifs = elifs
+        self.else_stmt = else_stmt
+        self._keys = ("if_stmt", "elifs", "else_stmt")
+
+
+class ConditionalStmt_(Node):
+
+    def __init__(self, expr, body):
+        self.expr = expr
+        self.body = body
+        self._keys = ("expr", "body")
+
+class While(ConditionalStmt_):
+    pass
+
+class If(ConditionalStmt_):
+    pass
+
+class Elif(ConditionalStmt_):
+    pass
+
+class Else(Node):
+
+    def __init__(self, body):
+        self.body = body
+        self._keys = ("body", )
+
+
 class FuncCall(Node):
 
     def __init__(self, name, args):

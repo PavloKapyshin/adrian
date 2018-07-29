@@ -55,7 +55,8 @@ ASSIGNMENT_OP_TO_EXPR_OP = {
 RESERVED_WORDS = {
     keyword: keyword.upper()
     for keyword in (
-        "var", "let", "for", "in", "fun", "return", "struct"
+        "var", "let", "for", "in", "fun", "return", "struct",
+        "if", "elif", "else", "while"
     )
 }
 
