@@ -145,7 +145,7 @@ let a = MyNumber(py#Int(1))
 a.print()
 let b = MyNumber(py#Int(2))
 b.print()
-let c = a + b
+var c = a + b
 c.print()
 c += a
 c.print()

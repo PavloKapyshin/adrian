@@ -47,3 +47,14 @@ def infer_type(expr):
         return astlib.Name(defs.TYPE_VOID)
     else:
         errors.later()
+
+
+def types_are_equal(type1, type2):
+    if type1 not in A(type(type2)):
+        return False
+    if type1 in A(astlib.Name):
+        return type1 == type2
+    elif type1 in A(astlib.PyType):
+        return type1.name == type2.name
+    else:
+        errors.later()

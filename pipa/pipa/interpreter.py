@@ -1,6 +1,6 @@
 from . import astlib, layers, errors, defs
 from .context import context
-from .inference import infer_type
+from .type_lib import infer_type
 from .utils import A
 
 
@@ -107,11 +107,13 @@ class Interpreter(layers.Layer):
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
-        if stmt.left not in A(astlib.Name, astlib.StructPath):
+        if stmt.left in A(astlib.Name):
+            node_type = context.env[stmt.left]["node_type"]
+            if node_type != astlib.NodeT.var:
+                errors.cant_reassign(stmt.left)
+        elif stmt.left not in A(astlib.StructPath):
             errors.later()
-        # TODO:
-        # Left must be declarated only as variable.
-        # Type of right must be equal to type of left.
+
         if stmt.op == defs.EQ:
             expr = inline_references_of_name(stmt.right, stmt.left)
         else:
@@ -120,6 +122,7 @@ class Interpreter(layers.Layer):
                     stmt.left, defs.ASSIGNMENT_OP_TO_EXPR_OP[stmt.op],
                     stmt.right),
                 stmt.left)
+
         if stmt.left in A(astlib.Name):
             context.env[stmt.left]["expr"] = self.eval(expr)
         else:
