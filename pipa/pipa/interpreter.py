@@ -273,6 +273,20 @@ class Interpreter(layers.Layer):
             return list(converted_base.keys())
         elif func_call.name == defs.METHOD_ITEMS:
             return list(converted_base.items())
+        elif func_call.name == defs.SPEC_METHOD_CONTAINS:
+            return args[0] in converted_base
+        elif func_call.name == defs.SPEC_METHOD_EQ:
+            return converted_base == args[0]
+        elif func_call.name == defs.SPEC_METHOD_NEQ:
+            return converted_base != args[0]
+        elif func_call.name == defs.SPEC_METHOD_LT:
+            return converted_base < args[0]
+        elif func_call.name == defs.SPEC_METHOD_GT:
+            return converted_base > args[0]
+        elif func_call.name == defs.SPEC_METHOD_LTEQ:
+            return converted_base <= args[0]
+        elif func_call.name == defs.SPEC_METHOD_GTEQ:
+            return converted_base >= args[0]
         elif func_call.name == defs.SPEC_METHOD_ADD:
             if type_.name == defs.TYPE_SET:
                 return converted_base.union(args[0])
@@ -343,12 +357,14 @@ class Interpreter(layers.Layer):
             return root_expr
         elif expr in A(astlib.Expr):
             method_name = defs.OPERATOR_TO_METHOD[expr.op]
-            type_ = infer_type(self.eval(expr.left))
+            base, args = expr.left, [expr.right]
+            if method_name == defs.SPEC_METHOD_CONTAINS:
+                base, args = expr.right, [expr.left]
+            type_ = infer_type(self.eval(base))
             if type_ in A(astlib.PyType):
                 return self.py_method_call(
-                    expr.left, astlib.FuncCall(method_name, [expr.right]))
-            return self.method_call(
-                expr.left, astlib.FuncCall(method_name, [expr.right]))
+                    base, astlib.FuncCall(method_name, args))
+            return self.method_call(base, astlib.FuncCall(method_name, args))
         elif expr in A(astlib.Literal):
             if expr.type_ == astlib.LiteralT.number:
                 return int(expr.literal)
@@ -361,7 +377,7 @@ class Interpreter(layers.Layer):
                     self.eval(key): self.eval(val)
                     for key, val in expr.literal.items()}
             return expr.literal
-        elif expr in A(int, str, list, set, dict, astlib.InstanceValue):
+        elif expr in A(int, str, list, set, dict, bool, astlib.InstanceValue):
             return expr
         else:
             # support other exprs

@@ -45,6 +45,7 @@ METHOD_ITEMS = "items"
 
 
 EQ = "="
+IN = "in"
 ASSIGNMENT_OP_TO_EXPR_OP = {
     "+=": "+",
     "-=": "-",
@@ -77,11 +78,25 @@ SPEC_METHOD_ADD = "__add__"
 SPEC_METHOD_SUB = "__sub__"
 SPEC_METHOD_MUL = "__mul__"
 SPEC_METHOD_DIV = "__div__"
+SPEC_METHOD_CONTAINS = "__contains__"
+SPEC_METHOD_EQ = "__eq__"
+SPEC_METHOD_NEQ = "__neq__"
+SPEC_METHOD_LTEQ = "__lteq__"
+SPEC_METHOD_GTEQ = "__gteq__"
+SPEC_METHOD_LT = "__lt__"
+SPEC_METHOD_GT = "__gt__"
 OPERATOR_TO_METHOD = {
     "+": SPEC_METHOD_ADD,
     "-": SPEC_METHOD_SUB,
     "*": SPEC_METHOD_MUL,
     "/": SPEC_METHOD_DIV,
+    "==": SPEC_METHOD_EQ,
+    "!=": SPEC_METHOD_NEQ,
+    "<=": SPEC_METHOD_LTEQ,
+    ">=": SPEC_METHOD_GTEQ,
+    "<": SPEC_METHOD_LT,
+    ">": SPEC_METHOD_GT,
+    "in": SPEC_METHOD_CONTAINS,
 }
 
 

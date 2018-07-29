@@ -50,6 +50,7 @@ py#print(py#len(py#List([py#Int(1), py#Int(2), py#Int(3)])))
 py#print()
 
 -- Iteration
+py#print(py#Str("Iteration:"))
 for char in py#Str("NOOB") {
     py#print(char)
 }
@@ -73,3 +74,31 @@ py#print()
 for key, val in py#Dict({py#Str("Hello") = py#Int(1)}).items() {
     py#print(key, py#Str(" = "), val)
 }
+py#print()
+
+-- Boolean expressions
+py#print(py#Str("Boolean expressions:"))
+---- ==, !=
+py#print(py#Str("==, !=:"))
+py#print(py#Int(1) == py#Int(1))
+py#print(py#Int(1) == py#Int(2))
+py#print(py#Int(1) != py#Int(1))
+py#print(py#Int(1) != py#Int(2))
+
+py#print()
+
+---- <, >
+py#print(py#Str("<, >:"))
+py#print(py#Int(1) < py#Int(2))
+py#print(py#Int(5) < py#Int(2))
+py#print(py#Int(1) > py#Int(2))
+py#print(py#Int(5) > py#Int(2))
+
+py#print()
+
+---- <=, >=
+py#print(py#Str("<=, >=:"))
+py#print(py#Int(1) <= py#Int(1))
+py#print(py#Int(5) <= py#Int(2))
+py#print(py#Int(1) >= py#Int(1))
+py#print(py#Int(5) >= py#Int(2))

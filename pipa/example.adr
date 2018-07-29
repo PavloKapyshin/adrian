@@ -1,18 +1,3 @@
-struct MyNumber {
-    data: py#Int
-
-    fun __add__(another: MyNumber): MyNumber {
-        return MyNumber(self.data + another.data)
-    }
-
-    fun print(): Void {
-        py#print(self.data)
-    }
+for key, val in py#Dict({py#Str("NOOB") = py#Int(1)}).items() {
+    py#print(key, val)
 }
-
-let a = MyNumber(py#Int(1))
-a.print()
-let b = MyNumber(py#Int(2))
-b.print()
-let c = a + b
-c.print()

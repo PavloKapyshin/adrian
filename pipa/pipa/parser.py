@@ -15,14 +15,14 @@ _TOKENS = {
     "-=": "MINUSEQ",
     "*=": "TIMESEQ",
     "/=": "DIVIDEEQ",
-    # "==": "EQEQ",
-    # "<=": "LTEQ",
-    # ">=": "GTEQ",
-    # "!=": "NEQ",
+    "==": "EQEQ",
+    "<=": "LTEQ",
+    ">=": "GTEQ",
+    "!=": "NEQ",
 
     "=": "EQ",
-    # "<": "LT",
-    # ">": "GT",
+    "<": "LT",
+    ">": "GT",
 
     "+": "PLUS",
     "-": "MINUS",
@@ -113,6 +113,8 @@ def t_error(token):
 precedence = (
     ("left", "PLUS", "MINUS"),
     ("left", "TIMES", "DIVIDE"),
+    ("left", "LT", "GT", "GTEQ", "LTEQ"),
+    ("left", "EQEQ", "NEQ"),
 )
 
 
@@ -284,6 +286,12 @@ def p_operator(content):
              | MINUS
              | TIMES
              | DIVIDE
+             | EQEQ
+             | NEQ
+             | LT
+             | GT
+             | LTEQ
+             | GTEQ
     """
     content[0] = content[1]
 

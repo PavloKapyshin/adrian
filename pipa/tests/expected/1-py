@@ -36,6 +36,7 @@ Hello, Mike
 
 3
 
+Iteration:
 N
 O
 O
@@ -50,3 +51,22 @@ B
 Hello
 
 Hello = 1
+
+Boolean expressions:
+==, !=:
+True
+False
+False
+True
+
+<, >:
+True
+False
+False
+True
+
+<=, >=:
+True
+False
+True
+True
