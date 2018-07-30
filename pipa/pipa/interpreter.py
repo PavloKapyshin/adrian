@@ -286,6 +286,8 @@ class Interpreter(layers.Layer):
             return list(converted_base.keys())
         elif func_call.name == defs.METHOD_ITEMS:
             return list(converted_base.items())
+        elif func_call.name == defs.SPEC_METHOD_GETITEM:
+            return converted_base[args[0]]
         elif func_call.name == defs.SPEC_METHOD_CONTAINS:
             return args[0] in converted_base
         elif func_call.name == defs.SPEC_METHOD_EQ:
@@ -392,6 +394,14 @@ class Interpreter(layers.Layer):
                     self.eval(key): self.eval(val)
                     for key, val in expr.literal.items()}
             return expr.literal
+        elif expr in A(astlib.Subscript):
+            method_name = defs.SPEC_METHOD_GETITEM
+            base, args = expr.base, [expr.index]
+            type_ = infer_type(self.eval(base))
+            if type_ in A(astlib.PyType):
+                return self.py_method_call(
+                    base, astlib.FuncCall(method_name, args))
+            return self.method_call(base, astlib.FuncCall(method_name, args))
         elif expr in A(int, str, list, set, dict, bool, astlib.InstanceValue):
             return expr
         else:

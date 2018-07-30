@@ -180,6 +180,14 @@ class Expr(Node):
         self._keys = ("left", "op", "right")
 
 
+class Subscript(Node):
+
+    def __init__(self, base, index):
+        self.base = base
+        self.index = index
+        self._keys = ("base", "index")
+
+
 class StructPath(Node):
 
     def __init__(self, path):

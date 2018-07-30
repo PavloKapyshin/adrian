@@ -363,6 +363,10 @@ def p_expr_1(content):
     content[0] = astlib.Expr(content[1], content[2], content[3])
 
 def p_expr_2(content):
+    """expr : factor LBRACKET expr RBRACKET"""
+    content[0] = astlib.Subscript(content[1], content[3])
+
+def p_expr_3(content):
     """expr : factor"""
     content[0] = content[1]
 

@@ -1,6 +1,2 @@
-for key in py#Dict({}) {
-    py#print(key)
-}
-let dict = py#Dict({py#Int(1) = py#Str("Hello")})
-
-py#print(py#Int(1) in dict)
+let myList = py#List([py#Int(0), py#Int(1), py#Int(2)])
+py#print(myList[py#Int(-1)])

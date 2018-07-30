@@ -69,6 +69,9 @@ def e(expr, hash_=None):
         return astlib.Expr(
             e(expr.left, hash_=hash_), expr.op,
             e(expr.right, hash_=hash_))
+    elif expr in A(astlib.Subscript):
+        return astlib.Subscript(
+            e(expr.base, hash_=hash_), e(expr.index, hash_=hash_))
     elif expr in A(astlib.Empty):
         return expr
     else:

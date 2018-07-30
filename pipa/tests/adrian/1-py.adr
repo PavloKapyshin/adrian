@@ -112,3 +112,13 @@ py#print(py#Str("a") in py#Str("Hello!"))
 py#print(py#Int(2) in py#List([py#Str("Hello!"), py#Int(2)]))
 py#print(py#Str("a") in py#Set({py#Str("Hello!")}))
 py#print(py#Int(2) in py#Dict({py#Int(2) = py#Str("Hello!")}))
+
+py#print()
+
+-- Get item
+py#print(py#Str("getitem:"))
+let getitemList = py#List([py#Int(1), py#Int(2), py#Int(3)])
+py#print(getitemList[py#Int(0)])
+py#print(getitemList[py#Int(-1)])
+let getitemDict = py#Dict({py#Str("A") = py#Int(1), py#Str("B") = py#Int(2)})
+py#print(getitemDict[py#Str("A")])
