@@ -75,6 +75,7 @@ COMMON_REGEX = "".join([
 
 SELF = "self"
 SPEC_METHOD_GETITEM = "__getItem__"
+SPEC_METHOD_SETITEM = "__setItem__"
 SPEC_METHOD_INIT = "__init__"
 SPEC_METHOD_ADD = "__add__"
 SPEC_METHOD_SUB = "__sub__"

@@ -115,10 +115,19 @@ py#print(py#Int(2) in py#Dict({py#Int(2) = py#Str("Hello!")}))
 
 py#print()
 
--- Get item
-py#print(py#Str("getitem:"))
+-- getItem, setItem
+py#print(py#Str("getItem, setItem:"))
 let getitemList = py#List([py#Int(1), py#Int(2), py#Int(3)])
 py#print(getitemList[py#Int(0)])
 py#print(getitemList[py#Int(-1)])
 let getitemDict = py#Dict({py#Str("A") = py#Int(1), py#Str("B") = py#Int(2)})
 py#print(getitemDict[py#Str("A")])
+
+py#print()
+
+var myList = py#List([py#Int(1), py#Int(1), py#Int(2)])
+py#print(myList)
+myList[py#Int(0)] += py#Int(5)
+py#print(myList)
+myList[py#Int(0)] = py#Int(5)
+py#print(myList)

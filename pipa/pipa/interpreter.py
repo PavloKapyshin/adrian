@@ -4,27 +4,6 @@ from .type_lib import infer_type
 from .utils import A
 
 
-def inline_references_of_name(expr, name):
-    if expr in A(astlib.Name):
-        return context.env[expr]["expr"] if expr == name else expr
-    elif expr in A(astlib.Expr):
-        return astlib.Expr(
-            inline_references_of_name(expr.left, name), expr.op,
-            inline_references_of_name(expr.right, name))
-    elif expr in A(astlib.StructPath):
-        return astlib.StructPath(
-            [inline_references_of_name(expr.path[0], name)] + expr.path[1:])
-    elif expr in A(astlib.PyTypeCall):
-        return expr
-    elif expr in A(astlib.FuncCall):
-        return astlib.FuncCall(
-            expr.name,
-            [inline_references_of_name(arg, name) for arg in expr.args])
-    else:
-        # support other exprs
-        errors.later()
-
-
 def default_init_method(struct_decl):
     self_decl = astlib.VarDecl(
         astlib.Name(defs.SELF), struct_decl.name,
@@ -109,21 +88,26 @@ class Interpreter(layers.Layer):
 
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
-        if stmt.left in A(astlib.Name):
-            if context.env[stmt.left]["node_type"] != astlib.NodeT.var:
-                errors.cant_reassign(stmt.left)
-        else:
-            assert(stmt.left in A(astlib.StructPath))
-
         expr = stmt.right
         if stmt.op != defs.EQ:
             expr = astlib.Expr(
                 stmt.left, defs.ASSIGNMENT_OP_TO_EXPR_OP[stmt.op], expr)
-        expr = self.eval(inline_references_of_name(expr, stmt.left))
+        expr = self.eval(self._inline_references_of_name(expr, stmt.left))
 
-        if stmt.left in A(astlib.Name):
+        if stmt.left in A(astlib.Subscript):
+            method_name = defs.SPEC_METHOD_SETITEM
+            base, args = stmt.left.base, [stmt.left.index, expr]
+            type_ = infer_type(self.eval(base))
+            if type_ in A(astlib.PyType):
+                return self.py_method_call(
+                    base, astlib.FuncCall(method_name, args))
+            return self.method_call(base, astlib.FuncCall(method_name, args))
+        elif stmt.left in A(astlib.Name):
+            if context.env[stmt.left]["node_type"] != astlib.NodeT.var:
+                errors.cant_reassign(stmt.left)
             context.env[stmt.left]["expr"] = expr
         else:
+            assert(stmt.left in A(astlib.StructPath))
             self._update_value_through_struct_path(stmt.left.path, expr)
 
     @layers.register(astlib.Cond)
@@ -288,6 +272,10 @@ class Interpreter(layers.Layer):
             return list(converted_base.items())
         elif func_call.name == defs.SPEC_METHOD_GETITEM:
             return converted_base[args[0]]
+        elif func_call.name == defs.SPEC_METHOD_SETITEM:
+            expr = converted_base
+            expr[args[0]] = args[1]
+            self.assignment(astlib.Assignment(base, "=", expr))
         elif func_call.name == defs.SPEC_METHOD_CONTAINS:
             return args[0] in converted_base
         elif func_call.name == defs.SPEC_METHOD_EQ:
@@ -440,3 +428,29 @@ class Interpreter(layers.Layer):
         if raw_root_expr in A(astlib.Name):
             assert(root == defs.SELF)
             context.env[raw_root_expr]["expr"] = new_expr
+
+    def _inline_references_of_name(self, expr, name):
+        if expr in A(astlib.Name):
+            return context.env[expr]["expr"] if expr == name else expr
+        elif expr in A(astlib.Expr):
+            return astlib.Expr(
+                self._inline_references_of_name(expr.left, name), expr.op,
+                self._inline_references_of_name(expr.right, name))
+        elif expr in A(astlib.StructPath):
+            return astlib.StructPath(
+                [self._inline_references_of_name(
+                    expr.path[0], name)] + expr.path[1:])
+        elif expr in A(astlib.PyTypeCall):
+            return expr
+        elif expr in A(astlib.FuncCall):
+            return astlib.FuncCall(
+                expr.name,
+                [self._inline_references_of_name(arg, name)
+                for arg in expr.args])
+        elif expr in A(astlib.Subscript):
+            return self.eval(expr)
+        elif expr in A(int, str, list, dict, set):
+            return expr
+        else:
+            # support other exprs
+            errors.later()

@@ -1,2 +1,0 @@
-let myList = py#List([py#Int(0), py#Int(1), py#Int(2)])
-py#print(myList[py#Int(-1)])
