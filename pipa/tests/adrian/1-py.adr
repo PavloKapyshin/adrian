@@ -102,3 +102,13 @@ py#print(py#Int(1) <= py#Int(1))
 py#print(py#Int(5) <= py#Int(2))
 py#print(py#Int(1) >= py#Int(1))
 py#print(py#Int(5) >= py#Int(2))
+
+py#print()
+
+-- in
+py#print(py#Str("in:"))
+py#print(py#Str("H") in py#Str("Hello!"))
+py#print(py#Str("a") in py#Str("Hello!"))
+py#print(py#Int(2) in py#List([py#Str("Hello!"), py#Int(2)]))
+py#print(py#Str("a") in py#Set({py#Str("Hello!")}))
+py#print(py#Int(2) in py#Dict({py#Int(2) = py#Str("Hello!")}))

@@ -146,25 +146,25 @@ def p_stmt(content):
 
 
 def p_let_decl_1(content):
-    """let_decl : LET NAME COLON type EQ expr"""
+    """let_decl : LET NAME COLON type EQ bool_expr"""
     content[0] = astlib.LetDecl(
         astlib.Name(content[2]), content[4], content[6])
 
 
 def p_let_decl_2(content):
-    """let_decl : LET NAME EQ expr"""
+    """let_decl : LET NAME EQ bool_expr"""
     content[0] = astlib.LetDecl(
         astlib.Name(content[2]), astlib.Empty(), content[4])
 
 
 def p_var_decl_1(content):
-    """var_decl : VAR NAME COLON type EQ expr"""
+    """var_decl : VAR NAME COLON type EQ bool_expr"""
     content[0] = astlib.VarDecl(
         astlib.Name(content[2]), content[4], content[6])
 
 
 def p_var_decl_2(content):
-    """var_decl : VAR NAME EQ expr"""
+    """var_decl : VAR NAME EQ bool_expr"""
     content[0] = astlib.VarDecl(
         astlib.Name(content[2]), astlib.Empty(), content[4])
 
@@ -200,28 +200,28 @@ def p_field_decl(content):
 
 
 def p_assignment(content):
-    """assignment : expr assignment_operator expr"""
+    """assignment : expr assignment_operator bool_expr"""
     content[0] = astlib.Assignment(content[1], content[2], content[3])
 
 
 def p_for_stmt(content):
-    """for_stmt : FOR arg_list IN expr LBRACE ast RBRACE"""
+    """for_stmt : FOR names IN expr LBRACE ast RBRACE"""
     content[0] = astlib.For(content[2], content[4], content[6])
 
 
 def p_while_stmt(content):
-    """while_stmt : WHILE expr LBRACE ast RBRACE"""
+    """while_stmt : WHILE bool_expr LBRACE ast RBRACE"""
     content[0] = astlib.While(content[2], content[4])
 
 
 def p_cond_stmt(content):
-    """cond_stmt : IF expr LBRACE ast RBRACE opt_elifs opt_else"""
+    """cond_stmt : IF bool_expr LBRACE ast RBRACE opt_elifs opt_else"""
     content[0] = astlib.Cond(
         astlib.If(content[2], content[4]), content[6], content[7])
 
 
 def p_opt_elifs_1(content):
-    """opt_elifs : ELIF expr LBRACE ast RBRACE opt_elifs"""
+    """opt_elifs : ELIF bool_expr LBRACE ast RBRACE opt_elifs"""
     content[0] = [astlib.Elif(content[2], content[4])] + content[6]
 
 
@@ -241,7 +241,7 @@ def p_opt_else_2(content):
 
 
 def p_return_stmt(content):
-    """return_stmt : RETURN expr"""
+    """return_stmt : RETURN bool_expr"""
     content[0] = astlib.Return(content[2])
 
 
@@ -287,13 +287,26 @@ def p_type_2(content):
     content[0] = astlib.Name(content[1])
 
 
+def p_names_1(content):
+    """names : NAME COMMA names"""
+    content[0] = [astlib.Name(content[1])] + content[3]
+
+def p_names_2(content):
+    """names : NAME"""
+    content[0] = [astlib.Name(content[1])]
+
+def p_names_3(content):
+    """names : empty"""
+    content[0] = []
+
+
 def p_arg_list_1(content):
-    """arg_list : expr COMMA arg_list"""
+    """arg_list : bool_expr COMMA arg_list"""
     content[0] = [content[1]] + content[3]
 
 
 def p_arg_list_2(content):
-    """arg_list : expr"""
+    """arg_list : bool_expr"""
     content[0] = [content[1]]
 
 
@@ -319,20 +332,35 @@ def p_operator(content):
              | MINUS
              | TIMES
              | DIVIDE
-             | EQEQ
-             | NEQ
-             | LT
-             | GT
-             | LTEQ
-             | GTEQ
     """
+    content[0] = content[1]
+
+
+def p_bool_op(content):
+    """
+    bool_op : EQEQ
+            | NEQ
+            | LT
+            | GT
+            | LTEQ
+            | GTEQ
+            | IN
+    """
+    content[0] = content[1]
+
+
+def p_bool_expr_1(content):
+    """bool_expr : expr bool_op bool_expr"""
+    content[0] = astlib.Expr(content[1], content[2], content[3])
+
+def p_bool_expr_2(content):
+    """bool_expr : expr"""
     content[0] = content[1]
 
 
 def p_expr_1(content):
     """expr : factor operator expr"""
     content[0] = astlib.Expr(content[1], content[2], content[3])
-
 
 def p_expr_2(content):
     """expr : factor"""
@@ -343,8 +371,7 @@ def p_factor_1(content):
     """factor : atom LPAREN arg_list RPAREN"""
     content[0] = astlib.FuncCall(content[1], content[3])
 
-
-def p_factor_3(content):
+def p_factor_2(content):
     """factor : factor DOT factor"""
     def merge(acc, elem):
         if elem in A(list):
@@ -360,8 +387,7 @@ def p_factor_3(content):
     content[0] = merge(content[0], content[3])
     content[0] = astlib.StructPath(content[0])
 
-
-def p_factor_2(content):
+def p_factor_3(content):
     """factor : atom"""
     content[0] = content[1]
 
@@ -377,9 +403,8 @@ def p_atom_1(content):
     """
     content[0] = content[1]
 
-
 def p_atom_2(content):
-    """atom : LPAREN expr RPAREN"""
+    """atom : LPAREN bool_expr RPAREN"""
     content[0] = content[2]
 
 
@@ -402,11 +427,9 @@ def p_inner_dict_1(content):
     """inner_dict : inner_dict_elem COMMA inner_dict"""
     content[0] = {**content[1], **content[3]}
 
-
 def p_inner_dict_2(content):
     """inner_dict : inner_dict_elem"""
     content[0] = content[1]
-
 
 def p_inner_dict_3(content):
     """inner_dict : empty"""
@@ -414,7 +437,7 @@ def p_inner_dict_3(content):
 
 
 def p_inner_dict_elem(content):
-    """inner_dict_elem : expr EQ expr"""
+    """inner_dict_elem : expr EQ bool_expr"""
     content[0] = {content[1]: content[3]}
 
 
