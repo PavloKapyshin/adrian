@@ -51,13 +51,13 @@ class Interpreter(layers.Layer):
 
     @layers.register(astlib.LetDecl)
     def let_declaration(self, decl):
-        self.declaration(decl)
+        self._declaration(decl)
 
     @layers.register(astlib.VarDecl)
     def var_declaration(self, decl):
         if decl.expr in A(astlib.Empty):
             errors.later()
-        self.declaration(decl)
+        self._declaration(decl)
 
     @layers.register(astlib.FuncDecl)
     def func_declaration(self, decl):
@@ -90,8 +90,10 @@ class Interpreter(layers.Layer):
         body = decl.body
         has_init = False
         for stmt in body:
-            if not has_init and stmt in A(astlib.MethodDecl):
-                has_init = (stmt.name == defs.SPEC_METHOD_INIT)
+            if (stmt in A(astlib.MethodDecl) and
+                    stmt.name == defs.SPEC_METHOD_INIT):
+                has_init = True
+                break
         if not has_init:
             body = [default_init_method(decl)] + body
         self.b(body)
@@ -108,41 +110,21 @@ class Interpreter(layers.Layer):
     @layers.register(astlib.Assignment)
     def assignment(self, stmt):
         if stmt.left in A(astlib.Name):
-            node_type = context.env[stmt.left]["node_type"]
-            if node_type != astlib.NodeT.var:
+            if context.env[stmt.left]["node_type"] != astlib.NodeT.var:
                 errors.cant_reassign(stmt.left)
-        elif stmt.left not in A(astlib.StructPath):
-            errors.later()
-
-        if stmt.op == defs.EQ:
-            expr = inline_references_of_name(stmt.right, stmt.left)
         else:
-            expr = inline_references_of_name(
-                astlib.Expr(
-                    stmt.left, defs.ASSIGNMENT_OP_TO_EXPR_OP[stmt.op],
-                    stmt.right),
-                stmt.left)
+            assert(stmt.left in A(astlib.StructPath))
+
+        expr = stmt.right
+        if stmt.op != defs.EQ:
+            expr = astlib.Expr(
+                stmt.left, defs.ASSIGNMENT_OP_TO_EXPR_OP[stmt.op], expr)
+        expr = self.eval(inline_references_of_name(expr, stmt.left))
 
         if stmt.left in A(astlib.Name):
-            context.env[stmt.left]["expr"] = self.eval(expr)
+            context.env[stmt.left]["expr"] = expr
         else:
-            root = stmt.left.path[0]
-            assert(root in A(astlib.Name))
-            root_expr_raw = context.env[root]["expr"]
-            root_expr = self.eval(root)
-            old_dicts = [(root_expr.type_, root_expr.value)]
-            for elem in stmt.left.path[1:-1]:
-                old_dicts.append((root_expr.type_, root_expr.value))
-                root_expr = root_expr.value[elem]
-            new_value = self.eval(expr)
-            for elem, (type_, dict_) in zip(
-                    reversed(stmt.left.path[1:]),
-                    reversed(old_dicts)):
-                new_value = astlib.InstanceValue(
-                    type_, {**dict_, **{elem: new_value}})
-            context.env[root]["expr"] = new_value
-            if root_expr_raw in A(astlib.Name):
-                context.env[root_expr_raw]["expr"] = new_value
+            self._update_value_through_struct_path(stmt.left.path, expr)
 
     @layers.register(astlib.Cond)
     def cond(self, stmt):
@@ -217,6 +199,25 @@ class Interpreter(layers.Layer):
         context.env.remove_scope()
         return return_val
 
+    def method_call(self, base, func_call):
+        converted_base = self.eval(base)
+        type_ = infer_type(converted_base)
+        args = [base] + [self.eval(arg) for arg in func_call.args]
+        assert(type_ in A(astlib.Name))
+        method_info = context.env[type_]["methods"][func_call.name]
+        body = method_info["body"]
+        context.env.add_scope()
+        for (name, type_), expr in zip(
+                [(astlib.Name(defs.SELF), type_)] + method_info["args"], args):
+            context.env[name] = {
+                "node_type": astlib.NodeT.var,
+                "type": type_,
+                "expr": expr
+            }
+        result = self.b(body)
+        context.env.remove_scope()
+        return result
+
     @layers.register(astlib.StructPath)
     def struct_path(self, struct_path):
         self.eval(struct_path)
@@ -273,26 +274,6 @@ class Interpreter(layers.Layer):
             # support other funcs
             errors.later()
 
-    def method_call(self, base, func_call):
-        # TODO: add support for changing fields
-        converted_base = self.eval(base)
-        type_ = infer_type(converted_base)
-        args = [base] + [self.eval(arg) for arg in func_call.args]
-        assert(type_ in A(astlib.Name))
-        method_info = context.env[type_]["methods"][func_call.name]
-        body = method_info["body"]
-        context.env.add_scope()
-        for (name, type_), expr in zip(
-                [(astlib.Name(defs.SELF), type_)] + method_info["args"], args):
-            context.env[name] = {
-                "node_type": astlib.NodeT.var,
-                "type": type_,
-                "expr": expr
-            }
-        result = self.b(body)
-        context.env.remove_scope()
-        return result
-
     def py_method_call(self, base, func_call):
         converted_base = self.eval(base)
         type_ = infer_type(converted_base)
@@ -344,6 +325,7 @@ class Interpreter(layers.Layer):
             errors.later()
 
     def b(self, body):
+        """Executes bodies of functions, methods, cycles, etc."""
         def transform_node(node, *, registry):
             node_func = registry.get(type(node))
             if node_func is not None:
@@ -356,6 +338,7 @@ class Interpreter(layers.Layer):
                 return value
 
     def eval(self, expr):
+        """Executes expressions."""
         if expr in A(astlib.Name):
             return self.eval(context.env[expr]["expr"])
         elif expr in A(astlib.FuncCall):
@@ -415,7 +398,7 @@ class Interpreter(layers.Layer):
             # support other exprs
             errors.later()
 
-    def declaration(self, decl):
+    def _declaration(self, decl):
         expr = self.eval(decl.expr)
         context.env[decl.name] = {
             "node_type": (astlib.NodeT.var
@@ -426,3 +409,24 @@ class Interpreter(layers.Layer):
                 else infer_type(expr)),
             "expr": expr
         }
+
+    def _update_value_through_struct_path(self, path, expr):
+        root, inner_body, leaf = path[0], path[1:-1], path[-1]
+        assert(root in A(astlib.Name))
+        raw_root_expr = context.env[root]["expr"]
+        root_expr = self.eval(root)
+        old_instance_values = [root_expr]
+        for elem in inner_body:
+            assert(root_expr in A(astlib.InstanceValue))
+            old_instance_values.append(root_expr)
+            root_expr = root_expr.value[elem]
+        new_expr = expr
+        for elem, old_instance_value in zip(
+                reversed(inner_body + [leaf]), reversed(old_instance_values)):
+            new_expr = astlib.InstanceValue(
+                old_instance_value.type_,
+                {**old_instance_value.value, **{elem: new_expr}})
+        context.env[root]["expr"] = new_expr
+        if raw_root_expr in A(astlib.Name):
+            assert(root == defs.SELF)
+            context.env[raw_root_expr]["expr"] = new_expr

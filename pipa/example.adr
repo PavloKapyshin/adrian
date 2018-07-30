@@ -1,1 +1,37 @@
-py#print(py#Str("Hello, world!"))
+struct Dummy {}
+struct MyInt {
+    data: py#Int
+}
+
+struct ContainerOfMyInt {
+    inner: MyInt
+
+    fun printMe(): Void {
+        py#print(self.inner.data)
+    }
+
+    fun setToZero(): Void {
+        self.inner.data = py#Int(0)
+    }
+
+    fun getValue(): py#Int {
+        return self.inner.data
+    }
+}
+
+struct MyNumber {
+    data: py#Int
+
+    fun __add__(another: MyNumber): MyNumber {
+        return MyNumber(self.data + another.data)
+    }
+
+    fun print(): Void {
+        py#print(self.data)
+    }
+}
+
+-- structs, fields and methods usage
+let dummy = Dummy()
+let myInt1 = MyInt(py#Int(1))
+py#print(myInt1.data)
