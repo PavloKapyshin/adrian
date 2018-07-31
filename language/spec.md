@@ -6,8 +6,15 @@ let
 fun
 adt
 ref
+while
+if
+in
+is
+elif
+else
 protocol
 struct
+extension
 return
 ```
 
@@ -118,7 +125,21 @@ n: T
 `n` is a name, `T` is a type.
 
 ##### Method declaration
-Same as function, but `statements` may include use of `self`.
+Same as function, but `statements` may include usage of `self`.
+
+
+#### Extension declaration
+```adrian
+extension NAME {
+    methods
+}
+
+extension NAME(parameters) {
+    methods
+}
+```
+
+Methods may include usage of `self`.
 
 
 #### Adt declaration
