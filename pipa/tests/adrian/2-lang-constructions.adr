@@ -187,3 +187,24 @@ if py#Int(1) > py#Int(5) {
 } else {
     py#print(py#Str("LOL3"))
 }
+
+
+py#print()
+
+-- Protocol Tests
+py#print("Protocol Tests:")
+protocol Node {
+    fun printNode(): Void
+}
+
+struct VarDecl is Node {
+    name: py#Str
+
+    fun printNode(): Void {
+        py#print(py#Str("I am a variable declaration!"))
+        py#print(py#Str("My name is "), self.name)
+    }
+}
+
+let aDecl = VarDecl(py#Str("a"))
+aDecl.printNode()

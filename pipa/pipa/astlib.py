@@ -8,6 +8,7 @@ class NodeT(enum.Enum):
     var = 2
     func = 3
     struct = 4
+    protocol = 5
 
 
 @enum.unique
@@ -75,11 +76,12 @@ class FieldDecl(Node):
 
 class _StructLikeDecl(Node):
 
-    def __init__(self, name, parameters, body):
+    def __init__(self, name, parameters, implemented_protocols, body):
         self.name = name
         self.parameters = parameters
+        self.implemented_protocols = implemented_protocols
         self.body = body
-        self._keys = ("name", "parameters", "body")
+        self._keys = ("name", "parameters", "implemented_protocols", "body")
 
 
 class StructDecl(_StructLikeDecl):
@@ -87,6 +89,10 @@ class StructDecl(_StructLikeDecl):
 
 
 class ExtensionDecl(_StructLikeDecl):
+    pass
+
+
+class ProtocolDecl(_StructLikeDecl):
     pass
 
 
@@ -104,6 +110,15 @@ class MethodDecl(_FuncDecl):
 
 class FuncDecl(_FuncDecl):
     pass
+
+
+class FuncProtoDecl(Node):
+
+    def __init__(self, name, args, rettype):
+        self.name = name
+        self.args = args
+        self.rettype = rettype
+        self._keys = ("name", "args", "rettype")
 
 
 class Assignment(Node):

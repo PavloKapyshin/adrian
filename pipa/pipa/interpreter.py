@@ -50,6 +50,7 @@ class Interpreter(layers.Layer):
     @layers.register(astlib.MethodDecl)
     def method_declaration(self, decl):
         assert(context.parent_struct is not None)
+        assert(context.parent_struct in context.env)
         context.env[context.parent_struct]["methods"][decl.name] = {
             "args": decl.args,
             "rettype": decl.rettype,
@@ -61,6 +62,7 @@ class Interpreter(layers.Layer):
         context.env[decl.name] = {
             "node_type": astlib.NodeT.struct,
             "parameters": decl.parameters,
+            "implemented_protocols": decl.implemented_protocols,
             "fields": {},
             "methods": {}
         }
@@ -81,16 +83,51 @@ class Interpreter(layers.Layer):
 
     @layers.register(astlib.ExtensionDecl)
     def extension_declaration(self, decl):
+        def _update_implemented_protocols(name, impled_protocols):
+            old = context.env[name]["implemented_protocols"]
+            to_add = []
+            for protocol_name in impled_protocols:
+                if protocol_name not in old:
+                    to_add.append(protocol_name)
+            context.env[name]["implemented_protocols"].extend(to_add)
+
         assert(decl.name in context.env)
+        _update_implemented_protocols(decl.name, decl.implemented_protocols)
         context.env.add_scope()
         context.parent_struct = decl.name
         self.b(decl.body)
         context.parent_struct = None
         context.env.remove_scope()
 
+    @layers.register(astlib.ProtocolDecl)
+    def protocol_declaration(self, decl):
+        context.env[decl.name] = {
+            "node_type": astlib.NodeT.protocol,
+            "parameters": decl.parameters,
+            "implemented_protocols": decl.implemented_protocols,
+            "fields": {},
+            "methods": {},
+        }
+        context.env.add_scope()
+        context.parent_struct = decl.name
+        self.b(decl.body)
+        context.parent_struct = None
+        context.env.remove_scope()
+
+    @layers.register(astlib.FuncProtoDecl)
+    def func_proto_declaration(self, decl):
+        assert(context.parent_struct is not None)
+        assert(context.parent_struct in context.env)
+        assert(context.env[context.parent_struct]["node_type"] == astlib.NodeT.protocol)
+        context.env[context.parent_struct]["methods"][decl.name] = {
+            "args": decl.args,
+            "rettype": decl.rettype
+        }
+
     @layers.register(astlib.FieldDecl)
     def field_declaration(self, decl):
         assert(context.parent_struct is not None)
+        assert(context.parent_struct in context.env)
         context.env[context.parent_struct]["fields"][decl.name] = {
             "type": decl.type_
         }

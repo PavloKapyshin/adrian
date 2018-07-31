@@ -145,7 +145,9 @@ def p_stmt(content):
     stmt : let_decl
          | var_decl
          | func_decl
+         | func_proto_decl
          | struct_decl
+         | protocol_decl
          | extension_decl
          | field_decl
          | assignment
@@ -189,21 +191,31 @@ def p_var_decl_3(content):
 
 
 def p_func_decl(content):
-    """func_decl : FUN NAME LPAREN func_parameters RPAREN COLON type LBRACE ast RBRACE"""
+    """func_decl : func_proto_decl LBRACE ast RBRACE"""
     content[0] = astlib.FuncDecl(
-        content[2], content[4], content[7], content[9])
+        content[1].name, content[1].args, content[1].rettype, content[3])
+
+
+def p_func_proto_decl(content):
+    """func_proto_decl : FUN NAME LPAREN func_parameters RPAREN COLON type"""
+    content[0] = astlib.FuncProtoDecl(content[2], content[4], content[7])
+
+
+def p_protocol_decl(content):
+    """protocol_decl : PROTOCOL NAME struct_parameters implemented_protocols LBRACE ast RBRACE"""
+    content[0] = astlib.ProtocolDecl(content[2], content[3], content[4], content[6])
 
 
 def p_struct_decl(content):
-    """struct_decl : STRUCT NAME struct_parameters LBRACE ast RBRACE"""
-    body = make_method_decls_from_func_decls(content[5])
-    content[0] = astlib.StructDecl(content[2], content[3], body)
+    """struct_decl : STRUCT NAME struct_parameters implemented_protocols LBRACE ast RBRACE"""
+    body = make_method_decls_from_func_decls(content[6])
+    content[0] = astlib.StructDecl(content[2], content[3], content[4], body)
 
 
 def p_extension_decl(content):
-    """extension_decl : EXTENSION NAME struct_parameters LBRACE ast RBRACE"""
-    body = make_method_decls_from_func_decls(content[5])
-    content[0] = astlib.ExtensionDecl(content[2], content[3], body)
+    """extension_decl : EXTENSION NAME struct_parameters implemented_protocols LBRACE ast RBRACE"""
+    body = make_method_decls_from_func_decls(content[6])
+    content[0] = astlib.ExtensionDecl(content[2], content[3], content[4], body)
 
 
 def p_field_decl(content):
@@ -274,6 +286,28 @@ def p_struct_parameters_1(content):
 
 def p_struct_parameters_2(content):
     """struct_parameters : empty"""
+    content[0] = []
+
+
+def p_implemented_protocols_1(content):
+    """implemented_protocols : IS impled_protocols"""
+    content[0] = content[2]
+
+def p_implemented_protocols_2(content):
+    """implemented_protocols : empty"""
+    content[0] = []
+
+
+def p_impled_protocols_1(content):
+    """impled_protocols : type COMMA impled_protocols"""
+    content[0] = [content[1]] + content[3]
+
+def p_impled_protocols_2(content):
+    """impled_protocols : type """
+    content[0] = [content[1]]
+
+def p_impled_protocols_3(content):
+    """impled_protocols : empty"""
     content[0] = []
 
 

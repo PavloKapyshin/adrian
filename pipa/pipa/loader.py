@@ -107,6 +107,11 @@ class Loader(layers.Layer):
     def declaration(self, decl):
         return type(decl)(n(decl.name), t(decl.type_), e(decl.expr))
 
+    def struct_like_decl(self, decl):
+        return type(decl)(
+            n(decl.name), decl.parameters, decl.implemented_protocols,
+            self.b(decl.body))
+
     @layers.register(astlib.LetDecl)
     def let_declaration(self, decl):
         yield self.declaration(decl)
@@ -114,6 +119,23 @@ class Loader(layers.Layer):
     @layers.register(astlib.VarDecl)
     def var_declaration(self, decl):
         yield self.declaration(decl)
+
+    @layers.register(astlib.StructDecl)
+    def struct_declaration(self, decl):
+        yield self.struct_like_decl(decl)
+
+    @layers.register(astlib.ExtensionDecl)
+    def extension_declaration(self, decl):
+        yield self.struct_like_decl(decl)
+
+    @layers.register(astlib.ProtocolDecl)
+    def protocol_declaration(self, decl):
+        yield self.struct_like_decl(decl)
+
+    @layers.register(astlib.FuncProtoDecl)
+    def func_proto_declaration(self, decl):
+        args = [(n(name), t(type_)) for name, type_ in decl.args]
+        yield astlib.FuncProtoDecl(n(decl.name), args, t(decl.rettype))
 
     @layers.register(astlib.FuncDecl)
     def func_declaration(self, decl):
@@ -126,16 +148,6 @@ class Loader(layers.Layer):
         args = [(n(name), t(type_)) for name, type_ in decl.args]
         yield astlib.MethodDecl(
             decl.name, args, t(decl.rettype), self.b(decl.body))
-
-    @layers.register(astlib.StructDecl)
-    def struct_declaration(self, decl):
-        yield astlib.StructDecl(
-            n(decl.name), decl.parameters, self.b(decl.body))
-
-    @layers.register(astlib.ExtensionDecl)
-    def extension_declaration(self, decl):
-        yield astlib.ExtensionDecl(
-            n(decl.name), decl.parameters, self.b(decl.body))
 
     @layers.register(astlib.FieldDecl)
     def field_declaration(self, decl):

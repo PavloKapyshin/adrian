@@ -1,13 +1,17 @@
-struct MyInt {
-    data: py#Int
-}
+protocol Node {}
 
+protocol HighNode is Node {}
 
-extension MyInt {
-    fun printMe(): Void {
-        py#print(self.data)
+struct VarDecl is HighNode {
+    name: py#Str
+
+    fun print(): Void {
+        py#print(self.name)
     }
 }
 
-let m1 = MyInt(py#Int(1))
-m1.printMe()
+
+let aDecl = VarDecl(py#Str("a"))
+aDecl.print()
+
+py#print(aDecl.name)
