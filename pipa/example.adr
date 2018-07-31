@@ -1,0 +1,13 @@
+struct MyInt {
+    data: py#Int
+}
+
+
+extension MyInt {
+    fun printMe(): Void {
+        py#print(self.data)
+    }
+}
+
+let m1 = MyInt(py#Int(1))
+m1.printMe()

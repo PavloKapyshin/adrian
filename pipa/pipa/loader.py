@@ -132,6 +132,11 @@ class Loader(layers.Layer):
         yield astlib.StructDecl(
             n(decl.name), decl.parameters, self.b(decl.body))
 
+    @layers.register(astlib.ExtensionDecl)
+    def extension_declaration(self, decl):
+        yield astlib.ExtensionDecl(
+            n(decl.name), decl.parameters, self.b(decl.body))
+
     @layers.register(astlib.FieldDecl)
     def field_declaration(self, decl):
         yield astlib.FieldDecl(decl.name, t(decl.type_))

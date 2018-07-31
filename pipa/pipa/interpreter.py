@@ -79,6 +79,15 @@ class Interpreter(layers.Layer):
         context.parent_struct = None
         context.env.remove_scope()
 
+    @layers.register(astlib.ExtensionDecl)
+    def extension_declaration(self, decl):
+        assert(decl.name in context.env)
+        context.env.add_scope()
+        context.parent_struct = decl.name
+        self.b(decl.body)
+        context.parent_struct = None
+        context.env.remove_scope()
+
     @layers.register(astlib.FieldDecl)
     def field_declaration(self, decl):
         assert(context.parent_struct is not None)

@@ -118,6 +118,18 @@ precedence = (
 )
 
 
+def make_method_decls_from_func_decls(body):
+    new_body = []
+    for stmt in body:
+        if stmt in A(astlib.FuncDecl):
+            new_body.append(
+                astlib.MethodDecl(
+                    stmt.name, stmt.args, stmt.rettype, stmt.body))
+        else:
+            new_body.append(stmt)
+    return new_body
+
+
 def p_ast_1(content):
     """ast : stmt ast"""
     content[0] = [content[1]] + content[2]
@@ -134,6 +146,7 @@ def p_stmt(content):
          | var_decl
          | func_decl
          | struct_decl
+         | extension_decl
          | field_decl
          | assignment
          | factor
@@ -183,15 +196,14 @@ def p_func_decl(content):
 
 def p_struct_decl(content):
     """struct_decl : STRUCT NAME struct_parameters LBRACE ast RBRACE"""
-    body = []
-    for stmt in content[5]:
-        if stmt in A(astlib.FuncDecl):
-            body.append(
-                astlib.MethodDecl(
-                    stmt.name, stmt.args, stmt.rettype, stmt.body))
-        else:
-            body.append(stmt)
+    body = make_method_decls_from_func_decls(content[5])
     content[0] = astlib.StructDecl(content[2], content[3], body)
+
+
+def p_extension_decl(content):
+    """extension_decl : EXTENSION NAME struct_parameters LBRACE ast RBRACE"""
+    body = make_method_decls_from_func_decls(content[5])
+    content[0] = astlib.ExtensionDecl(content[2], content[3], body)
 
 
 def p_field_decl(content):

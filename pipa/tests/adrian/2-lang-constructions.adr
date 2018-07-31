@@ -111,7 +111,9 @@ struct MyNumber {
     fun __add__(another: MyNumber): MyNumber {
         return MyNumber(self.data + another.data)
     }
+}
 
+extension MyNumber {
     fun print(): Void {
         py#print(self.data)
     }

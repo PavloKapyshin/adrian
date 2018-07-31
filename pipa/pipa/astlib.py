@@ -73,13 +73,21 @@ class FieldDecl(Node):
         self._keys = ("name", "type_")
 
 
-class StructDecl(Node):
+class _StructLikeDecl(Node):
 
     def __init__(self, name, parameters, body):
         self.name = name
         self.parameters = parameters
         self.body = body
         self._keys = ("name", "parameters", "body")
+
+
+class StructDecl(_StructLikeDecl):
+    pass
+
+
+class ExtensionDecl(_StructLikeDecl):
+    pass
 
 
 class _FuncDecl(Node):
