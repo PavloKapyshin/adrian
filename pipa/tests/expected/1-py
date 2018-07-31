@@ -86,3 +86,9 @@ getItem, setItem:
 [1, 1, 2]
 [6, 1, 2]
 [5, 1, 2]
+
+Zip:
+Person1 = John
+Person2 = Nile
+Person1 = Mike
+Person2 = Gal

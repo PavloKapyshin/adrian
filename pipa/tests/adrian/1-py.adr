@@ -131,3 +131,15 @@ myList[py#Int(0)] += py#Int(5)
 py#print(myList)
 myList[py#Int(0)] = py#Int(5)
 py#print(myList)
+
+py#print()
+
+-- zip:
+py#print(py#Str("Zip:"))
+var persons = py#List([py#Str("John"), py#Str("Mike")])
+var another = py#List([py#Str("Nile"), py#Str("Gal")])
+
+for person1, person2 in py#zip(persons, another) {
+    py#print(py#Str("Person1 = "), person1)
+    py#print(py#Str("Person2 = "), person2)
+}

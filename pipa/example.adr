@@ -1,17 +1,8 @@
-protocol Node {}
+var persons = py#List([py#Str("John"), py#Str("Mike")])
+var another = py#List([py#Str("Nile"), py#Str("Gal")])
 
-protocol HighNode is Node {}
-
-struct VarDecl is HighNode {
-    name: py#Str
-
-    fun print(): Void {
-        py#print(self.name)
-    }
+for person1, person2 in py#zip(persons, another) {
+    py#print(py#Str("Person1 = "), person1)
+    py#print(py#Str("Person2 = "), person2)
+    py#print()
 }
-
-
-let aDecl = VarDecl(py#Str("a"))
-aDecl.print()
-
-py#print(aDecl.name)

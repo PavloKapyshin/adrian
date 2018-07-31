@@ -290,6 +290,8 @@ class Interpreter(layers.Layer):
             return list(self.eval(func_call.args[0]))
         elif func_call.name == defs.FUNC_LEN:
             return len(self.eval(func_call.args[0]))
+        elif func_call.name == defs.FUNC_ZIP:
+            return list(zip(*[self.eval(arg) for arg in func_call.args]))
         elif func_call.name == defs.FUNC_READ_FILE:
             file_path = self.eval(func_call.args[0])
             with open(file_path, "r") as file:
