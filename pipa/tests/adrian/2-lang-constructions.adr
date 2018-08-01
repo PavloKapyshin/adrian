@@ -267,3 +267,55 @@ if anotherNode is VarDecl2 {
 } else {
     py#print(py#Str("Bad"))
 }
+
+py#print()
+
+-- Paramed structs and protocols:
+py#print(py#Str("Paramed:"))
+
+protocol Maybe(a) {}
+
+struct Some(a) is Maybe(a) {
+    data: a
+}
+
+struct None is Maybe(a) {}
+
+struct Vector(a) {
+    data: py#List
+
+    fun append(elem: a): Void {
+        self.data += py#List([elem])
+    }
+
+    fun __getItem__(index: py#Int): Maybe(a) {
+        var i = py#Int(0)
+        for elem in self.data {
+            if i == index {
+                return Some(elem)
+            }
+            i += py#Int(1)
+        }
+        return None()
+    }
+}
+
+
+let v1 = Vector(py#List([py#Int(5), py#Int(6)]))
+py#print(v1.data)
+v1.append(py#Int(2))
+py#print(v1.data)
+let myElement: Maybe(py#Int) = v1[py#Int(1)]
+let anotherElement: Maybe(py#Int) = v1[py#Int(5)]
+
+if myElement is Some(py#Int) {
+    py#print(myElement.data)
+} else {
+    py#print(py#Str("Try later!"))
+}
+
+if anotherElement is Some(py#Int) {
+    py#print(anotherElement.data)
+} else {
+    py#print(py#Str("Try later!"))
+}

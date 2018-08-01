@@ -48,6 +48,8 @@ def infer_type(expr):
         return astlib.PyType(defs.TYPE_DICT)
     elif expr is None:
         return astlib.Name(defs.TYPE_VOID)
+    elif expr in A(astlib.GenericType):
+        return expr
     else:
         errors.later()
 
@@ -66,9 +68,18 @@ def types_are_equal(type1, type2):
 def is_super_type(sub_type, super_type):
     if sub_type in A(astlib.PyType) or super_type in A(astlib.PyType):
         return False
+    if sub_type in A(astlib.GenericType):
+        sub_type = sub_type.base
+    if super_type in A(astlib.GenericType):
+        super_type = super_type.base
     assert(sub_type in A(astlib.Name))
     assert(super_type in A(astlib.Name))
     sub_type_info = context.env[sub_type]
     assert(sub_type_info["node_type"] in (
             astlib.NodeT.protocol, astlib.NodeT.struct))
-    return super_type in sub_type_info["implemented_protocols"]
+    for impled in sub_type_info["implemented_protocols"]:
+        if impled in A(astlib.GenericType):
+            impled = impled.base
+        if impled == super_type:
+            return True
+    return False

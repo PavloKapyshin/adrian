@@ -218,6 +218,8 @@ class Interpreter(layers.Layer):
         info = context.env[func_call.name]
         if info["node_type"] == astlib.NodeT.struct:
             info = info["methods"][defs.SPEC_METHOD_INIT]
+        elif info["node_type"] == astlib.NodeT.protocol:
+            return astlib.GenericType(func_call.name, func_call.args)
         context.env.add_scope()
         for (name, type_), expr in zip(info["args"], func_call.args):
             context.env[name] = {
@@ -450,7 +452,9 @@ class Interpreter(layers.Layer):
             super_type = infer_type(super_expr)
             return (types_are_equal(sub_type, super_type) or
                 is_super_type(sub_type, super_type))
-        elif expr in A(int, str, list, set, dict, bool, astlib.InstanceValue):
+        elif expr in A(
+                int, str, list, set, dict, bool, astlib.InstanceValue,
+                astlib.GenericType, astlib.PyType):
             return expr
         else:
             # support other exprs

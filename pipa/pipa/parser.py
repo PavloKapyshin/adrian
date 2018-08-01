@@ -332,6 +332,20 @@ def p_type_2(content):
     """type : NAME"""
     content[0] = astlib.Name(content[1])
 
+def p_type_3(content):
+    """type : type LPAREN types RPAREN"""
+    content[0] = astlib.GenericType(content[1], content[3])
+
+
+def p_types_1(content):
+    """types : type COMMA types"""
+    content[0] = [content[1]] + content[3]
+
+
+def p_types_2(content):
+    """types : type"""
+    content[0] = [content[1]]
+
 
 def p_names_1(content):
     """names : NAME COMMA names"""
@@ -439,7 +453,9 @@ def p_factor_2(content):
     content[0] = astlib.StructPath(content[0])
 
 def p_factor_3(content):
-    """factor : atom"""
+    """
+    factor : atom
+    """
     content[0] = content[1]
 
 

@@ -23,6 +23,10 @@ def t(type_, hash_=None):
         if type_ == defs.TYPE_VOID:
             return type_
         return n(type_, hash_)
+    elif type_ in A(astlib.GenericType):
+        return astlib.GenericType(
+            t(type_.base, hash_=hash_),
+            [t(param, hash_=hash_) for param in type_.parameters])
     elif type_ in A(astlib.Empty):
         return type_
     else:

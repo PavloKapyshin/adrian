@@ -279,6 +279,14 @@ class Name(_Name):
         super().__init__(data)
 
 
+class GenericType(Node):
+
+    def __init__(self, base, parameters):
+        self.base = base
+        self.parameters = parameters
+        self._keys = ("base", "parameters")
+
+
 class PyObject(Node):
     pass
 
