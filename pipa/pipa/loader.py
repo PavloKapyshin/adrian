@@ -109,7 +109,8 @@ class Loader(layers.Layer):
 
     def struct_like_decl(self, decl):
         return type(decl)(
-            n(decl.name), decl.parameters, decl.implemented_protocols,
+            n(decl.name), decl.parameters,
+            [t(impled) for impled in decl.implemented_protocols],
             self.b(decl.body))
 
     @layers.register(astlib.LetDecl)

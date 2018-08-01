@@ -193,11 +193,11 @@ py#print()
 
 -- Protocol Tests
 py#print("Protocol Tests:")
-protocol Node {
+protocol Node1 {
     fun printNode(): Void
 }
 
-struct VarDecl is Node {
+struct VarDecl1 is Node1 {
     name: py#Str
 
     fun printNode(): Void {
@@ -206,5 +206,64 @@ struct VarDecl is Node {
     }
 }
 
-let aDecl = VarDecl(py#Str("a"))
+let aDecl = VarDecl1(py#Str("a"))
 aDecl.printNode()
+
+py#print()
+
+protocol Node2 {
+    name: py#Str
+}
+
+struct VarDecl2 is Node2 {
+    name: py#Str
+}
+
+struct LetDecl2 is Node2 {
+    name: py#Str
+}
+
+var decl1: Node2 = VarDecl2(py#Str("Lol"))
+py#print(decl1.name)
+decl1 = LetDecl2(py#Str("Another"))
+py#print(decl1.name)
+let a: LetDecl2 = decl1
+a.name = py#Str("Noob")
+py#print(a.name)
+
+py#print()
+-- IS:
+py#print(py#Str("is tests:"))
+
+let someNode: Node2 = VarDecl2(py#Str("some name"))
+if someNode is Node2 {
+    py#print(py#Str("OK"))
+} else {
+    py#print(py#Str("Bad"))
+}
+
+if someNode is VarDecl2 {
+    py#print(py#Str("OK"))
+} else {
+    py#print(py#Str("Bad"))
+}
+
+if someNode is LetDecl2 {
+    py#print(py#Str("Bad"))
+} else {
+    py#print(py#Str("OK"))
+}
+
+
+let anotherNode = VarDecl2(py#Str("another name"))
+if anotherNode is Node2 {
+    py#print(py#Str("OK"))
+} else {
+    py#print(py#Str("Bad"))
+}
+
+if anotherNode is VarDecl2 {
+    py#print(py#Str("OK"))
+} else {
+    py#print(py#Str("Bad"))
+}

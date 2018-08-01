@@ -20,7 +20,10 @@ def infer_type(expr):
         else:
             errors.later()
     elif expr in A(astlib.Name):
-        return context.env[expr]["type"]
+        info = context.env[expr]
+        if info["node_type"] in (astlib.NodeT.var, astlib.NodeT.let):
+            return context.env[expr]["type"]
+        return expr
     elif expr in A(astlib.FuncCall):
         info = context.env[expr.name]
         if info["node_type"] == astlib.NodeT.func:
@@ -58,3 +61,14 @@ def types_are_equal(type1, type2):
         return type1.name == type2.name
     else:
         errors.later()
+
+
+def is_super_type(sub_type, super_type):
+    if sub_type in A(astlib.PyType) or super_type in A(astlib.PyType):
+        return False
+    assert(sub_type in A(astlib.Name))
+    assert(super_type in A(astlib.Name))
+    sub_type_info = context.env[sub_type]
+    assert(sub_type_info["node_type"] in (
+            astlib.NodeT.protocol, astlib.NodeT.struct))
+    return super_type in sub_type_info["implemented_protocols"]

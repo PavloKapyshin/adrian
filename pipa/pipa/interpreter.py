@@ -1,6 +1,6 @@
 from . import astlib, layers, errors, defs
 from .context import context
-from .type_lib import infer_type
+from .type_lib import infer_type, types_are_equal, is_super_type
 from .utils import A
 
 
@@ -378,7 +378,10 @@ class Interpreter(layers.Layer):
     def eval(self, expr):
         """Executes expressions."""
         if expr in A(astlib.Name):
-            return self.eval(context.env[expr]["expr"])
+            info = context.env[expr]
+            if info["node_type"] in (astlib.NodeT.var, astlib.NodeT.let):
+                return self.eval(context.env[expr]["expr"])
+            return expr
         elif expr in A(astlib.FuncCall):
             return self.func_call(expr)
         elif expr in A(astlib.PyFuncCall, astlib.PyTypeCall):
@@ -409,6 +412,8 @@ class Interpreter(layers.Layer):
                     root_type = infer_type(root_expr)
             return root_expr
         elif expr in A(astlib.Expr):
+            if expr.op == defs.IS:
+                return self.eval(astlib.Is(expr.left, expr.right))
             method_name = defs.OPERATOR_TO_METHOD[expr.op]
             base, args = expr.left, [expr.right]
             if method_name == defs.SPEC_METHOD_CONTAINS:
@@ -438,6 +443,13 @@ class Interpreter(layers.Layer):
                 return self.py_method_call(
                     base, astlib.FuncCall(method_name, args))
             return self.method_call(base, astlib.FuncCall(method_name, args))
+        elif expr in A(astlib.Is):
+            sub_expr = self.eval(expr.sub_expr)
+            super_expr = self.eval(expr.super_expr)
+            sub_type = infer_type(sub_expr)
+            super_type = infer_type(super_expr)
+            return (types_are_equal(sub_type, super_type) or
+                is_super_type(sub_type, super_type))
         elif expr in A(int, str, list, set, dict, bool, astlib.InstanceValue):
             return expr
         else:

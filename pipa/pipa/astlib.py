@@ -211,6 +211,14 @@ class Subscript(Node):
         self._keys = ("base", "index")
 
 
+class Is(Node):
+
+    def __init__(self, sub_expr, super_expr):
+        self.sub_expr = sub_expr
+        self.super_expr = super_expr
+        self._keys = ("sub_expr", "super_expr")
+
+
 class StructPath(Node):
 
     def __init__(self, path):

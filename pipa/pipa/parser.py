@@ -391,6 +391,7 @@ def p_bool_op(content):
             | LTEQ
             | GTEQ
             | IN
+            | IS
     """
     content[0] = content[1]
 

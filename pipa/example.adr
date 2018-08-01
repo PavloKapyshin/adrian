@@ -1,8 +1,20 @@
-var persons = py#List([py#Str("John"), py#Str("Mike")])
-var another = py#List([py#Str("Nile"), py#Str("Gal")])
+protocol Node {
+    name: py#Str
+}
 
-for person1, person2 in py#zip(persons, another) {
-    py#print(py#Str("Person1 = "), person1)
-    py#print(py#Str("Person2 = "), person2)
-    py#print()
+struct VarDecl is Node {
+    name: py#Str
+}
+
+struct LetDecl is Node {
+    name: py#Str
+}
+
+
+let name: Node = VarDecl(py#Str("Noob"))
+let a: Node = VarDecl(py#Str("Monk"))
+if name is a {
+    py#print(py#Str("OK"))
+} else {
+    py#print(py#Str("Bad"))
 }
