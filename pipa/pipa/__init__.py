@@ -14,9 +14,10 @@ def _update_context_args():
     return {**context.modified_context_args(), **{"env": defs.ENV}}
 
 
-def compile_from_string(input_code, *, stop_before, stop_after):
+def compile_from_string(input_code, *, stop_before, stop_after, module_paths):
     context_args = defs.DEFAULT_CONTEXT_ARGUMENTS
     context_args["main_file_hash"] = utils.get_hash(input_code)
+    context_args["module_paths"] = module_paths
     current_ast = input_code
     for layer_cls, method_name in LAYERS:
         if stop_before == layer_cls:
@@ -42,9 +43,12 @@ def _read_file(file_name):
 
 
 def compile_from_file(
-        in_file, *, stop_before=None, stop_after=None, print_ast=False):
+        in_file, *, stop_before=None, stop_after=None, print_ast=False,
+        modules_file=None):
     result = compile_from_string(
-        _read_file(in_file), stop_before=stop_before, stop_after=stop_after)
+        _read_file(in_file), stop_before=stop_before, stop_after=stop_after,
+        module_paths=(_read_file(modules_file).splitlines()
+            if modules_file is not None else defs.DEFAULT_MODULE_PATHS))
     if print_ast:
         print(result)
     return result

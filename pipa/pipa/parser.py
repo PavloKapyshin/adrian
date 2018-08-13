@@ -107,7 +107,7 @@ t_ignore = " \t"
 
 def t_error(token):
     """Error handling rule."""
-    errors.illegal_char(char=token.value[0])
+    errors.illegal_char(token.value[0])
 
 
 precedence = (

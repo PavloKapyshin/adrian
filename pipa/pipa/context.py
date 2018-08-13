@@ -6,11 +6,13 @@ context = threading.local()
 
 
 @contextlib.contextmanager
-def new_context(*, env, exit_on_error, main_file_hash):
+def new_context(*, env, exit_on_error, main_file_hash, module_paths):
     context.env = env
     context.exit_on_error = exit_on_error
     context.main_file_hash = main_file_hash
+    context.module_paths = module_paths
     context.loaded = []
+    context.loaded_modules = {}
     context.parent_struct = None
     yield
 
@@ -18,5 +20,6 @@ def new_context(*, env, exit_on_error, main_file_hash):
 def modified_context_args():
     return {
         key: getattr(context, key)
-        for key in ("env", "exit_on_error", "main_file_hash")
+        for key in (
+            "env", "exit_on_error", "main_file_hash", "module_paths")
     }

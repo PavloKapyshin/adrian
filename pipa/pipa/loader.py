@@ -1,9 +1,45 @@
 import importlib
 import pathlib
 
-from . import astlib, layers, errors, defs
+from . import astlib, layers, errors, defs, utils
 from .context import context
 from .utils import A
+
+
+def get_file_hash(file_path):
+    return utils.get_hash(read_file(str(file_path)))
+
+
+def read_file(file_path):
+    with open(file_path, "r") as file:
+        contents = file.read()
+    return contents
+
+
+def find_file(file_name):
+    file_name_with_extension = ".".join([
+        str(file_name), defs.ADRIAN_FILE_EXTENSION])
+    for dir_name in context.module_paths:
+        dir_path = pathlib.Path(dir_name)
+        for entity in dir_path.iterdir():
+            if (entity.is_file() and
+                    entity.name == file_name_with_extension):
+                return entity
+    errors.cannot_find_file(file_name_with_extension)
+
+
+def load_module(module_name):
+    hash_ = context.loaded_modules.get(module_name, None)
+    if hash_ is None:
+        file_path = find_file(module_name)
+        prev_main_file_hash = context.main_file_hash
+        pipa = importlib.import_module("pipa")
+        nodes = pipa.compile_from_file(str(file_path), stop_after=Loader)
+        context.main_file_hash = prev_main_file_hash
+        context.loaded.extend(nodes)
+        hash_ = get_file_hash(file_path)
+        context.loaded_modules[module_name] = hash_
+    return hash_
 
 
 def n(name, hash_=None):
@@ -18,7 +54,8 @@ def t(type_, hash_=None):
         if type_.module == defs.MODULE_PY:
             return make_py_object(type_.member)
         else:
-            errors.later()
+            hash_ = load_module(type_.module)
+            return t(type_.member, hash_=hash_)
     elif type_ in A(astlib.Name):
         if type_ == defs.TYPE_VOID:
             return type_
@@ -43,7 +80,8 @@ def e(expr, hash_=None):
         if expr.module == defs.MODULE_PY:
             return make_py_object(expr.member)
         else:
-            errors.later()
+            hash_ = load_module(expr.module)
+            return e(expr.member, hash_=hash_)
     elif expr in A(astlib.StructPath):
         expr = expr.path
         return astlib.StructPath([e(expr[0], hash_=hash_)] + [

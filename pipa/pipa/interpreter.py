@@ -4,6 +4,16 @@ from .type_lib import infer_type, types_are_equal, is_super_type
 from .utils import A
 
 
+def complete_init_method(method_decl, struct_decl):
+    self_decl = astlib.VarDecl(
+        astlib.Name(defs.SELF), struct_decl.name,
+        astlib.InstanceValue(struct_decl.name, {}))
+    return_self = astlib.Return(astlib.Name(defs.SELF))
+    return astlib.MethodDecl(
+        astlib.Name(defs.SPEC_METHOD_INIT), method_decl.args, struct_decl.name,
+        [self_decl] + method_decl.body + [return_self])
+
+
 def default_init_method(struct_decl):
     self_decl = astlib.VarDecl(
         astlib.Name(defs.SELF), struct_decl.name,
@@ -70,14 +80,17 @@ class Interpreter(layers.Layer):
         context.parent_struct = decl.name
         body = decl.body
         has_init = False
+        new_body = []
         for stmt in body:
             if (stmt in A(astlib.MethodDecl) and
                     stmt.name == defs.SPEC_METHOD_INIT):
                 has_init = True
+                new_body.append(complete_init_method(stmt, decl))
                 break
+            new_body.append(stmt)
         if not has_init:
-            body = [default_init_method(decl)] + body
-        self.b(body)
+            new_body = [default_init_method(decl)] + new_body
+        self.b(new_body)
         context.parent_struct = None
         context.env.remove_scope()
 

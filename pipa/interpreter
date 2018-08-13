@@ -28,11 +28,14 @@ def main():
         "--stop-after", type=str, help="stop after layer")
     parser.add_argument(
         "--print-ast", help="print ast after translation", action="store_true")
+    parser.add_argument(
+        "--modules", type=str, help="where to find modules")
 
     args = parser.parse_args()
     pipa.compile_from_file(
         args.in_file.name, stop_before=to_obj(args.stop_before),
-        stop_after=to_obj(args.stop_after), print_ast=args.print_ast)
+        stop_after=to_obj(args.stop_after), print_ast=args.print_ast,
+        modules_file=args.modules)
 
 
 if __name__ == "__main__":

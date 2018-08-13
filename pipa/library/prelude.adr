@@ -1,13 +1,10 @@
--- Core library. Don't use syntax sugar here, because you can't. :)
-struct Some(elementType) {
-    data: elementType
+protocol Maybe(a) {}
+
+struct Some(a) is Maybe(a) {
+    data: a
 }
 
-struct None {}
-
-adt Maybe(elementType) {
-    Some(elementType), None
-}
+struct None is Maybe(a) {}
 
 
 struct String {
@@ -18,19 +15,15 @@ struct Number {
     data: py#Int
 }
 
-struct Vector(elementType) {
+struct Vector(a) {
     data: py#List
-
-    fun append(element: elementType): Void {
-        self.data.append(element)
-    }
 }
 
-struct Set(elementType) {
+struct Set(a) {
     data: py#Set
 }
 
-struct Dict(keyType, valueType) {
+struct Dict(a, b) {
     data: py#Dict
 }
 
@@ -43,93 +36,129 @@ protocol ConvertibleToNumber {
     fun __toNumber__(): Number
 }
 
-protocol ConvertibleToVector(elementType) {
-    fun __toVector__(): Vector(elementType)
+protocol ConvertibleToVector(a) {
+    fun __toVector__(): Vector(a)
 }
 
-protocol ConvertibleToSet(elementType) {
-    fun __toSet__(): Set(elementType)
+protocol ConvertibleToSet(a) {
+    fun __toSet__(): Set(a)
 }
 
-protocol ConvertibleToDict(keyType, valueType) {
-    fun __toDict__(): Dict(keyType, valueType)
+protocol ConvertibleToDict(a, b) {
+    fun __toDict__(): Dict(a, b)
 }
 
+protocol Addable {
+    fun __add__(other: Self): Self
+}
+
+protocol Subtractable {
+    fun __sub__(other: Self): Self
+}
+
+protocol Multipliable {
+    fun __mul__(other: Self): Self
+}
+
+protocol Divisible {
+    fun __div__(other: Self): Self
+}
+
+protocol Printable {
+    fun __print__(): Void
+}
 
 protocol Lengthable {
     fun __length__(): Number
 }
 
-protocol Iterable(elementType) {
-    fun __next__(): Maybe(elementType)
+protocol Iterable(a) {
+    fun __next__(): Maybe(a)
 }
 
 
-extension String is ConvertibleToNumber {
+extension Number is ConvertibleToNumber, ConvertibleToString, Addable,
+                    Subtractable, Multipliable, Divisible {
     fun __toNumber__(): Number {
-        return Number(py#toInt(self.data))
+        return self
     }
-}
 
-extension Number is ConvertibleToString {
     fun __toString__(): String {
         return String(py#toStr(self.data))
     }
+
+    fun __add__(other: Number): Number {
+        return Number(self.data + other.data)
+    }
+
+    fun __sub__(other: Number): Number {
+        return Number(self.data - other.data)
+    }
+
+    fun __mul__(other: Number): Number {
+        return Number(self.data * other.data)
+    }
+
+    fun __div__(other: Number): Number {
+        return Number(self.data / other.data)
+    }
 }
 
-extension String is ConvertibleToString {
+extension String is ConvertibleToNumber, ConvertibleToString,
+                    ConvertibleToVector, ConvertibleToSet, Addable,
+                    Lengthable {
+    fun __add__(other: String): String {
+        return String(self.data + other.data)
+    }
+
+    fun __toNumber__(): Number {
+        return Number(py#toInt(self.data))
+    }
+
     fun __toString__(): String {
         return self
     }
-}
 
-extension String is Lengthable {
+    fun __toVector__(): Vector(String) {
+        return Vector(py#toList(self.data))
+    }
+
+    fun __toSet__(): Set(String) {
+        return Set(py#toSet(self.data))
+    }
+
     fun __length__(): Number {
         return Number(py#len(self.data))
     }
 }
 
-extension Vector(a) is Lengthable {
+extension Vector(a) is ConvertibleToVector, ConvertibleToString,
+                    ConvertibleToSet, Addable, Lengthable {
+    fun __add__(other: Vector(a)): Vector(a) {
+        return Vector(self.data + other.data)
+    }
+
+    fun __toVector__(): Vector(a) {
+        return self
+    }
+
+    fun __toString__(): String {
+        return String(py#toStr(self.data))
+    }
+
+    fun __toSet__(): Set(a) {
+        return Set(py#toSet(self.data))
+    }
+
     fun __length__(): Number {
         return Number(py#len(self.data))
     }
-}
 
-extension String {
-    fun __getitem__(index: Number): Maybe(String) {
-        let got: py#Maybe = self.data[index.data]
-        if got is py#None {
-            return Maybe.None()
-        }
-        return Maybe.Some(got)
+    fun append(element: a): Void {
+        self.data += py#List([element])
     }
-}
 
-extension Vector(a) {
-    fun __getitem__(index: Number): Maybe(a) {
-        let got: py#Maybe = self.data[index.data]
-        if got is py#None {
-            return Maybe.None()
-        }
-        return Maybe.Some(got)
+    fun extend(other: Vector(a)): Void {
+        self.data += other
     }
-}
-
-
-fun toString(object: ConvertibleToString): String {
-    return object.__toString__()
-}
-
-fun toNumber(object: ConvertibleToNumber): Number {
-    return object.__toNumber__()
-}
-
-
-fun print(data: ConvertibleToString): Void {
-    py#print(toString(data).data)
-}
-
-
-fun length(data: Lengthable): Number {
-    return data.__length__()
 }

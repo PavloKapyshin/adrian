@@ -4,6 +4,7 @@ from functools import partial
 
 from . import astlib, env
 
+ADRIAN_FILE_EXTENSION = "adr"
 
 MANGLING_LENGTH = 6
 
@@ -73,6 +74,7 @@ COMMON_REGEX = "".join([
         for regex in (NAME_REGEX, FUNC_REGEX,
         TYPE_REGEX, MODULE_REGEX, METHOD_REGEX)]),
     ")"])
+
 
 SELF = "self"
 IS = "is"
