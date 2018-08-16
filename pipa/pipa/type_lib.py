@@ -6,6 +6,10 @@ from .utils import A
 def infer_type(expr):
     if expr in A(astlib.PyTypeCall):
         return astlib.PyType(expr.name)
+    elif expr in A(astlib.PyType):
+        if expr.name == defs.TYPE_NONE:
+            return None
+        errors.later()
     elif expr in A(astlib.PyFuncCall):
         if expr.name == defs.FUNC_TO_INT:
             return astlib.PyType(defs.TYPE_INT)

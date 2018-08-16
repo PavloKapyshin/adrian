@@ -334,7 +334,13 @@ class Interpreter(layers.Layer):
         elif func_call.name == defs.METHOD_ITEMS:
             return list(converted_base.items())
         elif func_call.name == defs.SPEC_METHOD_GETITEM:
-            return converted_base[args[0]]
+            if converted_base in A(list, str):
+                if args[0] < len(converted_base):
+                    return converted_base[args[0]]
+                return None
+            else:
+                return converted_base.get(args[0])
+            #return converted_base[args[0]]
         elif func_call.name == defs.SPEC_METHOD_SETITEM:
             expr = converted_base
             expr[args[0]] = args[1]
@@ -462,13 +468,19 @@ class Interpreter(layers.Layer):
             sub_expr = self.eval(expr.sub_expr)
             super_expr = self.eval(expr.super_expr)
             sub_type = infer_type(sub_expr)
+            if sub_type in A(astlib.Name) and sub_type == defs.TYPE_VOID:
+                return True
             super_type = infer_type(super_expr)
+            if super_type is None:
+                return sub_expr is None
             return (types_are_equal(sub_type, super_type) or
                 is_super_type(sub_type, super_type))
         elif expr in A(
                 int, str, list, set, dict, bool, astlib.InstanceValue,
                 astlib.GenericType, astlib.PyType):
             return expr
+        elif expr is None:
+            return None
         else:
             # support other exprs
             errors.later()

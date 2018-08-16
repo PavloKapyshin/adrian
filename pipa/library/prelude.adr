@@ -76,6 +76,14 @@ protocol Iterable(a) {
     fun __next__(): Maybe(a)
 }
 
+protocol GetItemable(a) {
+    fun __getItem__(index: Number): Maybe(a)
+}
+
+protocol SetItemable(a) {
+    fun __setItem__(index: Number, item: a): Void
+}
+
 
 extension Number is ConvertibleToNumber, ConvertibleToString, Addable,
                     Subtractable, Multipliable, Divisible {
@@ -105,8 +113,8 @@ extension Number is ConvertibleToNumber, ConvertibleToString, Addable,
 }
 
 extension String is ConvertibleToNumber, ConvertibleToString,
-                    ConvertibleToVector, ConvertibleToSet, Addable,
-                    Lengthable {
+                    ConvertibleToVector(String), ConvertibleToSet(String),
+                    Addable, Lengthable, GetItemable(String) {
     fun __add__(other: String): String {
         return String(self.data + other.data)
     }
@@ -130,10 +138,19 @@ extension String is ConvertibleToNumber, ConvertibleToString,
     fun __length__(): Number {
         return Number(py#len(self.data))
     }
+
+    fun __getItem__(index: Number): Maybe(String) {
+        let got = self.data[index.data]
+        if got is py#None {
+            return None()
+        }
+        return Some(got)
+    }
 }
 
-extension Vector(a) is ConvertibleToVector, ConvertibleToString,
-                    ConvertibleToSet, Addable, Lengthable {
+extension Vector(a) is ConvertibleToVector(a), ConvertibleToString,
+                    ConvertibleToSet(a), Addable, Lengthable, GetItemable(a),
+                    SetItemable(a) {
     fun __add__(other: Vector(a)): Vector(a) {
         return Vector(self.data + other.data)
     }
@@ -143,7 +160,18 @@ extension Vector(a) is ConvertibleToVector, ConvertibleToString,
     }
 
     fun __toString__(): String {
-        return String(py#toStr(self.data))
+        let separator = py#Str(", ")
+        let dataLength = length(self).data
+        var index = py#Int(0)
+        var result = py#Str("[")
+        for element in self.data {
+            result += toString(element).data
+            if index < (dataLength - py#Int(1)) {
+                result += separator
+            }
+            index += py#Int(1)
+        }
+        return String(result + py#Str("]"))
     }
 
     fun __toSet__(): Set(a) {
@@ -154,6 +182,18 @@ extension Vector(a) is ConvertibleToVector, ConvertibleToString,
         return Number(py#len(self.data))
     }
 
+    fun __getItem__(index: Number): Maybe(a) {
+        let got = self.data[index.data]
+        if got is py#None {
+            return None()
+        }
+        return Some(got)
+    }
+
+    fun __setItem__(index: Number, item: a): Void {
+        self.data[index.data] = item
+    }
+
     fun append(element: a): Void {
         self.data += py#List([element])
     }
@@ -161,4 +201,33 @@ extension Vector(a) is ConvertibleToVector, ConvertibleToString,
     fun extend(other: Vector(a)): Void {
         self.data += other
     }
+}
+
+
+fun toString(data: ConvertibleToString): String {
+    return data.__toString__()
+}
+
+fun toNumber(data: ConvertibleToNumber): Number {
+    return data.__toNumber__()
+}
+
+fun toVector(data: ConvertibleToVector(a)): Vector(a) {
+    return data.__toVector__()
+}
+
+fun toSet(data: ConvertibleToSet(a)): Set(a) {
+    return data.__toSet__()
+}
+
+fun toDict(data: ConvertibleToDict(a, b)): Dict(a, b) {
+    return data.__toDict__()
+}
+
+fun print(data: ConvertibleToString): Void {
+    py#print(toString(data).data)
+}
+
+fun length(data: Lengthable): Number {
+    return data.__length__()
 }
