@@ -1,0 +1,24 @@
+var name = "John"
+print(name)
+name = "Mike"
+print(name)
+
+
+var greeting = "Hello"
+let separator = ", "
+name = "Nick"
+let end = "!"
+greeting += separator + name + end
+print(greeting)
+
+var number = 10
+print(number)
+number += 1
+print(number)
+number -= 6
+print(number)
+number *= 2
+print(number)
+number /= 2
+print(number)
+

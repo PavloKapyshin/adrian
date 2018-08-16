@@ -1,12 +1,2 @@
-let persons = prelude#Vector(py#List([
-    prelude#String(py#Str("John")),
-    prelude#String(py#Str("Mike")),
-    prelude#String(py#Str("Loki")),
-]))
-
-let first = persons[prelude#Number(py#Int(5))]
-if first is prelude#Some {
-    prelude#print(first.data)
-} else {
-    prelude#print(prelude#String(py#Str("Nothing here")))
-}
+let justAFile = io#File("new_one.txt")
+justAFile.write("Hello, files!")

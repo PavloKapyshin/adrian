@@ -16,6 +16,8 @@ def main():
     def to_obj(string):
         return {
             "parser": pipa.parser.Parser,
+            "desugar": pipa.desugar.Desugar,
+            "loader": pipa.loader.Loader,
             "interpreter": pipa.interpreter.Interpreter,
         }.get(string, None)
 

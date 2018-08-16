@@ -1,8 +1,9 @@
-from . import context, defs, layers, utils, parser, loader, interpreter
+from . import context, defs, layers, utils, parser, desugar, loader, interpreter
 
 
 LAYERS = (
     (parser.Parser, "parse"),
+    (desugar.Desugar, "transform_ast"),
     (loader.Loader, "expand_ast"),
     (interpreter.Interpreter, "proceed")
 )
@@ -14,7 +15,8 @@ def _update_context_args():
     return {**context.modified_context_args(), **{"env": defs.ENV}}
 
 
-def compile_from_string(input_code, *, stop_before, stop_after, module_paths):
+def compile_from_string(
+        input_code, in_file_name, *, stop_before, stop_after, module_paths):
     context_args = defs.DEFAULT_CONTEXT_ARGUMENTS
     context_args["main_file_hash"] = utils.get_hash(input_code)
     context_args["module_paths"] = module_paths
@@ -22,6 +24,8 @@ def compile_from_string(input_code, *, stop_before, stop_after, module_paths):
     for layer_cls, method_name in LAYERS:
         if stop_before == layer_cls:
             return current_ast
+        if in_file_name == defs.MODULE_PRELUDE and layer_cls is desugar.Desugar:
+            continue
         with context.new_context(**context_args):
             layer = layer_cls()
             if method_name == "parse":
@@ -46,8 +50,9 @@ def compile_from_file(
         in_file, *, stop_before=None, stop_after=None, print_ast=False,
         modules_file=None):
     result = compile_from_string(
-        _read_file(in_file), stop_before=stop_before, stop_after=stop_after,
-        module_paths=(_read_file(modules_file).splitlines()
+        _read_file(in_file), in_file.split("/")[-1].split(".")[0], stop_before=stop_before,
+        stop_after=stop_after, module_paths=(
+            _read_file(modules_file).splitlines()
             if modules_file is not None else defs.DEFAULT_MODULE_PATHS))
     if print_ast:
         print(result)

@@ -75,6 +75,9 @@ def e(expr, hash_=None):
     if expr in A(astlib.Name):
         if expr == defs.SELF:
             return expr
+        # elif expr in defs.PRELUDE_OBJS:
+        #     return e(astlib.ModuleMember(defs.MODULE_PRELUDE, expr),
+        #         hash_=hash_)
         return n(expr, hash_=hash_)
     elif expr in A(astlib.ModuleMember):
         if expr.module == defs.MODULE_PY:
@@ -114,7 +117,7 @@ def e(expr, hash_=None):
     elif expr in A(astlib.Subscript):
         return astlib.Subscript(
             e(expr.base, hash_=hash_), e(expr.index, hash_=hash_))
-    elif expr in A(astlib.Empty):
+    elif expr in A(astlib.Empty, astlib.PyCall):
         return expr
     else:
         errors.later()
