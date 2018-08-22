@@ -41,6 +41,9 @@ def _e(expr):
             return astlib.FuncCall(expr.name, [_e(arg) for arg in expr.args])
         else:
             return astlib.FuncCall(expr.name, [e(arg) for arg in expr.args])
+    elif expr in A(astlib.Name):
+        if expr in defs.PRELUDE_OBJS:
+            return astlib.ModuleMember(defs.MODULE_PRELUDE, expr)
     elif expr in A(astlib.StructPath):
         return astlib.StructPath([_e(elem) for elem in expr.path])
     return expr

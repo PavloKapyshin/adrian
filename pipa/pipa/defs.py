@@ -10,6 +10,8 @@ MANGLING_LENGTH = 6
 
 
 MODULE_PRELUDE = "prelude"
+CONSTANT_TRUE = "True"
+CONSTANT_FALSE = "False"
 TYPE_NUMBER = "Number"
 TYPE_STRING = "String"
 TYPE_BOOL = "Bool"

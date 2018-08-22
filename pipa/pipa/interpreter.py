@@ -399,6 +399,8 @@ class Interpreter(layers.Layer):
     def eval(self, expr):
         """Executes expressions."""
         if expr in A(astlib.Name):
+            if expr in (defs.CONSTANT_TRUE, defs.CONSTANT_FALSE):
+                return (True if expr == defs.CONSTANT_TRUE else False)
             info = context.env[expr]
             if info["node_type"] in (astlib.NodeT.var, astlib.NodeT.let):
                 return self.eval(context.env[expr]["expr"])

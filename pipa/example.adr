@@ -1,2 +1,0 @@
-let justAFile = io#File("new_one.txt")
-justAFile.write("Hello, files!")

@@ -73,11 +73,8 @@ def t(type_, hash_=None):
 def e(expr, hash_=None):
     hash_ = hash_ or context.main_file_hash
     if expr in A(astlib.Name):
-        if expr == defs.SELF:
+        if expr in (defs.SELF, defs.CONSTANT_TRUE, defs.CONSTANT_FALSE):
             return expr
-        # elif expr in defs.PRELUDE_OBJS:
-        #     return e(astlib.ModuleMember(defs.MODULE_PRELUDE, expr),
-        #         hash_=hash_)
         return n(expr, hash_=hash_)
     elif expr in A(astlib.ModuleMember):
         if expr.module == defs.MODULE_PY:
