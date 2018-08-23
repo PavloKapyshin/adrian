@@ -437,6 +437,21 @@ class Interpreter(layers.Layer):
         elif expr in A(astlib.Expr):
             if expr.op == defs.IS:
                 return self.eval(astlib.Is(expr.left, expr.right))
+            elif expr.op == defs.NEQ:
+                return not self.eval(
+                    astlib.Expr(expr.left, defs.EQEQ, expr.right))
+            elif expr.op == defs.LTEQ:
+                return (self.eval(
+                    astlib.Expr(expr.left, defs.EQEQ, expr.right)) or
+                    self.eval(astlib.Expr(expr.left, defs.LT, expr.right)))
+            elif expr.op == defs.GTEQ:
+                return (self.eval(
+                    astlib.Expr(expr.left, defs.EQEQ, expr.right)) or
+                    self.eval(astlib.Expr(expr.left, defs.GT, expr.right)))
+            elif expr.op == defs.AND:
+                return self.eval(expr.left) and self.eval(expr.right)
+            elif expr.op == defs.OR:
+                return self.eval(expr.left) or self.eval(expr.right)
             method_name = defs.OPERATOR_TO_METHOD[expr.op]
             base, args = expr.left, [expr.right]
             if method_name == defs.SPEC_METHOD_CONTAINS:
@@ -466,6 +481,8 @@ class Interpreter(layers.Layer):
                 return self.py_method_call(
                     base, astlib.FuncCall(method_name, args))
             return self.method_call(base, astlib.FuncCall(method_name, args))
+        elif expr in A(astlib.Not):
+            return not self.eval(expr.expr)
         elif expr in A(astlib.Is):
             sub_expr = self.eval(expr.sub_expr)
             super_expr = self.eval(expr.super_expr)

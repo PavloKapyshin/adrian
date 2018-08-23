@@ -44,6 +44,10 @@ PROTOCOL_ADD = "Addable"
 PROTOCOL_SUB = "Subtractable"
 PROTOCOL_MUL = "Mutipliable"
 PROTOCOL_DIV = "Divisible"
+PROTOCOL_EQ = "Eq"
+PROTOCOL_LT = "Lt"
+PROTOCOL_GT = "Gt"
+PROTOCOL_CONTAINER = "Container"
 PROTOCOL_PRINT = "Printable"
 PROTOCOL_LENGTH = "Lengthable"
 PROTOCOL_ITERABLE = "Iterable"
@@ -54,7 +58,8 @@ PRELUDE_PROTOCOLS = (
     PROTOCOL_CONVERTIBLE_TO_VECTOR, PROTOCOL_CONVERTIBLE_TO_NUMBER,
     PROTOCOL_CONVERTIBLE_TO_STRING, PROTOCOL_GET_ITEM, PROTOCOL_SET_ITEM,
     PROTOCOL_ADD, PROTOCOL_SUB, PROTOCOL_DIV, PROTOCOL_MUL, PROTOCOL_ITERABLE,
-    PROTOCOL_LENGTH, PROTOCOL_PRINT)
+    PROTOCOL_LENGTH, PROTOCOL_PRINT, PROTOCOL_EQ, PROTOCOL_LT, PROTOCOL_GT,
+    PROTOCOL_CONTAINER)
 PRELUDE_OBJS = PRELUDE_PROTOCOLS + PRELUDE_FUNCS + PRELUDE_TYPES
 
 
@@ -77,7 +82,17 @@ METHOD_ITEMS = "items"
 
 
 EQ = "="
+EQEQ = "=="
+NEQ = "!="
+LTEQ = "<="
+GTEQ = ">="
+LT = "<"
+GT = ">"
 IN = "in"
+AND = "and"
+OR = "or"
+NOT = "not"
+IS = "is"
 ASSIGNMENT_OP_TO_EXPR_OP = {
     "+=": "+",
     "-=": "-",
@@ -89,6 +104,7 @@ RESERVED_WORDS = {
     for keyword in (
         "var", "let", "for", "in", "fun", "return", "struct",
         "if", "elif", "else", "while", "extension", "protocol", "is",
+        "and", "or", "not"
     )
 }
 
@@ -107,7 +123,6 @@ COMMON_REGEX = "".join([
 
 
 SELF = "self"
-IS = "is"
 SPEC_METHOD_GETITEM = "__getItem__"
 SPEC_METHOD_SETITEM = "__setItem__"
 SPEC_METHOD_INIT = "__init__"

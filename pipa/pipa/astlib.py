@@ -219,6 +219,13 @@ class Is(Node):
         self._keys = ("sub_expr", "super_expr")
 
 
+class Not(Node):
+
+    def __init__(self, expr):
+        self.expr = expr
+        self._keys = ("expr", )
+
+
 class StructPath(Node):
 
     def __init__(self, path):

@@ -64,6 +64,22 @@ protocol Divisible {
     fun __div__(other: Self): Self
 }
 
+protocol Eq {
+    fun __eq__(other: Self): Bool
+}
+
+protocol Lt {
+    fun __lt__(other: Self): Bool
+}
+
+protocol Gt {
+    fun __gt__(other: Self): Bool
+}
+
+protocol Container(a) {
+    fun __contains__(element: a): Bool
+}
+
 protocol Printable {
     fun __print__(): Void
 }
@@ -85,8 +101,37 @@ protocol SetItemable(a) {
 }
 
 
+fun toString(data: ConvertibleToString): String {
+    return data.__toString__()
+}
+
+fun toNumber(data: ConvertibleToNumber): Number {
+    return data.__toNumber__()
+}
+
+fun toVector(data: ConvertibleToVector(a)): Vector(a) {
+    return data.__toVector__()
+}
+
+fun toSet(data: ConvertibleToSet(a)): Set(a) {
+    return data.__toSet__()
+}
+
+fun toDict(data: ConvertibleToDict(a, b)): Dict(a, b) {
+    return data.__toDict__()
+}
+
+fun print(data: ConvertibleToString): Void {
+    py#print(toString(data).data)
+}
+
+fun length(data: Lengthable): Number {
+    return data.__length__()
+}
+
+
 extension Number is ConvertibleToNumber, ConvertibleToString, Addable,
-                    Subtractable, Multipliable, Divisible {
+                    Subtractable, Multipliable, Divisible, Eq, Lt, Gt {
     fun __toNumber__(): Number {
         return self
     }
@@ -110,13 +155,34 @@ extension Number is ConvertibleToNumber, ConvertibleToString, Addable,
     fun __div__(other: Number): Number {
         return Number(self.data / other.data)
     }
+
+    fun __eq__(other: Number): Bool {
+        return self.data == other.data
+    }
+
+    fun __lt__(other: Number): Bool {
+        return self.data < other.data
+    }
+
+    fun __gt__(other: Number): Bool {
+        return self.data > other.data
+    }
 }
 
 extension String is ConvertibleToNumber, ConvertibleToString,
                     ConvertibleToVector(String), ConvertibleToSet(String),
-                    Addable, Lengthable, GetItemable(String) {
+                    Addable, Lengthable, GetItemable(String), Eq,
+                    Container(String) {
     fun __add__(other: String): String {
         return String(self.data + other.data)
+    }
+
+    fun __eq__(other: String): Bool {
+        return self.data == other.data
+    }
+
+    fun __contains__(element: String): Bool {
+        return element.data in self.data
     }
 
     fun __toNumber__(): Number {
@@ -150,9 +216,17 @@ extension String is ConvertibleToNumber, ConvertibleToString,
 
 extension Vector(a) is ConvertibleToVector(a), ConvertibleToString,
                     ConvertibleToSet(a), Addable, Lengthable, GetItemable(a),
-                    SetItemable(a) {
+                    SetItemable(a), Eq, Container(a) {
     fun __add__(other: Vector(a)): Vector(a) {
         return Vector(self.data + other.data)
+    }
+
+    fun __eq__(other: Vector(a)): Bool {
+        return self.data == other.data
+    }
+
+    fun __contains__(element: a): Bool {
+        return element in self.data
     }
 
     fun __toVector__(): Vector(a) {
@@ -201,33 +275,4 @@ extension Vector(a) is ConvertibleToVector(a), ConvertibleToString,
     fun extend(other: Vector(a)): Void {
         self.data += other
     }
-}
-
-
-fun toString(data: ConvertibleToString): String {
-    return data.__toString__()
-}
-
-fun toNumber(data: ConvertibleToNumber): Number {
-    return data.__toNumber__()
-}
-
-fun toVector(data: ConvertibleToVector(a)): Vector(a) {
-    return data.__toVector__()
-}
-
-fun toSet(data: ConvertibleToSet(a)): Set(a) {
-    return data.__toSet__()
-}
-
-fun toDict(data: ConvertibleToDict(a, b)): Dict(a, b) {
-    return data.__toDict__()
-}
-
-fun print(data: ConvertibleToString): Void {
-    py#print(toString(data).data)
-}
-
-fun length(data: Lengthable): Number {
-    return data.__length__()
 }

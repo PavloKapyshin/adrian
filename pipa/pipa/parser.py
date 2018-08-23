@@ -406,6 +406,8 @@ def p_bool_op(content):
             | GTEQ
             | IN
             | IS
+            | AND
+            | OR
     """
     content[0] = content[1]
 
@@ -415,6 +417,10 @@ def p_bool_expr_1(content):
     content[0] = astlib.Expr(content[1], content[2], content[3])
 
 def p_bool_expr_2(content):
+    """bool_expr : NOT bool_expr"""
+    content[0] = astlib.Not(content[2])
+
+def p_bool_expr_3(content):
     """bool_expr : expr"""
     content[0] = content[1]
 

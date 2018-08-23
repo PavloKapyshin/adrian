@@ -61,6 +61,8 @@ def e(expr):
         return astlib.Subscript(e(expr.base), e(expr.index))
     elif expr in A(astlib.Expr):
         return astlib.Expr(e(expr.left), expr.op, e(expr.right))
+    elif expr in A(astlib.Not):
+        return astlib.Not(e(expr.expr))
     elif expr in A(astlib.StructPath):
         return astlib.StructPath([e(elem) for elem in expr.path])
     return _e(expr)
