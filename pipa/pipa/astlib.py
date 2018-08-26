@@ -146,6 +146,16 @@ class For(Node):
         self._keys = ("names", "container", "body")
 
 
+class IterationEvent(Node):
+
+    def __init__(self):
+        self._keys = tuple()
+
+
+class BreakEvent(IterationEvent):
+    pass
+
+
 class Cond(Node):
 
     def __init__(self, if_stmt, elifs, else_stmt):

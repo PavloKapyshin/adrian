@@ -106,7 +106,7 @@ RESERVED_WORDS = {
     for keyword in (
         "var", "let", "for", "in", "fun", "return", "struct",
         "if", "elif", "else", "while", "extension", "protocol", "is",
-        "and", "or", "not"
+        "and", "or", "not", "break"
     )
 }
 

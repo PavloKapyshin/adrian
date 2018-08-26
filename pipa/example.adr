@@ -1,3 +1,6 @@
 for person in ["John", "Mike", "Gal"] {
+    if person == "Mike" {
+        break
+    }
     print("Hello, " + person + "!")
 }

@@ -156,6 +156,7 @@ def p_stmt(content):
          | return_stmt
          | cond_stmt
          | while_stmt
+         | break_event
     """
     content[0] = content[1]
 
@@ -242,6 +243,11 @@ def p_cond_stmt(content):
     """cond_stmt : IF bool_expr LBRACE ast RBRACE opt_elifs opt_else"""
     content[0] = astlib.Cond(
         astlib.If(content[2], content[4]), content[6], content[7])
+
+
+def p_break_event(content):
+    """break_event : BREAK"""
+    content[0] = astlib.BreakEvent()
 
 
 def p_opt_elifs_1(content):

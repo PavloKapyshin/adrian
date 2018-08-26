@@ -23,6 +23,14 @@ def replace_name_references_for_for_stmt_translation(body, name):
                 _replace(stmt.if_stmt),
                 [_replace(elif_stmt) for elif_stmt in stmt.elifs],
                 _replace(stmt.else_stmt))
+        elif stmt in A(astlib.If):
+            return astlib.If(
+                _replace(stmt.expr), [_replace(s) for s in stmt.body])
+        elif stmt in A(astlib.Elif):
+            return astlib.Elif(
+                _replace(stmt.expr), [_replace(s) for s in stmt.body])
+        elif stmt in A(astlib.Else):
+            return astlib.Else([_replace(s) for s in stmt.body])
         elif stmt in A(astlib.While):
             return astlib.While(
                 _replace(stmt.expr), [_replace(s) for s in stmt.body])
@@ -54,7 +62,8 @@ def replace_name_references_for_for_stmt_translation(body, name):
             return astlib.Subscript(_replace(stmt.base), _replace(stmt.index))
         elif stmt in A(astlib.Not):
             return astlib.Not(_replace(stmt.expr))
-        elif stmt is None or stmt in A(astlib.Empty, astlib.PyObject):
+        elif stmt is None or stmt in A(
+                astlib.BreakEvent, astlib.Empty, astlib.PyObject):
             return stmt
         elif stmt in A(astlib.ModuleMember):
             return astlib.ModuleMember(stmt.module, _replace(stmt.member))

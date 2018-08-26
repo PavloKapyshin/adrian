@@ -192,6 +192,8 @@ class Interpreter(layers.Layer):
         context.env.add_scope()
         while expr:
             result = self.b(stmt.body)
+            if result in A(astlib.BreakEvent):
+                break
             if result is not None:
                 context.env.remove_scope()
                 return result
@@ -208,27 +210,29 @@ class Interpreter(layers.Layer):
                 "expr": evaluated
             }
         container = self.eval(stmt.container)
-        if container in A(astlib.InstanceValue):
-            # TODO: translate for into while
-            pass
-        else:
-            context.env.add_scope()
-            names = stmt.names
-            for elem in container:
-                if len(names) > 1:
-                    for name, pair_elem in zip(names, elem):
-                        register_name(name, pair_elem)
-                else:
-                    register_name(names[0], elem)
-                result = self.b(stmt.body)
-                if result is not None:
-                    context.env.remove_scope()
-                    return result
-            context.env.remove_scope()
+        context.env.add_scope()
+        names = stmt.names
+        for elem in container:
+            if len(names) > 1:
+                for name, pair_elem in zip(names, elem):
+                    register_name(name, pair_elem)
+            else:
+                register_name(names[0], elem)
+            result = self.b(stmt.body)
+            if result in A(astlib.BreakEvent):
+                break
+            if result is not None:
+                context.env.remove_scope()
+                return result
+        context.env.remove_scope()
 
     @layers.register(astlib.Return)
     def return_stmt(self, stmt):
         return self.eval(stmt.expr)
+
+    @layers.register(astlib.BreakEvent)
+    def break_event(self, stmt):
+        return stmt
 
     @layers.register(astlib.FuncCall)
     def func_call(self, func_call):
