@@ -1,22 +1,9 @@
 ## Reserved names
 These names are reserved:
 ```
-var
-let
-fun
-for
-while
-if
-in
-is
-elif
-else
-protocol
-struct
-extension
-return
+var, let, for, in, fun, return, struct, if, elif, else, while,
+extension, protocol, is, and, or, not, break
 ```
-
 
 
 ## Naming rules

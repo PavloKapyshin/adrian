@@ -581,5 +581,6 @@ class Interpreter(layers.Layer):
         elif expr in A(int, str, list, dict, set):
             return expr
         else:
+            print(expr)
             # support other exprs
             errors.later()

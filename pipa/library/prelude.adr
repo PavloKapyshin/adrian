@@ -148,12 +148,12 @@ protocol Iterable(a) {
     fun __next__(): Maybe(a)
 }
 
-protocol GetItemable(a) {
-    fun __getItem__(index: Number): Maybe(a)
+protocol GetItemable(indexType, itemType) {
+    fun __getItem__(index: indexType): Maybe(elementType)
 }
 
-protocol SetItemable(a) {
-    fun __setItem__(index: Number, item: a): Void
+protocol SetItemable(indexType, itemType) {
+    fun __setItem__(index: indexType, item: itemType): Void
 }
 
 
@@ -192,8 +192,8 @@ fun any(iterable: Iterable(Bool)): Bool {
 }
 
 
-extension Number is ConvertibleToNumber, ConvertibleToString, Addable,
-                    Subtractable, Multipliable, Divisible, Eq, Lt, Gt {
+extension Number is Addable, Subtractable, Multipliable, Divisible,
+                    Eq, Lt, Gt, ConvertibleToNumber, ConvertibleToString {
     fun __toNumber__(): Number {
         return self
     }
@@ -231,10 +231,11 @@ extension Number is ConvertibleToNumber, ConvertibleToString, Addable,
     }
 }
 
-extension String is ConvertibleToNumber, ConvertibleToString,
-                    ConvertibleToVector(String), ConvertibleToSet(String),
-                    Addable, Lengthable, GetItemable(String), Eq,
-                    Container(String), Iterable(String) {
+
+extension String is Addable, Container(String), Iterable(String), Lengthable,
+                    Eq, GetItemable(Number, String), ConvertibleToString,
+                    ConvertibleToNumber, ConvertibleToVector(String),
+                    ConvertibleToSet(String) {
     fun __add__(other: String): String {
         return String(self.data + other.data)
     }
@@ -287,8 +288,9 @@ extension String is ConvertibleToNumber, ConvertibleToString,
 }
 
 extension Vector(a) is ConvertibleToVector(a), ConvertibleToString,
-                    ConvertibleToSet(a), Addable, Lengthable, GetItemable(a),
-                    SetItemable(a), Eq, Container(a), Iterable(a) {
+                    ConvertibleToSet(a), ConvertibleToDict(Number, a),
+                    Addable, Lengthable, Iterable(a), GetItemable(Number, a),
+                    SetItemable(Number, a), Eq, Container(a) {
     fun __add__(other: Vector(a)): Vector(a) {
         return Vector(self.data + other.data)
     }
@@ -322,6 +324,16 @@ extension Vector(a) is ConvertibleToVector(a), ConvertibleToString,
 
     fun __toSet__(): Set(a) {
         return Set(py#toSet(self.data))
+    }
+
+    fun __toDict__(): Dict(Number, a) {
+        var result = Dict(py#Dict({}))
+        var index = py#Int(0)
+        for element in self.data {
+            result[Number(index)] = element
+            index += py#Int(1)
+        }
+        return result
     }
 
     fun __length__(): Number {
@@ -360,7 +372,9 @@ extension Vector(a) is ConvertibleToVector(a), ConvertibleToString,
 }
 
 
-extension Set(a) is Iterable(a), Addable {
+extension Set(a) is Iterable(a), Addable, ConvertibleToVector(a),
+                    ConvertibleToSet(a), ConvertibleToString, Eq,
+                    Container(a), Lengthable, Subtractable {
     fun __next__(): Maybe(a) {
         -- Best case: O(n)
         -- Worst case: O(n**2)
@@ -370,6 +384,7 @@ extension Set(a) is Iterable(a), Addable {
                 return Some(element)
             }
         }
+        self.iteratedSet = py#Set({})
         return None()
     }
 
@@ -377,7 +392,118 @@ extension Set(a) is Iterable(a), Addable {
         return Set(self.data + other.data)
     }
 
+    fun __sub__(other: Set(a)): Set(a) {
+        return Set(self.data - other.data)
+    }
+
+    fun __eq__(other: Set(a)): Bool {
+        return self.data == other.data
+    }
+
+    fun __contains__(element: a): Bool {
+        return element in self.data
+    }
+
+    fun __length__(): Number {
+        return Number(py#len(self.data))
+    }
+
+    fun __toSet__(): Set(a) {
+        return self
+    }
+
+    fun __toVector__(): Vector(a) {
+        return Vector(py#toList(self.data))
+    }
+
+    fun __toString__(): String {
+        var elements = py#Str("")
+        let len = length(self).data
+        var index = py#Int(0)
+        for element in self.data {
+            elements += toString(element).data
+            if index < (len - py#Int(1)) {
+                elements += py#Str(", ")
+            }
+            index += py#Int(1)
+        }
+        return String(py#Str("{") + elements + py#Str("}"))
+    }
+
     fun add(element: a): Void {
         self.data += py#Set({element})
+    }
+}
+
+
+extension Dict(a, b) is ConvertibleToDict(a, b), ConvertibleToSet(a),
+                        ConvertibleToString, ConvertibleToVector(a),
+                        Iterable(a), Addable, Eq, Container(a), Lengthable,
+                        GetItemable(a, b), SetItemable(a, b) {
+    fun __toDict__(): Dict(a, b) {
+        return self
+    }
+
+    fun __toSet__(): Set(a) {
+        return Set(py#toSet(self.data))
+    }
+
+    fun __toVector__(): Vector(a) {
+        return Vector(py#toList(self.data))
+    }
+
+    fun __toString__(): String {
+        var elements = py#Str("")
+        var index = py#Int(0)
+        let len = length(self).data
+        for key, val in self.data.items() {
+            elements += toString(key).data + py#Str(" = ") + toString(val).data
+            if index < (len - py#Int(1)) {
+                elements += py#Str(", ")
+            }
+            index += py#Int(1)
+        }
+        return String(py#Str("{") + elements + py#Str("}"))
+    }
+
+    fun __next__(): Maybe(a) {
+        -- Best case: O(n)
+        -- Worst case: O(n**2)
+        for element in self.data {
+            if not (element in self.iteratedSet) {
+                self.iteratedSet += py#Set({element})
+                return Some(element)
+            }
+        }
+        self.iteratedSet = py#Set({})
+        return None()
+    }
+
+    fun __add__(other: Dict(a, b)): Dict(a, b) {
+        return Dict(self.data + other.data)
+    }
+
+    fun __eq__(other: Dict(a, b)): Bool {
+        return self.data == other.data
+    }
+
+    fun __contains__(element: a): Bool {
+        return element in self.data
+    }
+
+    fun __length__(): Number {
+        return Number(py#len(self.data))
+    }
+
+    fun __getItem__(index: a): Maybe(b) {
+        let element = self.data[index]
+        if element is py#None {
+            return None()
+        }
+        return Some(element)
+    }
+
+    fun __setItem__(index: a, item: b): Void {
+        self.data[index] = item
     }
 }
