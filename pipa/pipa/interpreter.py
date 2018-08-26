@@ -4,6 +4,16 @@ from .type_lib import infer_type, types_are_equal, is_super_type
 from .utils import A
 
 
+def depends_on_self(expr):
+    if expr in A(astlib.Name):
+        return True if expr == defs.SELF else False
+    elif expr in A(astlib.StructPath):
+        return any([depends_on_self(p) for p in expr.path])
+    elif expr in A(astlib.FuncCall):
+        return any([depends_on_self(a) for a in expr.args])
+    return False
+
+
 def complete_init_method(method_decl, struct_decl):
     self_decl = astlib.VarDecl(
         astlib.Name(defs.SELF), struct_decl.name,
@@ -255,7 +265,11 @@ class Interpreter(layers.Layer):
     def method_call(self, base, func_call):
         converted_base = self.eval(base)
         type_ = infer_type(converted_base)
-        args = [base] + [self.eval(arg) for arg in func_call.args]
+        if depends_on_self(base):
+            args = [converted_base]
+        else:
+            args = [base]
+        args += [self.eval(arg) for arg in func_call.args]
         assert(type_ in A(astlib.Name))
         method_info = context.env[type_]["methods"][func_call.name]
         body = method_info["body"]
@@ -348,7 +362,6 @@ class Interpreter(layers.Layer):
                 return None
             else:
                 return converted_base.get(args[0])
-            #return converted_base[args[0]]
         elif func_call.name == defs.SPEC_METHOD_SETITEM:
             expr = converted_base
             expr[args[0]] = args[1]

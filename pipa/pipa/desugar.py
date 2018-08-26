@@ -151,8 +151,13 @@ class Desugar(layers.Layer):
         return type(decl)(decl.name, decl.type_, e(decl.expr))
 
     def struct_like_decl(self, decl):
+        def _lookup_for_prelude_proto(protocol_name):
+            if protocol_name in defs.PRELUDE_OBJS:
+                return astlib.ModuleMember(defs.MODULE_PRELUDE, protocol_name)
+            return protocol_name
         return type(decl)(
-            decl.name, decl.parameters, decl.implemented_protocols,
+            decl.name, decl.parameters,
+            [_lookup_for_prelude_proto(p) for p in decl.implemented_protocols],
             self.b(decl.body))
 
     @layers.register(astlib.LetDecl)

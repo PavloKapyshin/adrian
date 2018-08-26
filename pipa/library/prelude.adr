@@ -1,3 +1,8 @@
+-- Syntax sugar is redundant! (no, it is not, but you can't use it here :)
+-- Can't use:
+--   for-in syntax sugar: use while loop
+--   literal to prelude object: use something like Number(py#Int(0)) instead of 0
+--   other modules (without py module): really? you need other modules in prelude module?
 protocol Maybe(a) {}
 
 struct Some(a) is Maybe(a) {
@@ -76,6 +81,26 @@ protocol ConvertibleToDict(a, b) {
     fun __toDict__(): Dict(a, b)
 }
 
+fun toString(data: ConvertibleToString): String {
+    return data.__toString__()
+}
+
+fun toNumber(data: ConvertibleToNumber): Number {
+    return data.__toNumber__()
+}
+
+fun toVector(data: ConvertibleToVector(a)): Vector(a) {
+    return data.__toVector__()
+}
+
+fun toSet(data: ConvertibleToSet(a)): Set(a) {
+    return data.__toSet__()
+}
+
+fun toDict(data: ConvertibleToDict(a, b)): Dict(a, b) {
+    return data.__toDict__()
+}
+
 
 protocol Addable {
     fun __add__(other: Self): Self
@@ -132,28 +157,12 @@ protocol SetItemable(a) {
 }
 
 
-fun toString(data: ConvertibleToString): String {
-    return data.__toString__()
-}
-
-fun toNumber(data: ConvertibleToNumber): Number {
-    return data.__toNumber__()
-}
-
-fun toVector(data: ConvertibleToVector(a)): Vector(a) {
-    return data.__toVector__()
-}
-
-fun toSet(data: ConvertibleToSet(a)): Set(a) {
-    return data.__toSet__()
-}
-
-fun toDict(data: ConvertibleToDict(a, b)): Dict(a, b) {
-    return data.__toDict__()
-}
-
-fun print(data: ConvertibleToString): Void {
-    py#print(toString(data).data)
+fun print(data: ConvertibleToString or Printable): Void {
+    if data is Printable {
+        data.__print__()
+    } else {
+        py#print(toString(data).data)
+    }
 }
 
 fun length(data: Lengthable): Number {

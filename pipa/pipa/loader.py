@@ -66,6 +66,9 @@ def t(type_, hash_=None):
             [t(param, hash_=hash_) for param in type_.parameters])
     elif type_ in A(astlib.Empty):
         return type_
+    elif type_ in A(astlib.TypeCombination):
+        return astlib.TypeCombination(
+            t(type_.left, hash_=hash_), type_.op, t(type_.right, hash_=hash_))
     else:
         errors.later()
 

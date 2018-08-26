@@ -342,6 +342,13 @@ def p_type_3(content):
     """type : type LPAREN types RPAREN"""
     content[0] = astlib.GenericType(content[1], content[3])
 
+def p_type_4(content):
+    """
+    type : type OR type
+         | type AND type
+    """
+    content[0] = astlib.TypeCombination(content[1], content[2], content[3])
+
 
 def p_types_1(content):
     """types : type COMMA types"""

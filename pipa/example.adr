@@ -1,3 +1,0 @@
-if all([True, True, True]) {
-    print("OK")
-}

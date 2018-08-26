@@ -204,6 +204,15 @@ class ModuleMember(Node):
         self._keys = ("module", "member")
 
 
+class TypeCombination(Node):
+
+    def __init__(self, left, op, right):
+        self.left = left
+        self.op = op
+        self.right = right
+        self._keys = ("left", "op", "right")
+
+
 class Expr(Node):
 
     def __init__(self, left, op, right):
