@@ -12,6 +12,11 @@ struct Some(a) is Maybe(a) {
 struct None is Maybe(a) {}
 
 
+fun assert(expr: Bool): Void {
+    py#assert(expr)
+}
+
+
 struct Number {
     data: py#Int
 }
@@ -285,6 +290,38 @@ extension String is Addable, Container(String), Iterable(String), Lengthable,
         self.iterIndex += py#Int(1)
         return Some(String(element))
     }
+
+    fun split(by: String): Vector(String) {
+        assert(length(by).data == py#Int(1))
+        var result = py#List([])
+        var buff = py#Str("")
+        for char in self.data {
+            if char == by.data {
+                result += py#List([String(buff)])
+                buff = py#Str("")
+            } else {
+                buff += char
+            }
+        }
+        result += py#List([String(buff)])
+        return Vector(result)
+    }
+
+    fun join(iterable: Iterable(String) and Lengthable): String {
+        var result = py#Str("")
+        var element = iterable.__next__()
+        let len = length(iterable).data
+        var index = py#Int(0)
+        while element is Some {
+            result += element.data.data
+            if index < (len - py#Int(1)) {
+                result += self.data
+            }
+            element = iterable.__next__()
+            index += py#Int(1)
+        }
+        return String(result)
+    }
 }
 
 extension Vector(a) is ConvertibleToVector(a), ConvertibleToString,
@@ -313,7 +350,11 @@ extension Vector(a) is ConvertibleToVector(a), ConvertibleToString,
         var index = py#Int(0)
         var result = py#Str("[")
         for element in self.data {
-            result += toString(element).data
+            if element is String {
+                result += py#Str("'") + toString(element).data + py#Str("'")
+            } else {
+                result += toString(element).data
+            }
             if index < (dataLength - py#Int(1)) {
                 result += separator
             }
@@ -421,7 +462,11 @@ extension Set(a) is Iterable(a), Addable, ConvertibleToVector(a),
         let len = length(self).data
         var index = py#Int(0)
         for element in self.data {
-            elements += toString(element).data
+            if element is String {
+                elements += py#Str("'") + toString(element).data + py#Str("'")
+            } else {
+                elements += toString(element).data
+            }
             if index < (len - py#Int(1)) {
                 elements += py#Str(", ")
             }
@@ -457,7 +502,13 @@ extension Dict(a, b) is ConvertibleToDict(a, b), ConvertibleToSet(a),
         var index = py#Int(0)
         let len = length(self).data
         for key, val in self.data.items() {
-            elements += toString(key).data + py#Str(" = ") + toString(val).data
+            if element is String {
+                elements += py#Str("'") +
+                    toString(key).data + py#Str(" = ") + toString(val).data +
+                py#Str("'")
+            } else {
+                elements += toString(key).data + py#Str(" = ") + toString(val).data
+            }
             if index < (len - py#Int(1)) {
                 elements += py#Str(", ")
             }
