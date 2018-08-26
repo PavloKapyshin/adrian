@@ -1,6 +1,3 @@
-for person in ["John", "Mike", "Gal", "Noob", "OtherMan", "Someone"] {
-    if person == "Noob" {
-        break
-    }
+for person in {"Mike", "John", "George"} {
     print("Hello, " + person + "!")
 }

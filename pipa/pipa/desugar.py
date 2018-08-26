@@ -104,7 +104,7 @@ def desugar_literal(literal):
             astlib.Name(defs.TYPE_SET), astlib.Name(defs.TYPE_SET),
             [astlib.Literal(
                 literal.type_,
-                {e(key): e(val) for key, val in literal.literal.items()})])
+                {e(elem) for elem in literal.literal})])
     return literal
 
 
