@@ -7,6 +7,11 @@ struct Some(a) is Maybe(a) {
 struct None is Maybe(a) {}
 
 
+struct Number {
+    data: py#Int
+}
+
+
 struct String {
     data: py#Str
     iterIndex: py#Int
@@ -17,9 +22,6 @@ struct String {
     }
 }
 
-struct Number {
-    data: py#Int
-}
 
 struct Vector(a) {
     data: py#List
@@ -31,6 +33,7 @@ struct Vector(a) {
     }
 }
 
+
 struct Set(a) {
     data: py#Set(a)
     iteratedSet: py#Set(a)
@@ -40,6 +43,7 @@ struct Set(a) {
         self.iteratedSet = py#Set({})
     }
 }
+
 
 struct Dict(a, b) {
     data: py#Dict(a, b)
@@ -72,6 +76,7 @@ protocol ConvertibleToDict(a, b) {
     fun __toDict__(): Dict(a, b)
 }
 
+
 protocol Addable {
     fun __add__(other: Self): Self
 }
@@ -88,6 +93,7 @@ protocol Divisible {
     fun __div__(other: Self): Self
 }
 
+
 protocol Eq {
     fun __eq__(other: Self): Bool
 }
@@ -103,6 +109,7 @@ protocol Gt {
 protocol Container(a) {
     fun __contains__(element: a): Bool
 }
+
 
 protocol Printable {
     fun __print__(): Void
@@ -151,6 +158,28 @@ fun print(data: ConvertibleToString): Void {
 
 fun length(data: Lengthable): Number {
     return data.__length__()
+}
+
+fun all(iterable: Iterable(Bool)): Bool {
+    var element = iterable.__next__()
+    while element is Some {
+        if element.data == False {
+            return False
+        }
+        element = iterable.__next__()
+    }
+    return True
+}
+
+fun any(iterable: Iterable(Bool)): Bool {
+    var element = iterable.__next__()
+    while element is Some {
+        if element.data == True {
+            return True
+        }
+        element = iterable.__next__()
+    }
+    return False
 }
 
 
