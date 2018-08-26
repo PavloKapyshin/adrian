@@ -1,0 +1,3 @@
+for person in ["John", "Mike", "Gal"] {
+    print("Hello, " + person + "!")
+}

@@ -9,6 +9,12 @@ struct None is Maybe(a) {}
 
 struct String {
     data: py#Str
+    iterIndex: py#Int
+
+    fun __init__(data: py#Str): Void {
+        self.data = data
+        self.iterIndex = py#Int(0)
+    }
 }
 
 struct Number {
@@ -17,6 +23,12 @@ struct Number {
 
 struct Vector(a) {
     data: py#List
+    iterIndex: py#Int
+
+    fun __init__(data: py#List): Void {
+        self.data = data
+        self.iterIndex = py#Int(0)
+    }
 }
 
 struct Set(a) {
@@ -172,7 +184,7 @@ extension Number is ConvertibleToNumber, ConvertibleToString, Addable,
 extension String is ConvertibleToNumber, ConvertibleToString,
                     ConvertibleToVector(String), ConvertibleToSet(String),
                     Addable, Lengthable, GetItemable(String), Eq,
-                    Container(String) {
+                    Container(String), Iterable(String) {
     fun __add__(other: String): String {
         return String(self.data + other.data)
     }
@@ -212,11 +224,21 @@ extension String is ConvertibleToNumber, ConvertibleToString,
         }
         return Some(got)
     }
+
+    fun __next__(): Maybe(String) {
+        let element = self.data[self.iterIndex]
+        if element is py#None {
+            self.iterIndex = py#Int(0)
+            return None()
+        }
+        self.iterIndex += py#Int(1)
+        return Some(String(element))
+    }
 }
 
 extension Vector(a) is ConvertibleToVector(a), ConvertibleToString,
                     ConvertibleToSet(a), Addable, Lengthable, GetItemable(a),
-                    SetItemable(a), Eq, Container(a) {
+                    SetItemable(a), Eq, Container(a), Iterable(a) {
     fun __add__(other: Vector(a)): Vector(a) {
         return Vector(self.data + other.data)
     }
@@ -266,6 +288,16 @@ extension Vector(a) is ConvertibleToVector(a), ConvertibleToString,
 
     fun __setItem__(index: Number, item: a): Void {
         self.data[index.data] = item
+    }
+
+    fun __next__(): Maybe(a) {
+        let element = self.data[self.iterIndex]
+        if element is py#None {
+            self.iterIndex = py#Int(0)
+            return None()
+        }
+        self.iterIndex += py#Int(1)
+        return Some(element)
     }
 
     fun append(element: a): Void {

@@ -8,6 +8,8 @@ ADRIAN_FILE_EXTENSION = "adr"
 
 MANGLING_LENGTH = 6
 
+TMP_FMT_STRING = "___tmp{}"
+
 
 MODULE_PRELUDE = "prelude"
 CONSTANT_TRUE = "True"
@@ -137,6 +139,7 @@ SPEC_METHOD_LTEQ = "__lteq__"
 SPEC_METHOD_GTEQ = "__gteq__"
 SPEC_METHOD_LT = "__lt__"
 SPEC_METHOD_GT = "__gt__"
+SPEC_METHOD_NEXT = "__next__"
 OPERATOR_TO_METHOD = {
     "+": SPEC_METHOD_ADD,
     "-": SPEC_METHOD_SUB,

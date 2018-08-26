@@ -14,6 +14,7 @@ def new_context(*, env, exit_on_error, main_file_hash, module_paths):
     context.loaded = []
     context.loaded_modules = {}
     context.parent_struct = None
+    context.tmp_counter = 0
     yield
 
 

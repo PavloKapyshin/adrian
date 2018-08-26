@@ -116,7 +116,9 @@ def e(expr, hash_=None):
     elif expr in A(astlib.Subscript):
         return astlib.Subscript(
             e(expr.base, hash_=hash_), e(expr.index, hash_=hash_))
-    elif expr in A(astlib.Empty, astlib.PyCall):
+    elif expr in A(astlib.PyTypeCall):
+        return astlib.PyTypeCall(expr.name, [e(arg) for arg in expr.args])
+    elif expr in A(astlib.Empty):
         return expr
     else:
         errors.later()
