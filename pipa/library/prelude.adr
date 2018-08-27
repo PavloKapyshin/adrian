@@ -107,35 +107,43 @@ fun toDict(data: ConvertibleToDict(a, b)): Dict(a, b) {
 }
 
 
+-- implement to support +
 protocol Addable {
     fun __add__(other: Self): Self
 }
 
+-- implement to support -
 protocol Subtractable {
     fun __sub__(other: Self): Self
 }
 
+-- implement to support *
 protocol Multipliable {
     fun __mul__(other: Self): Self
 }
 
+-- implement to support /
 protocol Divisible {
     fun __div__(other: Self): Self
 }
 
 
+-- implement to support == and !=
 protocol Eq {
     fun __eq__(other: Self): Bool
 }
 
+-- implement to support < (and <= if Eq is implemented)
 protocol Lt {
     fun __lt__(other: Self): Bool
 }
 
+-- implement to support > (and >= if Eq is implemented)
 protocol Gt {
     fun __gt__(other: Self): Bool
 }
 
+-- implement to support in
 protocol Container(a) {
     fun __contains__(element: a): Bool
 }
@@ -149,14 +157,17 @@ protocol Lengthable {
     fun __length__(): Number
 }
 
+-- implement to support for-in loop
 protocol Iterable(a) {
     fun __next__(): Maybe(a)
 }
 
+-- implement to support self[index]
 protocol GetItemable(indexType, itemType) {
     fun __getItem__(index: indexType): Maybe(elementType)
 }
 
+-- implement to support self[index] = item
 protocol SetItemable(indexType, itemType) {
     fun __setItem__(index: indexType, item: itemType): Void
 }
@@ -307,13 +318,13 @@ extension String is Addable, Container(String), Iterable(String), Lengthable,
         return Vector(result)
     }
 
-    fun join(iterable: Iterable(String) and Lengthable): String {
+    fun join(iterable: Iterable(ConvertibleToString) and Lengthable): String {
         var result = py#Str("")
         var element = iterable.__next__()
         let len = length(iterable).data
         var index = py#Int(0)
         while element is Some {
-            result += element.data.data
+            result += toString(element.data).data
             if index < (len - py#Int(1)) {
                 result += self.data
             }
@@ -408,7 +419,7 @@ extension Vector(a) is ConvertibleToVector(a), ConvertibleToString,
     }
 
     fun extend(other: Vector(a)): Void {
-        self.data += other
+        self.data += other.data
     }
 }
 

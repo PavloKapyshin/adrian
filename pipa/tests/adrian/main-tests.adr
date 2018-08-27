@@ -1,3 +1,4 @@
+-- Var and let declarations and assignments
 var name = "John"
 print(name)
 name = "Mike"
@@ -22,3 +23,204 @@ print(number)
 number /= 2
 print(number)
 
+-- Structs
+struct Type1 is ConvertibleToString {
+    fun __toString__(): String {
+        return "Hello, it is Type1"
+    }
+}
+
+struct Type2 is ConvertibleToString {
+    fun __toString__(): String {
+        return "Hello, it is Type2"
+    }
+}
+
+
+protocol Hobby {
+    yearsOfPractice: Number
+}
+
+struct Programming is Hobby, ConvertibleToString {
+    yearsOfPractice: Number
+
+    fun __toString__(): String {
+        return "Programming: " + toString(self.yearsOfPractice)
+    }
+}
+
+struct Workout is Hobby, ConvertibleToString {
+    yearsOfPractice: Number
+
+    fun __toString__(): String {
+        return "Workout: " + toString(self.yearsOfPractice)
+    }
+}
+
+struct Person is ConvertibleToString, ConvertibleToNumber {
+    firstName: String
+    secondName: String
+    age: Number
+    hobbies: Set(Hobby)
+
+    fun __toString__(): String {
+        return self.firstName + " " + self.secondName
+    }
+
+    fun __toNumber__(): Number {
+        return self.age
+    }
+
+    fun addHobby(hobby: Hobby): Void {
+        self.hobbies.add(hobby)
+    }
+}
+
+-- Functions
+fun someTypePrinter(data: Type1 or Type2 or Printable or ConvertibleToString): Void {
+    if data is Type1 {
+        print("Got Type1: " + toString(Type1))
+    } elif data is Type2 {
+        print("Got Type2: " + toString(Type2))
+    } else {
+        print(data)
+    }
+}
+
+fun doSomeMath(data: Addable and Subtractable, other: Addable and Subtractable): Addable and Subtractable {
+    return data + other - data
+}
+
+fun factorialRecurse(n: Number): Number {
+    if n in [0, 1] {
+        return 1
+    }
+    return factorialRecurse(n - 1) * n
+}
+
+fun factorialLooped(n: Number): Number {
+    var result = 1
+    while n > 1 {
+        result *= n
+        n -= 1
+    }
+    return result
+}
+
+fun fibonacci(n: Number): Number {
+    if n in [0, 1] {
+        return n
+    }
+    var result = 0
+    var a = 0
+    var b = 1
+    while n > 1 {
+        result = a + b
+        a = b
+        b = result
+        n -= 1
+    }
+    return result
+}
+
+fun fibonacciSequence(n: Number): Vector(Number) {
+    var result: Vector(Number) = []
+    var c = 0
+    var a = 0
+    var b = 1
+    if n >= 0 {
+        result.append(0)
+    }
+    if n >= 1 {
+        result.append(1)
+    }
+    while n > 1 {
+        c = a + b
+        a = b
+        b = c
+        result.append(c)
+        n -= 1
+    }
+    return result
+}
+
+print("")
+
+-- Struct and func usage
+someTypePrinter(Type1())
+someTypePrinter(Type2())
+someTypePrinter("Some other String")
+print(doSomeMath(1, 3))
+
+print("")
+
+print(factorialRecurse(1))
+print(factorialLooped(4))
+print(factorialLooped(1))
+
+print("")
+
+print(fibonacci(10))
+print(fibonacciSequence(10))
+
+print("")
+
+let mike = Person("Mike", "Jokna", 32, {Programming(6)})
+print(mike)
+print(toNumber(mike))
+print(mike.hobbies)
+
+print("")
+
+-- Iteration
+for n in [1, 2, 3, 4, 5, 6] {
+    print(n)
+}
+
+var d = {"John" = 1}
+for key in d {
+    let val = d[key]
+    print(key + " = " + toString(val.data))
+}
+
+print("")
+
+for char in "Hello" {
+    print(char)
+}
+
+print("")
+
+if (0 is Number) and (0 is ConvertibleToString) {
+    print("Really?")
+}
+print(toVector({1}))
+print(toSet([1]))
+print(toVector({"John" = 1}))
+
+
+if (1 >= 0) and ("Koko" != "Loko") and ("go" == "go") and ("h" in ":) hello") {
+    print("OK")
+}
+print("")
+print(" ".join([[1, 2, 3], "has length", length([1, 2, 3])]))
+print(" ".join(["second elem of", [1, 2, 3], "is", ([1, 2, 3][1]).data]))
+d = {"Mike" = 1}
+d["John"] = 23
+d["Noob"] = 0
+
+if all(["John" in d, (d["Noob"]).data == 0, (d["Mike"]).data == 1]) {
+    print("OK")
+}
+
+if any([True, False]) {
+    print("OK")
+}
+
+print(" ".join(["Splitted:", "Hello, world!", "Hello, world!".split(",")]))
+let justAVector: Vector(Object and ConvertibleToString) = [1, 2, 3, 4, "Hi"]
+justAVector.extend(["Joke", "Mike"])
+print(justAVector)
+let emptySet: Set(Number) = {}
+emptySet.add(1)
+print(emptySet)
