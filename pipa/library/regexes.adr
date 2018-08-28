@@ -1,0 +1,69 @@
+struct Regex is Eq {
+    expr: String
+
+    fun match(string: String): Maybe(String) {
+        -- TODO: just the stuff for elliptica...
+    }
+
+    fun __eq__(other: Regex): Bool {
+        return self.expr == other.expr
+    }
+}
+
+
+struct RegexDict(a) is GetItemable(String, Maybe(a)), SetItemable(Regex, a),
+                        Iterable(Regex), Lengthable, Container(Regex),
+                        Addable, ConvertibleToDict(Regex, a),
+                        ConvertibleToSet(Regex), ConvertibleToVector(Regex),
+                        ConvertibleToString {
+    data: Dict(Regex, a)
+
+    fun __next__(): Maybe(Regex) {
+        return self.data.__next__()
+    }
+
+    fun __getItem__(index: String): Maybe(a) {
+        for regex in self {
+            if regex.match(index) is Some {
+                return self.data[regex]
+            }
+        }
+        return None()
+    }
+
+    fun __setItem__(index: Regex, item: a): Void {
+        self.data[index] = item
+    }
+
+    fun __length__(): Number {
+        return length(self.data)
+    }
+
+    fun __contains__(elem: Regex): Bool {
+        return elem in self.data
+    }
+
+    fun __eq__(other: RegexDict(a)): Bool {
+        return self.data == other.data
+    }
+
+    fun __add__(other: RegexDict(a)): RegexDict(a) {
+        return RegexDict(self.data + other.data)
+    }
+
+    fun __toDict__(): Dict(Regex, a) {
+        return self.data
+    }
+
+    fun __toSet__(): Set(Regex) {
+        return toSet(self.data)
+    }
+
+    fun __toVector__(): Vector(Regex) {
+        return toVector(self.data)
+    }
+
+    fun __toString__(): String {
+        return toString(self.data)
+    }
+}

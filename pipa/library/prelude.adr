@@ -46,22 +46,22 @@ struct Vector(a) {
 
 struct Set(a) {
     data: py#Set(a)
-    iteratedSet: py#Set(a)
+    iterated: py#Set(a)
 
     fun __init__(data: py#Set(a)): Void {
         self.data = data
-        self.iteratedSet = py#Set({})
+        self.iterated = py#Set({})
     }
 }
 
 
 struct Dict(a, b) {
     data: py#Dict(a, b)
-    iteratedSet: py#Set(a)
+    iterated: py#Set(a)
 
     fun __init__(data: py#Dict(a, b)): Void {
         self.data = data
-        self.iteratedSet = py#Set({})
+        self.iterated = py#Set({})
     }
 }
 
@@ -431,12 +431,12 @@ extension Set(a) is Iterable(a), Addable, ConvertibleToVector(a),
         -- Best case: O(n)
         -- Worst case: O(n**2)
         for element in self.data {
-            if not (element in self.iteratedSet) {
-                self.iteratedSet += py#Set({element})
+            if not (element in self.iterated) {
+                self.iterated += py#Set({element})
                 return Some(element)
             }
         }
-        self.iteratedSet = py#Set({})
+        self.iterated = py#Set({})
         return None()
     }
 
@@ -532,12 +532,12 @@ extension Dict(a, b) is ConvertibleToDict(a, b), ConvertibleToSet(a),
         -- Best case: O(n)
         -- Worst case: O(n**2)
         for element in self.data {
-            if not (element in self.iteratedSet) {
-                self.iteratedSet += py#Set({element})
+            if not (element in self.iterated) {
+                self.iterated += py#Set({element})
                 return Some(element)
             }
         }
-        self.iteratedSet = py#Set({})
+        self.iterated = py#Set({})
         return None()
     }
 
