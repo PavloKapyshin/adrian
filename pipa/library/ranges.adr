@@ -1,0 +1,31 @@
+struct Range is Iterable(Number), ConvertibleToVector(Number) {
+    start: Number
+    end: Number
+    iterIndex: Number
+
+    fun __init__(start: Number, end: Number): Void {
+        self.start = start
+        self.end = end
+        self.iterIndex = self.start
+    }
+
+    fun __next__(): Maybe(Number) {
+        if self.iterIndex < self.end {
+            let prevIterIndex = self.iterIndex
+            self.iterIndex += 1
+            return Some(prevIterIndex)
+        }
+        self.iterIndex = self.start
+        return None()
+    }
+
+    fun __toVector__(): Vector(Number) {
+        var result: Vector(Number) = []
+        var i = self.start
+        while i < self.end {
+            result.append(i)
+            i += 1
+        }
+        return result
+    }
+}

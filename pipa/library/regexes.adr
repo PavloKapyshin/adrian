@@ -1,12 +1,26 @@
-struct Regex is Eq {
+struct Regex is Eq, ConvertibleToString, Addable {
     expr: String
 
     fun match(string: String): Maybe(String) {
         -- TODO: just the stuff for elliptica...
+        return None()
+    }
+
+    fun matches(string: String): Bool {
+        return self.match(string) is Some
     }
 
     fun __eq__(other: Regex): Bool {
         return self.expr == other.expr
+    }
+
+    fun __toString__(): String {
+        return self.expr
+    }
+
+    fun __add__(other: Regex): Regex {
+        -- TODO: hot stuff
+        return self
     }
 }
 
@@ -24,7 +38,7 @@ struct RegexDict(a) is GetItemable(String, Maybe(a)), SetItemable(Regex, a),
 
     fun __getItem__(index: String): Maybe(a) {
         for regex in self {
-            if regex.match(index) is Some {
+            if regex.matches(index) {
                 return self.data[regex]
             }
         }

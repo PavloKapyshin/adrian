@@ -96,8 +96,8 @@ class Interpreter(layers.Layer):
                     stmt.name == defs.SPEC_METHOD_INIT):
                 has_init = True
                 new_body.append(complete_init_method(stmt, decl))
-                break
-            new_body.append(stmt)
+            else:
+                new_body.append(stmt)
         if not has_init:
             new_body = [default_init_method(decl)] + new_body
         self.b(new_body)

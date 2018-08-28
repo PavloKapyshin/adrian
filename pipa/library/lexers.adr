@@ -22,5 +22,6 @@ struct Lexer {
 
     fun lex(input: String): Vector(Lexeme) {
         -- TODO
+        return []
     }
 }

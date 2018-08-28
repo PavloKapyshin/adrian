@@ -1,8 +1,8 @@
-fun factorialRecurse(n: Number): Number {
+fun factorialRecursion(n: Number): Number {
     if n in [0, 1] {
         return 1
     }
-    return factorialRecurse(n - 1) * n
+    return factorialRecursion(n - 1) * n
 }
 
 fun factorialLooped(n: Number): Number {
@@ -14,4 +14,14 @@ fun factorialLooped(n: Number): Number {
     return result
 }
 
-print(factorialLooped(10))
+
+fun factorialSequence(n: Number): Vector(Number) {
+    var result: Vector(Number) = []
+    for number in ranges#Range(0, n + 1) {
+        result.append(factorialLooped(number))
+    }
+    return result
+}
+
+
+print(factorialSequence(5))
