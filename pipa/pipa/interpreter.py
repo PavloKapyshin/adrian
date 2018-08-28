@@ -403,6 +403,7 @@ class Interpreter(layers.Layer):
                 return up
             return result
         else:
+            print(base, func_call)
             # support other methods
             errors.later()
 

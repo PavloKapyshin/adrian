@@ -21,7 +21,8 @@ struct Lexer {
     table: regexes#RegexDict(String)
 
     fun lex(input: String): Vector(Lexeme) {
+        let result: Vector(Lexeme) = []
         -- TODO
-        return []
+        return result
     }
 }

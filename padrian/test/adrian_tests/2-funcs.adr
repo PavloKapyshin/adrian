@@ -1,3 +1,0 @@
-fun power(a: c#UIntFast64): c#UIntFast64 {
-    return a * a
-}

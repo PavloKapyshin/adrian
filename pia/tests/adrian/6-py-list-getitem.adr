@@ -1,7 +1,0 @@
-let greeting = py#Str("Hi, ")
-let names = py#List([py#Str("john"), py#Str("mike")])
-let index = py#Int(0)
-while index < py#len(names) {
-    py#print(names[index])
-    index = index + py#Int(1)
-}

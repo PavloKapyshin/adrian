@@ -1,7 +1,0 @@
-let a: c#IntFast8 = c#IntFast8(0)
-var b = c#UIntFast8(1)
-
-b = c#UIntFast8(5)
-
-let c = b
-let d = ref(c)

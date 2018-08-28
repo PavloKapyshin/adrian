@@ -164,7 +164,7 @@ protocol Iterable(a) {
 
 -- implement to support self[index]
 protocol GetItemable(indexType, itemType) {
-    fun __getItem__(index: indexType): Maybe(elementType)
+    fun __getItem__(index: indexType): Maybe(itemType)
 }
 
 -- implement to support self[index] = item
@@ -303,19 +303,12 @@ extension String is Addable, Container(String), Iterable(String), Lengthable,
     }
 
     fun split(by: String): Vector(String) {
-        assert(length(by).data == py#Int(1))
-        var result = py#List([])
-        var buff = py#Str("")
-        for char in self.data {
-            if char == by.data {
-                result += py#List([String(buff)])
-                buff = py#Str("")
-            } else {
-                buff += char
-            }
+        let splitted: py#List = self.data.split(by.data)
+        let result: Vector(String) = Vector(py#List([]))
+        for str in splitted {
+            result.append(String(str))
         }
-        result += py#List([String(buff)])
-        return Vector(result)
+        return result
     }
 
     fun join(iterable: Iterable(ConvertibleToString) and Lengthable): String {
@@ -428,8 +421,6 @@ extension Set(a) is Iterable(a), Addable, ConvertibleToVector(a),
                     ConvertibleToSet(a), ConvertibleToString, Eq,
                     Container(a), Lengthable, Subtractable {
     fun __next__(): Maybe(a) {
-        -- Best case: O(n)
-        -- Worst case: O(n**2)
         for element in self.data {
             if not (element in self.iterated) {
                 self.iterated += py#Set({element})
@@ -529,8 +520,6 @@ extension Dict(a, b) is ConvertibleToDict(a, b), ConvertibleToSet(a),
     }
 
     fun __next__(): Maybe(a) {
-        -- Best case: O(n)
-        -- Worst case: O(n**2)
         for element in self.data {
             if not (element in self.iterated) {
                 self.iterated += py#Set({element})
