@@ -1,5 +1,0 @@
-var counter = py#Int(0)
-while counter < py#Int(10) {
-    py#print(py#Str("Hello,"), counter)
-    counter = counter + py#Int(1)
-}

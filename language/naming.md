@@ -1,4 +1,4 @@
-## Adrian naming
+## Naming used in pia
 
 type -- struct, adt or a protocol
 generic type -- generic struct, generic adt or a generic protocol
@@ -12,7 +12,7 @@ protocol -- type declarated with `protocol` keyword
 supertype -- type which has subtypes
 subtype -- type which has supertypes
 field -- variable or constant inside of struct
-special method -- __method__
+special method -- `__method__`
 method -- function inside of struct, adt or a protocol
 
 

@@ -1,0 +1,560 @@
+-- Syntax sugar is redundant! (no, it is not, but you can't use it here :)
+-- Can't use:
+--   for-in syntax sugar: use while loop
+--   literal to prelude object: use something like Number(py#Int(0)) instead of 0
+--   other modules (without py module): really? you need other modules in prelude module?
+protocol Maybe(a) {}
+
+struct Some(a) is Maybe(a) {
+    data: a
+}
+
+struct None is Maybe(a) {}
+
+
+fun assert(expr: Bool): Void {
+    py#assert(expr)
+}
+
+
+struct Number {
+    data: py#Int
+}
+
+
+struct String {
+    data: py#Str
+    iterIndex: py#Int
+
+    fun __init__(data: py#Str): Void {
+        self.data = data
+        self.iterIndex = py#Int(0)
+    }
+}
+
+
+struct Vector(a) {
+    data: py#List
+    iterIndex: py#Int
+
+    fun __init__(data: py#List): Void {
+        self.data = data
+        self.iterIndex = py#Int(0)
+    }
+}
+
+
+struct Set(a) {
+    data: py#Set(a)
+    iterated: py#Set(a)
+
+    fun __init__(data: py#Set(a)): Void {
+        self.data = data
+        self.iterated = py#Set({})
+    }
+}
+
+
+struct Dict(a, b) {
+    data: py#Dict(a, b)
+    iterated: py#Set(a)
+
+    fun __init__(data: py#Dict(a, b)): Void {
+        self.data = data
+        self.iterated = py#Set({})
+    }
+}
+
+
+protocol ConvertibleToString {
+    fun __toString__(): String
+}
+
+protocol ConvertibleToNumber {
+    fun __toNumber__(): Number
+}
+
+protocol ConvertibleToVector(a) {
+    fun __toVector__(): Vector(a)
+}
+
+protocol ConvertibleToSet(a) {
+    fun __toSet__(): Set(a)
+}
+
+protocol ConvertibleToDict(a, b) {
+    fun __toDict__(): Dict(a, b)
+}
+
+fun toString(data: ConvertibleToString): String {
+    return data.__toString__()
+}
+
+fun toNumber(data: ConvertibleToNumber): Number {
+    return data.__toNumber__()
+}
+
+fun toVector(data: ConvertibleToVector(a)): Vector(a) {
+    return data.__toVector__()
+}
+
+fun toSet(data: ConvertibleToSet(a)): Set(a) {
+    return data.__toSet__()
+}
+
+fun toDict(data: ConvertibleToDict(a, b)): Dict(a, b) {
+    return data.__toDict__()
+}
+
+
+-- implement to support +
+protocol Addable {
+    fun __add__(other: Self): Self
+}
+
+-- implement to support -
+protocol Subtractable {
+    fun __sub__(other: Self): Self
+}
+
+-- implement to support *
+protocol Multipliable {
+    fun __mul__(other: Self): Self
+}
+
+-- implement to support /
+protocol Divisible {
+    fun __div__(other: Self): Self
+}
+
+
+-- implement to support == and !=
+protocol Eq {
+    fun __eq__(other: Self): Bool
+}
+
+-- implement to support < (and <= if Eq is implemented)
+protocol Lt {
+    fun __lt__(other: Self): Bool
+}
+
+-- implement to support > (and >= if Eq is implemented)
+protocol Gt {
+    fun __gt__(other: Self): Bool
+}
+
+-- implement to support in
+protocol Container(a) {
+    fun __contains__(element: a): Bool
+}
+
+
+protocol Printable {
+    fun __print__(): Void
+}
+
+protocol Lengthable {
+    fun __length__(): Number
+}
+
+-- implement to support for-in loop
+protocol Iterable(a) {
+    fun __next__(): Maybe(a)
+}
+
+-- implement to support self[index]
+protocol GetItemable(indexType, itemType) {
+    fun __getItem__(index: indexType): Maybe(itemType)
+}
+
+-- implement to support self[index] = item
+protocol SetItemable(indexType, itemType) {
+    fun __setItem__(index: indexType, item: itemType): Void
+}
+
+
+fun print(data: ConvertibleToString or Printable): Void {
+    if data is Printable {
+        data.__print__()
+    } else {
+        py#print(toString(data).data)
+    }
+}
+
+fun length(data: Lengthable): Number {
+    return data.__length__()
+}
+
+fun all(iterable: Iterable(Bool)): Bool {
+    var element = iterable.__next__()
+    while element is Some {
+        if element.data == False {
+            return False
+        }
+        element = iterable.__next__()
+    }
+    return True
+}
+
+fun any(iterable: Iterable(Bool)): Bool {
+    var element = iterable.__next__()
+    while element is Some {
+        if element.data == True {
+            return True
+        }
+        element = iterable.__next__()
+    }
+    return False
+}
+
+
+extension Number is Addable, Subtractable, Multipliable, Divisible,
+                    Eq, Lt, Gt, ConvertibleToNumber, ConvertibleToString {
+    fun __toNumber__(): Number {
+        return self
+    }
+
+    fun __toString__(): String {
+        return String(py#toStr(self.data))
+    }
+
+    fun __add__(other: Number): Number {
+        return Number(self.data + other.data)
+    }
+
+    fun __sub__(other: Number): Number {
+        return Number(self.data - other.data)
+    }
+
+    fun __mul__(other: Number): Number {
+        return Number(self.data * other.data)
+    }
+
+    fun __div__(other: Number): Number {
+        return Number(self.data / other.data)
+    }
+
+    fun __eq__(other: Number): Bool {
+        return self.data == other.data
+    }
+
+    fun __lt__(other: Number): Bool {
+        return self.data < other.data
+    }
+
+    fun __gt__(other: Number): Bool {
+        return self.data > other.data
+    }
+}
+
+
+extension String is Addable, Container(String), Iterable(String), Lengthable,
+                    Eq, GetItemable(Number, String), ConvertibleToString,
+                    ConvertibleToNumber, ConvertibleToVector(String),
+                    ConvertibleToSet(String) {
+    fun __add__(other: String): String {
+        return String(self.data + other.data)
+    }
+
+    fun __eq__(other: String): Bool {
+        return self.data == other.data
+    }
+
+    fun __contains__(element: String): Bool {
+        return element.data in self.data
+    }
+
+    fun __toNumber__(): Number {
+        return Number(py#toInt(self.data))
+    }
+
+    fun __toString__(): String {
+        return self
+    }
+
+    fun __toVector__(): Vector(String) {
+        return Vector(py#toList(self.data))
+    }
+
+    fun __toSet__(): Set(String) {
+        return Set(py#toSet(self.data))
+    }
+
+    fun __length__(): Number {
+        return Number(py#len(self.data))
+    }
+
+    fun __getItem__(index: Number): Maybe(String) {
+        let got = self.data[index.data]
+        if got is py#None {
+            return None()
+        }
+        return Some(got)
+    }
+
+    fun __next__(): Maybe(String) {
+        let element = self.data[self.iterIndex]
+        if element is py#None {
+            self.iterIndex = py#Int(0)
+            return None()
+        }
+        self.iterIndex += py#Int(1)
+        return Some(String(element))
+    }
+
+    fun split(by: String): Vector(String) {
+        let splitted: py#List = self.data.split(by.data)
+        let result: Vector(String) = Vector(py#List([]))
+        for str in splitted {
+            result.append(String(str))
+        }
+        return result
+    }
+
+    fun join(iterable: Iterable(ConvertibleToString) and Lengthable): String {
+        var result = py#Str("")
+        var element = iterable.__next__()
+        let len = length(iterable).data
+        var index = py#Int(0)
+        while element is Some {
+            result += toString(element.data).data
+            if index < (len - py#Int(1)) {
+                result += self.data
+            }
+            element = iterable.__next__()
+            index += py#Int(1)
+        }
+        return String(result)
+    }
+}
+
+extension Vector(a) is ConvertibleToVector(a), ConvertibleToString,
+                    ConvertibleToSet(a), ConvertibleToDict(Number, a),
+                    Addable, Lengthable, Iterable(a), GetItemable(Number, a),
+                    SetItemable(Number, a), Eq, Container(a) {
+    fun __add__(other: Vector(a)): Vector(a) {
+        return Vector(self.data + other.data)
+    }
+
+    fun __eq__(other: Vector(a)): Bool {
+        return self.data == other.data
+    }
+
+    fun __contains__(element: a): Bool {
+        return element in self.data
+    }
+
+    fun __toVector__(): Vector(a) {
+        return self
+    }
+
+    fun __toString__(): String {
+        let separator = py#Str(", ")
+        let dataLength = length(self).data
+        var index = py#Int(0)
+        var result = py#Str("[")
+        for element in self.data {
+            if element is String {
+                result += py#Str("'") + toString(element).data + py#Str("'")
+            } else {
+                result += toString(element).data
+            }
+            if index < (dataLength - py#Int(1)) {
+                result += separator
+            }
+            index += py#Int(1)
+        }
+        return String(result + py#Str("]"))
+    }
+
+    fun __toSet__(): Set(a) {
+        return Set(py#toSet(self.data))
+    }
+
+    fun __toDict__(): Dict(Number, a) {
+        var result = Dict(py#Dict({}))
+        var index = py#Int(0)
+        for element in self.data {
+            result[Number(index)] = element
+            index += py#Int(1)
+        }
+        return result
+    }
+
+    fun __length__(): Number {
+        return Number(py#len(self.data))
+    }
+
+    fun __getItem__(index: Number): Maybe(a) {
+        let got = self.data[index.data]
+        if got is py#None {
+            return None()
+        }
+        return Some(got)
+    }
+
+    fun __setItem__(index: Number, item: a): Void {
+        self.data[index.data] = item
+    }
+
+    fun __next__(): Maybe(a) {
+        let element = self.data[self.iterIndex]
+        if element is py#None {
+            self.iterIndex = py#Int(0)
+            return None()
+        }
+        self.iterIndex += py#Int(1)
+        return Some(element)
+    }
+
+    fun append(element: a): Void {
+        self.data += py#List([element])
+    }
+
+    fun extend(other: Vector(a)): Void {
+        self.data += other.data
+    }
+}
+
+
+extension Set(a) is Iterable(a), Addable, ConvertibleToVector(a),
+                    ConvertibleToSet(a), ConvertibleToString, Eq,
+                    Container(a), Lengthable, Subtractable {
+    fun __next__(): Maybe(a) {
+        for element in self.data {
+            if not (element in self.iterated) {
+                self.iterated += py#Set({element})
+                return Some(element)
+            }
+        }
+        self.iterated = py#Set({})
+        return None()
+    }
+
+    fun __add__(other: Set(a)): Set(a) {
+        return Set(self.data + other.data)
+    }
+
+    fun __sub__(other: Set(a)): Set(a) {
+        return Set(self.data - other.data)
+    }
+
+    fun __eq__(other: Set(a)): Bool {
+        return self.data == other.data
+    }
+
+    fun __contains__(element: a): Bool {
+        return element in self.data
+    }
+
+    fun __length__(): Number {
+        return Number(py#len(self.data))
+    }
+
+    fun __toSet__(): Set(a) {
+        return self
+    }
+
+    fun __toVector__(): Vector(a) {
+        return Vector(py#toList(self.data))
+    }
+
+    fun __toString__(): String {
+        var elements = py#Str("")
+        let len = length(self).data
+        var index = py#Int(0)
+        for element in self.data {
+            if element is String {
+                elements += py#Str("'") + toString(element).data + py#Str("'")
+            } else {
+                elements += toString(element).data
+            }
+            if index < (len - py#Int(1)) {
+                elements += py#Str(", ")
+            }
+            index += py#Int(1)
+        }
+        return String(py#Str("{") + elements + py#Str("}"))
+    }
+
+    fun add(element: a): Void {
+        self.data += py#Set({element})
+    }
+}
+
+
+extension Dict(a, b) is ConvertibleToDict(a, b), ConvertibleToSet(a),
+                        ConvertibleToString, ConvertibleToVector(a),
+                        Iterable(a), Addable, Eq, Container(a), Lengthable,
+                        GetItemable(a, b), SetItemable(a, b) {
+    fun __toDict__(): Dict(a, b) {
+        return self
+    }
+
+    fun __toSet__(): Set(a) {
+        return Set(py#toSet(self.data))
+    }
+
+    fun __toVector__(): Vector(a) {
+        return Vector(py#toList(self.data))
+    }
+
+    fun __toString__(): String {
+        var elements = py#Str("")
+        var index = py#Int(0)
+        let len = length(self).data
+        for key, val in self.data.items() {
+            if element is String {
+                elements += py#Str("'") +
+                    toString(key).data + py#Str(" = ") + toString(val).data +
+                py#Str("'")
+            } else {
+                elements += toString(key).data + py#Str(" = ") + toString(val).data
+            }
+            if index < (len - py#Int(1)) {
+                elements += py#Str(", ")
+            }
+            index += py#Int(1)
+        }
+        return String(py#Str("{") + elements + py#Str("}"))
+    }
+
+    fun __next__(): Maybe(a) {
+        for element in self.data {
+            if not (element in self.iterated) {
+                self.iterated += py#Set({element})
+                return Some(element)
+            }
+        }
+        self.iterated = py#Set({})
+        return None()
+    }
+
+    fun __add__(other: Dict(a, b)): Dict(a, b) {
+        return Dict(self.data + other.data)
+    }
+
+    fun __eq__(other: Dict(a, b)): Bool {
+        return self.data == other.data
+    }
+
+    fun __contains__(element: a): Bool {
+        return element in self.data
+    }
+
+    fun __length__(): Number {
+        return Number(py#len(self.data))
+    }
+
+    fun __getItem__(index: a): Maybe(b) {
+        let element = self.data[index]
+        if element is py#None {
+            return None()
+        }
+        return Some(element)
+    }
+
+    fun __setItem__(index: a, item: b): Void {
+        self.data[index] = item
+    }
+}

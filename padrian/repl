@@ -1,2 +1,0 @@
-. ./zpath
-python3 test/repl.py

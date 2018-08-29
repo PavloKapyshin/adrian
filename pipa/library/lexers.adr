@@ -1,0 +1,28 @@
+struct LexemeType is Eq {
+    data: String
+
+    fun __eq__(other: LexemeType): Bool {
+        return self.data == other.data
+    }
+}
+
+
+struct Lexeme is Eq {
+    text: String
+    type: LexemeType
+
+    fun __eq__(other: Lexeme): Bool {
+        return (self.text == other.text) and (self.type == other.type)
+    }
+}
+
+
+struct Lexer {
+    table: regexes#RegexDict(String)
+
+    fun lex(input: String): Vector(Lexeme) {
+        let result: Vector(Lexeme) = []
+        -- TODO
+        return result
+    }
+}
