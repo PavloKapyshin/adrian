@@ -9,3 +9,8 @@ struct File {
         py#writeFile(self.name.data, contents.data)
     }
 }
+
+let argv = Vector(py#List([]))
+for element in py#argv {
+    argv.append(String(element))
+}

@@ -140,8 +140,10 @@ def only_args(node, hash_=None):
 
 
 def make_py_object(node):
-    if node in defs.PY_OBJS:
+    if node in defs.PY_FUNCS:
         return astlib.PyFunc(node)
+    elif node == defs.CONSTANT_ARGV:
+        return astlib.PyConstant(node)
     return astlib.PyType(node)
 
 

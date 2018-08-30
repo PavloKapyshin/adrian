@@ -289,6 +289,15 @@ class Interpreter(layers.Layer):
     def struct_path(self, struct_path):
         self.eval(struct_path)
 
+    def py_constant(self, constant):
+        if constant.name == defs.CONSTANT_ARGV:
+            import sys
+            argv = sys.argv
+            assert(all([elem in A(str) for elem in argv]))
+            return argv
+        else:
+            errors.later()
+
     @layers.register(astlib.PyFuncCall)
     def py_call(self, func_call):
         def translate_iterable(iterable):
@@ -433,6 +442,8 @@ class Interpreter(layers.Layer):
             return self.func_call(expr)
         elif expr in A(astlib.PyFuncCall, astlib.PyTypeCall):
             return self.py_call(expr)
+        elif expr in A(astlib.PyConstant):
+            return self.py_constant(expr)
         elif expr in A(astlib.StructPath):
             root, tail = expr.path[0], expr.path[1:]
             root_expr_raw = root
