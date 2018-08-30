@@ -447,6 +447,10 @@ def p_expr_2(content):
     content[0] = astlib.Subscript(content[1], content[3])
 
 def p_expr_3(content):
+    """expr : factor LBRACKET expr COLON expr RBRACKET"""
+    content[0] = astlib.Slice(content[1], content[3], content[5])
+
+def p_expr_4(content):
     """expr : factor"""
     content[0] = content[1]
 

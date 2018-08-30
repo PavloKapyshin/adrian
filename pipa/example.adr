@@ -1,1 +1,1 @@
-print(io#argv)
+print(io#argv[1:length(io#argv)])

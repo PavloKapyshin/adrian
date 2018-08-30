@@ -172,6 +172,11 @@ protocol SetItemable(indexType, itemType) {
     fun __setItem__(index: indexType, item: itemType): Void
 }
 
+-- implement to support self[start:end]
+protocol Sliceable(indexType, resultType) {
+    fun __slice__(start: indexType, end: indexType): resultType
+}
+
 
 fun print(data: ConvertibleToString or Printable): Void {
     if data is Printable {
@@ -251,7 +256,7 @@ extension Number is Addable, Subtractable, Multipliable, Divisible,
 extension String is Addable, Container(String), Iterable(String), Lengthable,
                     Eq, GetItemable(Number, String), ConvertibleToString,
                     ConvertibleToNumber, ConvertibleToVector(String),
-                    ConvertibleToSet(String) {
+                    ConvertibleToSet(String), Sliceable(Number, String) {
     fun __add__(other: String): String {
         return String(self.data + other.data)
     }
@@ -282,6 +287,10 @@ extension String is Addable, Container(String), Iterable(String), Lengthable,
 
     fun __length__(): Number {
         return Number(py#len(self.data))
+    }
+
+    fun __slice__(start: Number, end: Number): String {
+        return String(self.data[start.data:end.data])
     }
 
     fun __getItem__(index: Number): Maybe(String) {
@@ -331,7 +340,8 @@ extension String is Addable, Container(String), Iterable(String), Lengthable,
 extension Vector(a) is ConvertibleToVector(a), ConvertibleToString,
                     ConvertibleToSet(a), ConvertibleToDict(Number, a),
                     Addable, Lengthable, Iterable(a), GetItemable(Number, a),
-                    SetItemable(Number, a), Eq, Container(a) {
+                    SetItemable(Number, a), Eq, Container(a),
+                    Sliceable(Number, Vector(a)) {
     fun __add__(other: Vector(a)): Vector(a) {
         return Vector(self.data + other.data)
     }
@@ -383,6 +393,10 @@ extension Vector(a) is ConvertibleToVector(a), ConvertibleToString,
 
     fun __length__(): Number {
         return Number(py#len(self.data))
+    }
+
+    fun __slice__(start: Number, end: Number): Vector(a) {
+        return Vector(self.data[start.data:end.data])
     }
 
     fun __getItem__(index: Number): Maybe(a) {

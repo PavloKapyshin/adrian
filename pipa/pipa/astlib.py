@@ -222,6 +222,15 @@ class Expr(Node):
         self._keys = ("left", "op", "right")
 
 
+class Slice(Node):
+
+    def __init__(self, base, start, end):
+        self.base = base
+        self.start = start
+        self.end = end
+        self._keys = ("base", "start", "end")
+
+
 class Subscript(Node):
 
     def __init__(self, base, index):

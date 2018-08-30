@@ -366,6 +366,8 @@ class Interpreter(layers.Layer):
             return list(converted_base.keys())
         elif func_call.name == defs.METHOD_ITEMS:
             return list(converted_base.items())
+        elif func_call.name == defs.SPEC_METHOD_SLICE:
+            return converted_base[args[0]:args[1]]
         elif func_call.name == defs.SPEC_METHOD_GETITEM:
             if converted_base in A(list, str):
                 if args[0] < len(converted_base):
@@ -460,6 +462,8 @@ class Interpreter(layers.Layer):
                         root_expr_raw = root_expr
                         root_type = infer_type(root_expr)
                 else:
+                    if root_expr not in A(astlib.InstanceValue):
+                        print("why:", root_expr)
                     assert(root_expr in A(astlib.InstanceValue))
                     root_expr = root_expr.value[elem]
                     if root_expr_raw in A(astlib.StructPath):
@@ -508,6 +512,14 @@ class Interpreter(layers.Layer):
                     self.eval(key): self.eval(val)
                     for key, val in expr.literal.items()}
             return expr.literal
+        elif expr in A(astlib.Slice):
+            method_name = defs.SPEC_METHOD_SLICE
+            base, args = expr.base, [expr.start, expr.end]
+            type_ = infer_type(self.eval(base))
+            if type_ in A(astlib.PyType):
+                return self.py_method_call(
+                    base, astlib.FuncCall(method_name, args))
+            return self.method_call(base, astlib.FuncCall(method_name, args))
         elif expr in A(astlib.Subscript):
             method_name = defs.SPEC_METHOD_GETITEM
             base, args = expr.base, [expr.index]
@@ -591,6 +603,8 @@ class Interpreter(layers.Layer):
                 [self._inline_references_of_name(arg, name)
                 for arg in expr.args])
         elif expr in A(astlib.Subscript):
+            return self.eval(expr)
+        elif expr in A(astlib.Slice):
             return self.eval(expr)
         elif expr in A(int, str, list, dict, set):
             return expr

@@ -116,6 +116,10 @@ def e(expr, hash_=None):
             e(expr.right, hash_=hash_))
     elif expr in A(astlib.Not):
         return astlib.Not(e(expr.expr))
+    elif expr in A(astlib.Slice):
+        return astlib.Slice(
+            e(expr.base, hash_=hash_), e(expr.start, hash_=hash_),
+            e(expr.end, hash_=hash_))
     elif expr in A(astlib.Subscript):
         return astlib.Subscript(
             e(expr.base, hash_=hash_), e(expr.index, hash_=hash_))
