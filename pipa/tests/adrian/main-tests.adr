@@ -148,7 +148,7 @@ print("")
 
 -- Struct and func usage
 someTypePrinter(Type1())
-someTypePrinter(Type2())
+someTypePrinter(data = Type2())
 someTypePrinter("Some other String")
 print(doSomeMath(1, 3))
 
@@ -217,7 +217,7 @@ if any([True, False]) {
     print("OK")
 }
 
-print(" ".join(["Splitted:", "Hello, world!", "Hello, world!".split(",")]))
+print(" ".join(iterable = ["Splitted:", "Hello, world!", "Hello, world!".split(by = ",")]))
 let justAVector: Vector(Object and ConvertibleToString) = [1, 2, 3, 4, "Hi"]
 justAVector.extend(["Joke", "Mike"])
 print(justAVector)
