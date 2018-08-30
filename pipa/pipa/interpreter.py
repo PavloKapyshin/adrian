@@ -253,6 +253,10 @@ class Interpreter(layers.Layer):
             return astlib.GenericType(func_call.name, func_call.args)
         context.env.add_scope()
         for (name, type_), expr in zip(info["args"], func_call.args):
+            if expr in A(astlib.KeywordArg):
+                name = expr.name
+                expr = expr.expr
+                type_ = infer_type(self.eval(expr))
             context.env[name] = {
                 "node_type": astlib.NodeT.var,
                 "type": type_,
@@ -264,6 +268,7 @@ class Interpreter(layers.Layer):
 
     def method_call(self, base, func_call):
         converted_base = self.eval(base)
+        assert(converted_base in A(astlib.InstanceValue))
         type_ = infer_type(converted_base)
         if depends_on_self(base):
             args = [converted_base]
@@ -276,6 +281,12 @@ class Interpreter(layers.Layer):
         context.env.add_scope()
         for (name, type_), expr in zip(
                 [(astlib.Name(defs.SELF), type_)] + method_info["args"], args):
+            if expr in A(astlib.KeywordArg):
+                h = str(converted_base.type_)[:defs.MANGLING_LENGTH]
+                name = astlib.Name(
+                    "_".join([h, str(expr.name)[defs.MANGLING_LENGTH+1:]]))
+                expr = expr.expr
+                type_ = infer_type(expr)
             context.env[name] = {
                 "node_type": astlib.NodeT.var,
                 "type": type_,
@@ -541,6 +552,8 @@ class Interpreter(layers.Layer):
                 return sub_expr is None
             return (types_are_equal(sub_type, super_type) or
                 is_super_type(sub_type, super_type))
+        elif expr in A(astlib.KeywordArg):
+            return astlib.KeywordArg(expr.name, self.eval(expr.expr))
         elif expr in A(
                 int, str, list, set, dict, bool, astlib.InstanceValue,
                 astlib.GenericType, astlib.PyType):

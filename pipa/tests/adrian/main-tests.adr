@@ -79,9 +79,9 @@ struct Person is ConvertibleToString, ConvertibleToNumber {
 -- Functions
 fun someTypePrinter(data: Type1 or Type2 or Printable or ConvertibleToString): Void {
     if data is Type1 {
-        print("Got Type1: " + toString(Type1))
+        print("Got Type1: " + toString(data))
     } elif data is Type2 {
-        print("Got Type2: " + toString(Type2))
+        print("Got Type2: " + toString(data))
     } else {
         print(data)
     }

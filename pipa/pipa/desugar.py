@@ -58,6 +58,8 @@ def replace_name_references_for_for_stmt_translation(body, name):
         elif stmt in A(astlib.Expr):
             return astlib.Expr(
                 _replace(stmt.left), stmt.op, _replace(stmt.right))
+        elif stmt in A(astlib.KeywordArg):
+            return astlib.KeywordArg(stmt.name, _replace(stmt.expr))
         elif stmt in A(astlib.Slice):
             return astlib.Slice(
                 _replace(stmt.base), _replace(stmt.start), _replace(stmt.end))
@@ -123,6 +125,8 @@ def _e(expr):
             return astlib.ModuleMember(defs.MODULE_PRELUDE, expr)
     elif expr in A(astlib.StructPath):
         return astlib.StructPath([_e(elem) for elem in expr.path])
+    elif expr in A(astlib.KeywordArg):
+        return astlib.KeywordArg(expr.name, _e(expr.expr))
     return expr
 
 
@@ -136,6 +140,8 @@ def e(expr):
                 list(map(e, expr.args)))
     elif expr in A(astlib.Slice):
         return astlib.Slice(e(expr.base), e(expr.start), e(expr.end))
+    elif expr in A(astlib.KeywordArg):
+        return astlib.KeywordArg(expr.name, e(expr.expr))
     elif expr in A(astlib.Subscript):
         return astlib.Subscript(e(expr.base), e(expr.index))
     elif expr in A(astlib.Expr):

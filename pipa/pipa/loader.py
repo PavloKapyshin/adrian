@@ -96,6 +96,19 @@ def e(expr, hash_=None):
             return astlib.PyFuncCall(name.name, args)
         elif name in A(astlib.PyType):
             return astlib.PyTypeCall(name.name, args)
+        if expr.name in A(astlib.ModuleMember):
+            h = name[:defs.MANGLING_LENGTH]
+            new_args = []
+            for arg in args:
+                if arg in A(astlib.KeywordArg):
+                    new_args.append(
+                        astlib.KeywordArg(
+                            astlib.Name(
+                                "_".join([str(h), str(arg.name)[defs.MANGLING_LENGTH+1:]])),
+                            arg.expr))
+                else:
+                    new_args.append(arg)
+            args = new_args
         return astlib.FuncCall(name, args)
     elif expr in A(astlib.Literal):
         if expr.type_ == astlib.LiteralT.vector:
@@ -123,6 +136,9 @@ def e(expr, hash_=None):
     elif expr in A(astlib.Subscript):
         return astlib.Subscript(
             e(expr.base, hash_=hash_), e(expr.index, hash_=hash_))
+    elif expr in A(astlib.KeywordArg):
+        return astlib.KeywordArg(
+            e(expr.name, hash_=hash_), e(expr.expr, hash_=hash_))
     elif expr in A(astlib.PyTypeCall):
         return astlib.PyTypeCall(expr.name, [e(arg) for arg in expr.args])
     elif expr in A(astlib.Empty):

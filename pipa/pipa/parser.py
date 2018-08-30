@@ -374,16 +374,18 @@ def p_names_3(content):
 
 
 def p_arg_list_1(content):
-    """arg_list : bool_expr COMMA arg_list"""
-    content[0] = [content[1]] + content[3]
-
+    """arg_list : arg_list COMMA arg_list"""
+    content[0] = content[1] + content[3]
 
 def p_arg_list_2(content):
     """arg_list : bool_expr"""
     content[0] = [content[1]]
 
-
 def p_arg_list_3(content):
+    """arg_list : NAME EQ bool_expr"""
+    content[0] = [astlib.KeywordArg(astlib.Name(content[1]), content[3])]
+
+def p_arg_list_4(content):
     """arg_list : empty"""
     content[0] = []
 

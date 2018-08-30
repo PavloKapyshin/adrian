@@ -188,6 +188,14 @@ class Else(Node):
         self._keys = ("body", )
 
 
+class KeywordArg(Node):
+
+    def __init__(self, name, expr):
+        self.name = name
+        self.expr = expr
+        self._keys = ("name", "expr")
+
+
 class FuncCall(Node):
 
     def __init__(self, name, args):
