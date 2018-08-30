@@ -188,6 +188,14 @@ class Else(Node):
         self._keys = ("body", )
 
 
+class KeywordArg(Node):
+
+    def __init__(self, name, expr):
+        self.name = name
+        self.expr = expr
+        self._keys = ("name", "expr")
+
+
 class FuncCall(Node):
 
     def __init__(self, name, args):
@@ -220,6 +228,15 @@ class Expr(Node):
         self.op = op
         self.right = right
         self._keys = ("left", "op", "right")
+
+
+class Slice(Node):
+
+    def __init__(self, base, start, end):
+        self.base = base
+        self.start = start
+        self.end = end
+        self._keys = ("base", "start", "end")
 
 
 class Subscript(Node):
@@ -315,6 +332,13 @@ class GenericType(Node):
 
 class PyObject(Node):
     pass
+
+
+class PyConstant(PyObject):
+
+    def __init__(self, name):
+        self.name = name
+        self._keys = ("name", )
 
 
 class PyType(PyObject):

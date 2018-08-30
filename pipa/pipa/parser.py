@@ -317,13 +317,22 @@ def p_impled_protocols_3(content):
     content[0] = []
 
 
+def p_names_in_func_parameters_1(content):
+    """names_in_func_parameters : NAME names_in_func_parameters"""
+    content[0] = [astlib.Name(content[1])] + content[2]
+
+def p_names_in_func_parameters_2(content):
+    """names_in_func_parameters : NAME"""
+    content[0] = [astlib.Name(content[1])]
+
+
 def p_func_parameters_1(content):
-    """func_parameters : NAME COLON type COMMA func_parameters"""
-    content[0] = [(astlib.Name(content[1]), content[3])] + content[5]
+    """func_parameters : names_in_func_parameters COLON type COMMA func_parameters"""
+    content[0] = [(content[1], content[3])] + content[5]
 
 def p_func_parameters_2(content):
-    """func_parameters : NAME COLON type"""
-    content[0] = [(astlib.Name(content[1]), content[3])]
+    """func_parameters : names_in_func_parameters COLON type"""
+    content[0] = [(content[1], content[3])]
 
 def p_func_parameters_3(content):
     """func_parameters : empty"""
@@ -348,6 +357,10 @@ def p_type_4(content):
          | type AND type
     """
     content[0] = astlib.TypeCombination(content[1], content[2], content[3])
+
+def p_type_5(content):
+    """type : type IS LPAREN types RPAREN"""
+    content[0] = astlib.TypeCombination(content[1], content[2], content[4])
 
 
 def p_types_1(content):
@@ -374,16 +387,18 @@ def p_names_3(content):
 
 
 def p_arg_list_1(content):
-    """arg_list : bool_expr COMMA arg_list"""
-    content[0] = [content[1]] + content[3]
-
+    """arg_list : arg_list COMMA arg_list"""
+    content[0] = content[1] + content[3]
 
 def p_arg_list_2(content):
     """arg_list : bool_expr"""
     content[0] = [content[1]]
 
-
 def p_arg_list_3(content):
+    """arg_list : NAME EQ bool_expr"""
+    content[0] = [astlib.KeywordArg(astlib.Name(content[1]), content[3])]
+
+def p_arg_list_4(content):
     """arg_list : empty"""
     content[0] = []
 
@@ -447,6 +462,10 @@ def p_expr_2(content):
     content[0] = astlib.Subscript(content[1], content[3])
 
 def p_expr_3(content):
+    """expr : factor LBRACKET expr COLON expr RBRACKET"""
+    content[0] = astlib.Slice(content[1], content[3], content[5])
+
+def p_expr_4(content):
     """expr : factor"""
     content[0] = content[1]
 

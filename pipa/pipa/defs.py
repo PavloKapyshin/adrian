@@ -80,12 +80,13 @@ FUNC_LEN = "len"
 FUNC_ZIP = "zip"
 FUNC_READ_FILE = "readFile"
 FUNC_WRITE_FILE = "writeFile"
+CONSTANT_ARGV = "argv"
 METHOD_SPLIT = "split"
 METHOD_VALUES = "values"
 METHOD_KEYS = "keys"
 METHOD_ITEMS = "items"
 
-PY_OBJS = (
+PY_FUNCS = (
     FUNC_PRINT, FUNC_LEN, FUNC_ZIP, FUNC_TO_INT, FUNC_TO_STR, FUNC_TO_SET,
     FUNC_TO_LIST, FUNC_READ_FILE, FUNC_WRITE_FILE, FUNC_ASSERT)
 
@@ -134,6 +135,7 @@ COMMON_REGEX = "".join([
 SELF = "self"
 SPEC_METHOD_GETITEM = "__getItem__"
 SPEC_METHOD_SETITEM = "__setItem__"
+SPEC_METHOD_SLICE = "__slice__"
 SPEC_METHOD_INIT = "__init__"
 SPEC_METHOD_ADD = "__add__"
 SPEC_METHOD_SUB = "__sub__"

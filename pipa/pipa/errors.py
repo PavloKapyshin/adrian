@@ -26,6 +26,7 @@ def _error_maker(message, *args_names):
 
 _CANNOT_FIND_FILE = "cannot find file {file}"
 
+_UNKNOWN_ARG = "unknown argument {argument}"
 _UNKNOWN_NAME = "unknown name {name}"
 _CANT_REASSIGN = "cannot reassign name {name}"
 _TYPE_MISMATCH = "types mismatched: {expr1} has type {type1}, {expr2} has type {type2}"
@@ -36,6 +37,7 @@ _SYNTAX_ERROR = "syntax error on {line}"
 
 cannot_find_file = _error_maker(_CANNOT_FIND_FILE, "file")
 
+unknown_arg = _error_maker(_UNKNOWN_ARG, "argument")
 unknown_name = _error_maker(_UNKNOWN_NAME, "name")
 cant_reassign = _error_maker(_CANT_REASSIGN, "name")
 type_mismatch = _error_maker(_TYPE_MISMATCH, "expr1", "type1", "expr2", "type2")

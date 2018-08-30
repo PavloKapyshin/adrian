@@ -79,15 +79,15 @@ struct Person is ConvertibleToString, ConvertibleToNumber {
 -- Functions
 fun someTypePrinter(data: Type1 or Type2 or Printable or ConvertibleToString): Void {
     if data is Type1 {
-        print("Got Type1: " + toString(Type1))
+        print("Got Type1: " + toString(data))
     } elif data is Type2 {
-        print("Got Type2: " + toString(Type2))
+        print("Got Type2: " + toString(data))
     } else {
         print(data)
     }
 }
 
-fun doSomeMath(data: Addable and Subtractable, other: Addable and Subtractable): Addable and Subtractable {
+fun doSomeMath(data: a is (Addable, Subtractable), other: a): a {
     return data + other - data
 }
 
@@ -148,7 +148,7 @@ print("")
 
 -- Struct and func usage
 someTypePrinter(Type1())
-someTypePrinter(Type2())
+someTypePrinter(data = Type2())
 someTypePrinter("Some other String")
 print(doSomeMath(1, 3))
 
@@ -217,7 +217,7 @@ if any([True, False]) {
     print("OK")
 }
 
-print(" ".join(["Splitted:", "Hello, world!", "Hello, world!".split(",")]))
+print(" ".join(iterable = ["Splitted:", "Hello, world!", "Hello, world!".split(by = ",")]))
 let justAVector: Vector(Object and ConvertibleToString) = [1, 2, 3, 4, "Hi"]
 justAVector.extend(["Joke", "Mike"])
 print(justAVector)

@@ -4,6 +4,13 @@ from .type_lib import infer_type, types_are_equal, is_super_type
 from .utils import A
 
 
+def get_name_alises(name, arg_decls):
+    for names, _ in arg_decls:
+        if name in names:
+            return names
+    errors.unknown_arg(name)
+
+
 def depends_on_self(expr):
     if expr in A(astlib.Name):
         return True if expr == defs.SELF else False
@@ -35,7 +42,7 @@ def default_init_method(struct_decl):
     field_inits = []
     args = []
     for field_decl in field_decls:
-        args.append((field_decl.name, field_decl.type_))
+        args.append(([field_decl.name], field_decl.type_))
         field_inits.append(
             astlib.Assignment(
                 astlib.StructPath([astlib.Name(defs.SELF), field_decl.name]),
@@ -252,18 +259,24 @@ class Interpreter(layers.Layer):
         elif info["node_type"] == astlib.NodeT.protocol:
             return astlib.GenericType(func_call.name, func_call.args)
         context.env.add_scope()
-        for (name, type_), expr in zip(info["args"], func_call.args):
-            context.env[name] = {
-                "node_type": astlib.NodeT.var,
-                "type": type_,
-                "expr": self.eval(expr)
-            }
+        for (names, type_), expr in zip(info["args"], func_call.args):
+            if expr in A(astlib.KeywordArg):
+                names = get_name_alises(expr.name, info["args"])
+                expr = expr.expr
+                type_ = infer_type(self.eval(expr))
+            for name in names:
+                context.env[name] = {
+                    "node_type": astlib.NodeT.var,
+                    "type": type_,
+                    "expr": self.eval(expr)
+                }
         return_val = self.b(info["body"])
         context.env.remove_scope()
         return return_val
 
     def method_call(self, base, func_call):
         converted_base = self.eval(base)
+        assert(converted_base in A(astlib.InstanceValue))
         type_ = infer_type(converted_base)
         if depends_on_self(base):
             args = [converted_base]
@@ -274,13 +287,22 @@ class Interpreter(layers.Layer):
         method_info = context.env[type_]["methods"][func_call.name]
         body = method_info["body"]
         context.env.add_scope()
-        for (name, type_), expr in zip(
-                [(astlib.Name(defs.SELF), type_)] + method_info["args"], args):
-            context.env[name] = {
-                "node_type": astlib.NodeT.var,
-                "type": type_,
-                "expr": expr
-            }
+        decl_args = [([astlib.Name(defs.SELF)], type_)] + method_info["args"]
+        for (names, type_), expr in zip(decl_args, args):
+            if expr in A(astlib.KeywordArg):
+                h = str(converted_base.type_)[:defs.MANGLING_LENGTH]
+                names = get_name_alises(
+                    astlib.Name(
+                        "_".join([h, str(expr.name)[defs.MANGLING_LENGTH+1:]])),
+                    decl_args)
+                expr = expr.expr
+                type_ = infer_type(expr)
+            for name in names:
+                context.env[name] = {
+                    "node_type": astlib.NodeT.var,
+                    "type": type_,
+                    "expr": expr
+                }
         result = self.b(body)
         context.env.remove_scope()
         return result
@@ -288,6 +310,15 @@ class Interpreter(layers.Layer):
     @layers.register(astlib.StructPath)
     def struct_path(self, struct_path):
         self.eval(struct_path)
+
+    def py_constant(self, constant):
+        if constant.name == defs.CONSTANT_ARGV:
+            import sys
+            argv = sys.argv
+            assert(all([elem in A(str) for elem in argv]))
+            return argv
+        else:
+            errors.later()
 
     @layers.register(astlib.PyFuncCall)
     def py_call(self, func_call):
@@ -357,6 +388,8 @@ class Interpreter(layers.Layer):
             return list(converted_base.keys())
         elif func_call.name == defs.METHOD_ITEMS:
             return list(converted_base.items())
+        elif func_call.name == defs.SPEC_METHOD_SLICE:
+            return converted_base[args[0]:args[1]]
         elif func_call.name == defs.SPEC_METHOD_GETITEM:
             if converted_base in A(list, str):
                 if args[0] < len(converted_base):
@@ -403,7 +436,6 @@ class Interpreter(layers.Layer):
                 return up
             return result
         else:
-            print(base, func_call)
             # support other methods
             errors.later()
 
@@ -433,6 +465,8 @@ class Interpreter(layers.Layer):
             return self.func_call(expr)
         elif expr in A(astlib.PyFuncCall, astlib.PyTypeCall):
             return self.py_call(expr)
+        elif expr in A(astlib.PyConstant):
+            return self.py_constant(expr)
         elif expr in A(astlib.StructPath):
             root, tail = expr.path[0], expr.path[1:]
             root_expr_raw = root
@@ -497,6 +531,14 @@ class Interpreter(layers.Layer):
                     self.eval(key): self.eval(val)
                     for key, val in expr.literal.items()}
             return expr.literal
+        elif expr in A(astlib.Slice):
+            method_name = defs.SPEC_METHOD_SLICE
+            base, args = expr.base, [expr.start, expr.end]
+            type_ = infer_type(self.eval(base))
+            if type_ in A(astlib.PyType):
+                return self.py_method_call(
+                    base, astlib.FuncCall(method_name, args))
+            return self.method_call(base, astlib.FuncCall(method_name, args))
         elif expr in A(astlib.Subscript):
             method_name = defs.SPEC_METHOD_GETITEM
             base, args = expr.base, [expr.index]
@@ -518,6 +560,8 @@ class Interpreter(layers.Layer):
                 return sub_expr is None
             return (types_are_equal(sub_type, super_type) or
                 is_super_type(sub_type, super_type))
+        elif expr in A(astlib.KeywordArg):
+            return astlib.KeywordArg(expr.name, self.eval(expr.expr))
         elif expr in A(
                 int, str, list, set, dict, bool, astlib.InstanceValue,
                 astlib.GenericType, astlib.PyType):
@@ -581,9 +625,10 @@ class Interpreter(layers.Layer):
                 for arg in expr.args])
         elif expr in A(astlib.Subscript):
             return self.eval(expr)
+        elif expr in A(astlib.Slice):
+            return self.eval(expr)
         elif expr in A(int, str, list, dict, set):
             return expr
         else:
-            print(expr)
             # support other exprs
             errors.later()

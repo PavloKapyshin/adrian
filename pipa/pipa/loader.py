@@ -67,8 +67,12 @@ def t(type_, hash_=None):
     elif type_ in A(astlib.Empty):
         return type_
     elif type_ in A(astlib.TypeCombination):
+        if type_.right in A(list):
+            right = [t(elem, hash_=hash_) for elem in type_.right]
+        else:
+            right = t(type_.right, hash_=hash_)
         return astlib.TypeCombination(
-            t(type_.left, hash_=hash_), type_.op, t(type_.right, hash_=hash_))
+            t(type_.left, hash_=hash_), type_.op, right)
     else:
         errors.later()
 
@@ -96,6 +100,19 @@ def e(expr, hash_=None):
             return astlib.PyFuncCall(name.name, args)
         elif name in A(astlib.PyType):
             return astlib.PyTypeCall(name.name, args)
+        if expr.name in A(astlib.ModuleMember):
+            h = name[:defs.MANGLING_LENGTH]
+            new_args = []
+            for arg in args:
+                if arg in A(astlib.KeywordArg):
+                    new_args.append(
+                        astlib.KeywordArg(
+                            astlib.Name(
+                                "_".join([str(h), str(arg.name)[defs.MANGLING_LENGTH+1:]])),
+                            arg.expr))
+                else:
+                    new_args.append(arg)
+            args = new_args
         return astlib.FuncCall(name, args)
     elif expr in A(astlib.Literal):
         if expr.type_ == astlib.LiteralT.vector:
@@ -116,9 +133,16 @@ def e(expr, hash_=None):
             e(expr.right, hash_=hash_))
     elif expr in A(astlib.Not):
         return astlib.Not(e(expr.expr))
+    elif expr in A(astlib.Slice):
+        return astlib.Slice(
+            e(expr.base, hash_=hash_), e(expr.start, hash_=hash_),
+            e(expr.end, hash_=hash_))
     elif expr in A(astlib.Subscript):
         return astlib.Subscript(
             e(expr.base, hash_=hash_), e(expr.index, hash_=hash_))
+    elif expr in A(astlib.KeywordArg):
+        return astlib.KeywordArg(
+            e(expr.name, hash_=hash_), e(expr.expr, hash_=hash_))
     elif expr in A(astlib.PyTypeCall):
         return astlib.PyTypeCall(expr.name, [e(arg) for arg in expr.args])
     elif expr in A(astlib.Empty):
@@ -140,8 +164,10 @@ def only_args(node, hash_=None):
 
 
 def make_py_object(node):
-    if node in defs.PY_OBJS:
+    if node in defs.PY_FUNCS:
         return astlib.PyFunc(node)
+    elif node == defs.CONSTANT_ARGV:
+        return astlib.PyConstant(node)
     return astlib.PyType(node)
 
 
@@ -181,18 +207,24 @@ class Loader(layers.Layer):
 
     @layers.register(astlib.FuncProtoDecl)
     def func_proto_declaration(self, decl):
-        args = [(n(name), t(type_)) for name, type_ in decl.args]
+        args = [
+            ([n(name) for name in names], t(type_))
+            for names, type_ in decl.args]
         yield astlib.FuncProtoDecl(n(decl.name), args, t(decl.rettype))
 
     @layers.register(astlib.FuncDecl)
     def func_declaration(self, decl):
-        args = [(n(name), t(type_)) for name, type_ in decl.args]
+        args = [
+            ([n(name) for name in names], t(type_))
+            for names, type_ in decl.args]
         yield astlib.FuncDecl(
             n(decl.name), args, t(decl.rettype), self.b(decl.body))
 
     @layers.register(astlib.MethodDecl)
     def method_declaration(self, decl):
-        args = [(n(name), t(type_)) for name, type_ in decl.args]
+        args = [
+            ([n(name) for name in names], t(type_))
+            for names, type_ in decl.args]
         yield astlib.MethodDecl(
             decl.name, args, t(decl.rettype), self.b(decl.body))
 
