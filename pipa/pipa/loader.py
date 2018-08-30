@@ -67,8 +67,12 @@ def t(type_, hash_=None):
     elif type_ in A(astlib.Empty):
         return type_
     elif type_ in A(astlib.TypeCombination):
+        if type_.right in A(list):
+            right = [t(elem, hash_=hash_) for elem in type_.right]
+        else:
+            right = t(type_.right, hash_=hash_)
         return astlib.TypeCombination(
-            t(type_.left, hash_=hash_), type_.op, t(type_.right, hash_=hash_))
+            t(type_.left, hash_=hash_), type_.op, right)
     else:
         errors.later()
 

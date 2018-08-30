@@ -1,11 +1,6 @@
 print(data = io#argv[1:length(io#argv)])
 print(", ".join(iterable = [1, 2, 3]))
 
-
-struct EmptyDummyType {
-    fun lol(element: String): String {
-        return element
-    }
+fun addSomething(elem1: a is (Addable), elem2: a): a {
+    return elem1 + elem2
 }
-
-print(EmptyDummyType().lol(element = "KOKOK"))

@@ -87,7 +87,7 @@ fun someTypePrinter(data: Type1 or Type2 or Printable or ConvertibleToString): V
     }
 }
 
-fun doSomeMath(data: Addable and Subtractable, other: Addable and Subtractable): Addable and Subtractable {
+fun doSomeMath(data: a is (Addable, Subtractable), other: a): a {
     return data + other - data
 }
 
