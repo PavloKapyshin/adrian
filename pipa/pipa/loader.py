@@ -207,18 +207,24 @@ class Loader(layers.Layer):
 
     @layers.register(astlib.FuncProtoDecl)
     def func_proto_declaration(self, decl):
-        args = [(n(name), t(type_)) for name, type_ in decl.args]
+        args = [
+            ([n(name) for name in names], t(type_))
+            for names, type_ in decl.args]
         yield astlib.FuncProtoDecl(n(decl.name), args, t(decl.rettype))
 
     @layers.register(astlib.FuncDecl)
     def func_declaration(self, decl):
-        args = [(n(name), t(type_)) for name, type_ in decl.args]
+        args = [
+            ([n(name) for name in names], t(type_))
+            for names, type_ in decl.args]
         yield astlib.FuncDecl(
             n(decl.name), args, t(decl.rettype), self.b(decl.body))
 
     @layers.register(astlib.MethodDecl)
     def method_declaration(self, decl):
-        args = [(n(name), t(type_)) for name, type_ in decl.args]
+        args = [
+            ([n(name) for name in names], t(type_))
+            for names, type_ in decl.args]
         yield astlib.MethodDecl(
             decl.name, args, t(decl.rettype), self.b(decl.body))
 

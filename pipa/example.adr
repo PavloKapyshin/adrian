@@ -1,5 +1,5 @@
 print(data = io#argv[1:length(io#argv)])
-print(", ".join(iterable = [1, 2, 3]))
+print(", ".join(iterable = [1, 2, 3]).split(separator = ", "))
 
 fun addSomething(elem1: a is (Addable), elem2: a): a {
     return elem1 + elem2

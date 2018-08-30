@@ -317,13 +317,22 @@ def p_impled_protocols_3(content):
     content[0] = []
 
 
+def p_names_in_func_parameters_1(content):
+    """names_in_func_parameters : NAME names_in_func_parameters"""
+    content[0] = [astlib.Name(content[1])] + content[2]
+
+def p_names_in_func_parameters_2(content):
+    """names_in_func_parameters : NAME"""
+    content[0] = [astlib.Name(content[1])]
+
+
 def p_func_parameters_1(content):
-    """func_parameters : NAME COLON type COMMA func_parameters"""
-    content[0] = [(astlib.Name(content[1]), content[3])] + content[5]
+    """func_parameters : names_in_func_parameters COLON type COMMA func_parameters"""
+    content[0] = [(content[1], content[3])] + content[5]
 
 def p_func_parameters_2(content):
-    """func_parameters : NAME COLON type"""
-    content[0] = [(astlib.Name(content[1]), content[3])]
+    """func_parameters : names_in_func_parameters COLON type"""
+    content[0] = [(content[1], content[3])]
 
 def p_func_parameters_3(content):
     """func_parameters : empty"""

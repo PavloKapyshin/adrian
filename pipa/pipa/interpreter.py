@@ -4,6 +4,13 @@ from .type_lib import infer_type, types_are_equal, is_super_type
 from .utils import A
 
 
+def get_name_alises(name, arg_decls):
+    for names, _ in arg_decls:
+        if name in names:
+            return names
+    errors.unknown_arg(name)
+
+
 def depends_on_self(expr):
     if expr in A(astlib.Name):
         return True if expr == defs.SELF else False
@@ -35,7 +42,7 @@ def default_init_method(struct_decl):
     field_inits = []
     args = []
     for field_decl in field_decls:
-        args.append((field_decl.name, field_decl.type_))
+        args.append(([field_decl.name], field_decl.type_))
         field_inits.append(
             astlib.Assignment(
                 astlib.StructPath([astlib.Name(defs.SELF), field_decl.name]),
@@ -252,16 +259,17 @@ class Interpreter(layers.Layer):
         elif info["node_type"] == astlib.NodeT.protocol:
             return astlib.GenericType(func_call.name, func_call.args)
         context.env.add_scope()
-        for (name, type_), expr in zip(info["args"], func_call.args):
+        for (names, type_), expr in zip(info["args"], func_call.args):
             if expr in A(astlib.KeywordArg):
-                name = expr.name
+                names = get_name_alises(expr.name, info["args"])
                 expr = expr.expr
                 type_ = infer_type(self.eval(expr))
-            context.env[name] = {
-                "node_type": astlib.NodeT.var,
-                "type": type_,
-                "expr": self.eval(expr)
-            }
+            for name in names:
+                context.env[name] = {
+                    "node_type": astlib.NodeT.var,
+                    "type": type_,
+                    "expr": self.eval(expr)
+                }
         return_val = self.b(info["body"])
         context.env.remove_scope()
         return return_val
@@ -279,19 +287,22 @@ class Interpreter(layers.Layer):
         method_info = context.env[type_]["methods"][func_call.name]
         body = method_info["body"]
         context.env.add_scope()
-        for (name, type_), expr in zip(
-                [(astlib.Name(defs.SELF), type_)] + method_info["args"], args):
+        decl_args = [([astlib.Name(defs.SELF)], type_)] + method_info["args"]
+        for (names, type_), expr in zip(decl_args, args):
             if expr in A(astlib.KeywordArg):
                 h = str(converted_base.type_)[:defs.MANGLING_LENGTH]
-                name = astlib.Name(
-                    "_".join([h, str(expr.name)[defs.MANGLING_LENGTH+1:]]))
+                names = get_name_alises(
+                    astlib.Name(
+                        "_".join([h, str(expr.name)[defs.MANGLING_LENGTH+1:]])),
+                    decl_args)
                 expr = expr.expr
                 type_ = infer_type(expr)
-            context.env[name] = {
-                "node_type": astlib.NodeT.var,
-                "type": type_,
-                "expr": expr
-            }
+            for name in names:
+                context.env[name] = {
+                    "node_type": astlib.NodeT.var,
+                    "type": type_,
+                    "expr": expr
+                }
         result = self.b(body)
         context.env.remove_scope()
         return result
@@ -425,7 +436,6 @@ class Interpreter(layers.Layer):
                 return up
             return result
         else:
-            print(base, func_call)
             # support other methods
             errors.later()
 
@@ -473,8 +483,6 @@ class Interpreter(layers.Layer):
                         root_expr_raw = root_expr
                         root_type = infer_type(root_expr)
                 else:
-                    if root_expr not in A(astlib.InstanceValue):
-                        print("why:", root_expr)
                     assert(root_expr in A(astlib.InstanceValue))
                     root_expr = root_expr.value[elem]
                     if root_expr_raw in A(astlib.StructPath):
@@ -622,6 +630,5 @@ class Interpreter(layers.Layer):
         elif expr in A(int, str, list, dict, set):
             return expr
         else:
-            print(expr)
             # support other exprs
             errors.later()

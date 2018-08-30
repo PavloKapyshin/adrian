@@ -311,8 +311,8 @@ extension String is Addable, Container(String), Iterable(String), Lengthable,
         return Some(String(element))
     }
 
-    fun split(by: String): Vector(String) {
-        let splitted: py#List = self.data.split(by.data)
+    fun split(by separator: String): Vector(String) {
+        let splitted: py#List = self.data.split(separator.data)
         let result: Vector(String) = Vector(py#List([]))
         for str in splitted {
             result.append(String(str))
