@@ -32,6 +32,7 @@ def complete_init_method(method_decl, struct_decl):
 
 
 def default_init_method(struct_decl):
+    hash_ = str(struct_decl.name)[:defs.MANGLING_LENGTH]
     self_decl = astlib.VarDecl(
         astlib.Name(defs.SELF), struct_decl.name,
         astlib.InstanceValue(struct_decl.name, {}))
@@ -42,11 +43,12 @@ def default_init_method(struct_decl):
     field_inits = []
     args = []
     for field_decl in field_decls:
-        args.append(([field_decl.name], field_decl.type_))
+        field_name = astlib.Name("_".join([hash_, str(field_decl.name)]))
+        args.append(([field_name], field_decl.type_))
         field_inits.append(
             astlib.Assignment(
                 astlib.StructPath([astlib.Name(defs.SELF), field_decl.name]),
-                "=", field_decl.name))
+                "=", field_name))
     return_self = astlib.Return(astlib.Name(defs.SELF))
     return astlib.MethodDecl(
         astlib.Name(defs.SPEC_METHOD_INIT), args, struct_decl.name,
