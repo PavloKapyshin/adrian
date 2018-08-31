@@ -1,3 +1,3 @@
 **WIP**
 
-padrian is an Adrian compiler written in python.
+pipa is an Adrian interpreter written in python.

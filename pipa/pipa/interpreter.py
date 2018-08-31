@@ -32,6 +32,7 @@ def complete_init_method(method_decl, struct_decl):
 
 
 def default_init_method(struct_decl):
+    hash_ = str(struct_decl.name)[:defs.MANGLING_LENGTH]
     self_decl = astlib.VarDecl(
         astlib.Name(defs.SELF), struct_decl.name,
         astlib.InstanceValue(struct_decl.name, {}))
@@ -42,11 +43,12 @@ def default_init_method(struct_decl):
     field_inits = []
     args = []
     for field_decl in field_decls:
-        args.append(([field_decl.name], field_decl.type_))
+        field_name = astlib.Name("_".join([hash_, str(field_decl.name)]))
+        args.append(([field_name], field_decl.type_))
         field_inits.append(
             astlib.Assignment(
                 astlib.StructPath([astlib.Name(defs.SELF), field_decl.name]),
-                "=", field_decl.name))
+                "=", field_name))
     return_self = astlib.Return(astlib.Name(defs.SELF))
     return astlib.MethodDecl(
         astlib.Name(defs.SPEC_METHOD_INIT), args, struct_decl.name,
@@ -126,7 +128,7 @@ class Interpreter(layers.Layer):
                     to_add.append(protocol_name)
             context.env[name]["implemented_protocols"].extend(to_add)
 
-        assert(decl.name in context.env)
+        assert (decl.name in context.env), decl.name
         _update_implemented_protocols(decl.name, decl.implemented_protocols)
         context.env.add_scope()
         context.parent_struct = decl.name
@@ -262,7 +264,7 @@ class Interpreter(layers.Layer):
     def func_call(self, func_call):
         info = context.env[func_call.name]
         if info["node_type"] in (astlib.NodeT.var, astlib.NodeT.let):
-            assert(info["expr"] in A(astlib.Function))
+            assert (info["expr"] in A(astlib.Function)), info["expr"]
             info = {
                 "node_type": astlib.NodeT.func,
                 "args": info["expr"].args,
@@ -386,6 +388,9 @@ class Interpreter(layers.Layer):
             assert(self.eval(func_call.args[0]))
         elif func_call.name == defs.FUNC_ZIP:
             return list(zip(*[self.eval(arg) for arg in func_call.args]))
+        elif func_call.name == defs.FUNC_EXIT:
+            import sys
+            sys.exit(self.eval(func_call.args[0]))
         elif func_call.name == defs.FUNC_READ_FILE:
             file_path = self.eval(func_call.args[0])
             with open(file_path, "r") as file:

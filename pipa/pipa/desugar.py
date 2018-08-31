@@ -41,8 +41,13 @@ def replace_name_references_for_for_stmt_translation(body, name):
         elif stmt in A(astlib.Return):
             return astlib.Return(_replace(stmt.expr))
         elif stmt in A(astlib.FuncCall):
-            return astlib.FuncCall(
-                stmt.name, [_replace(a) for a in stmt.args])
+            new_name = _replace(stmt.name)
+            args = [_replace(a) for a in stmt.args]
+            if new_name in A(astlib.StructPath):
+                return astlib.StructPath(
+                    new_name.path[:-1] + [
+                        astlib.FuncCall(new_name.path[-1], args)])
+            return astlib.FuncCall(new_name, args)
         elif stmt in A(astlib.StructPath):
             def _replace_path_member(path_member):
                 if path_member in A(astlib.Name):
@@ -163,11 +168,15 @@ class Desugar(layers.Layer):
 
     def struct_like_decl(self, decl):
         def _lookup_for_prelude_proto(protocol_name):
+            if protocol_name in A(astlib.GenericType):
+                return astlib.GenericType(
+                    _lookup_for_prelude_proto(protocol_name.base),
+                    [_lookup_for_prelude_proto(p) for p in protocol_name.parameters])
             if protocol_name in defs.PRELUDE_OBJS:
                 return astlib.ModuleMember(defs.MODULE_PRELUDE, protocol_name)
             return protocol_name
         return type(decl)(
-            decl.name, decl.parameters,
+            _lookup_for_prelude_proto(decl.name), decl.parameters,
             [_lookup_for_prelude_proto(p) for p in decl.implemented_protocols],
             self.b(decl.body))
 
@@ -216,8 +225,10 @@ class Desugar(layers.Layer):
 
     @layers.register(astlib.Cond)
     def cond(self, stmt):
+        decls, if_stmt = self.if_stmt(stmt.if_stmt)
+        yield from decls
         yield astlib.Cond(
-            self.if_stmt(stmt.if_stmt),
+            if_stmt,
             [self.elif_stmt(elif_) for elif_ in stmt.elifs],
             (None if stmt.else_stmt is None
                 else self.else_stmt(stmt.else_stmt)))
@@ -266,7 +277,21 @@ class Desugar(layers.Layer):
         yield e(struct_path)
 
     def if_stmt(self, stmt):
-        return astlib.If(e(stmt.expr), self.b(stmt.body))
+        if stmt.expr in A(astlib.LetDecl):
+            tmp_name = astlib.Name(
+                defs.TMP_FMT_STRING.format(context.tmp_counter))
+            context.tmp_counter += 1
+            return (
+                [astlib.LetDecl(tmp_name, astlib.Empty(), e(stmt.expr.expr))],
+                astlib.If(
+                    e(astlib.Expr(tmp_name, "is", astlib.Name(defs.TYPE_SOME))),
+                    [astlib.LetDecl(
+                        stmt.expr.name, astlib.Empty(),
+                        astlib.StructPath([
+                            tmp_name,
+                            astlib.Name(
+                                defs.FIELD_OF_SOME)]))] + self.b(stmt.body)))
+        return [], astlib.If(e(stmt.expr), self.b(stmt.body))
 
     def elif_stmt(self, stmt):
         return astlib.Elif(e(stmt.expr), self.b(stmt.body))

@@ -81,7 +81,7 @@ def t(type_, hash_=None):
 
 def e(expr, hash_=None):
     hash_ = hash_ or context.main_file_hash
-    if expr in A(astlib.Name):
+    if expr in A(astlib.Name, str):
         if expr in (defs.SELF, defs.CONSTANT_TRUE, defs.CONSTANT_FALSE):
             return expr
         return n(expr, hash_=hash_)
@@ -182,8 +182,12 @@ class Loader(layers.Layer):
         return type(decl)(n(decl.name), t(decl.type_), e(decl.expr))
 
     def struct_like_decl(self, decl):
+        if decl.name in A(astlib.ModuleMember):
+            name = e(decl.name)
+        else:
+            name = n(decl.name)
         return type(decl)(
-            n(decl.name), decl.parameters,
+            name, decl.parameters,
             [t(impled) for impled in decl.implemented_protocols],
             self.b(decl.body))
 

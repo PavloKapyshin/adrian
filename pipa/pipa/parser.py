@@ -39,7 +39,9 @@ _TOKENS = {
     ":": "COLON",
     ",": "COMMA",
     ".": "DOT",
-    "#": "HASH"
+    "#": "HASH",
+    "?": "QUESTION",
+    "!": "EXCLAMATION"
 }
 
 tokens = (
@@ -49,7 +51,7 @@ tokens = (
  ) + tuple(_TOKENS.values()) + tuple(_RESERVED_WORDS.values())
 
 
-def _escape_tok_regex(regex, escape=set("#.{}()[]*+")):
+def _escape_tok_regex(regex, escape=set("#.{}()[]*+?")):
     """Escape chars in regex string if they are in escape set."""
     for char in regex:
         if char in escape:
@@ -239,8 +241,13 @@ def p_while_stmt(content):
     content[0] = astlib.While(content[2], content[4])
 
 
-def p_cond_stmt(content):
+def p_cond_stmt_1(content):
     """cond_stmt : IF bool_expr LBRACE ast RBRACE opt_elifs opt_else"""
+    content[0] = astlib.Cond(
+        astlib.If(content[2], content[4]), content[6], content[7])
+
+def p_cond_stmt_2(content):
+    """cond_stmt : IF let_decl LBRACE ast RBRACE opt_elifs opt_else"""
     content[0] = astlib.Cond(
         astlib.If(content[2], content[4]), content[6], content[7])
 
@@ -361,6 +368,11 @@ def p_type_4(content):
 def p_type_5(content):
     """type : type IS LPAREN types RPAREN"""
     content[0] = astlib.TypeCombination(content[1], content[2], content[4])
+
+def p_type_6(content):
+    """type : type QUESTION"""
+    content[0] = astlib.GenericType(
+        astlib.Name(defs.TYPE_MAYBE), [content[1]])
 
 
 def p_types_1(content):
@@ -491,9 +503,12 @@ def p_factor_2(content):
     content[0] = astlib.StructPath(content[0])
 
 def p_factor_3(content):
-    """
-    factor : atom
-    """
+    """factor : factor EXCLAMATION"""
+    content[0] = astlib.StructPath(
+        [content[1], astlib.Name(defs.FIELD_OF_SOME)])
+
+def p_factor_4(content):
+    """factor : atom"""
     content[0] = content[1]
 
 
