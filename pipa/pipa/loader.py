@@ -59,6 +59,8 @@ def t(type_, hash_=None):
     elif type_ in A(astlib.Name):
         if type_ == defs.TYPE_VOID:
             return type_
+        elif type_ == defs.TYPE_FUNCTION:
+            return type_
         return n(type_, hash_)
     elif type_ in A(astlib.GenericType):
         return astlib.GenericType(

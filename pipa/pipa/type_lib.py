@@ -56,6 +56,8 @@ def infer_type(expr):
         return astlib.Name(defs.TYPE_VOID)
     elif expr in A(astlib.GenericType):
         return expr
+    elif expr in A(astlib.Function):
+        return expr.rettype
     else:
         errors.later()
 
