@@ -1,26 +1,8 @@
-struct Person {
-    firstName: String
-    secondName: String
-    age: Number
-    printMe: Function(Void)
+let list = [1, 2, 3, 4, 5]
+let possibleResult: Number? = list[0]
 
-    fun __init__(firstName: String, secondName: String, age: Number, printMe: Function(Void)): Void {
-        self.firstName = firstName
-        self.secondName = secondName
-        self.age = age
-        self.printMe = printMe
-    }
+if let result = possibleResult {
+    print(result)
+} else {
+    print("Some error here...")
 }
-
-fun printMike(): Void {
-    print(" ".join([self.firstName, self.secondName]))
-}
-
-fun anotherPrintingFunc(): Void {
-    print(" ".join([self.firstName, self.secondName, "age =", self.age]))
-}
-
-let mike = Person("Mike", "Joker", 25, printMe = printMike)
-mike.printMe()
-mike.printMe = anotherPrintingFunc
-mike.printMe()

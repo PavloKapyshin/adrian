@@ -216,8 +216,10 @@ class Desugar(layers.Layer):
 
     @layers.register(astlib.Cond)
     def cond(self, stmt):
+        decls, if_stmt = self.if_stmt(stmt.if_stmt)
+        yield from decls
         yield astlib.Cond(
-            self.if_stmt(stmt.if_stmt),
+            if_stmt,
             [self.elif_stmt(elif_) for elif_ in stmt.elifs],
             (None if stmt.else_stmt is None
                 else self.else_stmt(stmt.else_stmt)))
@@ -266,7 +268,21 @@ class Desugar(layers.Layer):
         yield e(struct_path)
 
     def if_stmt(self, stmt):
-        return astlib.If(e(stmt.expr), self.b(stmt.body))
+        if stmt.expr in A(astlib.LetDecl):
+            tmp_name = astlib.Name(
+                defs.TMP_FMT_STRING.format(context.tmp_counter))
+            context.tmp_counter += 1
+            return (
+                [astlib.LetDecl(tmp_name, astlib.Empty(), e(stmt.expr.expr))],
+                astlib.If(
+                    e(astlib.Expr(tmp_name, "is", astlib.Name(defs.TYPE_SOME))),
+                    [astlib.LetDecl(
+                        stmt.expr.name, astlib.Empty(),
+                        astlib.StructPath([
+                            tmp_name,
+                            astlib.Name(
+                                defs.FIELD_OF_SOME)]))] + self.b(stmt.body)))
+        return [], astlib.If(e(stmt.expr), self.b(stmt.body))
 
     def elif_stmt(self, stmt):
         return astlib.Elif(e(stmt.expr), self.b(stmt.body))
