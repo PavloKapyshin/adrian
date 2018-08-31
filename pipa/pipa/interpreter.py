@@ -640,6 +640,8 @@ class Interpreter(layers.Layer):
 
     def _inline_references_of_name(self, expr, name):
         if expr in A(astlib.Name):
+            if expr in (defs.CONSTANT_TRUE, defs.CONSTANT_FALSE):
+                return expr
             info = context.env[expr]
             if info["node_type"] == astlib.NodeT.func:
                 return expr

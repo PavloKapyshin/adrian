@@ -335,6 +335,36 @@ extension String is Addable, Container(String), Iterable(String), Lengthable,
         }
         return String(result)
     }
+
+    fun format(changes: Dict(String, String)): String {
+        let result: Vector(String) = Vector(py#List([]))
+        var buffer: Vector(String) = Vector(py#List([]))
+        var key: Vector(String) = Vector(py#List([]))
+        var needToAppendKey: Bool = False
+        for char in self.data {
+            if char == py#Str("{") {
+                needToAppendKey = True
+                result.append(String(py#Str("")).join(buffer))
+                buffer = Vector(py#List([]))
+            } elif char == py#Str("}") {
+                needToAppendKey = False
+                let joinedKey = String(py#Str("")).join(key)
+                let possibleValue = changes[joinedKey]
+                if possibleValue is Some {
+                    result.append(possibleValue.data)
+                } else {
+                    result.append(String(py#Str("{") + joinedKey.data + py#Str("}")))
+                }
+                key = Vector(py#List([]))
+            } elif needToAppendKey {
+                key.append(String(char))
+            } else {
+                buffer.append(String(char))
+            }
+        }
+        result.append(String(py#Str("")).join(buffer))
+        return String(py#Str("")).join(result)
+    }
 }
 
 extension Vector(a) is ConvertibleToVector(a), ConvertibleToString,
@@ -433,7 +463,8 @@ extension Vector(a) is ConvertibleToVector(a), ConvertibleToString,
 
 extension Set(a) is Iterable(a), Addable, ConvertibleToVector(a),
                     ConvertibleToSet(a), ConvertibleToString, Eq,
-                    Container(a), Lengthable, Subtractable {
+                    Container(a), Lengthable, Subtractable,
+                    ConvertibleToDict(a, a) {
     fun __next__(): Maybe(a) {
         for element in self.data {
             if not (element in self.iterated) {
@@ -471,6 +502,14 @@ extension Set(a) is Iterable(a), Addable, ConvertibleToVector(a),
 
     fun __toVector__(): Vector(a) {
         return Vector(py#toList(self.data))
+    }
+
+    fun __toDict__(): Dict(a, a) {
+        let result: Dict(a, a) = Dict(py#Dict({}))
+        for elem in self.data {
+            result[elem] = elem
+        }
+        return result
     }
 
     fun __toString__(): String {
