@@ -50,3 +50,6 @@ OK
 Splitted: Hello, world! ['Hello', ' world!']
 [1, 2, 3, 4, 'Hi', 'Joke', 'Mike']
 {1}
+
+[2, 3, 4, 5, 6]
+[3, 4, 5, 6, 7]

@@ -67,12 +67,15 @@ class Interpreter(layers.Layer):
 
     @layers.register(astlib.FuncDecl)
     def func_declaration(self, decl):
+        args = []
+        for arg_names, _ in decl.args:
+            args.extend(arg_names)
         context.env[decl.name] = {
             "node_type": astlib.NodeT.func,
             "args": decl.args,
             "rettype": decl.rettype,
             "body": [
-                self.replace_name_with_possible_variables(stmt)
+                self.replace_name_with_possible_variables(stmt, args)
                 for stmt in decl.body]
         }
 
@@ -150,7 +153,9 @@ class Interpreter(layers.Layer):
     def func_proto_declaration(self, decl):
         assert(context.parent_struct is not None)
         assert(context.parent_struct in context.env)
-        assert(context.env[context.parent_struct]["node_type"] == astlib.NodeT.protocol)
+        assert(
+            (context.env[context.parent_struct]["node_type"] ==
+                astlib.NodeT.protocol))
         context.env[context.parent_struct]["methods"][decl.name] = {
             "args": decl.args,
             "rettype": decl.rettype
@@ -468,8 +473,6 @@ class Interpreter(layers.Layer):
             if expr in (defs.CONSTANT_TRUE, defs.CONSTANT_FALSE):
                 return (True if expr == defs.CONSTANT_TRUE else False)
             info = context.env[expr]
-            if info is None:
-                print(expr)
             if info["node_type"] in (astlib.NodeT.var, astlib.NodeT.let):
                 return self.eval(info["expr"])
             elif info["node_type"] == astlib.NodeT.func:
@@ -652,68 +655,71 @@ class Interpreter(layers.Layer):
             # support other exprs
             errors.later()
 
-    def replace_name_with_possible_variables(self, stmt):
+    def replace_name_with_possible_variables(self, stmt, args):
         if stmt in A(astlib.VarDecl, astlib.LetDecl):
             return type(stmt)(
                 stmt.name, stmt.type_,
-                self.replace_name_with_possible_variables(stmt.expr))
+                self.replace_name_with_possible_variables(stmt.expr, args))
         elif stmt in A(astlib.FuncCall):
             return astlib.FuncCall(
                 stmt.name,
-                [self.replace_name_with_possible_variables(arg)
+                [self.replace_name_with_possible_variables(arg, args)
                 for arg in stmt.args])
         elif stmt in A(astlib.Assignment):
             return astlib.Assignment(
                 stmt.left, stmt.op,
-                self.replace_name_with_possible_variables(stmt.right))
+                self.replace_name_with_possible_variables(stmt.right, args))
         elif stmt in A(astlib.For):
             return astlib.For(
                 stmt.names,
-                self.replace_name_with_possible_variables(stmt.container),
-                [self.replace_name_with_possible_variables(s)
+                self.replace_name_with_possible_variables(stmt.container, args),
+                [self.replace_name_with_possible_variables(s, args)
                 for s in stmt.body])
         elif stmt in A(astlib.While):
             return astlib.While(
-                self.replace_name_with_possible_variables(stmt.expr),
-                [self.replace_name_with_possible_variables(s)
+                self.replace_name_with_possible_variables(stmt.expr, args),
+                [self.replace_name_with_possible_variables(s, args)
                 for s in stmt.body])
         elif stmt in A(astlib.Cond):
             return astlib.Cond(
-                self.replace_name_with_possible_variables(stmt.if_stmt),
-                [self.replace_name_with_possible_variables(elif_)
+                self.replace_name_with_possible_variables(stmt.if_stmt, args),
+                [self.replace_name_with_possible_variables(elif_, args)
                 for elif_ in stmt.elifs],
-                (self.replace_name_with_possible_variables(stmt.else_stmt)
+                (self.replace_name_with_possible_variables(stmt.else_stmt, args)
                     if stmt.else_stmt is not None else None))
         elif stmt in A(astlib.If):
             return astlib.If(
-                self.replace_name_with_possible_variables(stmt.expr),
-                [self.replace_name_with_possible_variables(s)
+                self.replace_name_with_possible_variables(stmt.expr, args),
+                [self.replace_name_with_possible_variables(s, args)
                 for s in stmt.body])
         elif stmt in A(astlib.Elif):
             return astlib.Elif(
-                self.replace_name_with_possible_variables(stmt.expr),
-                [self.replace_name_with_possible_variables(s)
+                self.replace_name_with_possible_variables(stmt.expr, args),
+                [self.replace_name_with_possible_variables(s, args)
                 for s in stmt.body])
         elif stmt in A(astlib.Else):
             return astlib.Else(
-                [self.replace_name_with_possible_variables(s)
+                [self.replace_name_with_possible_variables(s, args)
                 for s in stmt.body])
         elif stmt in A(astlib.Return):
             return astlib.Return(
-                self.replace_name_with_possible_variables(stmt.expr))
+                self.replace_name_with_possible_variables(stmt.expr, args))
         elif stmt in A(astlib.FuncDecl):
+            new_args = []
+            for arg_names, _ in stmt.args:
+                new_args.extend(arg_names)
             return astlib.FuncDecl(
                 stmt.name, stmt.args, stmt.rettype,
-                [self.replace_name_with_possible_variables(s)
+                [self.replace_name_with_possible_variables(s, args + new_args)
                 for s in stmt.body])
         elif stmt in A(astlib.StructPath):
             return astlib.StructPath([
-                self.replace_name_with_possible_variables(s)
+                self.replace_name_with_possible_variables(s, args)
                 for s in stmt.path])
         elif stmt in A(astlib.PyCall):
             return type(stmt)(
                 stmt.name,
-                [self.replace_name_with_possible_variables(a)
+                [self.replace_name_with_possible_variables(a, args)
                 for a in stmt.args])
         elif stmt in A(astlib.Name):
             info = context.env[stmt]
@@ -722,28 +728,29 @@ class Interpreter(layers.Layer):
             elif info["node_type"] == astlib.NodeT.func:
                 return astlib.Function(
                     info["args"], info["rettype"], info["body"])
-            elif info["node_type"] in (astlib.NodeT.let, astlib.NodeT.var):
+            elif (info["node_type"] in (astlib.NodeT.let, astlib.NodeT.var) and
+                    stmt not in args):
                 return info["expr"]
             return stmt
         elif stmt in A(astlib.Not):
             return astlib.Not(
-                self.replace_name_with_possible_variables(stmt.expr))
+                self.replace_name_with_possible_variables(stmt.expr, args))
         elif stmt in A(astlib.Is):
             return astlib.Is(
-                self.replace_name_with_possible_variables(stmt.sub_expr),
-                self.replace_name_with_possible_variables(stmt.super_expr))
+                self.replace_name_with_possible_variables(stmt.sub_expr, args),
+                self.replace_name_with_possible_variables(stmt.super_expr, args))
         elif stmt in A(astlib.Subscript):
             return astlib.Subscript(
-                self.replace_name_with_possible_variables(stmt.base),
-                self.replace_name_with_possible_variables(stmt.index))
+                self.replace_name_with_possible_variables(stmt.base, args),
+                self.replace_name_with_possible_variables(stmt.index, args))
         elif stmt in A(astlib.Slice):
             return astlib.Slice(
-                self.replace_name_with_possible_variables(stmt.base),
-                self.replace_name_with_possible_variables(stmt.start),
-                self.replace_name_with_possible_variables(stmt.end))
+                self.replace_name_with_possible_variables(stmt.base, args),
+                self.replace_name_with_possible_variables(stmt.start, args),
+                self.replace_name_with_possible_variables(stmt.end, args))
         elif stmt in A(astlib.Expr):
             return astlib.Expr(
-                self.replace_name_with_possible_variables(stmt.left),
+                self.replace_name_with_possible_variables(stmt.left, args),
                 stmt.op,
-                self.replace_name_with_possible_variables(stmt.right))
+                self.replace_name_with_possible_variables(stmt.right, args))
         return stmt
