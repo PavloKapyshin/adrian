@@ -264,7 +264,7 @@ class Interpreter(layers.Layer):
     def func_call(self, func_call):
         info = context.env[func_call.name]
         if info["node_type"] in (astlib.NodeT.var, astlib.NodeT.let):
-            assert(info["expr"] in A(astlib.Function))
+            assert (info["expr"] in A(astlib.Function)), info["expr"]
             info = {
                 "node_type": astlib.NodeT.func,
                 "args": info["expr"].args,
@@ -388,6 +388,9 @@ class Interpreter(layers.Layer):
             assert(self.eval(func_call.args[0]))
         elif func_call.name == defs.FUNC_ZIP:
             return list(zip(*[self.eval(arg) for arg in func_call.args]))
+        elif func_call.name == defs.FUNC_EXIT:
+            import sys
+            sys.exit(self.eval(func_call.args[0]))
         elif func_call.name == defs.FUNC_READ_FILE:
             file_path = self.eval(func_call.args[0])
             with open(file_path, "r") as file:

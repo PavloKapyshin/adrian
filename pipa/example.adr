@@ -1,15 +1,11 @@
-extension Vector(a) {
-    fun map(func: Function(a, b)): Vector(b) {
-        let result: Vector(b) = []
-        for elem in self {
-            result.append(func(elem))
-        }
-        return result
-    }
+fun testStringAsContainer(): testing#Status {
+    return testing#assertTrue("a" in "ant", "must work")
 }
 
-fun addOne(n: Number): Number {
-    return n + 1
-}
 
-print([1, 2, 3].map(addOne))
+let result = testing#run([testStringAsContainer])
+if result is testing#Ok {
+    print("Tests have passed")
+} else {
+    print(result.message)
+}

@@ -1,0 +1,58 @@
+protocol Status {
+    description: String
+    message: String
+}
+
+struct Ok is Status {
+    description: String
+    message: String
+}
+
+struct Fail is Status {
+    description: String
+    message: String
+}
+
+
+fun assertEqual(got: a is (Eq, ConvertibleToString), expected: a, description: String): Status {
+    if got == expected {
+        return Ok(description, message = "Congratulations :)")
+    }
+    return Fail(description, message = " ".join(["FAIL:", toString(got), "!=", toString(expected)]))
+}
+
+
+fun assertNotEqual(got: a is (Eq, ConvertibleToString), expected: a, description: String): Status {
+    if got != expected {
+        return Ok(description, message = "Congratulations :)")
+    }
+    return Fail(description, message = " ".join(["FAIL:", toString(got), "==", toString(expected)]))
+}
+
+
+fun assertTrue(got: Bool, description: String): Status {
+    if got == True {
+        return Ok(description, message = "Congratulations :)")
+    }
+    return Fail(description, message = " ".join(["FAIL:", "got False"]))
+}
+
+
+fun assertFalse(got: Bool, description: String): Status {
+    if got == False {
+        return Ok(description, message = "Congratulations :)")
+    }
+    return Fail(
+        description, message = " ".join(["FAIL:", "got True"]))
+}
+
+
+fun run(tests: Vector(Function(Status))): Status {
+    for test in tests {
+        let result = test()
+        if result is Fail {
+            return result
+        }
+    }
+    return Ok(description = "Passed", message = "Congratulations :)")
+}

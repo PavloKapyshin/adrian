@@ -41,8 +41,13 @@ def replace_name_references_for_for_stmt_translation(body, name):
         elif stmt in A(astlib.Return):
             return astlib.Return(_replace(stmt.expr))
         elif stmt in A(astlib.FuncCall):
-            return astlib.FuncCall(
-                stmt.name, [_replace(a) for a in stmt.args])
+            new_name = _replace(stmt.name)
+            args = [_replace(a) for a in stmt.args]
+            if new_name in A(astlib.StructPath):
+                return astlib.StructPath(
+                    new_name.path[:-1] + [
+                        astlib.FuncCall(new_name.path[-1], args)])
+            return astlib.FuncCall(new_name, args)
         elif stmt in A(astlib.StructPath):
             def _replace_path_member(path_member):
                 if path_member in A(astlib.Name):
