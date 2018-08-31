@@ -71,7 +71,9 @@ class Interpreter(layers.Layer):
             "node_type": astlib.NodeT.func,
             "args": decl.args,
             "rettype": decl.rettype,
-            "body": decl.body
+            "body": [
+                self.replace_name_with_possible_variables(stmt)
+                for stmt in decl.body]
         }
 
     @layers.register(astlib.MethodDecl)
@@ -254,7 +256,15 @@ class Interpreter(layers.Layer):
     @layers.register(astlib.FuncCall)
     def func_call(self, func_call):
         info = context.env[func_call.name]
-        if info["node_type"] == astlib.NodeT.struct:
+        if info["node_type"] in (astlib.NodeT.var, astlib.NodeT.let):
+            assert(info["expr"] in A(astlib.Function))
+            info = {
+                "node_type": astlib.NodeT.func,
+                "args": info["expr"].args,
+                "rettype": info["expr"].rettype,
+                "body": info["expr"].body
+            }
+        elif info["node_type"] == astlib.NodeT.struct:
             info = info["methods"][defs.SPEC_METHOD_INIT]
         elif info["node_type"] == astlib.NodeT.protocol:
             return astlib.GenericType(func_call.name, func_call.args)
@@ -458,8 +468,14 @@ class Interpreter(layers.Layer):
             if expr in (defs.CONSTANT_TRUE, defs.CONSTANT_FALSE):
                 return (True if expr == defs.CONSTANT_TRUE else False)
             info = context.env[expr]
+            if info is None:
+                print(expr)
             if info["node_type"] in (astlib.NodeT.var, astlib.NodeT.let):
-                return self.eval(context.env[expr]["expr"])
+                return self.eval(info["expr"])
+            elif info["node_type"] == astlib.NodeT.func:
+                return astlib.Function(
+                    args=info["args"], rettype=info["rettype"],
+                    body=info["body"])
             return expr
         elif expr in A(astlib.FuncCall):
             return self.func_call(expr)
@@ -564,7 +580,7 @@ class Interpreter(layers.Layer):
             return astlib.KeywordArg(expr.name, self.eval(expr.expr))
         elif expr in A(
                 int, str, list, set, dict, bool, astlib.InstanceValue,
-                astlib.GenericType, astlib.PyType):
+                astlib.GenericType, astlib.PyType, astlib.Function):
             return expr
         elif expr is None:
             return None
@@ -607,7 +623,10 @@ class Interpreter(layers.Layer):
 
     def _inline_references_of_name(self, expr, name):
         if expr in A(astlib.Name):
-            return context.env[expr]["expr"] if expr == name else expr
+            info = context.env[expr]
+            if info["node_type"] == astlib.NodeT.func:
+                return expr
+            return info["expr"] if expr == name else expr
         elif expr in A(astlib.Expr):
             return astlib.Expr(
                 self._inline_references_of_name(expr.left, name), expr.op,
@@ -632,3 +651,99 @@ class Interpreter(layers.Layer):
         else:
             # support other exprs
             errors.later()
+
+    def replace_name_with_possible_variables(self, stmt):
+        if stmt in A(astlib.VarDecl, astlib.LetDecl):
+            return type(stmt)(
+                stmt.name, stmt.type_,
+                self.replace_name_with_possible_variables(stmt.expr))
+        elif stmt in A(astlib.FuncCall):
+            return astlib.FuncCall(
+                stmt.name,
+                [self.replace_name_with_possible_variables(arg)
+                for arg in stmt.args])
+        elif stmt in A(astlib.Assignment):
+            return astlib.Assignment(
+                stmt.left, stmt.op,
+                self.replace_name_with_possible_variables(stmt.right))
+        elif stmt in A(astlib.For):
+            return astlib.For(
+                stmt.names,
+                self.replace_name_with_possible_variables(stmt.container),
+                [self.replace_name_with_possible_variables(s)
+                for s in stmt.body])
+        elif stmt in A(astlib.While):
+            return astlib.While(
+                self.replace_name_with_possible_variables(stmt.expr),
+                [self.replace_name_with_possible_variables(s)
+                for s in stmt.body])
+        elif stmt in A(astlib.Cond):
+            return astlib.Cond(
+                self.replace_name_with_possible_variables(stmt.if_stmt),
+                [self.replace_name_with_possible_variables(elif_)
+                for elif_ in stmt.elifs],
+                (self.replace_name_with_possible_variables(stmt.else_stmt)
+                    if stmt.else_stmt is not None else None))
+        elif stmt in A(astlib.If):
+            return astlib.If(
+                self.replace_name_with_possible_variables(stmt.expr),
+                [self.replace_name_with_possible_variables(s)
+                for s in stmt.body])
+        elif stmt in A(astlib.Elif):
+            return astlib.Elif(
+                self.replace_name_with_possible_variables(stmt.expr),
+                [self.replace_name_with_possible_variables(s)
+                for s in stmt.body])
+        elif stmt in A(astlib.Else):
+            return astlib.Else(
+                [self.replace_name_with_possible_variables(s)
+                for s in stmt.body])
+        elif stmt in A(astlib.Return):
+            return astlib.Return(
+                self.replace_name_with_possible_variables(stmt.expr))
+        elif stmt in A(astlib.FuncDecl):
+            return astlib.FuncDecl(
+                stmt.name, stmt.args, stmt.rettype,
+                [self.replace_name_with_possible_variables(s)
+                for s in stmt.body])
+        elif stmt in A(astlib.StructPath):
+            return astlib.StructPath([
+                self.replace_name_with_possible_variables(s)
+                for s in stmt.path])
+        elif stmt in A(astlib.PyCall):
+            return type(stmt)(
+                stmt.name,
+                [self.replace_name_with_possible_variables(a)
+                for a in stmt.args])
+        elif stmt in A(astlib.Name):
+            info = context.env[stmt]
+            if info is None:
+                return stmt
+            elif info["node_type"] == astlib.NodeT.func:
+                return astlib.Function(
+                    info["args"], info["rettype"], info["body"])
+            elif info["node_type"] in (astlib.NodeT.let, astlib.NodeT.var):
+                return info["expr"]
+            return stmt
+        elif stmt in A(astlib.Not):
+            return astlib.Not(
+                self.replace_name_with_possible_variables(stmt.expr))
+        elif stmt in A(astlib.Is):
+            return astlib.Is(
+                self.replace_name_with_possible_variables(stmt.sub_expr),
+                self.replace_name_with_possible_variables(stmt.super_expr))
+        elif stmt in A(astlib.Subscript):
+            return astlib.Subscript(
+                self.replace_name_with_possible_variables(stmt.base),
+                self.replace_name_with_possible_variables(stmt.index))
+        elif stmt in A(astlib.Slice):
+            return astlib.Slice(
+                self.replace_name_with_possible_variables(stmt.base),
+                self.replace_name_with_possible_variables(stmt.start),
+                self.replace_name_with_possible_variables(stmt.end))
+        elif stmt in A(astlib.Expr):
+            return astlib.Expr(
+                self.replace_name_with_possible_variables(stmt.left),
+                stmt.op,
+                self.replace_name_with_possible_variables(stmt.right))
+        return stmt

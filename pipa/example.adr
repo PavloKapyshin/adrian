@@ -1,8 +1,27 @@
-print(io#argv[1:length(io#argv)])
-print(", ".join(iterable = [1, 2, 3]).split(by = ", "))
-
-fun addSomething(elem1 first: a is (Addable), elem2 second: a): a {
-    return elem1 + elem2
+fun map(transformer: Function(a, b), iterable: Iterable(a)): Vector(b) {
+    let result: Vector(b) = []
+    for element in iterable {
+        result.append(transformer(element))
+    }
+    return result
 }
 
-print(addSomething(1, second = 2))
+
+fun addFunctionMaker(a: Number): Function(Number, Number) {
+    fun helper(b: Number): Number {
+        return a + b
+    }
+    return helper
+}
+
+
+fun addOne(n: Number): Number {
+    return n + 1
+}
+
+
+let addTwo = addFunctionMaker(a = 2)
+
+
+print(map(addOne, [1, 2, 3, 4, 5]))
+print(map(addTwo, [1, 2, 3, 4, 5]))

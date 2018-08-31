@@ -196,6 +196,15 @@ class KeywordArg(Node):
         self._keys = ("name", "expr")
 
 
+class Function(Node):
+
+    def __init__(self, args, rettype, body):
+        self.args = args
+        self.rettype = rettype
+        self.body = body
+        self._keys = ("args", "rettype", "body")
+
+
 class FuncCall(Node):
 
     def __init__(self, name, args):
