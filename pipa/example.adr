@@ -1,27 +1,19 @@
-fun map(transformer: Function(a, b), iterable: Iterable(a)): Vector(b) {
-    let result: Vector(b) = []
-    for element in iterable {
-        result.append(transformer(element))
-    }
-    return result
+struct Person {
+    firstName: String
+    secondName: String
+    age: Number
+    printMe: Function(Void)
 }
 
-
-fun addFunctionMaker(a: Number): Function(Number, Number) {
-    fun helper(b: Number): Number {
-        return a + b
-    }
-    return helper
+fun printMike(): Void {
+    print(" ".join([self.firstName, self.secondName]))
 }
 
-
-fun addOne(n: Number): Number {
-    return n + 1
+fun anotherPrintingFunc(): Void {
+    print(" ".join([self.firstName, self.secondName, "age =", self.age]))
 }
 
-
-let addTwo = addFunctionMaker(a = 2)
-
-
-print(map(addOne, [1, 2, 3, 4, 5]))
-print(map(addTwo, [1, 2, 3, 4, 5]))
+let mike = Person("Mike", "Joker", 25, printMike)
+mike.printMe()
+mike.printMe = anotherPrintingFunc
+mike.printMe()

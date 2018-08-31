@@ -299,7 +299,16 @@ class Interpreter(layers.Layer):
             args = [base]
         args += [self.eval(arg) for arg in func_call.args]
         assert(type_ in A(astlib.Name))
-        method_info = context.env[type_]["methods"][func_call.name]
+        info = context.env[type_]
+        if func_call.name in info["fields"]:
+            _func_info = converted_base.value[func_call.name]
+            method_info = {
+                "args": _func_info.args,
+                "rettype": _func_info.rettype,
+                "body": _func_info.body
+            }
+        else:
+            method_info = context.env[type_]["methods"][func_call.name]
         body = method_info["body"]
         context.env.add_scope()
         decl_args = [([astlib.Name(defs.SELF)], type_)] + method_info["args"]
