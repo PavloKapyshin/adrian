@@ -128,7 +128,7 @@ class Interpreter(layers.Layer):
                     to_add.append(protocol_name)
             context.env[name]["implemented_protocols"].extend(to_add)
 
-        assert(decl.name in context.env)
+        assert (decl.name in context.env), decl.name
         _update_implemented_protocols(decl.name, decl.implemented_protocols)
         context.env.add_scope()
         context.parent_struct = decl.name
