@@ -1,6 +1,6 @@
 -- Syntax sugar is redundant! (no, it is not, but you can't use it here :)
 -- Can't use:
---   for-in syntax sugar: use while loop
+--   for-in syntax sugar: use while loop with copying of container!
 --   literal to prelude object: use something like Number(py#Int(0)) instead of 0
 --   other modules (without py module): really? you need other modules in prelude module?
 protocol Maybe(a) {}
@@ -192,23 +192,25 @@ fun length(data: Lengthable): Number {
 }
 
 fun all(iterable: Iterable(Bool)): Bool {
-    var element = iterable.__next__()
+    let iter = iterable
+    var element = iter.__next__()
     while element is Some {
         if element.data == False {
             return False
         }
-        element = iterable.__next__()
+        element = iter.__next__()
     }
     return True
 }
 
 fun any(iterable: Iterable(Bool)): Bool {
-    var element = iterable.__next__()
+    let iter = iterable
+    var element = iter.__next__()
     while element is Some {
         if element.data == True {
             return True
         }
-        element = iterable.__next__()
+        element = iter.__next__()
     }
     return False
 }
@@ -336,16 +338,17 @@ extension String is Addable, Container(String), Iterable(String), Lengthable,
     }
 
     fun join(iterable: Iterable(String) and Lengthable): String {
+        let iter = iterable
         var result = py#Str("")
-        var element = iterable.__next__()
-        let len = length(iterable).data
+        var element = iter.__next__()
+        let len = length(iter).data
         var index = py#Int(0)
         while element is Some {
             result += element.data.data
             if index < (len - py#Int(1)) {
                 result += self.data
             }
-            element = iterable.__next__()
+            element = iter.__next__()
             index += py#Int(1)
         }
         return String(result)

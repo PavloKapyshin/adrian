@@ -9,6 +9,7 @@ class NodeT(enum.Enum):
     func = 3
     struct = 4
     protocol = 5
+    arg = 6
 
 
 @enum.unique
