@@ -6,6 +6,16 @@ from .type_lib import infer_type, types_are_equal, is_super_type
 from .utils import A
 
 
+def mangle_prelude_name(name):
+    hash_ = context.loaded_modules.get(defs.MODULE_PRELUDE)
+    if hash_ is None:
+        errors.later()
+    return astlib.Name(
+        "_".join([
+            hash_[:defs.MANGLING_LENGTH], str(name)
+        ]))
+
+
 def get_name_alises(name, arg_decls):
     for arg in arg_decls:
         names = arg.names
@@ -33,6 +43,13 @@ def depends_on_self(expr):
     return False
 
 
+def get_only_field_decls(body):
+    return filter(
+        lambda x: x is not None,
+        [stmt if stmt in A(astlib.FieldDecl) else None
+        for stmt in body])
+
+
 def complete_init_method(method_decl, struct_decl):
     self_decl = astlib.VarDecl(
         astlib.Name(defs.SELF), struct_decl.name,
@@ -43,15 +60,28 @@ def complete_init_method(method_decl, struct_decl):
         [self_decl] + method_decl.body + [return_self])
 
 
+def default_spec_eq_method(struct_decl):
+    args = [astlib.Argument([astlib.Name("other")], struct_decl.name, None)]
+    field_decls = get_only_field_decls(struct_decl.body)
+    return_expr = defs.CONSTANT_TRUE
+    for field_decl in field_decls:
+        return_expr = astlib.Expr(
+            return_expr, "and",
+            astlib.Expr(
+                astlib.StructPath([astlib.Name(defs.SELF), field_decl.name]),
+                defs.EQEQ,
+                astlib.StructPath([astlib.Name("other"), field_decl.name])))
+    return astlib.MethodDecl(
+        astlib.Name(defs.SPEC_METHOD_EQ), args, astlib.Name(defs.TYPE_BOOL),
+        [astlib.Return(return_expr)])
+
+
 def default_init_method(struct_decl):
     hash_ = str(struct_decl.name)[:defs.MANGLING_LENGTH]
     self_decl = astlib.VarDecl(
         astlib.Name(defs.SELF), struct_decl.name,
         astlib.InstanceValue(struct_decl.name, {}))
-    field_decls = filter(
-        lambda x: x is not None,
-        [stmt if stmt in A(astlib.FieldDecl) else None
-        for stmt in struct_decl.body])
+    field_decls = get_only_field_decls(struct_decl.body)
     field_inits = []
     args = []
     for field_decl in field_decls:
@@ -116,7 +146,10 @@ class Interpreter(layers.Layer):
         context.parent_struct = decl.name
         body = decl.body
         has_init = False
-        new_body = []
+        new_body = [default_spec_eq_method(decl)]
+        new_implemented_protocols = [mangle_prelude_name(defs.PROTOCOL_EQ)]
+        unmangled_struct_name = astlib.Name(
+            str(decl.name)[defs.MANGLING_LENGTH+1:])
         for stmt in body:
             if (stmt in A(astlib.MethodDecl) and
                     stmt.name == defs.SPEC_METHOD_INIT):
