@@ -146,6 +146,19 @@ class For(Node):
         self._keys = ("names", "container", "body")
 
 
+class ContextEvent(Node):
+
+    def __init__(self):
+        self._keys = tuple()
+
+
+class ContextAddScope(ContextEvent):
+    pass
+
+class ContextRemoveScope(ContextEvent):
+    pass
+
+
 class IterationEvent(Node):
 
     def __init__(self):

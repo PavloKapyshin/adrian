@@ -214,6 +214,20 @@ fun any(iterable: Iterable(Bool)): Bool {
 }
 
 
+extension Some(a) is ConvertibleToString {
+    fun __toString__(): String {
+        return String(py#Str("Some(") + toString(self.data) + py#Str(")"))
+    }
+}
+
+
+extension None is ConvertibleToString {
+    fun __toString__(): String {
+        return String(py#Str("NONE"))
+    }
+}
+
+
 extension Number is Addable, Subtractable, Multipliable, Divisible,
                     Eq, Lt, Gt, ConvertibleToNumber, ConvertibleToString {
     fun __toNumber__(): Number {

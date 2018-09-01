@@ -263,6 +263,14 @@ class Interpreter(layers.Layer):
     def break_event(self, stmt):
         return stmt
 
+    @layers.register(astlib.ContextAddScope)
+    def context_add_scope(self, stmt):
+        context.env.add_scope()
+
+    @layers.register(astlib.ContextRemoveScope)
+    def context_remove_scope(self, stmt):
+        context.env.remove_scope()
+
     @layers.register(astlib.FuncCall)
     def func_call(self, func_call):
         info = context.env[func_call.name]

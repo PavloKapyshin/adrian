@@ -248,6 +248,7 @@ class Desugar(layers.Layer):
             container_var_name = astlib.Name(
                 defs.TMP_FMT_STRING.format(context.tmp_counter))
             context.tmp_counter += 1
+            yield astlib.ContextAddScope()
             yield astlib.LetDecl(
                 container_var_name, astlib.Empty(), container)
             yield astlib.VarDecl(
@@ -263,6 +264,7 @@ class Desugar(layers.Layer):
                         astlib.StructPath([
                             container_var_name,
                             astlib.FuncCall(defs.SPEC_METHOD_NEXT, [])]))])
+            yield astlib.ContextRemoveScope()
 
     @layers.register(astlib.Return)
     def return_stmt(self, stmt):
