@@ -3,6 +3,27 @@
 --   for-in syntax sugar: use while loop with copying of container!
 --   literal to prelude object: use something like Number(py#Int(0)) instead of 0
 --   other modules (without py module): really? you need other modules in prelude module?
+
+-- implement to support == and !=
+protocol Eq {
+    fun __eq__(other: Self): Bool
+}
+
+struct String {
+    data: py#Str
+    iterIndex: py#Int
+
+    fun __init__(data: py#Str): Void {
+        self.data = data
+        self.iterIndex = py#Int(0)
+    }
+}
+
+protocol ConvertibleToString {
+    fun __toString__(): String
+}
+
+
 protocol Maybe(a) {}
 
 struct Some(a) is Maybe(a) {
@@ -19,17 +40,6 @@ fun assert(expr: Bool): Void {
 
 struct Number {
     data: py#Int
-}
-
-
-struct String {
-    data: py#Str
-    iterIndex: py#Int
-
-    fun __init__(data: py#Str): Void {
-        self.data = data
-        self.iterIndex = py#Int(0)
-    }
 }
 
 
@@ -63,11 +73,6 @@ struct Dict(a, b) {
         self.data = data
         self.iterated = py#Set({})
     }
-}
-
-
-protocol ConvertibleToString {
-    fun __toString__(): String
 }
 
 protocol ConvertibleToNumber {
@@ -125,12 +130,6 @@ protocol Multipliable {
 -- implement to support /
 protocol Divisible {
     fun __div__(other: Self): Self
-}
-
-
--- implement to support == and !=
-protocol Eq {
-    fun __eq__(other: Self): Bool
 }
 
 -- implement to support < (and <= if Eq is implemented)
