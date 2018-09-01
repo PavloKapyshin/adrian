@@ -14,6 +14,15 @@ def get_name_alises(name, arg_decls):
     errors.unknown_arg(name)
 
 
+def is_arg(expr):
+    if expr in A(astlib.Name):
+        info = context.env[expr]
+        return info["node_type"] == astlib.NodeT.arg
+    elif expr in A(astlib.StructPath):
+        return is_arg(expr.path[0])
+    return False
+
+
 def depends_on_self(expr):
     if expr in A(astlib.Name):
         return True if expr == defs.SELF else False
@@ -191,7 +200,8 @@ class Interpreter(layers.Layer):
                     base, astlib.FuncCall(method_name, args))
             return self.method_call(base, astlib.FuncCall(method_name, args))
         elif stmt.left in A(astlib.Name):
-            if context.env[stmt.left]["node_type"] != astlib.NodeT.var:
+            if context.env[stmt.left]["node_type"] not in (
+                    astlib.NodeT.var, astlib.NodeT.arg):
                 errors.cant_reassign(stmt.left)
             context.env[stmt.left]["expr"] = expr
         else:
@@ -274,7 +284,7 @@ class Interpreter(layers.Layer):
     @layers.register(astlib.FuncCall)
     def func_call(self, func_call):
         info = context.env[func_call.name]
-        if info["node_type"] in (astlib.NodeT.var, astlib.NodeT.let):
+        if info["node_type"] in (astlib.NodeT.var, astlib.NodeT.let, astlib.NodeT.arg):
             assert (info["expr"] in A(astlib.Function)), info["expr"]
             info = {
                 "node_type": astlib.NodeT.func,
@@ -299,7 +309,7 @@ class Interpreter(layers.Layer):
                 expr = arg_decl.default_value
             for name in names:
                 context.env[name] = {
-                    "node_type": astlib.NodeT.var,
+                    "node_type": astlib.NodeT.arg,
                     "type": type_,
                     "expr": self.eval(expr)
                 }
@@ -311,7 +321,7 @@ class Interpreter(layers.Layer):
         converted_base = self.eval(base)
         assert(converted_base in A(astlib.InstanceValue))
         type_ = infer_type(converted_base)
-        if depends_on_self(base):
+        if depends_on_self(base) or is_arg(base):
             args = [converted_base]
         else:
             args = [base]
@@ -348,7 +358,7 @@ class Interpreter(layers.Layer):
                 expr = arg_decl.default_value
             for name in names:
                 context.env[name] = {
-                    "node_type": astlib.NodeT.var,
+                    "node_type": astlib.NodeT.arg,
                     "type": type_,
                     "expr": expr
                 }
@@ -509,7 +519,8 @@ class Interpreter(layers.Layer):
             if expr in (defs.CONSTANT_TRUE, defs.CONSTANT_FALSE):
                 return (True if expr == defs.CONSTANT_TRUE else False)
             info = context.env[expr]
-            if info["node_type"] in (astlib.NodeT.var, astlib.NodeT.let):
+            if info["node_type"] in (
+                    astlib.NodeT.var, astlib.NodeT.let, astlib.NodeT.arg):
                 return self.eval(info["expr"])
             elif info["node_type"] == astlib.NodeT.func:
                 return astlib.Function(
@@ -766,7 +777,8 @@ class Interpreter(layers.Layer):
             elif info["node_type"] == astlib.NodeT.func:
                 return astlib.Function(
                     info["args"], info["rettype"], info["body"])
-            elif (info["node_type"] in (astlib.NodeT.let, astlib.NodeT.var) and
+            elif (info["node_type"] in (
+                    astlib.NodeT.let, astlib.NodeT.var, astlib.NodeT.arg) and
                     stmt not in args):
                 return info["expr"]
             return stmt
