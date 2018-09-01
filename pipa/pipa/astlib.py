@@ -188,6 +188,15 @@ class Else(Node):
         self._keys = ("body", )
 
 
+class Argument(Node):
+
+    def __init__(self, names, type_, default_value):
+        self.names = names
+        self.type_ = type_
+        self.default_value = default_value
+        self._keys = ("names", "type_", "default_value")
+
+
 class KeywordArg(Node):
 
     def __init__(self, name, expr):

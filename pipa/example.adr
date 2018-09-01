@@ -1,0 +1,12 @@
+fun func(n: Number, needToPrint: Bool = False): Number {
+    if needToPrint {
+        print("In func")
+    } else {
+        print("no needToPrint")
+    }
+    return n + 1
+}
+
+func(1)
+func(1, needToPrint = False)
+func(2, needToPrint = True)
