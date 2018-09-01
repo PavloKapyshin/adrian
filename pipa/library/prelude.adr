@@ -320,13 +320,13 @@ extension String is Addable, Container(String), Iterable(String), Lengthable,
         return result
     }
 
-    fun join(iterable: Iterable(ConvertibleToString) and Lengthable): String {
+    fun join(iterable: Iterable(String) and Lengthable): String {
         var result = py#Str("")
         var element = iterable.__next__()
         let len = length(iterable).data
         var index = py#Int(0)
         while element is Some {
-            result += toString(element.data).data
+            result += element.data.data
             if index < (len - py#Int(1)) {
                 result += self.data
             }
@@ -457,6 +457,14 @@ extension Vector(a) is ConvertibleToVector(a), ConvertibleToString,
 
     fun extend(other: Vector(a)): Void {
         self.data += other.data
+    }
+
+    fun map(func by: Function(a, b)): Vector(b) {
+        let result: Vector(b) = Vector(py#List([]))
+        for element in self.data {
+            result.append(func(element))
+        }
+        return result
     }
 }
 
