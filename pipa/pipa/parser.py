@@ -165,26 +165,22 @@ def p_stmt(content):
 
 def p_let_decl_1(content):
     """let_decl : LET NAME COLON type EQ bool_expr"""
-    content[0] = astlib.LetDecl(
-        astlib.Name(content[2]), content[4], content[6])
+    content[0] = astlib.LetDecl(astlib.Name(content[2]), content[4], content[6])
 
 
 def p_let_decl_2(content):
     """let_decl : LET NAME EQ bool_expr"""
-    content[0] = astlib.LetDecl(
-        astlib.Name(content[2]), astlib.Empty(), content[4])
+    content[0] = astlib.LetDecl(astlib.Name(content[2]), astlib.Empty(), content[4])
 
 
 def p_var_decl_1(content):
     """var_decl : VAR NAME COLON type EQ bool_expr"""
-    content[0] = astlib.VarDecl(
-        astlib.Name(content[2]), content[4], content[6])
+    content[0] = astlib.VarDecl(astlib.Name(content[2]), content[4], content[6])
 
 
 def p_var_decl_2(content):
     """var_decl : VAR NAME EQ bool_expr"""
-    content[0] = astlib.VarDecl(
-        astlib.Name(content[2]), astlib.Empty(), content[4])
+    content[0] = astlib.VarDecl(astlib.Name(content[2]), astlib.Empty(), content[4])
 
 
 def p_var_decl_3(content):
@@ -394,13 +390,22 @@ def p_types_2(content):
     content[0] = [content[1]]
 
 
+def p_possible_unpacking_1(content):
+    """possible_unpacking : LPAREN names RPAREN"""
+    content[0] = astlib.Unpacking(content[2])
+
+def p_possible_unpacking_2(content):
+    """possible_unpacking : NAME"""
+    content[0] = astlib.Name(content[1])
+
+
 def p_names_1(content):
-    """names : NAME COMMA names"""
-    content[0] = [astlib.Name(content[1])] + content[3]
+    """names : possible_unpacking COMMA names"""
+    content[0] = [content[1]] + content[3]
 
 def p_names_2(content):
-    """names : NAME"""
-    content[0] = [astlib.Name(content[1])]
+    """names : possible_unpacking"""
+    content[0] = [content[1]]
 
 def p_names_3(content):
     """names : empty"""
@@ -580,7 +585,7 @@ def p_error(content):
     line = 0
     if content is not None:
         line = content.lineno
-    errors.syntax_error(line)
+    errors.syntax_error(line, content)
 
 
 class Parser:
