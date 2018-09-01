@@ -1,4 +1,1 @@
-for (id, name) in [Pair(1, "Mike"), Pair(2, "John")] {
-    print(id)
-    print(name)
-}
+print("Hello, world!".cutBetween(",", "!"))

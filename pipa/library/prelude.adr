@@ -3,40 +3,43 @@
 --   for-in syntax sugar: use while loop with copying of container!
 --   literal to prelude object: use something like Number(py#Int(0)) instead of 0
 --   other modules (without py module): really? you need other modules in prelude module?
+protocol Comparable {}
 
 -- implement to support == and !=
-protocol Eq {
+protocol Eq is Comparable {
     fun __eq__(other: Self): Bool
 }
 
--- implement to support +
-protocol Addable {
-    fun __add__(other: Self): Self
-}
-
--- implement to support -
-protocol Subtractable {
-    fun __sub__(other: Self): Self
-}
-
--- implement to support *
-protocol Multipliable {
-    fun __mul__(other: Self): Self
-}
-
--- implement to support /
-protocol Divisible {
-    fun __div__(other: Self): Self
-}
-
 -- implement to support < (and <= if Eq is implemented)
-protocol Lt {
+protocol Lt is Comparable {
     fun __lt__(other: Self): Bool
 }
 
 -- implement to support > (and >= if Eq is implemented)
-protocol Gt {
+protocol Gt is Comparable{
     fun __gt__(other: Self): Bool
+}
+
+protocol ArithmeticObject {}
+
+-- implement to support +
+protocol Addable is ArithmeticObject {
+    fun __add__(other: Self): Self
+}
+
+-- implement to support -
+protocol Subtractable is ArithmeticObject {
+    fun __sub__(other: Self): Self
+}
+
+-- implement to support *
+protocol Multipliable is ArithmeticObject {
+    fun __mul__(other: Self): Self
+}
+
+-- implement to support /
+protocol Divisible is ArithmeticObject {
+    fun __div__(other: Self): Self
 }
 
 -- implement to support in
@@ -163,7 +166,7 @@ protocol Lengthable {
 
 -- implement to support for-in loop
 protocol Iterator(elementType) {
-    __next__: Function(Maybe(elementType))
+    fun __next__(): Maybe(elementType)
 }
 
 protocol Iterable(elementType) {
@@ -224,8 +227,8 @@ fun any(iterable: Iterable(Bool)): Bool {
 }
 
 
-extension Number is Addable, Subtractable, Multipliable, Divisible,
-                    Eq, Lt, Gt, ConvertibleToNumber, ConvertibleToString {
+extension Number is ArithmeticObject, Comparable, ConvertibleToString,
+                    ConvertibleToNumber {
     fun __toNumber__(): Number {
         return self
     }
@@ -348,9 +351,9 @@ struct DictIterator(a, b) is Iterator(a) {
 
 
 extension String is Addable, Container(String), Iterable(String), Lengthable,
-                    Eq, GetItemable(Number, String), ConvertibleToString,
-                    ConvertibleToNumber, ConvertibleToVector(String),
-                    ConvertibleToSet(String), Sliceable(Number, String) {
+                    Eq, GetItemable(Number, String), ConvertibleToNumber,
+                    ConvertibleToVector(String), ConvertibleToSet(String),
+                    Sliceable(Number, String), ConvertibleToString {
     fun __add__(other: String): String {
         return String(self.data + other.data)
     }
@@ -400,32 +403,33 @@ extension String is Addable, Container(String), Iterable(String), Lengthable,
     }
 
     fun split(by separator: String): Vector(String) {
-        let splitted: py#List = self.data.split(separator.data)
         let result: Vector(String) = Vector(py#List([]))
-        for str in splitted {
+        for str in self.data.split(separator.data) {
             result.append(String(str))
         }
         return result
     }
 
-    fun join(iterable: Iterable(String) and Lengthable): String {
+    fun join(iterable: Iterable(String)): String {
         let iterator = iterable.__iter__()
         var result = py#Str("")
         var element = iterator.__next__()
-        let len = length(iterable).data
-        var index = py#Int(0)
+        if element is Some {
+            result = element.data.data
+        } else {
+            return String(py#Str(""))
+        }
+        element = iterator.__next__()
         while element is Some {
-            result += element.data.data
-            if index < (len - py#Int(1)) {
-                result += self.data
-            }
+            result += self.data + element.data.data
             element = iterator.__next__()
-            index += py#Int(1)
         }
         return String(result)
     }
 
     fun format(changes: Dict(String, String)): String {
+        -- TODO: support unpaired braces
+        --       support \{...}
         let result: Vector(String) = Vector(py#List([]))
         var buffer: Vector(String) = Vector(py#List([]))
         var key: Vector(String) = Vector(py#List([]))
@@ -453,6 +457,39 @@ extension String is Addable, Container(String), Iterable(String), Lengthable,
         }
         result.append(String(py#Str("")).join(buffer))
         return String(py#Str("")).join(result)
+    }
+
+    fun cutBetween(start: String, end: String = String(py#Str(""))): String {
+        -- TODO: support length(start) > 1
+        --       support length(end) > 1
+        if end.data == py#Str("") {
+            end.data = start.data
+        }
+        var shouldRecord: Bool = False
+        var buffer: py#Str = py#Str("")
+        for char in self.data {
+            if (char == end.data) and (shouldRecord) {
+                return String(buffer)
+            }
+            if shouldRecord {
+                buffer += char
+            }
+            if char == start.data {
+                shouldRecord = True
+            }
+        }
+        return String(py#Str(""))
+    }
+
+    fun count(sub: String): Number {
+        -- TODO: support length(sub) > 1
+        var result: py#Int = py#Int(0)
+        for char in self.data {
+            if char == sub.data {
+                result += py#Int(1)
+            }
+        }
+        return Number(result)
     }
 }
 
