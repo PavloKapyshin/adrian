@@ -48,12 +48,10 @@ def _read_file(file_name):
 
 def compile_from_file(
         in_file, *, stop_before=None, stop_after=None, print_ast=False,
-        modules_file=None):
+        module_paths):
     result = compile_from_string(
         _read_file(in_file), in_file.split("/")[-1].split(".")[0], stop_before=stop_before,
-        stop_after=stop_after, module_paths=(
-            _read_file(modules_file).splitlines()
-            if modules_file is not None else defs.DEFAULT_MODULE_PATHS))
+        stop_after=stop_after, module_paths=module_paths)
     if print_ast:
         print(result)
     return result

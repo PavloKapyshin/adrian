@@ -1,3 +1,5 @@
+from itertools import zip_longest
+
 from . import astlib, layers, errors, defs
 from .context import context
 from .type_lib import infer_type, types_are_equal, is_super_type
@@ -5,7 +7,8 @@ from .utils import A
 
 
 def get_name_alises(name, arg_decls):
-    for names, _ in arg_decls:
+    for arg in arg_decls:
+        names = arg.names
         if name in names:
             return names
     errors.unknown_arg(name)
@@ -44,7 +47,7 @@ def default_init_method(struct_decl):
     args = []
     for field_decl in field_decls:
         field_name = astlib.Name("_".join([hash_, str(field_decl.name)]))
-        args.append(([field_name], field_decl.type_))
+        args.append(astlib.Argument([field_name], field_decl.type_, None))
         field_inits.append(
             astlib.Assignment(
                 astlib.StructPath([astlib.Name(defs.SELF), field_decl.name]),
@@ -70,8 +73,8 @@ class Interpreter(layers.Layer):
     @layers.register(astlib.FuncDecl)
     def func_declaration(self, decl):
         args = []
-        for arg_names, _ in decl.args:
-            args.extend(arg_names)
+        for arg in decl.args:
+            args.extend(arg.names)
         context.env[decl.name] = {
             "node_type": astlib.NodeT.func,
             "args": decl.args,
@@ -260,6 +263,14 @@ class Interpreter(layers.Layer):
     def break_event(self, stmt):
         return stmt
 
+    @layers.register(astlib.ContextAddScope)
+    def context_add_scope(self, stmt):
+        context.env.add_scope()
+
+    @layers.register(astlib.ContextRemoveScope)
+    def context_remove_scope(self, stmt):
+        context.env.remove_scope()
+
     @layers.register(astlib.FuncCall)
     def func_call(self, func_call):
         info = context.env[func_call.name]
@@ -276,11 +287,16 @@ class Interpreter(layers.Layer):
         elif info["node_type"] == astlib.NodeT.protocol:
             return astlib.GenericType(func_call.name, func_call.args)
         context.env.add_scope()
-        for (names, type_), expr in zip(info["args"], func_call.args):
+        # Always len(info["args"]) >= len(func_call.args)
+        for arg_decl, expr in zip_longest(info["args"], func_call.args, fillvalue=None):
+            names = arg_decl.names
+            type_ = arg_decl.type_
             if expr in A(astlib.KeywordArg):
                 names = get_name_alises(expr.name, info["args"])
                 expr = expr.expr
                 type_ = infer_type(self.eval(expr))
+            elif expr is None:
+                expr = arg_decl.default_value
             for name in names:
                 context.env[name] = {
                     "node_type": astlib.NodeT.var,
@@ -313,8 +329,13 @@ class Interpreter(layers.Layer):
             method_info = context.env[type_]["methods"][func_call.name]
         body = method_info["body"]
         context.env.add_scope()
-        decl_args = [([astlib.Name(defs.SELF)], type_)] + method_info["args"]
-        for (names, type_), expr in zip(decl_args, args):
+        decl_args = [
+            astlib.Argument([
+                astlib.Name(defs.SELF)], type_, None)] + method_info["args"]
+        # Always len(decl_args) >= len(args)
+        for arg_decl, expr in zip_longest(decl_args, args, fillvalue=None):
+            names = arg_decl.names
+            type_ = arg_decl.type_
             if expr in A(astlib.KeywordArg):
                 h = str(converted_base.type_)[:defs.MANGLING_LENGTH]
                 names = get_name_alises(
@@ -323,6 +344,8 @@ class Interpreter(layers.Layer):
                     decl_args)
                 expr = expr.expr
                 type_ = infer_type(expr)
+            elif expr is None:
+                expr = arg_decl.default_value
             for name in names:
                 context.env[name] = {
                     "node_type": astlib.NodeT.var,
@@ -372,8 +395,7 @@ class Interpreter(layers.Layer):
         elif func_call.name == defs.FUNC_PRINT:
             for arg in func_call.args:
                 arg = self.eval(arg)
-                print(arg, end="")
-            print()
+                print(arg.replace("\\n", "\n"), end="")
         elif func_call.name == defs.FUNC_TO_STR:
             return str(self.eval(func_call.args[0]))
         elif func_call.name == defs.FUNC_TO_INT:
@@ -722,8 +744,8 @@ class Interpreter(layers.Layer):
                 self.replace_name_with_possible_variables(stmt.expr, args))
         elif stmt in A(astlib.FuncDecl):
             new_args = []
-            for arg_names, _ in stmt.args:
-                new_args.extend(arg_names)
+            for arg in stmt.args:
+                new_args.extend(arg.names)
             return astlib.FuncDecl(
                 stmt.name, stmt.args, stmt.rettype,
                 [self.replace_name_with_possible_variables(s, args + new_args)

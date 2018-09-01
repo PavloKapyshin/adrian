@@ -333,13 +333,22 @@ def p_names_in_func_parameters_2(content):
     content[0] = [astlib.Name(content[1])]
 
 
+def p_func_parameter_1(content):
+    """func_parameter : names_in_func_parameters COLON type EQ bool_expr"""
+    content[0] = astlib.Argument(content[1], content[3], content[5])
+
+def p_func_parameter_2(content):
+    """func_parameter : names_in_func_parameters COLON type"""
+    content[0] = astlib.Argument(content[1], content[3], None)
+
+
 def p_func_parameters_1(content):
-    """func_parameters : names_in_func_parameters COLON type COMMA func_parameters"""
-    content[0] = [(content[1], content[3])] + content[5]
+    """func_parameters : func_parameter COMMA func_parameters"""
+    content[0] = [content[1]] + content[3]
 
 def p_func_parameters_2(content):
-    """func_parameters : names_in_func_parameters COLON type"""
-    content[0] = [(content[1], content[3])]
+    """func_parameters : func_parameter"""
+    content[0] = [content[1]]
 
 def p_func_parameters_3(content):
     """func_parameters : empty"""

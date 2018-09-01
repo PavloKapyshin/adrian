@@ -10,6 +10,12 @@ VENDOR_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "vendor")
 
 
+def _read_file(file_name):
+    with open(file_name, mode="r", encoding="utf-8") as file:
+        contents = file.read()
+    return contents
+
+
 def main():
     sys.path.append(VENDOR_PATH)
     pipa = importlib.import_module("pipa")
@@ -37,7 +43,9 @@ def main():
     pipa.compile_from_file(
         args.in_file.name, stop_before=to_obj(args.stop_before),
         stop_after=to_obj(args.stop_after), print_ast=args.print_ast,
-        modules_file=args.modules)
+        module_paths=(
+            _read_file(args.modules).splitlines()
+            if args.modules is not None else pipa.defs.DEFAULT_MODULE_PATHS))
 
 
 if __name__ == "__main__":

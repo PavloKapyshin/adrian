@@ -34,7 +34,8 @@ def load_module(module_name):
         file_path = find_file(module_name)
         prev_main_file_hash = context.main_file_hash
         pipa = importlib.import_module("pipa")
-        nodes = pipa.compile_from_file(str(file_path), stop_after=Loader)
+        nodes = pipa.compile_from_file(
+            str(file_path), stop_after=Loader, module_paths=context.module_paths)
         context.main_file_hash = prev_main_file_hash
         context.loaded.extend(nodes)
         hash_ = get_file_hash(file_path)
@@ -214,23 +215,29 @@ class Loader(layers.Layer):
     @layers.register(astlib.FuncProtoDecl)
     def func_proto_declaration(self, decl):
         args = [
-            ([n(name) for name in names], t(type_))
-            for names, type_ in decl.args]
+            astlib.Argument(
+                [n(name) for name in arg.names], t(arg.type_),
+                (None if arg.default_value is None else e(arg.default_value)))
+            for arg in decl.args]
         yield astlib.FuncProtoDecl(n(decl.name), args, t(decl.rettype))
 
     @layers.register(astlib.FuncDecl)
     def func_declaration(self, decl):
         args = [
-            ([n(name) for name in names], t(type_))
-            for names, type_ in decl.args]
+            astlib.Argument(
+                [n(name) for name in arg.names], t(arg.type_),
+                (None if arg.default_value is None else e(arg.default_value)))
+            for arg in decl.args]
         yield astlib.FuncDecl(
             n(decl.name), args, t(decl.rettype), self.b(decl.body))
 
     @layers.register(astlib.MethodDecl)
     def method_declaration(self, decl):
         args = [
-            ([n(name) for name in names], t(type_))
-            for names, type_ in decl.args]
+            astlib.Argument(
+                [n(name) for name in arg.names], t(arg.type_),
+                (None if arg.default_value is None else e(arg.default_value)))
+            for arg in decl.args]
         yield astlib.MethodDecl(
             decl.name, args, t(decl.rettype), self.b(decl.body))
 

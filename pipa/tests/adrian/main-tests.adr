@@ -203,8 +203,10 @@ if (1 >= 0) and ("Koko" != "Loko") and ("go" == "go") and ("h" in ":) hello") {
     print("OK")
 }
 print("")
-print(" ".join([[1, 2, 3], "has length", length([1, 2, 3])]))
-print(" ".join(["second elem of", [1, 2, 3], "is", ([1, 2, 3][1]).data]))
+print(" ".join([
+    toString([1, 2, 3]), "has length", toString(length([1, 2, 3]))]))
+print(" ".join([
+    "second elem of", toString([1, 2, 3]), "is", toString(([1, 2, 3][1]).data)]))
 d = {"Mike" = 1}
 d["John"] = 23
 d["Noob"] = 0
@@ -217,7 +219,8 @@ if any([True, False]) {
     print("OK")
 }
 
-print(" ".join(iterable = ["Splitted:", "Hello, world!", "Hello, world!".split(by = ",")]))
+print(" ".join(
+    iterable = ["Splitted:", "Hello, world!", toString("Hello, world!".split(by = ","))]))
 let justAVector: Vector(Object and ConvertibleToString) = [1, 2, 3, 4, "Hi"]
 justAVector.extend(["Joke", "Mike"])
 print(justAVector)
