@@ -178,12 +178,13 @@ protocol Sliceable(indexType, resultType) {
 }
 
 
-fun print(data: ConvertibleToString or Printable): Void {
+fun print(data: ConvertibleToString or Printable = String(py#Str("")), end: String = String(py#Str("\n"))): Void {
     if data is Printable {
         data.__print__()
     } else {
         py#print(toString(data).data)
     }
+    py#print(end.data)
 }
 
 fun length(data: Lengthable): Number {

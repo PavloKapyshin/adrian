@@ -387,8 +387,7 @@ class Interpreter(layers.Layer):
         elif func_call.name == defs.FUNC_PRINT:
             for arg in func_call.args:
                 arg = self.eval(arg)
-                print(arg, end="")
-            print()
+                print(arg.replace("\\n", "\n"), end="")
         elif func_call.name == defs.FUNC_TO_STR:
             return str(self.eval(func_call.args[0]))
         elif func_call.name == defs.FUNC_TO_INT:
