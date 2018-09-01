@@ -33,7 +33,7 @@ _TYPE_MISMATCH = "types mismatched: {expr1} has type {type1}, {expr2} has type {
 _LATER = ":P just wait"
 _FATAL = "FATAL ERROR: {message}"
 _ILLEGAL_CHAR = "illegal character {char}"
-_SYNTAX_ERROR = "syntax error on {line}"
+_SYNTAX_ERROR = "syntax error on {line_number}: {line}"
 
 cannot_find_file = _error_maker(_CANNOT_FIND_FILE, "file")
 
@@ -44,4 +44,4 @@ type_mismatch = _error_maker(_TYPE_MISMATCH, "expr1", "type1", "expr2", "type2")
 later = _error_maker(_LATER)
 fatal = _error_maker(_FATAL, "message")
 illegal_char = _error_maker(_ILLEGAL_CHAR, "char")
-syntax_error = _error_maker(_SYNTAX_ERROR, "line")
+syntax_error = _error_maker(_SYNTAX_ERROR, "line_number", "line")

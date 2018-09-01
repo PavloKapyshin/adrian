@@ -258,3 +258,10 @@ let addTwo = addFunctionMaker(a = 2)
 
 print(map(addOne, [1, 2, 3, 4, 5]))
 print(map(addTwo, [1, 2, 3, 4, 5]))
+
+print()
+
+for (id, name) in [Pair(1, "Mike"), Pair(2, "John")] {
+    print(id)
+    print(name)
+}

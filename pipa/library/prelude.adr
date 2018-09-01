@@ -45,6 +45,38 @@ protocol Container(a) {
 }
 
 
+struct Pair(a, b) {
+    first: a
+    second: b
+
+    fun __component1__(): a {
+        return self.first
+    }
+
+    fun __component2__(): b {
+        return self.second
+    }
+}
+
+struct Triple(a, b, c) {
+    first: a
+    second: b
+    third: c
+
+    fun __component1__(): a {
+        return self.first
+    }
+
+    fun __component2__(): b {
+        return self.second
+    }
+
+    fun __component3__(): c {
+        return self.third
+    }
+}
+
+
 protocol Maybe(a) {}
 
 struct Some(a) is Maybe(a) {
@@ -588,6 +620,20 @@ extension Set(a) is Iterable(a), Addable, ConvertibleToVector(a),
 }
 
 
+struct DictItemPair(a, b) {
+    key: a
+    value: b
+
+    fun __component1__(): a {
+        return self.key
+    }
+
+    fun __component2__(): b {
+        return self.value
+    }
+}
+
+
 extension Dict(a, b) is ConvertibleToDict(a, b), ConvertibleToSet(a),
                         ConvertibleToString, ConvertibleToVector(a),
                         Iterable(a), Addable, Eq, Container(a), Lengthable,
@@ -654,5 +700,13 @@ extension Dict(a, b) is ConvertibleToDict(a, b), ConvertibleToSet(a),
 
     fun __setItem__(index: a, item: b): Void {
         self.data[index] = item
+    }
+
+    fun items(): Vector(DictItemPair(a, b)) {
+        let result = py#List([])
+        for key, val in self.data.items() {
+            result += DictItemPair(key, val)
+        }
+        return Vector(result)
     }
 }

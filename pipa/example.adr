@@ -1,24 +1,4 @@
-protocol Node {
-    fun generate(): String
+for (id, name) in [Pair(1, "Mike"), Pair(2, "John")] {
+    print(id)
+    print(name)
 }
-
-struct SomeNode is Node {
-    name: String
-
-    fun generate(): String {
-        let node = 1
-        return self.name
-    }
-}
-
-fun generate(node: Node): String {
-    return node.generate()
-}
-
-print(generate(SomeNode("noob")))
-
-
-let list = [1, 2, 3]
-print(list)
-list.append(4)
-print(list)

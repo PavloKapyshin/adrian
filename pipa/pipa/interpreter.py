@@ -9,7 +9,7 @@ from .utils import A
 def mangle_prelude_name(name):
     hash_ = context.loaded_modules.get(defs.MODULE_PRELUDE)
     if hash_ is None:
-        errors.later()
+        return None
     return astlib.Name(
         "_".join([
             hash_[:defs.MANGLING_LENGTH], str(name)
@@ -146,8 +146,12 @@ class Interpreter(layers.Layer):
         context.parent_struct = decl.name
         body = decl.body
         has_init = False
-        new_body = [default_spec_eq_method(decl)]
-        new_implemented_protocols = [mangle_prelude_name(defs.PROTOCOL_EQ)]
+        mangled_eq_protocol = mangle_prelude_name(defs.PROTOCOL_EQ)
+        new_body = []
+        new_implemented_protocols = []
+        if mangled_eq_protocol is not None:
+            new_body = [default_spec_eq_method(decl)]
+            new_implemented_protocols = [mangled_eq_protocol]
         unmangled_struct_name = astlib.Name(
             str(decl.name)[defs.MANGLING_LENGTH+1:])
         for stmt in body:

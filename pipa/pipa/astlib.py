@@ -324,6 +324,13 @@ class InstanceValue(Node):
         self._keys = ("type_", "value",)
 
 
+class Unpacking(Node):
+
+    def __init__(self, names):
+        self.names = names
+        self._keys = ("names")
+
+
 class _Name(collections.UserString):
     """Name concept.
 

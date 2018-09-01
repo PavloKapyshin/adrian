@@ -11,77 +11,6 @@ def is_py_obj(obj):
     return obj in A(astlib.PyObject)
 
 
-def replace_name_references_for_for_stmt_translation(body, name):
-    def _replace(stmt):
-        if stmt in A(astlib.LetDecl, astlib.VarDecl):
-            return type(stmt)(stmt.name, stmt.type_, _replace(stmt.expr))
-        elif stmt in A(astlib.Assignment):
-            return astlib.Assignment(
-                _replace(stmt.left), stmt.op, _replace(stmt.right))
-        elif stmt in A(astlib.Cond):
-            return astlib.Cond(
-                _replace(stmt.if_stmt),
-                [_replace(elif_stmt) for elif_stmt in stmt.elifs],
-                _replace(stmt.else_stmt))
-        elif stmt in A(astlib.If):
-            return astlib.If(
-                _replace(stmt.expr), [_replace(s) for s in stmt.body])
-        elif stmt in A(astlib.Elif):
-            return astlib.Elif(
-                _replace(stmt.expr), [_replace(s) for s in stmt.body])
-        elif stmt in A(astlib.Else):
-            return astlib.Else([_replace(s) for s in stmt.body])
-        elif stmt in A(astlib.While):
-            return astlib.While(
-                _replace(stmt.expr), [_replace(s) for s in stmt.body])
-        elif stmt in A(astlib.For):
-            return astlib.For(
-                stmt.names, _replace(stmt.container),
-                [_replace(s) for s in stmt.body])
-        elif stmt in A(astlib.Return):
-            return astlib.Return(_replace(stmt.expr))
-        elif stmt in A(astlib.FuncCall):
-            new_name = _replace(stmt.name)
-            args = [_replace(a) for a in stmt.args]
-            if new_name in A(astlib.StructPath):
-                return astlib.StructPath(
-                    new_name.path[:-1] + [
-                        astlib.FuncCall(new_name.path[-1], args)])
-            return astlib.FuncCall(new_name, args)
-        elif stmt in A(astlib.StructPath):
-            def _replace_path_member(path_member):
-                if path_member in A(astlib.Name):
-                    return path_member
-                return astlib.FuncCall(
-                    path_member.name, [_replace(a) for a in path_member.args])
-            return astlib.StructPath(
-                [_replace(stmt.path[0])] + [
-                    _replace_path_member(p) for p in stmt.path[1:]])
-        elif stmt in A(astlib.Name):
-            return (astlib.StructPath([name, astlib.Name("data")])
-                    if stmt == name else stmt)
-        elif stmt in A(astlib.Expr):
-            return astlib.Expr(
-                _replace(stmt.left), stmt.op, _replace(stmt.right))
-        elif stmt in A(astlib.KeywordArg):
-            return astlib.KeywordArg(stmt.name, _replace(stmt.expr))
-        elif stmt in A(astlib.Slice):
-            return astlib.Slice(
-                _replace(stmt.base), _replace(stmt.start), _replace(stmt.end))
-        elif stmt in A(astlib.Subscript):
-            return astlib.Subscript(_replace(stmt.base), _replace(stmt.index))
-        elif stmt in A(astlib.Not):
-            return astlib.Not(_replace(stmt.expr))
-        elif stmt is None or stmt in A(
-                astlib.BreakEvent, astlib.Empty, astlib.PyObject):
-            return stmt
-        elif stmt in A(astlib.ModuleMember):
-            return astlib.ModuleMember(stmt.module, _replace(stmt.member))
-        else:
-            errors.later()
-    return [_replace(stmt) for stmt in body]
-
-
 def _literal_to_struct_call(adr_type, py_type_name, args):
     return astlib.ModuleMember(
         astlib.Name(defs.MODULE_PRELUDE),
@@ -163,8 +92,30 @@ class Desugar(layers.Layer):
     def __init__(self):
         self.b = layers.b(Desugar)
 
+    def _make_tmp(self, expr, is_constant=True):
+        tmp_name = astlib.Name(
+            defs.TMP_FMT_STRING.format(context.tmp_counter))
+        context.tmp_counter += 1
+        if is_constant:
+            decl = astlib.LetDecl(tmp_name, astlib.Empty(), expr)
+        else:
+            decl = astlib.VarDecl(tmp_name, astlib.Empty(), expr)
+        return tmp_name, decl
+
     def declaration(self, decl):
-        return type(decl)(decl.name, decl.type_, e(decl.expr))
+        if decl.name in A(astlib.Unpacking):
+            tmp_name, tmp_decl = self._make_tmp(e(decl.expr))
+            yield tmp_decl
+            component_n = 1
+            for name in decl.name.names:
+                yield type(decl)(
+                    name, astlib.Empty(),
+                    astlib.StructPath([
+                        tmp_name,
+                        defs.SPEC_METHOD_COMPONENT.format(component_n)]))
+                component_n += 1
+        else:
+            yield type(decl)(decl.name, decl.type_, e(decl.expr))
 
     def struct_like_decl(self, decl):
         def _lookup_for_prelude_proto(protocol_name):
@@ -182,11 +133,11 @@ class Desugar(layers.Layer):
 
     @layers.register(astlib.LetDecl)
     def let_declaration(self, decl):
-        yield self.declaration(decl)
+        yield from self.declaration(decl)
 
     @layers.register(astlib.VarDecl)
     def var_declaration(self, decl):
-        yield self.declaration(decl)
+        yield from self.declaration(decl)
 
     @layers.register(astlib.StructDecl)
     def struct_declaration(self, decl):
@@ -243,28 +194,55 @@ class Desugar(layers.Layer):
         if is_py_obj(container):
             yield astlib.For(stmt.names, container, self.b(stmt.body))
         else:
-            if len(stmt.names) != 1:
-                errors.later()
-            container_var_name = astlib.Name(
-                defs.TMP_FMT_STRING.format(context.tmp_counter))
-            context.tmp_counter += 1
-            yield astlib.LetDecl(
-                container_var_name, astlib.Empty(),
+            def next_call(parent):
+                return astlib.StructPath([
+                    parent, astlib.FuncCall(defs.SPEC_METHOD_NEXT, [])
+                ])
+
+            def component_call(parent, n):
+                call_ = astlib.FuncCall(defs.SPEC_METHOD_COMPONENT.format(n), [])
+                if parent in A(astlib.StructPath):
+                    return astlib.StructPath(parent.path + [call_])
+                return astlib.StructPath([parent, call_])
+
+            def init_names(names, parent):
+                inits = []
+                n = 1
+                for name in names:
+                    if name in A(astlib.Unpacking):
+                        tmp_name, tmp_decl = self._make_tmp(
+                            parent, is_constant=False)
+                        inits.append(tmp_decl)
+                        inits.extend(init_names(
+                            name.names, component_call(tmp_name, n)))
+                    else:
+                        inits.append(astlib.VarDecl(
+                            name, astlib.Empty(), component_call(parent, n)))
+                    n += 1
+                return inits
+
+            tmp_name, tmp_decl = self._make_tmp(
                 astlib.StructPath([
                     container, astlib.FuncCall(defs.SPEC_METHOD_ITER, [])]))
-            yield astlib.VarDecl(
-                stmt.names[0], astlib.Empty(),
-                astlib.StructPath(
-                    [container_var_name, astlib.FuncCall(defs.SPEC_METHOD_NEXT, [])]))
+            yield tmp_decl
+            elem_name, elem_decl = self._make_tmp(
+                next_call(tmp_name), is_constant=False)
+            yield elem_decl
+            if len(stmt.names) == 1 and stmt.names[0] not in A(astlib.Unpacking):
+                preassignments = [
+                    astlib.VarDecl(
+                        stmt.names[0], astlib.Empty(),
+                        astlib.StructPath([elem_name, "data"]))]
+            else:
+                assert(len(stmt.names) == 1 and stmt.names[0] in A(astlib.Unpacking))
+                preassignments = init_names(
+                    stmt.names[0].names, astlib.StructPath([elem_name, "data"]))
+            body = preassignments + self.b(stmt.body) + [
+                    astlib.Assignment(elem_name, defs.EQ, next_call(tmp_name))
+                ]
             yield astlib.While(
-                e(astlib.Expr(
-                    stmt.names[0], defs.IS, astlib.Name(defs.TYPE_SOME))),
-                replace_name_references_for_for_stmt_translation(
-                    self.b(stmt.body), name=stmt.names[0]) + [
-                    astlib.Assignment(stmt.names[0], defs.EQ,
-                        astlib.StructPath([
-                            container_var_name,
-                            astlib.FuncCall(defs.SPEC_METHOD_NEXT, [])]))])
+                e(astlib.Expr(elem_name, defs.IS, astlib.Name(defs.TYPE_SOME))),
+                body)
 
     @layers.register(astlib.Return)
     def return_stmt(self, stmt):
