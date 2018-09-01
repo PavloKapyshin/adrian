@@ -34,7 +34,8 @@ def load_module(module_name):
         file_path = find_file(module_name)
         prev_main_file_hash = context.main_file_hash
         pipa = importlib.import_module("pipa")
-        nodes = pipa.compile_from_file(str(file_path), stop_after=Loader)
+        nodes = pipa.compile_from_file(
+            str(file_path), stop_after=Loader, module_paths=context.module_paths)
         context.main_file_hash = prev_main_file_hash
         context.loaded.extend(nodes)
         hash_ = get_file_hash(file_path)
