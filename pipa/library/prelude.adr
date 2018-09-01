@@ -9,18 +9,39 @@ protocol Eq {
     fun __eq__(other: Self): Bool
 }
 
-struct String {
-    data: py#Str
-    iterIndex: py#Int
-
-    fun __init__(data: py#Str): Void {
-        self.data = data
-        self.iterIndex = py#Int(0)
-    }
+-- implement to support +
+protocol Addable {
+    fun __add__(other: Self): Self
 }
 
-protocol ConvertibleToString {
-    fun __toString__(): String
+-- implement to support -
+protocol Subtractable {
+    fun __sub__(other: Self): Self
+}
+
+-- implement to support *
+protocol Multipliable {
+    fun __mul__(other: Self): Self
+}
+
+-- implement to support /
+protocol Divisible {
+    fun __div__(other: Self): Self
+}
+
+-- implement to support < (and <= if Eq is implemented)
+protocol Lt {
+    fun __lt__(other: Self): Bool
+}
+
+-- implement to support > (and >= if Eq is implemented)
+protocol Gt {
+    fun __gt__(other: Self): Bool
+}
+
+-- implement to support in
+protocol Container(a) {
+    fun __contains__(element: a): Bool
 }
 
 
@@ -38,41 +59,29 @@ fun assert(expr: Bool): Void {
 }
 
 
+struct String {
+    data: py#Str
+}
+
 struct Number {
     data: py#Int
 }
 
-
 struct Vector(a) {
     data: py#List
-    iterIndex: py#Int
-
-    fun __init__(data: py#List): Void {
-        self.data = data
-        self.iterIndex = py#Int(0)
-    }
 }
-
 
 struct Set(a) {
     data: py#Set(a)
-    iterated: py#Set(a)
-
-    fun __init__(data: py#Set(a)): Void {
-        self.data = data
-        self.iterated = py#Set({})
-    }
 }
-
 
 struct Dict(a, b) {
     data: py#Dict(a, b)
-    iterated: py#Set(a)
+}
 
-    fun __init__(data: py#Dict(a, b)): Void {
-        self.data = data
-        self.iterated = py#Set({})
-    }
+
+protocol ConvertibleToString {
+    fun __toString__(): String
 }
 
 protocol ConvertibleToNumber {
@@ -112,42 +121,6 @@ fun toDict(data: ConvertibleToDict(a, b)): Dict(a, b) {
 }
 
 
--- implement to support +
-protocol Addable {
-    fun __add__(other: Self): Self
-}
-
--- implement to support -
-protocol Subtractable {
-    fun __sub__(other: Self): Self
-}
-
--- implement to support *
-protocol Multipliable {
-    fun __mul__(other: Self): Self
-}
-
--- implement to support /
-protocol Divisible {
-    fun __div__(other: Self): Self
-}
-
--- implement to support < (and <= if Eq is implemented)
-protocol Lt {
-    fun __lt__(other: Self): Bool
-}
-
--- implement to support > (and >= if Eq is implemented)
-protocol Gt {
-    fun __gt__(other: Self): Bool
-}
-
--- implement to support in
-protocol Container(a) {
-    fun __contains__(element: a): Bool
-}
-
-
 protocol Printable {
     fun __print__(): Void
 }
@@ -157,8 +130,12 @@ protocol Lengthable {
 }
 
 -- implement to support for-in loop
-protocol Iterable(a) {
-    fun __next__(): Maybe(a)
+protocol Iterator(elementType) {
+    __next__: Function(Maybe(elementType))
+}
+
+protocol Iterable(elementType) {
+    fun __iter__(): Iterator(elementType)
 }
 
 -- implement to support self[index]
@@ -191,41 +168,27 @@ fun length(data: Lengthable): Number {
 }
 
 fun all(iterable: Iterable(Bool)): Bool {
-    let iter = iterable
-    var element = iter.__next__()
+    let iterator = iterable.__iter__()
+    var element = iterator.__next__()
     while element is Some {
         if element.data == False {
             return False
         }
-        element = iter.__next__()
+        element = iterator.__next__()
     }
     return True
 }
 
 fun any(iterable: Iterable(Bool)): Bool {
-    let iter = iterable
-    var element = iter.__next__()
+    let iterator = iterable.__iter__()
+    var element = iterator.__next__()
     while element is Some {
         if element.data == True {
             return True
         }
-        element = iter.__next__()
+        element = iterator.__next__()
     }
     return False
-}
-
-
-extension Some(a) is ConvertibleToString {
-    fun __toString__(): String {
-        return String(py#Str("Some(") + toString(self.data) + py#Str(")"))
-    }
-}
-
-
-extension None is ConvertibleToString {
-    fun __toString__(): String {
-        return String(py#Str("NONE"))
-    }
 }
 
 
@@ -265,6 +228,89 @@ extension Number is Addable, Subtractable, Multipliable, Divisible,
 
     fun __gt__(other: Number): Bool {
         return self.data > other.data
+    }
+}
+
+
+struct StringIterator is Iterator(String) {
+    data: String
+    index: py#Int
+
+    fun __init__(data: String): Void {
+        self.data = data
+        self.index = py#Int(0)
+    }
+
+    fun __next__(): Maybe(String) {
+        let element = self.data.data[self.index]
+        if element is py#None {
+            self.index = py#Int(0)
+            return None()
+        }
+        self.index += py#Int(1)
+        return Some(String(element))
+    }
+}
+
+struct VectorIterator(a) is Iterator(a) {
+    data: Vector(a)
+    index: py#Int
+
+    fun __init__(data: Vector(a)): Void {
+        self.data = data
+        self.index = py#Int(0)
+    }
+
+    fun __next__(): Maybe(a) {
+        let element = self.data.data[self.index]
+        if element is py#None {
+            self.index = py#Int(0)
+            return None()
+        }
+        self.index += py#Int(1)
+        return Some(element)
+    }
+}
+
+struct SetIterator(a) is Iterator(a) {
+    data: Set(a)
+    iterated: py#Set
+
+    fun __init__(data: Set(a)): Void {
+        self.data = data
+        self.iterated = py#Set({})
+    }
+
+    fun __next__(): Maybe(a) {
+        for element in self.data.data {
+            if not (element in self.iterated) {
+                self.iterated += py#Set({element})
+                return Some(element)
+            }
+        }
+        self.iterated = py#Set({})
+        return None()
+    }
+}
+
+struct DictIterator(a, b) is Iterator(a) {
+    data: Dict(a, b)
+    iterated: py#Set
+
+    fun __init__(data: Dict(a, b)): Void {
+        self.data = data
+        self.iterated = py#Set({})
+    }
+
+    fun __next__(): Maybe(a) {
+        for element in self.data.data {
+            if not (element in self.iterated) {
+                self.iterated += py#Set({element})
+                return Some(element)
+            }
+        }
+        self.iterated = py#Set({})
+        return None()
     }
 }
 
@@ -317,14 +363,8 @@ extension String is Addable, Container(String), Iterable(String), Lengthable,
         return Some(got)
     }
 
-    fun __next__(): Maybe(String) {
-        let element = self.data[self.iterIndex]
-        if element is py#None {
-            self.iterIndex = py#Int(0)
-            return None()
-        }
-        self.iterIndex += py#Int(1)
-        return Some(String(element))
+    fun __iter__(): StringIterator {
+        return StringIterator(self)
     }
 
     fun split(by separator: String): Vector(String) {
@@ -337,17 +377,17 @@ extension String is Addable, Container(String), Iterable(String), Lengthable,
     }
 
     fun join(iterable: Iterable(String) and Lengthable): String {
-        let iter = iterable
+        let iterator = iterable.__iter__()
         var result = py#Str("")
-        var element = iter.__next__()
-        let len = length(iter).data
+        var element = iterator.__next__()
+        let len = length(iterable).data
         var index = py#Int(0)
         while element is Some {
             result += element.data.data
             if index < (len - py#Int(1)) {
                 result += self.data
             }
-            element = iter.__next__()
+            element = iterator.__next__()
             index += py#Int(1)
         }
         return String(result)
@@ -458,14 +498,8 @@ extension Vector(a) is ConvertibleToVector(a), ConvertibleToString,
         self.data[index.data] = item
     }
 
-    fun __next__(): Maybe(a) {
-        let element = self.data[self.iterIndex]
-        if element is py#None {
-            self.iterIndex = py#Int(0)
-            return None()
-        }
-        self.iterIndex += py#Int(1)
-        return Some(element)
+    fun __iter__(): VectorIterator(a) {
+        return VectorIterator(self)
     }
 
     fun append(element: a): Void {
@@ -490,15 +524,8 @@ extension Set(a) is Iterable(a), Addable, ConvertibleToVector(a),
                     ConvertibleToSet(a), ConvertibleToString, Eq,
                     Container(a), Lengthable, Subtractable,
                     ConvertibleToDict(a, a) {
-    fun __next__(): Maybe(a) {
-        for element in self.data {
-            if not (element in self.iterated) {
-                self.iterated += py#Set({element})
-                return Some(element)
-            }
-        }
-        self.iterated = py#Set({})
-        return None()
+    fun __iter__(): SetIterator(a) {
+        return SetIterator(self)
     }
 
     fun __add__(other: Set(a)): Set(a) {
@@ -597,15 +624,8 @@ extension Dict(a, b) is ConvertibleToDict(a, b), ConvertibleToSet(a),
         return String(py#Str("{") + elements + py#Str("}"))
     }
 
-    fun __next__(): Maybe(a) {
-        for element in self.data {
-            if not (element in self.iterated) {
-                self.iterated += py#Set({element})
-                return Some(element)
-            }
-        }
-        self.iterated = py#Set({})
-        return None()
+    fun __iter__(): DictIterator(a, b) {
+        return DictIterator(self)
     }
 
     fun __add__(other: Dict(a, b)): Dict(a, b) {
