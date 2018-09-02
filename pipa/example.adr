@@ -1,18 +1,33 @@
-fun factorialRecurse(n: Number): Number {
-    if n in [0, 1] {
-        return 1
-    }
-    let innerResult = factorialRecurse(n - 1)
-    return innerResult * n
+let microSyntax = {
+    lexers#OneOrMore(lexers#NumberCombinator()) = "NUMBER",
+    lexers#OneOrMore(lexers#Or([lexers#LowerCaseLetter(), lexers#UpperCaseLetter()])) = "NAME",
+    lexers#And([
+        lexers#Char("'"),
+        lexers#AnyChar(["'"]),
+        lexers#Char("'")
+    ]) = "STRING"
 }
 
-fun factorialLooped(n: Number): Number {
-    if n in [0, 1] {
-        return 1
-    }
-    return factorialLooped(n - 1) * n
+for (char, lexemeType) in [
+            Pair("(", "LEFT_PAREN"),
+            Pair(")", "RIGHT_PAREN"),
+            Pair(":", "COLON"),
+            Pair("{", "LEFT_BRACE"),
+            Pair("}", "RIGHT_BRACE"),
+        ] {
+    microSyntax[lexers#Char(char)] = lexemeType
 }
 
 
---print(factorialRecurse(120))
-print(factorialLooped(6))
+let lexer = lexers#CombinatorLexer(
+    microSyntax, ignoreList = [" "], keywords = ["fun", "return"])
+
+
+let lexingResult = lexer.lex("fun name(): Number {return 0}")
+if lexingResult is Right {
+    for (text, type) in lexingResult.data {
+        print(" ".join([text, type]))
+    }
+} else {
+    print(" ".join(["LEXING ERROR:", toString(lexingResult.data)]))
+}

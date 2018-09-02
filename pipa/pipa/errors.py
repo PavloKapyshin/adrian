@@ -28,6 +28,7 @@ _CANNOT_FIND_FILE = "cannot find file {file}"
 
 _UNKNOWN_ARG = "unknown argument {argument}"
 _UNKNOWN_NAME = "unknown name {name}"
+_UNKNOWN_METHOD = "unknown method in {base} with type {type} called {method}"
 _CANT_REASSIGN = "cannot reassign name {name}"
 _TYPE_MISMATCH = "types mismatched: {expr1} has type {type1}, {expr2} has type {type2}"
 _LATER = ":P just wait"
@@ -39,6 +40,7 @@ cannot_find_file = _error_maker(_CANNOT_FIND_FILE, "file")
 
 unknown_arg = _error_maker(_UNKNOWN_ARG, "argument")
 unknown_name = _error_maker(_UNKNOWN_NAME, "name")
+unknown_method = _error_maker(_UNKNOWN_METHOD, "base", "type", "method")
 cant_reassign = _error_maker(_CANT_REASSIGN, "name")
 type_mismatch = _error_maker(_TYPE_MISMATCH, "expr1", "type1", "expr2", "type2")
 later = _error_maker(_LATER)
