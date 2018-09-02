@@ -1,0 +1,53 @@
+-- prelude#Vector tests
+let names = ["John", "Mike", "Drake"]
+let listsOfNumbers = [[1, 2], [3], [4, 5, 6], []]
+let numbers = [1, 2, 3, 4, 5, 6]
+let persons: Vector(String) = []
+
+print("Vector.append")
+names.append("Michael")
+print(names)
+
+print()
+
+print("Vector.extend")
+numbers.extend(by = [7, 8, 9])
+print(numbers)
+
+print()
+
+print("Vector.isEmpty")
+if persons.isEmpty() {
+    print("'Persons' is empty")
+} else {
+    print("'Persons' is not empty")
+}
+
+print()
+
+print("Vector.map")
+fun makeGreeting(name: String): String {
+    return "Hello, " + name
+}
+
+print(names.map(makeGreeting))
+
+print()
+
+print("Vector.enumerated")
+for (n, elem) in names.enumerated() {
+    print(" ".join([toString(n), elem]))
+}
+
+print()
+
+for (n, elem) in names.enumerated(start = 5) {
+    print(" ".join([toString(n), elem]))
+}
+
+print()
+
+print("Vector.zipped")
+for (number, name) in numbers.zipped(with = names) {
+    print(" ".join([toString(number), name]))
+}

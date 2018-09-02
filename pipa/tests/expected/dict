@@ -1,0 +1,8 @@
+Iteration
+John 1
+Mike 2
+Drake 3
+
+Dict.keys and Dict.values
+['John', 'Mike', 'Drake']
+[1, 2, 3]
