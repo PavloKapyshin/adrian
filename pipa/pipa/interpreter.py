@@ -334,6 +334,7 @@ class Interpreter(layers.Layer):
         elif info["node_type"] == astlib.NodeT.protocol:
             return astlib.GenericType(func_call.name, func_call.args)
         context.env.add_scope()
+        # TODO
         # Always len(info["args"]) >= len(func_call.args)
         for arg_decl, expr in zip_longest(info["args"], func_call.args, fillvalue=None):
             names = arg_decl.names
@@ -422,6 +423,8 @@ class Interpreter(layers.Layer):
             return [self.eval(element) for element in iterable]
 
         if func_call.name == defs.TYPE_INT:
+            if "." in func_call.args[0].literal:
+                return float(func_call.args[0].literal)
             return int(func_call.args[0].literal)
         elif func_call.name == defs.TYPE_STR:
             return func_call.args[0].literal
@@ -666,7 +669,7 @@ class Interpreter(layers.Layer):
         elif expr in A(astlib.KeywordArg):
             return astlib.KeywordArg(expr.name, self.eval(expr.expr))
         elif expr in A(
-                int, str, list, set, dict, bool, astlib.InstanceValue,
+                int, str, list, set, dict, bool, float, astlib.InstanceValue,
                 astlib.GenericType, astlib.PyType, astlib.Function):
             return expr
         elif expr is None:

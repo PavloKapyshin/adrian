@@ -1,1 +1,18 @@
-print("Hello, world!".cutBetween(",", "!"))
+fun factorialRecurse(n: Number): Number {
+    if n in [0, 1] {
+        return 1
+    }
+    let innerResult = factorialRecurse(n - 1)
+    return innerResult * n
+}
+
+fun factorialLooped(n: Number): Number {
+    if n in [0, 1] {
+        return 1
+    }
+    return factorialLooped(n - 1) * n
+}
+
+
+--print(factorialRecurse(120))
+print(factorialLooped(6))
