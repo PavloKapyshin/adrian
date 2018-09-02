@@ -428,6 +428,14 @@ extension String is Addable, Container(String), Iterable(String), Lengthable,
         return StringIterator(self)
     }
 
+    fun lower(): String {
+        return String(self.data.lower())
+    }
+
+    fun upper(): String {
+        return String(self.data.upper())
+    }
+
     fun split(by separator: String): Vector(String) {
         -- TODO: write without usage of py#Str.split
         let result: Vector(String) = Vector(py#List([]))

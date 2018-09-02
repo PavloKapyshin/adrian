@@ -12,12 +12,31 @@ protocol Combinator {
 }
 
 
+struct UpperCaseLetter is Combinator {
+    fun match(string: String): String? {
+        if (length(string) == 0) or (not ((string[0])! in String(py#upperCaseLetters))) {
+            return None()
+        }
+        return Some((string[0])!)
+    }
+}
+
+struct LowerCaseLetter is Combinator {
+    fun match(string: String): String? {
+        if (length(string) == 0) or (not ((string[0])! in String(py#lowerCaseLetters))) {
+            return None()
+        }
+        return Some((string[0])!)
+    }
+}
+
+
 struct NumberCombinator is Combinator {
     fun match(string: String): String? {
         if (length(string) == 0) or (not ((string[0])! in "1234567890")) {
             return None()
         }
-        return string[0]
+        return Some((string[0])!)
     }
 }
 
@@ -139,13 +158,11 @@ struct CombinatorLexer {
     microSyntax: Dict(Combinator, String)
     ignoreList: Vector(String)
     keywords: Vector(String)
-    keywordLexemeType: String
 
     fun __init__(
             microSyntax: Dict(Combinator, String),
             ignoreList: Vector(String) = [],
-            keywords: Vector(String) = [],
-            keywordLexemeType: String = ""): Void {
+            keywords: Vector(String) = []): Void {
         self.microSyntax = microSyntax
         self.ignoreList = ignoreList
         self.keywords = keywords
@@ -171,7 +188,7 @@ struct CombinatorLexer {
         for (combinator, lexemeType) in self.microSyntax {
             if let result = combinator.match(string) {
                 if result in self.keywords {
-                    return Some(Lexeme(result, self.keywordLexemeType))
+                    return Some(Lexeme(result, result.upper()))
                 }
                 return Some(Lexeme(result, lexemeType))
             }

@@ -421,6 +421,12 @@ class Interpreter(layers.Layer):
             argv = sys.argv
             assert(all([elem in A(str) for elem in argv]))
             return argv
+        elif constant.name == defs.CONSTANT_UPPER_CASE_LETTERS:
+            import string
+            return string.ascii_uppercase
+        elif constant.name == defs.CONSTANT_LOWER_CASE_LETTERS:
+            import string
+            return string.ascii_lowercase
         else:
             errors.later()
 
@@ -496,6 +502,10 @@ class Interpreter(layers.Layer):
             return list(converted_base.keys())
         elif func_call.name == defs.METHOD_ITEMS:
             return list(converted_base.items())
+        elif func_call.name == defs.METHOD_LOWER:
+            return converted_base.lower()
+        elif func_call.name == defs.METHOD_UPPER:
+            return converted_base.upper()
         elif func_call.name == defs.SPEC_METHOD_SLICE:
             return converted_base[args[0]:args[1]]
         elif func_call.name == defs.SPEC_METHOD_GETITEM:

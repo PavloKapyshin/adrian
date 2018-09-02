@@ -1,16 +1,29 @@
-
-let lexer = lexers#CombinatorLexer({
-    lexers#OneOrMore(lexers#NumberCombinator()) = "number",
-    lexers#OneOrMore(lexers#Or([lexers#Char("a"), lexers#Char("b")])) = "name",
+let microSyntax = {
+    lexers#OneOrMore(lexers#NumberCombinator()) = "NUMBER",
+    lexers#OneOrMore(lexers#Or([lexers#LowerCaseLetter(), lexers#UpperCaseLetter()])) = "NAME",
     lexers#And([
         lexers#Char("'"),
         lexers#AnyChar(["'"]),
         lexers#Char("'")
-    ]) = "string"
-}, ignoreList = [" ",])
+    ]) = "STRING"
+}
+
+for (char, lexemeType) in [
+            Pair("(", "LEFT_PAREN"),
+            Pair(")", "RIGHT_PAREN"),
+            Pair(":", "COLON"),
+            Pair("{", "LEFT_BRACE"),
+            Pair("}", "RIGHT_BRACE"),
+        ] {
+    microSyntax[lexers#Char(char)] = lexemeType
+}
 
 
-let lexingResult = lexer.lex("aaa bba '@@' 1234 a'123#!aba'")
+let lexer = lexers#CombinatorLexer(
+    microSyntax, ignoreList = [" "], keywords = ["fun", "return"])
+
+
+let lexingResult = lexer.lex("fun name(): Number {return 0}")
 if lexingResult is Right {
     for (text, type) in lexingResult.data {
         print(" ".join([text, type]))
