@@ -178,9 +178,8 @@ for n in [1, 2, 3, 4, 5, 6] {
 }
 
 var d = {"John" = 1}
-for key in d {
-    let val = d[key]
-    print(key + " = " + toString(val.data))
+for (key, val) in d {
+    print(key + " = " + toString(val))
 }
 
 print("")
