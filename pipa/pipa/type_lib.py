@@ -40,7 +40,7 @@ def infer_type(expr):
         return expr.type_
     elif expr in A(astlib.Expr):
         return infer_type(expr.left)
-    elif expr in A(int):
+    elif expr in A(int, float):
         return astlib.PyType(defs.TYPE_INT)
     elif expr in A(str):
         return astlib.PyType(defs.TYPE_STR)
