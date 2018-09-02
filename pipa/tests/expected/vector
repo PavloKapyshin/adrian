@@ -9,3 +9,20 @@ Vector.isEmpty
 
 Vector.map
 ['Hello, John', 'Hello, Mike', 'Hello, Drake', 'Hello, Michael']
+
+Vector.enumerated
+0 John
+1 Mike
+2 Drake
+3 Michael
+
+5 John
+6 Mike
+7 Drake
+8 Michael
+
+Vector.zipped
+1 John
+2 Mike
+3 Drake
+4 Michael

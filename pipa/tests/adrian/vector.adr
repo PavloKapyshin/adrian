@@ -31,3 +31,23 @@ fun makeGreeting(name: String): String {
 }
 
 print(names.map(makeGreeting))
+
+print()
+
+print("Vector.enumerated")
+for (n, elem) in names.enumerated() {
+    print(" ".join([toString(n), elem]))
+}
+
+print()
+
+for (n, elem) in names.enumerated(start = 5) {
+    print(" ".join([toString(n), elem]))
+}
+
+print()
+
+print("Vector.zipped")
+for (number, name) in numbers.zipped(with = names) {
+    print(" ".join([toString(number), name]))
+}

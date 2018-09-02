@@ -624,6 +624,31 @@ extension Vector(a) is ConvertibleToVector(a), ConvertibleToString,
         }
         return result
     }
+
+    fun enumerated(start: Number = Number(py#Int(0))): Vector(Pair(Number, a)) {
+        var result: py#List = py#List([])
+        var index: py#Int = start.data
+        for element in self.data {
+            result += py#List([Pair(Number(index), element)])
+            index += py#Int(1)
+        }
+        return Vector(result)
+    }
+
+    fun zipped(iterable with: Vector(b)): Vector(Pair(a, b)) {
+        let iterableLength: py#Int = length(iterable).data
+        var result: py#List = py#List([])
+        var index: py#Int = py#Int(0)
+        for element in self.data {
+            if index < iterableLength {
+                result += py#List([Pair(element, (iterable.data)[index])])
+            } else {
+                return Vector(result)
+            }
+            index += py#Int(1)
+        }
+        return Vector(result)
+    }
 }
 
 
