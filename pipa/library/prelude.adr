@@ -102,6 +102,19 @@ struct Some(a) is Maybe(a) {
 struct None is Maybe(a) {}
 
 
+protocol Either(a, b) {
+    data: a or b
+}
+
+struct Left(a) is Either(a, b) {
+    data: a
+}
+
+struct Right(b) is Either(a, b) {
+    data: b
+}
+
+
 fun assert(expr: Bool): Void {
     py#assert(expr)
 }

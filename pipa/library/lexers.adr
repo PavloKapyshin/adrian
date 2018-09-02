@@ -1,6 +1,26 @@
+struct LexingError is ConvertibleToString {
+    description: String
+
+    fun __toString__(): String {
+        return self.description
+    }
+}
+
+
 protocol Combinator {
     fun match(string: String): String?
 }
+
+
+struct NumberCombinator is Combinator {
+    fun match(string: String): String? {
+        if (length(string) == 0) or (not ((string[0])! in "1234567890")) {
+            return None()
+        }
+        return string[0]
+    }
+}
+
 
 struct Char is Combinator {
     char: String
@@ -100,15 +120,6 @@ struct Or is Combinator {
     }
 }
 
-struct NumberCombinator is Combinator {
-    fun match(string: String): String? {
-        if (length(string) == 0) or (not ((string[0])! in "1234567890")) {
-            return None()
-        }
-        return string[0]
-    }
-}
-
 
 struct Lexeme {
     text: String
@@ -140,7 +151,7 @@ struct CombinatorLexer {
         self.keywords = keywords
     }
 
-    fun lex(input: String): Vector(Lexeme) {
+    fun lex(input: String): Either(LexingError, Vector(Lexeme)) {
         let lexemes: Vector(Lexeme) = []
         let initialLength = length(input)
         while input != "" {
@@ -149,12 +160,11 @@ struct CombinatorLexer {
                 lexemes.append(lexeme)
                 input = input[length(lexeme.text):initialLength]
             } else {
-                -- error: lexing error
-                print("LEXING ERROR")
-                break
+                return Left(
+                    LexingError("Something is broken in lexer..."))
             }
         }
-        return lexemes
+        return Right(lexemes)
     }
 
     fun getLexeme(string: String): Lexeme? {
