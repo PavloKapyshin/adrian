@@ -334,6 +334,7 @@ class Interpreter(layers.Layer):
         elif info["node_type"] == astlib.NodeT.protocol:
             return astlib.GenericType(func_call.name, func_call.args)
         context.env.add_scope()
+        # TODO
         # Always len(info["args"]) >= len(func_call.args)
         for arg_decl, expr in zip_longest(info["args"], func_call.args, fillvalue=None):
             names = arg_decl.names

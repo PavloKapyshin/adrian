@@ -244,9 +244,34 @@ class Desugar(layers.Layer):
                 e(astlib.Expr(elem_name, defs.IS, astlib.Name(defs.TYPE_SOME))),
                 body)
 
+    def tail_call(self, expr):
+        if expr in A(astlib.Expr):
+            left_tmp_name, left_tmp_decls = self.tail_call(expr.left)
+            if expr.op not in (defs.IS,):
+                right_tmp_name, right_tmp_decls = self.tail_call(expr.right)
+            else:
+                right_tmp_name, right_tmp_decls = expr.right, []
+            return (
+                astlib.Expr(left_tmp_name, expr.op, right_tmp_name),
+                left_tmp_decls + right_tmp_decls)
+        elif expr in A(astlib.Name):
+            return expr, []
+        elif expr in A(astlib.FuncCall):
+            args, arg_decls = [], []
+            for arg in expr.args:
+                tmp_name, tmp_decls = self.tail_call(arg)
+                args.append(tmp_name)
+                arg_decls.extend(tmp_decls)
+            tmp_name, tmp_decl = self._make_tmp(
+                astlib.FuncCall(expr.name, args))
+            return tmp_name, arg_decls + [tmp_decl]
+        return expr, []
+
     @layers.register(astlib.Return)
     def return_stmt(self, stmt):
-        yield astlib.Return(e(stmt.expr))
+        expr, decls = self.tail_call(e(stmt.expr))
+        yield from decls
+        yield astlib.Return(expr)
 
     @layers.register(astlib.FuncCall)
     def func_call(self, call):
