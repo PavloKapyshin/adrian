@@ -81,7 +81,7 @@ def without_quotes(string):
 def t_STRING(token):
     r'''\"([^\\\n]|(\\.))*?\"'''
     token.value = astlib.Literal(
-        astlib.LiteralT.string, without_quotes(token.value))
+        astlib.LiteralT.string, without_quotes(token.value).replace("\\n", "\n"))
     return token
 
 
@@ -232,8 +232,12 @@ def p_for_stmt(content):
     content[0] = astlib.For(content[2], content[4], content[6])
 
 
-def p_while_stmt(content):
+def p_while_stmt_1(content):
     """while_stmt : WHILE bool_expr LBRACE ast RBRACE"""
+    content[0] = astlib.While(content[2], content[4])
+
+def p_while_stmt_2(content):
+    """while_stmt : WHILE let_decl LBRACE ast RBRACE"""
     content[0] = astlib.While(content[2], content[4])
 
 

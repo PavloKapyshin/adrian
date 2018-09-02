@@ -321,6 +321,8 @@ class Interpreter(layers.Layer):
     @layers.register(astlib.FuncCall)
     def func_call(self, func_call):
         info = context.env[func_call.name]
+        if info is None:
+            errors.unknown_name(func_call.name)
         if info["node_type"] in (astlib.NodeT.var, astlib.NodeT.let, astlib.NodeT.arg):
             assert (info["expr"] in A(astlib.Function)), info["expr"]
             info = {
@@ -374,7 +376,12 @@ class Interpreter(layers.Layer):
                 "body": _func_info.body
             }
         else:
-            method_info = context.env[type_]["methods"][func_call.name]
+            info = context.env[type_]
+            if info is None:
+                errors.unknown_name(type_)
+            method_info = info["methods"].get(func_call.name)
+            if method_info is None:
+                errors.unknown_method(base, type_, func_call.name)
         body = method_info["body"]
         context.env.add_scope()
         decl_args = [
@@ -445,7 +452,7 @@ class Interpreter(layers.Layer):
         elif func_call.name == defs.FUNC_PRINT:
             for arg in func_call.args:
                 arg = self.eval(arg)
-                print(arg.replace("\\n", "\n"), end="")
+                print(arg, end="")
         elif func_call.name == defs.FUNC_TO_STR:
             return str(self.eval(func_call.args[0]))
         elif func_call.name == defs.FUNC_TO_INT:
@@ -537,6 +544,7 @@ class Interpreter(layers.Layer):
                 return up
             return result
         else:
+            print(func_call.name, converted_base)
             # support other methods
             errors.later()
 
@@ -589,7 +597,11 @@ class Interpreter(layers.Layer):
                         root_expr_raw = root_expr
                         root_type = infer_type(root_expr)
                 else:
+                    if root_expr not in A(astlib.InstanceValue):
+                        print(root_expr, root_expr_raw)
                     assert(root_expr in A(astlib.InstanceValue))
+                    if elem not in root_expr.value:
+                        print("Why", root_expr, elem)
                     root_expr = root_expr.value[elem]
                     if root_expr_raw in A(astlib.StructPath):
                         root_expr_raw.path += [elem]

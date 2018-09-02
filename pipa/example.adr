@@ -1,18 +1,15 @@
-fun factorialRecurse(n: Number): Number {
-    if n in [0, 1] {
-        return 1
-    }
-    let innerResult = factorialRecurse(n - 1)
-    return innerResult * n
+
+let lexer = lexers#CombinatorLexer({
+    lexers#OneOrMore(lexers#NumberCombinator()) = "number",
+    lexers#OneOrMore(lexers#Or([lexers#Char("a"), lexers#Char("b")])) = "name",
+    lexers#And([
+        lexers#Char("'"),
+        lexers#AnyChar(["'"]),
+        lexers#Char("'")
+    ]) = "string"
+}, ignoreList = [" ",])
+
+
+for (text, type) in lexer.lex("aaa bba '@@' 1234 a'123#!aba'") {
+    print(" ".join([text, type]))
 }
-
-fun factorialLooped(n: Number): Number {
-    if n in [0, 1] {
-        return 1
-    }
-    return factorialLooped(n - 1) * n
-}
-
-
---print(factorialRecurse(120))
-print(factorialLooped(6))

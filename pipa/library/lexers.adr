@@ -1,28 +1,185 @@
-struct LexemeType is Eq {
-    data: String
+protocol Combinator {
+    fun match(string: String): String?
+}
 
-    fun __eq__(other: LexemeType): Bool {
-        return self.data == other.data
+struct Char is Combinator {
+    char: String
+
+    fun match(string: String): String? {
+        if (length(string) == 0) or ((string[0])! != self.char) {
+            return None()
+        }
+        return Some(self.char)
     }
 }
 
 
-struct Lexeme is Eq {
+struct AnyChar is Combinator {
+    escapes: Vector(String)
+
+    fun __init__(escapes: Vector(String) = []): Void {
+        self.escapes = escapes
+    }
+
+    fun match(string: String): String? {
+        let results: Vector(String) = []
+        for char in string {
+            if char in self.escapes {
+                break
+            }
+            results.append(char)
+        }
+        if results == [] {
+            return None()
+        }
+        return Some("".join(results))
+    }
+}
+
+
+struct Possible is Combinator {
+    combinator: Combinator
+
+    fun match(string: String): String? {
+        if let result = self.combinator.match(string) {
+            return Some(result)
+        }
+        return Some("")
+    }
+}
+
+
+struct OneOrMore is Combinator {
+    combinator: Combinator
+
+    fun match(string: String): String? {
+        let initialLength = length(string)
+        let results: Vector(String) = []
+        while let result = self.combinator.match(string) {
+            results.append(result)
+            string = string[length(result):initialLength]
+        }
+        if results == [] {
+            return None()
+        }
+        return Some("".join(results))
+    }
+}
+
+struct And is Combinator {
+    combinators: Vector(Combinator)
+
+    fun match(string: String): String? {
+        let initialLength = length(string)
+        let results = []
+        for combinator in self.combinators {
+            if let result = combinator.match(string) {
+                results.append(result)
+                string = string[length(result):initialLength]
+            } else {
+                return None()
+            }
+        }
+        if results == [] {
+            return None()
+        }
+        return Some("".join(results))
+    }
+}
+
+struct Or is Combinator {
+    combinators: Vector(Combinator)
+
+    fun match(string: String): String? {
+        for combinator in self.combinators {
+            if let result = combinator.match(string) {
+                return Some(result)
+            }
+        }
+        return None()
+    }
+}
+
+struct NumberCombinator is Combinator {
+    fun match(string: String): String? {
+        if (length(string) == 0) or (not ((string[0])! in "1234567890")) {
+            return None()
+        }
+        return string[0]
+    }
+}
+
+
+struct Lexeme {
     text: String
-    type: LexemeType
+    type: String
 
-    fun __eq__(other: Lexeme): Bool {
-        return (self.text == other.text) and (self.type == other.type)
+    fun __component1__(): String {
+        return self.text
+    }
+
+    fun __component2__(): String {
+        return self.type
     }
 }
 
 
-struct Lexer {
-    table: regexes#RegexDict(String)
+struct CombinatorLexer {
+    microSyntax: Dict(Combinator, String)
+    ignoreList: Vector(String)
+    keywords: Vector(String)
+    keywordLexemeType: String
+
+    fun __init__(
+            microSyntax: Dict(Combinator, String),
+            ignoreList: Vector(String) = [],
+            keywords: Vector(String) = [],
+            keywordLexemeType: String = ""): Void {
+        self.microSyntax = microSyntax
+        self.ignoreList = ignoreList
+        self.keywords = keywords
+    }
 
     fun lex(input: String): Vector(Lexeme) {
-        let result: Vector(Lexeme) = []
-        -- TODO
-        return result
+        let lexemes: Vector(Lexeme) = []
+        let initialLength = length(input)
+        while input != "" {
+            input = self.withRemovedLeadingIgnorableChars(input)
+            if let lexeme = self.getLexeme(input) {
+                lexemes.append(lexeme)
+                input = input[length(lexeme.text):initialLength]
+            } else {
+                -- error: lexing error
+                print("LEXING ERROR")
+                break
+            }
+        }
+        return lexemes
+    }
+
+    fun getLexeme(string: String): Lexeme? {
+        for (combinator, lexemeType) in self.microSyntax {
+            if let result = combinator.match(string) {
+                if result in self.keywords {
+                    return Some(Lexeme(result, self.keywordLexemeType))
+                }
+                return Some(Lexeme(result, lexemeType))
+            }
+        }
+        return None()
+    }
+
+    fun withRemovedLeadingIgnorableChars(string: String): String {
+        let result: Vector(String) = []
+        var normalCharWasSeen = False
+        for char in string {
+            if (not normalCharWasSeen) and (not (char in self.ignoreList)) {
+                normalCharWasSeen = True
+            }
+            if normalCharWasSeen {
+                result.append(char)
+            }
+        }
+        return "".join(result)
     }
 }

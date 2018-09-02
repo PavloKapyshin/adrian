@@ -186,7 +186,22 @@ class Desugar(layers.Layer):
 
     @layers.register(astlib.While)
     def while_stmt(self, stmt):
-        yield astlib.While(e(stmt.expr), self.b(stmt.body))
+        if stmt.expr in A(astlib.LetDecl):
+            let_expr = e(stmt.expr.expr)
+            tmp_name = astlib.Name(
+                defs.TMP_FMT_STRING.format(context.tmp_counter))
+            context.tmp_counter += 1
+            yield astlib.VarDecl(tmp_name, astlib.Empty(), let_expr)
+            yield astlib.While(
+                e(astlib.Expr(tmp_name, "is", astlib.Name(defs.TYPE_SOME))),
+                [astlib.LetDecl(
+                    stmt.expr.name, astlib.Empty(),
+                    astlib.StructPath([
+                        tmp_name, astlib.Name(
+                            defs.FIELD_OF_SOME)]))] + self.b(stmt.body) + [
+                astlib.Assignment(tmp_name, "=", let_expr)])
+        else:
+            yield astlib.While(e(stmt.expr), self.b(stmt.body))
 
     @layers.register(astlib.For)
     def for_stmt(self, stmt):
