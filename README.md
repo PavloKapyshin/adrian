@@ -1,3 +1,3 @@
-**WIP**
+# Adrian
 
-pipa is an Adrian interpreter written in python.
+The Adrian programming language.
