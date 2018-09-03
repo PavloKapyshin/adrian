@@ -20,14 +20,14 @@ for (char, lexemeType) in [
 
 
 let lexer = lexers#CombinatorLexer(
-    microSyntax, ignoreList = [" "], keywords = ["fun", "return"])
+    microSyntax, ignoreList = [" ", "\n"], keywords = ["fun", "return"])
 
 
-let lexingResult = lexer.lex("fun name(): Number {return 0}")
+let lexingResult = lexer.lex("fun name(): Number {\nreturn 0\n}\n")
 if lexingResult is Right {
     for (text, type) in lexingResult.data {
         print(" ".join([text, type]))
     }
 } else {
-    print(" ".join(["LEXING ERROR:", toString(lexingResult.data)]))
+    print(lexingResult.data)
 }

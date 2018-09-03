@@ -361,7 +361,9 @@ class Interpreter(layers.Layer):
         converted_base = self.eval(base)
         assert(converted_base in A(astlib.InstanceValue))
         type_ = infer_type(converted_base)
-        if depends_on_self(base) or is_arg(base):
+        if base == defs.SELF:
+            args = [context.env[base]["expr"]]
+        elif depends_on_self(base) or is_arg(base):
             args = [converted_base]
         else:
             args = [base]
@@ -554,7 +556,6 @@ class Interpreter(layers.Layer):
                 return up
             return result
         else:
-            print(func_call.name, converted_base)
             # support other methods
             errors.later()
 
@@ -607,11 +608,7 @@ class Interpreter(layers.Layer):
                         root_expr_raw = root_expr
                         root_type = infer_type(root_expr)
                 else:
-                    if root_expr not in A(astlib.InstanceValue):
-                        print(root_expr, root_expr_raw)
                     assert(root_expr in A(astlib.InstanceValue))
-                    if elem not in root_expr.value:
-                        print("Why", root_expr, elem)
                     root_expr = root_expr.value[elem]
                     if root_expr_raw in A(astlib.StructPath):
                         root_expr_raw.path += [elem]

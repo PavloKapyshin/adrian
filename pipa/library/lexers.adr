@@ -1,8 +1,12 @@
 struct LexingError is ConvertibleToString {
-    description: String
+    lineNumber: Number
+    char: String
 
     fun __toString__(): String {
-        return self.description
+        return "LEXING ERROR (on {lineNumber}): illegal char {char}".format({
+            "lineNumber" = toString(self.lineNumber),
+            "char" = self.char
+        })
     }
 }
 
@@ -158,6 +162,7 @@ struct CombinatorLexer {
     microSyntax: Dict(Combinator, String)
     ignoreList: Vector(String)
     keywords: Vector(String)
+    lineNumber: Number
 
     fun __init__(
             microSyntax: Dict(Combinator, String),
@@ -166,19 +171,24 @@ struct CombinatorLexer {
         self.microSyntax = microSyntax
         self.ignoreList = ignoreList
         self.keywords = keywords
+        self.lineNumber = 1
     }
 
     fun lex(input: String): Either(LexingError, Vector(Lexeme)) {
         let lexemes: Vector(Lexeme) = []
         let initialLength = length(input)
         while input != "" {
-            input = self.withRemovedLeadingIgnorableChars(input)
+            input = self.withoutLeadingIgnorableChars(
+                self.withoutLeadingNewlines(input))
+            if input == "" {
+                break
+            }
             if let lexeme = self.getLexeme(input) {
                 lexemes.append(lexeme)
                 input = input[length(lexeme.text):initialLength]
             } else {
                 return Left(
-                    LexingError("Something is broken in lexer..."))
+                    LexingError(self.lineNumber, (input[0])!))
             }
         }
         return Right(lexemes)
@@ -196,7 +206,21 @@ struct CombinatorLexer {
         return None()
     }
 
-    fun withRemovedLeadingIgnorableChars(string: String): String {
+    fun withoutLeadingNewlines(string: String): String {
+        var index = 0
+        for char in string {
+            if char == "\n" {
+                index += 1
+            } else {
+                self.lineNumber += index
+                return string[index:length(string)]
+            }
+        }
+        self.lineNumber += index
+        return ""
+    }
+
+    fun withoutLeadingIgnorableChars(string: String): String {
         let result: Vector(String) = []
         var normalCharWasSeen = False
         for char in string {
