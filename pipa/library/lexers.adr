@@ -212,11 +212,12 @@ struct CombinatorLexer {
         for char in string {
             if char == "\n" {
                 index += 1
-                self.lineNumber += 1
             } else {
+                self.lineNumber += index
                 return string[index:length(string)]
             }
         }
+        self.lineNumber += index
         return ""
     }
 
