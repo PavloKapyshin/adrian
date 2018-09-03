@@ -39,6 +39,8 @@
 #endif
 #endif
 
+#define _POSIX_C_SOURCE 200809L
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -367,7 +369,7 @@ static bool_t unescape_string(char *str) {
                     str[j++] = '\\'; str[j++] = 'x'; str[j] = '\0'; return FALSE;
                 }
                 if (str[i + 2] == '\0') {
-                    str[j++] = '\\'; str[j++] = 'x'; str[j++] = str[i + 1]; str[j] = '\0'; return FALSE; 
+                    str[j++] = '\\'; str[j++] = 'x'; str[j++] = str[i + 1]; str[j] = '\0'; return FALSE;
                 }
                 {
                     char c = str[i + 1];
@@ -1283,7 +1285,7 @@ static bool_t match_character(context_t *ctx, char ch) {
 static bool_t match_character_range(context_t *ctx, char min, char max) {
     if (refill_buffer(ctx, 1) >= 1) {
         char c = ctx->buffer.buf[ctx->bufpos];
-        if (c >= min && c <= max) { 
+        if (c >= min && c <= max) {
             ctx->bufpos++;
             return TRUE;
         }

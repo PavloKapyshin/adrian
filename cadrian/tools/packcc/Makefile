@@ -1,2 +1,2 @@
 all:
-	$(CC) -o packcc packcc.c
+	$(CC) -std=c11 -o packcc packcc.c
