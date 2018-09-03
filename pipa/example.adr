@@ -23,7 +23,7 @@ let lexer = lexers#CombinatorLexer(
     microSyntax, ignoreList = [" ", "\n"], keywords = ["fun", "return"])
 
 
-let lexingResult = lexer.lex("fun name(): Number {\nreturn$ 0\n}\n")
+let lexingResult = lexer.lex("fun name(): Number {\nreturn 0\n}\n")
 if lexingResult is Right {
     for (text, type) in lexingResult.data {
         print(" ".join([text, type]))
