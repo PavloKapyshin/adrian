@@ -1,11 +1,11 @@
 struct LexingError is ConvertibleToString {
-    description: String
     lineNumber: Number
+    char: String
 
     fun __toString__(): String {
-        return "LEXING ERROR (on {lineNumber}): {description}".format({
+        return "LEXING ERROR (on {lineNumber}): illegal char {char}".format({
             "lineNumber" = toString(self.lineNumber),
-            "description" = self.description
+            "char" = self.char
         })
     }
 }
@@ -188,8 +188,7 @@ struct CombinatorLexer {
                 input = input[length(lexeme.text):initialLength]
             } else {
                 return Left(
-                    LexingError(
-                        "Something is broken in lexer...", self.lineNumber))
+                    LexingError(self.lineNumber, (input[0])!))
             }
         }
         return Right(lexemes)
