@@ -34,6 +34,15 @@ struct LowerCaseLetter is Combinator {
     }
 }
 
+struct Letter is Combinator {
+    fun match(string: String): String? {
+        if (length(string) == 0) or (not ((string[0])! in String(py#lowerCaseLetters + py#upperCaseLetters))) {
+            return None()
+        }
+        return Some((string[0])!)
+    }
+}
+
 
 struct NumberCombinator is Combinator {
     fun match(string: String): String? {
@@ -60,7 +69,7 @@ struct Char is Combinator {
 struct AnyChar is Combinator {
     escapes: Vector(String)
 
-    fun __init__(escapes: Vector(String) = []): Void {
+    fun __init__(escapes except: Vector(String) = []): Void {
         self.escapes = escapes
     }
 
@@ -166,7 +175,7 @@ struct CombinatorLexer {
 
     fun __init__(
             microSyntax: Dict(Combinator, String),
-            ignoreList: Vector(String) = [],
+            ignoreList: Vector(String) = ["\n"],
             keywords: Vector(String) = []): Void {
         self.microSyntax = microSyntax
         self.ignoreList = ignoreList

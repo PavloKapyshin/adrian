@@ -14,7 +14,6 @@ def new_context(*, env, exit_on_error, main_file_hash, module_paths, loaded_modu
     context.loaded = []
     context.loaded_modules = loaded_modules or {}
     context.parent_struct = None
-    context.in_method = False
     context.tmp_counter = 0
     yield
 

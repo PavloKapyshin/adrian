@@ -322,6 +322,7 @@ class Interpreter(layers.Layer):
     def func_call(self, func_call):
         info = context.env[func_call.name]
         if info is None:
+            print(context.loaded_modules)
             errors.unknown_name(func_call.name)
         if info["node_type"] in (astlib.NodeT.var, astlib.NodeT.let, astlib.NodeT.arg):
             assert (info["expr"] in A(astlib.Function)), info["expr"]

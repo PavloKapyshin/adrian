@@ -81,7 +81,8 @@ def without_quotes(string):
 def t_STRING(token):
     r'''\"([^\\\n]|(\\.))*?\"'''
     token.value = astlib.Literal(
-        astlib.LiteralT.string, without_quotes(token.value).replace("\\n", "\n"))
+        astlib.LiteralT.string,
+        without_quotes(token.value).replace("\\n", "\n"))
     return token
 
 
