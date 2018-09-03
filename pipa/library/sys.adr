@@ -1,3 +1,0 @@
-fun exit(status: Number): Void {
-    py#exit(status.data)
-}
