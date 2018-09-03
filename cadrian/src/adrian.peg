@@ -1,0 +1,25 @@
+%source {
+#define _POSIX_C_SOURCE 200809L
+}
+
+statement <- let_declaration { puts("Parsed"); }
+
+let_declaration <- _ "let" _ name _ "=" _ expression _ EOL
+
+name <- [a-zA-Z_][a-zA-Z0-9_]*
+
+expression <- number_literal
+
+number_literal <- [0-9]+
+
+_ <- [ \t]*
+
+EOL <- "\n"
+
+%%
+int main() {
+    pcc_context_t *ctx = pcc_create(NULL);
+    while (pcc_parse(ctx, NULL));
+    pcc_destroy(ctx);
+    return 0;
+}
