@@ -36,11 +36,17 @@ typedef struct {
 } LetDeclaration;
 
 
+typedef union {
+    LetDeclaration* let_declaration;
+} Node;
+
+
 extern Empty* Empty_new();
 extern Empty* Empty_copy(Empty* self);
 extern void Empty_free(Empty* self);
 
 extern LetDeclaration* LetDeclaration_new(char* name, Type* type, Expr* expr);
+extern LetDeclaration* LetDeclaration_copy(LetDeclaration* self);
 extern void LetDeclaration_free(LetDeclaration* self);
 
 extern Literal* Literal_new(LiteralType type, char* text);
@@ -54,5 +60,9 @@ extern void Expr_free(Expr* self);
 extern Type* Type_new();
 extern Type* Type_copy(Type* self);
 extern void Type_free(Type* self);
+
+extern Node* Node_new();
+extern Node* Node_copy(Node* self);
+extern void Node_free(Node* self);
 
 #endif

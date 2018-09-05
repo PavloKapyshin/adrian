@@ -1942,12 +1942,6 @@ static bool_t parse(context_t *ctx) {
             "\n",
             ctx->sfile
         );
-        fprintf(
-            ctx->sfile,
-            "#include \"%s\"\n"
-            "\n",
-            ctx->hname
-        );
     }
     {
         fprintf(
@@ -2003,6 +1997,15 @@ static bool_t parse(context_t *ctx) {
             commit_buffer(ctx);
         }
         commit_buffer(ctx);
+    }
+    // For proper includes in %header directive.
+    {
+        fprintf(
+            ctx->sfile,
+            "#include \"%s\"\n"
+            "\n",
+            ctx->hname
+        );
     }
     {
         int i;
