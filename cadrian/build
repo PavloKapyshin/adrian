@@ -1,4 +1,3 @@
-cd tools &&
-    cd packcc && make && cd ../../ &&
-cd src/ &&
-    ./../tools/packcc/packcc -o adrian_parser adrian.peg && cd .. && make
+cd libs && \
+    cd puclua && make linux && cd .. && \
+    cd lpeg && make linux && cd ..
