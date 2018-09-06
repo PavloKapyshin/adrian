@@ -272,7 +272,7 @@ end
 
 local function structFieldTrailer(p)
     return p / function (fieldName)
-        return astlib.Field(fieldName)
+        return astlib.Field.new(fieldName)
     end
 end
 
@@ -554,7 +554,7 @@ local grammar = lpeg.P({
 
 
 local input = [[
-    let a = not a
+    let a = f()![1]!.name
 ]]
 
 
