@@ -1,2 +1,3 @@
-cd tools &&
-    cd packcc && make && cd ..
+cd libs && \
+    cd puclua && make linux && cd .. && \
+    cd lpeg && make linux && cd ..
