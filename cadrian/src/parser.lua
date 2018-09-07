@@ -1,7 +1,6 @@
-package.cpath = package.cpath .. ";libs/lpeg/?.so"
 local lpeg = require("lpeg")
-package.path = package.path .. ";src/?.lua"
 local astlib = require("astlib")
+local utils = require("utils")
 
 local luatype = type
 
@@ -21,30 +20,16 @@ local numberLiteral = number^1
 local stringLiteral = lpeg.P('"') * (lpeg.P(1) - '"')^0 * lpeg.P('"')
 
 
-local function toStructPath(p)
-    return p / function (path)
-        return astlib.StructPath.new(path)
-    end
-end
-
-
-
-local function keywordArg(p)
-    return p / function (name, expr)
-        if expr == nil then
-            return name
-        end
-        return astlib.KeywordArg.new(name, expr)
-    end
-end
-
-
 local function parameterizedTypeInit(p)
     return p / function (base, parameters)
         if parameters == nil then
             return base
         end
-        return astlib.ParameterizedType.new(base, parameters)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.parameterizedType,
+            base = base,
+            parameters = parameters
+        })
     end
 end
 
@@ -53,13 +38,21 @@ local function typeCombInit(p)
         if op == nil then
             return left
         end
-        return astlib.TypeCombination.new(left, op, right)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.typeExpr,
+            left = left,
+            op = op,
+            right = right
+        })
     end
 end
 
-local function refTypeInit(p)
+local function refInit(p)
     return p / function (base)
-        return astlib.Ref.new(base)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.ref,
+            base = base
+        })
     end
 end
 
@@ -68,7 +61,10 @@ local function maybeInit(p)
         if mark == nil then
             return base
         end
-        return astlib.Maybe.new(base)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.maybe,
+            base = base
+        })
     end
 end
 
@@ -77,147 +73,262 @@ local function typeDependencyInit(p)
         if protocols == nil then
             return base
         end
-        return astlib.TypeDependency.new(base, protocols)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.typeExpr,
+            left = base,
+            op = "is",
+            right = protocols
+        })
     end
 end
 
 
 local function nameInit(p)
     return p / function (string)
-        return astlib.Name.new(string)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.name,
+            string = string
+        })
     end
 end
 
 local function vectorLiteralInit(p)
     return p / function (text)
-        return astlib.Literal.new(astlib.literalTypes.vector, text)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.literal,
+            type = astlib.literaltypes.vector,
+            text = text
+        })
     end
 end
 
 local function dictOrSetLiteralInit(p)
     return p / function (text)
-        return astlib.Literal.new(astlib.literalTypes.dictOrSet, text)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.literal,
+            type = astlib.literaltypes.dictOrSet,
+            text = text
+        })
     end
 end
 
 local function numberLiteralInit(p)
     return p / function (text)
-        return astlib.Literal.new(astlib.literalTypes.number, text)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.literal,
+            type = astlib.literaltypes.number,
+            text = text
+        })
     end
 end
 
 local function stringLiteralInit(p)
     return p / function (text)
-        return astlib.Literal.new(astlib.literalTypes.string, text)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.literal,
+            type = astlib.literaltypes.string,
+            text = text
+        })
     end
 end
 
 local function letDeclInit(p)
     return p / function (name, type, expr)
-        return astlib.LetDeclaration.new(name, type, expr)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.letDeclaration,
+            name = name,
+            type = type,
+            expr = expr
+        })
     end
 end
 
 local function varDeclInit(p)
     return p / function (name, type, expr)
-        return astlib.VarDeclaration.new(name, type, expr)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.varDeclaration,
+            name = name,
+            type = type,
+            expr = expr
+        })
     end
 end
 
 local function funcProtoInit(p)
     return p / function (name, args, type)
-        return astlib.FuncPrototype.new(name, args, type)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.funcPrototype,
+            name = name,
+            args = args,
+            type = type
+        })
     end
 end
 
 local function funcDeclInit(p)
     return p / function (funcProto, body)
-        return astlib.FuncDeclaration.new(
-            funcProto.name, funcProto.args, funcProto.type, body)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.funcDeclaration,
+            name = funcProto.name,
+            args = funcProto.args,
+            type = funcProto.type,
+            body = body
+        })
     end
 end
 
 local function argumentInit(p)
     return p / function (name, type, expr)
-        return astlib.Argument.new(name, type, expr)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.argument,
+            name = name,
+            type = type,
+            expr = expr
+        })
     end
 end
 
 local function protoDeclInit(p)
     return p / function (name, parameters, protocols, body)
-        return astlib.ProtocolDeclaration.new(name, parameters, protocols, body)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.protocolDeclaration,
+            name = name,
+            parameters = parameters,
+            protocols = protocols,
+            body = body
+        })
     end
 end
 
 local function structDeclInit(p)
     return p / function (name, parameters, protocols, body)
-        return astlib.StructDeclaration.new(name, parameters, protocols, body)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.structDeclaration,
+            name = name,
+            parameters = parameters,
+            protocols = protocols,
+            body = body
+        })
     end
 end
 
 local function extDeclInit(p)
     return p / function (name, parameters, protocols, body)
-        return astlib.ExtensionDeclaration.new(name, parameters, protocols, body)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.extensionDeclaration,
+            name = name,
+            parameters = parameters,
+            protocols = protocols,
+            body = body
+        })
     end
 end
 
 local function reassignmentInit(p)
     return p / function (left, op, right)
-        return astlib.Reassignment.new(left, op, right)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.reassignment,
+            left = left,
+            op = op,
+            right = right
+        })
     end
 end
 
 local function forStmtInit(p)
     return p / function (names, container, body)
-        return astlib.For.new(names, container, body)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.forStmt,
+            names = names,
+            container = container,
+            body = body
+        })
     end
 end
 
 local function whileStmtInit(p)
     return p / function (expr, body)
-        return astlib.While.new(expr, body)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.whileStmt,
+            expr = expr,
+            body = body
+        })
     end
 end
 
 local function condStmtInit(p)
     return p / function (expr, body, elifs, elseStmt)
-        return astlib.Cond.new(expr, body, elifs, elseStmt)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.elseStmt,
+            expr = expr,
+            body = body,
+            elifs = elifs,
+            elseStmt = elseStmt
+        })
     end
 end
 
 local function elifStmtInit(p)
     return p / function (expr, body)
-        return astlib.Elif.new(expr, body)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.elifStmt,
+            expr = expr,
+            body = body
+        })
     end
 end
 
 local function elseStmtInit(p)
     return p / function (body)
-        return astlib.Else.new(body)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.elseStmt,
+            body = body
+        })
     end
 end
 
 local function breakStmtInit(p)
     return p / function (input)
-        return astlib.Break.new()
+        return astlib.Node.new({nodetype = astlib.nodetypes.breakStmt})
     end
 end
 
 local function returnInit(p)
     return p / function (expr)
-        return astlib.Return.new(expr)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.returnStmt,
+            expr = expr
+        })
     end
 end
 
 local function fieldDeclInit(p)
     return p / function (name, type)
-        return astlib.FieldDeclaration.new(name, type)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.FieldDeclaration,
+            name = name,
+            type = type
+        })
     end
 end
 
-local function moduleMemberInit(p)
-    return p / function (moduleName, member)
-        return astlib.ModuleMember.new(moduleName, member)
+local function moduleMemberOrKeywordArg(p)
+    return p / function (name, trailer)
+        if trailer == nil then
+            return name
+        elseif trailer.nodetype == "keywordT" then
+            return astlib.Node.new({
+                nodetype = astlib.nodetypes.keywordArg,
+                name = name,
+                expr = trailer.expr,
+            })
+        else
+            return astlib.Node.new({
+                nodetype = astlib.nodetypes.moduleMember,
+                module = name,
+                member = trailer.member,
+            })
+        end
     end
 end
 
@@ -236,10 +347,8 @@ end
 
 local function optNil(p)
     return p / function (someValue)
-        if luatype(someValue) ~= "table" then
-            return nil
-        end
-        if getmetatable(someValue) == nil and #someValue == 0 then
+        if (luatype(someValue) ~= "table") or
+                (someValue.nodetype == nil and #someValue == 0) then
             return nil
         end
         return someValue
@@ -248,10 +357,8 @@ end
 
 local function optStr(p, string)
     return p / function (someValue)
-        if luatype(someValue) ~= "string" then
-            return nil
-        elseif string == someValue then
-            return someValue
+        if string == someValue then
+            return string
         end
         return nil
     end
@@ -260,19 +367,13 @@ end
 
 local function functionTrailer(p)
     return p / function (argList)
-        return astlib.Call.new(argList)
-    end
-end
-
-local function subscriptTrailer(p)
-    return p / function (subs)
-        return subs
+        return {nodetype = "callT", args = argList}
     end
 end
 
 local function structFieldTrailer(p)
     return p / function (fieldName)
-        return astlib.Field.new(fieldName)
+        return {nodetype = "fieldT", field = fieldName}
     end
 end
 
@@ -285,26 +386,62 @@ local function atomExprInit(p)
                 table.insert(trailers, v)
             end
         end
-        if #trailers == 0 then
-            return atom
+        local result = atom
+        for _, v in ipairs(trailers) do
+            if v.nodetype == "callT" then
+                result = astlib.Node.new({
+                    nodetype = astlib.nodetypes.call,
+                    base = result,
+                    args = v.args
+                })
+            elseif v.nodetype == "subscriptT" then
+                result = astlib.Node.new({
+                    nodetype = astlib.nodetypes.subscript,
+                    base = result,
+                    key = v.key
+                })
+            elseif v.nodetype == "sliceT" then
+                result = astlib.Node.new({
+                    nodetype = astlib.nodetypes.slice,
+                    base = result,
+                    first = v.first,
+                    isInclusive = v.isInclusive,
+                    last = v.last,
+                    step = v.step
+                })
+            elseif v.nodetype == "unwrapT" then
+                result = astlib.Node.new({
+                    nodetype = astlib.nodetypes.maybe,
+                    base = result
+                })
+            elseif v.nodetype == "fieldT" then
+                result = astlib.Node.new({
+                    nodetype = astlib.nodetypes.field,
+                    base = result,
+                    field = v.field
+                })
+            end
         end
-        return astlib.TraileredExpr.new(atom, trailers)
+        return result
     end
 end
 
 local function sliceOrSubscriptInit(p)
     return p / function (left, rangeOp, right, step)
         if rangeOp == nil then
-            return astlib.Subscript.new(left)
+            return {nodetype = "subscriptT", key = left}
         end
-        return astlib.Slice.new(left, rangeOp, right, step)
+        return {
+            nodetype = "sliceT", first = left, isInclusive = (rangeOp == "..."),
+            last = right, step = step
+        }
     end
 end
 
 local function unwrapTrailer(p)
-    return p / function (exclamationMark)
-        if exclamationMark ~= nil and exclamationMark == "!" then
-            return astlib.Unwrap.new()
+    return p / function (mark)
+        if mark == "?" then
+            return {nodetype = "unwrapT"}
         end
         return nil
     end
@@ -326,10 +463,19 @@ local function _makeExpr(left, other)
     if #other == 0 then
         return left
     elseif #other == 2 then
-        return astlib.Expr.new(left, other[1], other[2])
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.expr,
+            left = left,
+            op = other[1],
+            right = other[2]
+        })
     else
-        return astlib.Expr.new(
-            left, other[1], _makeExpr(other[2], table.slice(other, 3)))
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.expr,
+            left = left,
+            op = other[1],
+            right = _makeExpr(other[2], table.slice(other, 3))
+        })
     end
 end
 
@@ -339,7 +485,23 @@ end
 
 local function unaryOperator(p)
     return p / function (op, expr)
-        return astlib.UnaryOp.new(op, expr)
+        return astlib.Node.new({
+            nodetype = astlib.nodetypes.unaryExpr,
+            op = op,
+            expr = expr
+        })
+    end
+end
+
+local function moduleMemberTrailerInit(p)
+    return p / function (member)
+        return {nodetype = "moduleMemberT", member = member}
+    end
+end
+
+local function keywordArgTrailerInit(p)
+    return p / function (expr)
+        return {nodetype = "keywordT", expr = expr}
     end
 end
 
@@ -414,7 +576,9 @@ local grammar = lpeg.P({
     protocolStmt = pw * (lpeg.V("funcProto") + lpeg.V("fieldDecl")) * pw,
     structStmt = pw * (lpeg.V("funcDecl") + lpeg.V("fieldDecl")) * pw,
 
-    keywordArgTrailer = pw * lpeg.P("=") * pw * lpeg.V("expr") + lpeg.P(""),
+    keywordArgTrailer =
+        keywordArgTrailerInit(
+            pw * lpeg.P("=") * pw * lpeg.V("expr")),
     reassignmentOp =
         lpeg.Cs(
             lpeg.P("+=") + lpeg.P("-=") + lpeg.P("*=") + lpeg.P("/=") +
@@ -462,8 +626,7 @@ local grammar = lpeg.P({
             lpeg.Cs(
                 (letter + underscore) *
                 (letter + underscore + number)^0)) - keywords,
-    moduleMember = moduleMemberInit(
-        lpeg.V("name") * lpeg.P("#") * lpeg.V("name")),
+    moduleMemberTrailer = moduleMemberTrailerInit(lpeg.P("#") * lpeg.V("name")),
     argList =
         lpeg.Cf(
             lpeg.Ct(lpeg.V("expr")) * (lpeg.P(",") * pw * lpeg.V("argList"))^0,
@@ -511,14 +674,16 @@ local grammar = lpeg.P({
         stringLiteralInit(stringLiteral) +
         lpeg.V("vectorLiteral") +
         lpeg.V("dictOrSetLiteral") +
-        keywordArg(lpeg.V("name") * lpeg.V("keywordArgTrailer")) +
-        lpeg.V("moduleMember") +
-        lpeg.P("(") * lpeg.V("expr") * lpeg.P(")"),
+        moduleMemberOrKeywordArg(
+            lpeg.V("name") *
+            (lpeg.V("keywordArgTrailer") + lpeg.V("moduleMemberTrailer"))^-1) +
+        lpeg.P("(") * lpeg.V("expr") * lpeg.P(")") +
+        refInit(lpeg.P("ref") * pw * lpeg.V("subExpr")),
     trailer =
         functionTrailer(lpeg.P("(") * lpeg.V("argList") * lpeg.P(")")) +
         lpeg.P("[") * lpeg.V("sliceOrSubscript") * lpeg.P("]") +
         structFieldTrailer(lpeg.P(".") * lpeg.V("name")) +
-        unwrapTrailer(lpeg.Cs(lpeg.P("!"))),
+        unwrapTrailer(lpeg.Cs(lpeg.P("?"))),
     comparisonOp =
         lpeg.P("==") + lpeg.P("<=") + lpeg.P(">=") + lpeg.P("!=") +
         lpeg.P("<") + lpeg.P(">") + lpeg.P("in") + lpeg.P("is"),
@@ -544,20 +709,18 @@ local grammar = lpeg.P({
         lpeg.V("typeAtom") *
         optNil((lpeg.P("(") * lpeg.V("types") * lpeg.P(")"))^-1)),
     typeAtom =
-        refTypeInit(lpeg.P("ref") * pw * lpeg.V("typeFactor")) +
+        refInit(lpeg.P("ref") * pw * lpeg.V("typeFactor")) +
         lpeg.P("(") * lpeg.V("type") * lpeg.P(")") +
-        lpeg.V("moduleMember") + lpeg.V("name"),
+        moduleMemberOrKeywordArg(lpeg.V("name") * lpeg.V("moduleMemberTrailer")^-1),
 
     typeCombOp = lpeg.Cs(lpeg.P("and") + lpeg.P("or")),
     questionMark = lpeg.Cs(lpeg.P("?")) + lpeg.P(""),
 })
 
 
-local input = [[
-    let a = f()![1]!.name
-]]
-
-
-for _, v in ipairs(grammar:match(input)) do
-    print(v)
+function parse(input)
+    return grammar:match(input)
 end
+
+
+return {parse = parse}
