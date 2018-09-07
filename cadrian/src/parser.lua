@@ -398,7 +398,7 @@ local function atomExprInit(p)
                 result = astlib.Node.new({
                     nodetype = astlib.nodetypes.subscript,
                     base = result,
-                    key = v.value
+                    key = v.key
                 })
             elseif v.nodetype == "sliceT" then
                 result = astlib.Node.new({

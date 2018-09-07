@@ -24,17 +24,14 @@ function t(type, context)
         return nil
     elseif type.nodetype == astlib.nodetypes.name then
         return checkNameExistence(type, context)
-    elseif type.nodetypes == astlib.nodetypes.moduleMember then
+    elseif type.nodetype == astlib.nodetypes.moduleMember then
         return type
-    elseif type.nodetypes == astlib.nodetypes.ref then
+    elseif type.nodetype == astlib.nodetypes.ref then
         return astlib.Node.new({
-            nodetype = type.nodetypes,
+            nodetype = astlib.nodetypes.ref,
             base = t(type.base, context)
         })
     else
-        for i,v in ipairs(getmetatable(type)) do
-            print(i,v)
-        end
         error("not implemented t:desugar")
     end
 end
@@ -121,7 +118,7 @@ end
 
 function astlib.Node:register(context)
     context.env[self.name.string] = {
-        infoNodetype = astlib.infoNodetype.constant,
+        infoNodetype = astlib.infoNodetypes.constant,
         type = self.type,
         expr = self.expr
     }

@@ -72,7 +72,8 @@ function joinBody(body)
         end
     end
     indentationLevel = indentationLevel - 1
-    return result .. indStr .. "}"
+    return result .. utils.repeatString(indentationString, indentationLevel)
+        .. "}"
 end
 
 function joinArgs(args)
@@ -192,7 +193,7 @@ function Node:toCode()
             stepString = ":" .. self.step:toCode()
         end
         return string.format(
-            "%s[%s%s%s%s",
+            "%s[%s%s%s%s]",
             self.base:toCode(), self.first:toCode(), op, self.last:toCode(),
             stepString)
     elseif self.nodetype == nodetypes.subscript then
@@ -240,7 +241,8 @@ function tableToString(table)
         end
     end
     tableIndentationLevel = tableIndentationLevel - 1
-    return result .. indStr .. "}"
+    return result ..
+        utils.repeatString(indentationString, tableIndentationLevel) .. "}"
 end
 
 function Node:__tostring()
