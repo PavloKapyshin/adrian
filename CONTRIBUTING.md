@@ -10,3 +10,4 @@
 
 ## Notes
 * elliptica is in charge of pull requests
+* elliptica is AEP maintainer
