@@ -64,3 +64,4 @@ Example: “Propose AEP-0”
 
 ## Log
 * 2018-09-08. Proposed.
+* 2018-09-08. Accepted.
