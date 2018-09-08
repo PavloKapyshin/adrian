@@ -22,7 +22,7 @@ local function main(fileName)
         context = context:copy()
     end
     for _, v in ipairs(ast) do
-        print(v:toCode())
+        print(v)
     end
 end
 
