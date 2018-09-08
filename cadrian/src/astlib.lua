@@ -1,5 +1,6 @@
 local utils = require("utils")
 
+local luatype = type
 
 infoNodetypes = {
     constant = 1,
@@ -222,27 +223,28 @@ function Node:toCode()
 end
 
 local tableIndentationLevel = 0
+local tableIndentationString = "    "
 
 function tableToString(table)
     local result = "{\n"
     local length = #table
     tableIndentationLevel = tableIndentationLevel + 1
-    local indStr = utils.repeatString(indentationString, tableIndentationLevel)
-    for i, v in ipairs(table) do
+    local indStr = utils.repeatString(
+        tableIndentationString, tableIndentationLevel)
+    local i = 1
+    for k, v in pairs(table) do
         local string
         if luatype(v) == "table" then
             string = tableToString(v)
         else
             string = tostring(v)
         end
-        result = result .. indStr .. string
-        if i < length then
-            result = result .. ",\n"
-        end
+        result = result .. indStr .. tostring(k) .. " = " .. string .. ",\n"
+        i = i + 1
     end
     tableIndentationLevel = tableIndentationLevel - 1
     return result ..
-        utils.repeatString(indentationString, tableIndentationLevel) .. "}"
+        utils.repeatString(tableIndentationString, tableIndentationLevel) .. "}"
 end
 
 function Node:__tostring()
